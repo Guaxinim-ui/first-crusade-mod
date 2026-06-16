@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "CIC",
+    " F "
+  ],
+  "key": {
+    "C": {
+      "item": "firstcrusade:crusadium_ingot"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "F": {
+      "item": "minecraft:coal"
+    }
+  },
+  "result": {
+    "item": "firstcrusade:crusadium_plate",
+    "count": 2
+  }
+}

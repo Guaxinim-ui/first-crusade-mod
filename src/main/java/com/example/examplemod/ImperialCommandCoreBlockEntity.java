@@ -1,0 +1,2175 @@
+package com.example.examplemod;
+
+import net.minecraft.world.item.Items;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraftforge.network.NetworkHooks;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
+
+import java.util.List;
+import java.util.UUID;
+
+public class ImperialCommandCoreBlockEntity extends BlockEntity {
+    private static final int MAX_CITY_LEVEL = 5;
+
+    private String baseName = "Imperial Outpost";
+    private UUID ownerUUID;
+    private String ownerName = "Unclaimed";
+
+    private int cityLevel = 1;
+
+    private int iron = 0;
+    private int coal = 0;
+    private int scrapMetal = 0;
+
+    private int recruitedGuardsmen = 0;
+
+    private long lastProductionDay = -1;
+    private int tickCounter = 0;
+
+ private long lastOrkRaidDay = -1;
+ private int orkRaidCount = 0;
+private boolean activeOrkRaid = false;
+private int activeOrkRaidTicks = 0;
+
+private int orkRaidVictories = 0;
+private int imperialWarSupport = 0;
+
+private int cityIntegrity = 100;
+private int raidPressureTicks = 0;
+
+private int reinforcementCooldownTicks = 0;
+
+private int emperorGeneSeed = 0;
+
+private int spaceMarinePromotionCooldownTicks = 0;
+private UUID pendingSpaceMarineCandidateUUID;
+
+public void tryBuildImperialMine(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    int currentMines = ImperialWorkSiteManager.countImperialMines(serverLevel, this, 128);
+
+    if (currentMines >= getImperialMineCapacity()) {
+        player.displayClientMessage(Component.literal(
+                "Imperial Mine capacity reached. Upgrade the city to build more mines."
+        ), true);
+        return;
+    }
+
+    int ironCost = 20;
+    int scrapCost = 10;
+    int coalCost = 5;
+
+    if (this.iron < ironCost || this.scrapMetal < scrapCost || this.coal < coalCost) {
+        player.displayClientMessage(Component.literal(
+                "Not enough city resources. Need: "
+                        + ironCost + " Iron, "
+                        + scrapCost + " Scrap, "
+                        + coalCost + " Coal."
+        ), true);
+        return;
+    }
+
+    boolean built = ImperialWorkSiteManager.buildImperialMine(serverLevel, this, player);
+
+    if (!built) {
+        return;
+    }
+
+    this.iron -= ironCost;
+    this.scrapMetal -= scrapCost;
+    this.coal -= coalCost;
+
+    setChanged();
+
+    player.displayClientMessage(Component.literal(
+            "City Resources: "
+                    + this.iron + " Iron, "
+                    + this.scrapMetal + " Scrap, "
+                    + this.coal + " Coal."
+    ), false);
+}
+
+public int getImperialMineCapacity() {
+    return Math.max(1, this.cityLevel);
+}
+
+public int receiveProducedResource(ImperialResourceType resourceType, int amount) {
+    if (amount <= 0) {
+        return 0;
+    }
+
+    int accepted = 0;
+
+    switch (resourceType) {
+        case IRON -> {
+            int freeSpace = Math.max(0, getStorageCapacity() - this.iron);
+            accepted = Math.min(amount, freeSpace);
+            this.iron += accepted;
+        }
+
+        case COAL -> {
+            int freeSpace = Math.max(0, getStorageCapacity() - this.coal);
+            accepted = Math.min(amount, freeSpace);
+            this.coal += accepted;
+        }
+
+        case SCRAP -> {
+            int freeSpace = Math.max(0, getStorageCapacity() - this.scrapMetal);
+            accepted = Math.min(amount, freeSpace);
+            this.scrapMetal += accepted;
+        }
+
+        case GOLD, EMERALD, CRUSADIUM -> {
+            accepted = 0;
+        }
+    }
+
+    if (accepted > 0) {
+        setChanged();
+    }
+
+    return accepted;
+}
+
+    public ImperialCommandCoreBlockEntity(BlockPos pos, BlockState state) {
+        super(ExampleMod.IMPERIAL_COMMAND_CORE_BLOCK_ENTITY.get(), pos, state);
+    }
+
+    public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialCommandCoreBlockEntity blockEntity) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        blockEntity.tickCounter++;
+
+        if (blockEntity.tickCounter < 200) {
+            return;
+        }
+
+       blockEntity.tickCounter = 0;
+blockEntity.produceResourcesIfNewDay(level);
+blockEntity.reduceReinforcementCooldown();
+blockEntity.reduceSpaceMarinePromotionCooldown();
+blockEntity.processAutomaticSpaceMarinePromotion(serverLevel);
+blockEntity.trySpawnOrkRaid(serverLevel);
+blockEntity.checkActiveOrkRaid(serverLevel);
+    }
+
+    private void produceResourcesIfNewDay(Level level) {
+        long currentDay = level.getDayTime() / 24000L;
+
+        if (this.lastProductionDay < 0) {
+            this.lastProductionDay = currentDay;
+            setChanged();
+            return;
+        }
+
+        if (currentDay <= this.lastProductionDay) {
+            return;
+        }
+
+        long daysPassed = currentDay - this.lastProductionDay;
+
+        addIron((int) daysPassed * getDailyIronProduction());
+addScrapMetal((int) daysPassed * getDailyScrapProduction());
+addCoal((int) daysPassed * getDailyCoalProduction());
+addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
+
+        this.lastProductionDay = currentDay;
+        setChanged();
+    }
+
+    public void depositIron(Player player, ItemStack itemStack) {
+        if (!isOwner(player)) {
+            player.displayClientMessage(Component.literal("Only the owner can deposit resources into this city."), true);
+            return;
+        }
+
+        int acceptedAmount = addIron(itemStack.getCount());
+
+        if (acceptedAmount <= 0) {
+            player.displayClientMessage(Component.literal("Iron warehouse is full."), true);
+            return;
+        }
+
+        itemStack.shrink(acceptedAmount);
+        setChanged();
+
+        player.displayClientMessage(Component.literal("Deposited " + acceptedAmount + " Iron."), false);
+        player.displayClientMessage(Component.literal("City Iron: " + this.iron + "/" + getStorageCapacity()), false);
+    }
+
+    public void depositCoal(Player player, ItemStack itemStack) {
+        if (!isOwner(player)) {
+            player.displayClientMessage(Component.literal("Only the owner can deposit resources into this city."), true);
+            return;
+        }
+
+        int acceptedAmount = addCoal(itemStack.getCount());
+
+        if (acceptedAmount <= 0) {
+            player.displayClientMessage(Component.literal("Coal warehouse is full."), true);
+            return;
+        }
+
+        itemStack.shrink(acceptedAmount);
+        setChanged();
+
+        player.displayClientMessage(Component.literal("Deposited " + acceptedAmount + " Coal."), false);
+        player.displayClientMessage(Component.literal("City Coal: " + this.coal + "/" + getStorageCapacity()), false);
+    }
+
+    public void depositScrapMetal(Player player, ItemStack itemStack) {
+        if (!isOwner(player)) {
+            player.displayClientMessage(Component.literal("Only the owner can deposit resources into this city."), true);
+            return;
+        }
+
+        int acceptedAmount = addScrapMetal(itemStack.getCount());
+
+        if (acceptedAmount <= 0) {
+            player.displayClientMessage(Component.literal("Scrap Metal warehouse is full."), true);
+            return;
+        }
+
+        itemStack.shrink(acceptedAmount);
+        setChanged();
+
+        player.displayClientMessage(Component.literal("Deposited " + acceptedAmount + " Scrap Metal."), false);
+        player.displayClientMessage(Component.literal("City Scrap Metal: " + this.scrapMetal + "/" + getStorageCapacity()), false);
+    }
+    
+    public void depositAllResources(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can deposit resources into this city."), true);
+        return;
+    }
+
+    int totalIron = 0;
+    int totalCoal = 0;
+    int totalScrap = 0;
+    boolean foundResource = false;
+
+    for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+        ItemStack stack = player.getInventory().getItem(slot);
+
+        if (stack.isEmpty()) {
+            continue;
+        }
+
+        if (stack.is(Items.IRON_INGOT)) {
+            foundResource = true;
+            int accepted = addIron(stack.getCount());
+
+            if (accepted > 0) {
+                stack.shrink(accepted);
+                totalIron += accepted;
+            }
+
+            continue;
+        }
+
+        if (stack.is(Items.COAL)) {
+            foundResource = true;
+            int accepted = addCoal(stack.getCount());
+
+            if (accepted > 0) {
+                stack.shrink(accepted);
+                totalCoal += accepted;
+            }
+
+            continue;
+        }
+
+        if (stack.is(ExampleMod.SCRAP_METAL.get())) {
+            foundResource = true;
+            int accepted = addScrapMetal(stack.getCount());
+
+            if (accepted > 0) {
+                stack.shrink(accepted);
+                totalScrap += accepted;
+            }
+        }
+    }
+
+    if (totalIron <= 0 && totalCoal <= 0 && totalScrap <= 0) {
+        if (foundResource) {
+            player.displayClientMessage(Component.literal("City storage is full. No resources were deposited."), true);
+        } else {
+            player.displayClientMessage(Component.literal("No depositable city resources found in your inventory."), true);
+        }
+
+        return;
+    }
+
+    player.getInventory().setChanged();
+    setChanged();
+
+    player.displayClientMessage(Component.literal(
+            "Deposited: " + totalIron + " Iron, " + totalCoal + " Coal, " + totalScrap + " Scrap Metal."
+    ), false);
+
+    player.displayClientMessage(Component.literal(
+            "City Storage: " + this.iron + " Iron, " + this.coal + " Coal, " + this.scrapMetal + " Scrap."
+    ), false);
+}
+
+    private int addIron(int amount) {
+        int acceptedAmount = getAcceptedAmount(this.iron, amount);
+        this.iron += acceptedAmount;
+        return acceptedAmount;
+    }
+
+    private int addCoal(int amount) {
+        int acceptedAmount = getAcceptedAmount(this.coal, amount);
+        this.coal += acceptedAmount;
+        return acceptedAmount;
+    }
+
+    private int addScrapMetal(int amount) {
+        int acceptedAmount = getAcceptedAmount(this.scrapMetal, amount);
+        this.scrapMetal += acceptedAmount;
+        return acceptedAmount;
+    }
+
+private int addEmperorGeneSeed(int amount) {
+    if (amount <= 0) {
+        return 0;
+    }
+
+    int freeSpace = getEmperorGeneSeedCapacity() - this.emperorGeneSeed;
+
+    if (freeSpace <= 0) {
+        return 0;
+    }
+
+    int acceptedAmount = Math.min(amount, freeSpace);
+    this.emperorGeneSeed += acceptedAmount;
+
+    return acceptedAmount;
+}
+
+public int getEmperorGeneSeed() {
+    return this.emperorGeneSeed;
+}
+
+public int getDailyEmperorGeneProduction() {
+    return switch (this.cityLevel) {
+        case 1 -> 0;
+        case 2 -> 0;
+        case 3 -> 1;
+        case 4 -> 2;
+        case 5 -> 4;
+        default -> 0;
+    };
+}
+
+public int getEmperorGeneSeedCapacity() {
+    return switch (this.cityLevel) {
+        case 1 -> 0;
+        case 2 -> 0;
+        case 3 -> 5;
+        case 4 -> 12;
+        case 5 -> 30;
+        default -> 0;
+    };
+}
+
+
+    private int getAcceptedAmount(int currentAmount, int requestedAmount) {
+        if (requestedAmount <= 0) {
+            return 0;
+        }
+
+        int freeSpace = getStorageCapacity() - currentAmount;
+
+        if (freeSpace <= 0) {
+            return 0;
+        }
+
+        return Math.min(requestedAmount, freeSpace);
+    }
+
+public void tryRecruitGuardsman(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can train soldiers in this city."), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    if (this.recruitedGuardsmen >= getMilitaryCapacity()) {
+        player.displayClientMessage(Component.literal("Military capacity reached. Upgrade the city to train more soldiers."), true);
+        return;
+    }
+
+    boolean trained = ImperialPopulationManager.trainNearestCitizenAsGuardsman(serverLevel, this, player);
+
+    if (!trained) {
+        return;
+    }
+
+    this.recruitedGuardsmen++;
+    setChanged();
+
+    player.displayClientMessage(Component.literal(
+            "Military Population: " + this.recruitedGuardsmen + "/" + getMilitaryCapacity()
+    ), false);
+}
+
+    private BlockPos findSpawnPosition(ServerLevel serverLevel) {
+        BlockPos basePos = this.worldPosition.above();
+
+        for (int x = -2; x <= 2; x++) {
+            for (int z = -2; z <= 2; z++) {
+                BlockPos candidate = basePos.offset(x, 0, z);
+                BlockPos aboveCandidate = candidate.above();
+
+                if (serverLevel.getBlockState(candidate).isAir() && serverLevel.getBlockState(aboveCandidate).isAir()) {
+                    return candidate;
+                }
+            }
+        }
+
+        return basePos;
+    }
+
+    private BlockPos findGuardPostPosition(int soldierIndex) {
+        if (this.cityLevel <= 1) {
+            int radius = 4;
+            int positionIndex = soldierIndex % 8;
+
+            return switch (positionIndex) {
+                case 0 -> this.worldPosition.offset(0, 0, radius);
+                case 1 -> this.worldPosition.offset(radius, 0, 0);
+                case 2 -> this.worldPosition.offset(0, 0, -radius);
+                case 3 -> this.worldPosition.offset(-radius, 0, 0);
+                case 4 -> this.worldPosition.offset(radius, 0, radius);
+                case 5 -> this.worldPosition.offset(-radius, 0, radius);
+                case 6 -> this.worldPosition.offset(radius, 0, -radius);
+                case 7 -> this.worldPosition.offset(-radius, 0, -radius);
+                default -> this.worldPosition.offset(0, 0, radius);
+            };
+        }
+
+        int radius = Math.max(8, getCityStructureRadius());
+        int wallYOffset = getCityWallHeight();
+        int towerYOffset = getCityWallHeight() + 4;
+        int positionIndex = soldierIndex % 16;
+
+        return switch (positionIndex) {
+            case 0 -> this.worldPosition.offset(radius, towerYOffset, radius);
+            case 1 -> this.worldPosition.offset(-radius, towerYOffset, radius);
+            case 2 -> this.worldPosition.offset(radius, towerYOffset, -radius);
+            case 3 -> this.worldPosition.offset(-radius, towerYOffset, -radius);
+            case 4 -> this.worldPosition.offset(5, wallYOffset, radius);
+            case 5 -> this.worldPosition.offset(-5, wallYOffset, radius);
+            case 6 -> this.worldPosition.offset(radius, wallYOffset, 5);
+            case 7 -> this.worldPosition.offset(radius, wallYOffset, -5);
+            case 8 -> this.worldPosition.offset(5, wallYOffset, -radius);
+            case 9 -> this.worldPosition.offset(-5, wallYOffset, -radius);
+            case 10 -> this.worldPosition.offset(-radius, wallYOffset, 5);
+            case 11 -> this.worldPosition.offset(-radius, wallYOffset, -5);
+            case 12 -> this.worldPosition.offset(radius - 2, wallYOffset, radius - 2);
+            case 13 -> this.worldPosition.offset(-radius + 2, wallYOffset, radius - 2);
+            case 14 -> this.worldPosition.offset(radius - 2, wallYOffset, -radius + 2);
+            case 15 -> this.worldPosition.offset(-radius + 2, wallYOffset, -radius + 2);
+            default -> this.worldPosition.offset(5, wallYOffset, radius);
+        };
+    }
+
+    private void prepareGuardPost(ServerLevel serverLevel, BlockPos guardPostPos) {
+        if (guardPostPos == null) {
+            return;
+        }
+
+        if (guardPostPos.equals(this.worldPosition)) {
+            return;
+        }
+
+        BlockPos floorPos = guardPostPos.below();
+
+        if (!floorPos.equals(this.worldPosition) && serverLevel.getBlockState(floorPos).isAir()) {
+            serverLevel.setBlock(floorPos, Blocks.STONE_BRICKS.defaultBlockState(), 3);
+        }
+
+        clearBlockForGuard(serverLevel, guardPostPos);
+        clearBlockForGuard(serverLevel, guardPostPos.above());
+    }
+
+    private void clearBlockForGuard(ServerLevel serverLevel, BlockPos pos) {
+        if (pos.equals(this.worldPosition)) {
+            return;
+        }
+
+        if (!serverLevel.getBlockState(pos).isAir()) {
+            serverLevel.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+        }
+    }
+
+    private void reorganizeExistingGuardsmen(ServerLevel serverLevel) {
+        int searchRadius = Math.max(96, getCityStructureRadius() + 32);
+
+        AABB searchBox = new AABB(
+                this.worldPosition.getX() - searchRadius,
+                this.worldPosition.getY() - 64,
+                this.worldPosition.getZ() - searchRadius,
+                this.worldPosition.getX() + searchRadius,
+                this.worldPosition.getY() + 96,
+                this.worldPosition.getZ() + searchRadius
+        );
+
+        List<GuardsmanEntity> guardsmen = serverLevel.getEntitiesOfClass(
+                GuardsmanEntity.class,
+                searchBox,
+                guardsman -> guardsman.isAssignedToCommandCore(this.worldPosition)
+        );
+
+        int index = 0;
+
+        for (GuardsmanEntity guardsman : guardsmen) {
+            BlockPos guardPostPos = findGuardPostPosition(index);
+
+            prepareGuardPost(serverLevel, guardPostPos);
+            guardsman.assignGuardPost(guardPostPos);
+
+            if (guardsman.getTarget() == null) {
+                guardsman.teleportTo(
+                        guardPostPos.getX() + 0.5D,
+                        guardPostPos.getY(),
+                        guardPostPos.getZ() + 0.5D
+                );
+            }
+
+            index++;
+        }
+
+        this.recruitedGuardsmen = guardsmen.size();
+        setChanged();
+    }
+
+    public void onAssignedGuardsmanDeath() {
+        if (this.recruitedGuardsmen > 0) {
+            this.recruitedGuardsmen--;
+            setChanged();
+        }
+    }
+
+    private void reduceReinforcementCooldown() {
+    if (this.reinforcementCooldownTicks <= 0) {
+        return;
+    }
+
+    this.reinforcementCooldownTicks -= 200;
+
+    if (this.reinforcementCooldownTicks < 0) {
+        this.reinforcementCooldownTicks = 0;
+    }
+
+    setChanged();
+}
+
+public void callImperialReinforcements(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can call Imperial reinforcements."), true);
+        return;
+    }
+
+    if (!this.activeOrkRaid) {
+        player.displayClientMessage(Component.literal("Imperial reinforcements can only be called during an active Ork raid."), true);
+        return;
+    }
+
+    if (this.reinforcementCooldownTicks > 0) {
+        player.displayClientMessage(Component.literal("Reinforcements are still on cooldown: " + (this.reinforcementCooldownTicks / 20) + " seconds."), true);
+        return;
+    }
+
+    if (this.recruitedGuardsmen >= getMilitaryCapacity()) {
+        player.displayClientMessage(Component.literal("Military capacity reached. Cannot call more reinforcements."), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    int requestedReinforcements = getReinforcementCount();
+    int availableSlots = getMilitaryCapacity() - this.recruitedGuardsmen;
+    int actualReinforcements = Math.min(requestedReinforcements, availableSlots);
+
+    if (actualReinforcements <= 0) {
+        player.displayClientMessage(Component.literal("No military capacity available for reinforcements."), true);
+        return;
+    }
+
+    int spawned = 0;
+
+    for (int i = 0; i < actualReinforcements; i++) {
+        GuardsmanEntity guardsman = ExampleMod.GUARDSMAN.get().create(serverLevel);
+
+        if (guardsman == null) {
+            continue;
+        }
+
+        BlockPos spawnPos = findSpawnPosition(serverLevel);
+        BlockPos guardPostPos = findGuardPostPosition(this.recruitedGuardsmen);
+
+        prepareGuardPost(serverLevel, guardPostPos);
+
+        guardsman.moveTo(
+                spawnPos.getX() + 0.5D,
+                spawnPos.getY(),
+                spawnPos.getZ() + 0.5D,
+                player.getYRot(),
+                0.0F
+        );
+
+        guardsman.assignToCommandCore(this.worldPosition);
+        guardsman.assignGuardPost(guardPostPos);
+        guardsman.assignRandomChapter();
+        guardsman.initializeFromCity(getReinforcementRank());
+
+        serverLevel.addFreshEntity(guardsman);
+
+        this.recruitedGuardsmen++;
+        spawned++;
+    }
+
+    if (spawned <= 0) {
+        player.displayClientMessage(Component.literal("Failed to deploy Imperial reinforcements."), true);
+        return;
+    }
+
+    this.reinforcementCooldownTicks = getReinforcementCooldownTicks();
+
+    setChanged();
+
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "Imperial reinforcements deployed: " + spawned + " Guardsmen."
+    );
+
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "Reinforcement cooldown started. No War Support was spent."
+    );
+}
+
+private int getReinforcementWarSupportCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 5;
+        case 2 -> 10;
+        case 3 -> 18;
+        case 4 -> 30;
+        case 5 -> 50;
+        default -> 5;
+    };
+}
+
+private int getReinforcementCount() {
+    return switch (this.cityLevel) {
+        case 1 -> 1;
+        case 2 -> 2;
+        case 3 -> 3;
+        case 4 -> 4;
+        case 5 -> 6;
+        default -> 1;
+    };
+}
+
+private int getReinforcementCooldownTicks() {
+    return switch (this.cityLevel) {
+        case 1 -> 2400;
+        case 2 -> 2200;
+        case 3 -> 2000;
+        case 4 -> 1800;
+        case 5 -> 1600;
+        default -> 2400;
+    };
+}
+
+private GuardsmanRank getReinforcementRank() {
+    return switch (this.cityLevel) {
+        case 1 -> GuardsmanRank.GUARDSMAN;
+        case 2 -> GuardsmanRank.VETERAN;
+        case 3 -> GuardsmanRank.SERGEANT;
+        case 4 -> GuardsmanRank.LIEUTENANT;
+        case 5 -> GuardsmanRank.CAPTAIN;
+        default -> GuardsmanRank.GUARDSMAN;
+    };
+}
+public void rallyDefenders(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can rally city defenders."), true);
+        return;
+    }
+
+    if (!this.activeOrkRaid) {
+        player.displayClientMessage(Component.literal("Defender rally can only be used during an active Ork raid."), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    int affected = ImperialDefenseManager.rallyDefenders(serverLevel, this);
+
+    if (affected <= 0) {
+        player.displayClientMessage(Component.literal("No assigned Guardsmen found near this Core."), true);
+        return;
+    }
+
+    setChanged();
+
+    ImperialDefenseManager.notifyDefenseCommand(
+            serverLevel,
+            this.worldPosition,
+            "Imperial order issued: defenders rally to the Core!"
+    );
+
+    ImperialDefenseManager.notifyDefenseCommand(
+            serverLevel,
+            this.worldPosition,
+            "Defenders repositioned: " + affected
+    );
+}
+
+public void fortifyDefenders(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can fortify city defenders."), true);
+        return;
+    }
+
+    if (!this.activeOrkRaid) {
+        player.displayClientMessage(Component.literal("Defender fortification can only be used during an active Ork raid."), true);
+        return;
+    }
+
+    int warSupportCost = getFortifyDefendersWarSupportCost();
+
+    if (this.imperialWarSupport < warSupportCost) {
+        player.displayClientMessage(Component.literal("Not enough Imperial War Support to fortify defenders."), true);
+        player.displayClientMessage(Component.literal("Required: " + warSupportCost + " War Support."), false);
+        player.displayClientMessage(Component.literal("Current: " + this.imperialWarSupport + " War Support."), false);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    int affected = ImperialDefenseManager.fortifyDefenders(serverLevel, this);
+
+    if (affected <= 0) {
+        player.displayClientMessage(Component.literal("No assigned Guardsmen found near this Core."), true);
+        return;
+    }
+
+    this.imperialWarSupport -= warSupportCost;
+
+    setChanged();
+
+    ImperialDefenseManager.notifyDefenseCommand(
+            serverLevel,
+            this.worldPosition,
+            "Imperial order issued: defenders fortified!"
+    );
+
+    ImperialDefenseManager.notifyDefenseCommand(
+            serverLevel,
+            this.worldPosition,
+            "Fortified Guardsmen: " + affected + ". War Support spent: " + warSupportCost + "."
+    );
+}
+
+private int getFortifyDefendersWarSupportCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 5;
+        case 2 -> 10;
+        case 3 -> 18;
+        case 4 -> 30;
+        case 5 -> 45;
+        default -> 5;
+    };
+}
+
+public void upgradeNearestGuardsmanToSpaceMarine(Player player, ItemStack catalystStack) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can upgrade Guardsmen into Space Marines."), true);
+        return;
+    }
+
+    if (this.cityLevel < 3) {
+        player.displayClientMessage(Component.literal("Space Marine upgrades require an Imperial settlement of Level 3 or higher."), true);
+        return;
+    }
+
+    if (catalystStack.isEmpty()) {
+        return;
+    }
+
+    int ironCost = getSpaceMarineUpgradeIronCost();
+    int scrapCost = getSpaceMarineUpgradeScrapCost();
+    int coalCost = getSpaceMarineUpgradeCoalCost();
+    int warSupportCost = getSpaceMarineUpgradeWarSupportCost();
+
+    if (this.iron < ironCost) {
+        player.displayClientMessage(Component.literal("Missing Iron for Space Marine upgrade: " + (ironCost - this.iron)), true);
+        return;
+    }
+
+    if (this.scrapMetal < scrapCost) {
+        player.displayClientMessage(Component.literal("Missing Scrap Metal for Space Marine upgrade: " + (scrapCost - this.scrapMetal)), true);
+        return;
+    }
+
+    if (this.coal < coalCost) {
+        player.displayClientMessage(Component.literal("Missing Coal for Space Marine upgrade: " + (coalCost - this.coal)), true);
+        return;
+    }
+
+    if (this.imperialWarSupport < warSupportCost) {
+        player.displayClientMessage(Component.literal("Missing Imperial War Support for Space Marine upgrade: " + (warSupportCost - this.imperialWarSupport)), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    GuardsmanEntity targetGuardsman = SpaceMarineUpgradeManager.findNearestUpgradeableGuardsman(
+            serverLevel,
+            this,
+            player.blockPosition()
+    );
+
+    if (targetGuardsman == null) {
+        player.displayClientMessage(Component.literal("No upgradeable Guardsman found near this Core."), true);
+        return;
+    }
+
+    this.iron -= ironCost;
+    this.scrapMetal -= scrapCost;
+    this.coal -= coalCost;
+    this.imperialWarSupport -= warSupportCost;
+
+    catalystStack.shrink(1);
+
+    SpaceMarineUpgradeManager.upgradeToSpaceMarine(serverLevel, this, targetGuardsman);
+
+    setChanged();
+
+    player.displayClientMessage(Component.literal("Space Marine upgrade completed."), false);
+    player.displayClientMessage(Component.literal("Cost: " + ironCost + " Iron, " + scrapCost + " Scrap, " + coalCost + " Coal, " + warSupportCost + " War Support, 1 Netherite Ingot."), false);
+}
+
+private int getSpaceMarineUpgradeIronCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 0;
+        case 2 -> 0;
+        case 3 -> 750;
+        case 4 -> 1500;
+        case 5 -> 3000;
+        default -> 750;
+    };
+}
+
+private int getSpaceMarineUpgradeScrapCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 0;
+        case 2 -> 0;
+        case 3 -> 450;
+        case 4 -> 900;
+        case 5 -> 1800;
+        default -> 450;
+    };
+}
+
+private int getSpaceMarineUpgradeCoalCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 0;
+        case 2 -> 0;
+        case 3 -> 200;
+        case 4 -> 400;
+        case 5 -> 800;
+        default -> 200;
+    };
+}
+
+private int getSpaceMarineUpgradeWarSupportCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 0;
+        case 2 -> 0;
+        case 3 -> 25;
+        case 4 -> 50;
+        case 5 -> 100;
+        default -> 25;
+    };
+}
+
+    private void reduceSpaceMarinePromotionCooldown() {
+    if (this.spaceMarinePromotionCooldownTicks <= 0) {
+        return;
+    }
+
+    this.spaceMarinePromotionCooldownTicks -= 200;
+
+    if (this.spaceMarinePromotionCooldownTicks < 0) {
+        this.spaceMarinePromotionCooldownTicks = 0;
+    }
+
+    setChanged();
+}
+
+private void processAutomaticSpaceMarinePromotion(ServerLevel serverLevel) {
+    if (this.cityLevel < 3) {
+        this.pendingSpaceMarineCandidateUUID = null;
+        return;
+    }
+
+    if (this.emperorGeneSeed <= 0) {
+        return;
+    }
+
+    if (this.spaceMarinePromotionCooldownTicks > 0) {
+        return;
+    }
+
+    if (this.pendingSpaceMarineCandidateUUID != null) {
+        continuePendingSpaceMarinePromotion(serverLevel);
+        return;
+    }
+
+    GuardsmanEntity candidate = SpaceMarineUpgradeManager.findBestAutomaticCandidate(serverLevel, this);
+
+    if (candidate == null) {
+        return;
+    }
+
+    this.pendingSpaceMarineCandidateUUID = candidate.getUUID();
+
+    SpaceMarineUpgradeManager.commandCandidateToCore(serverLevel, this, candidate);
+
+    setChanged();
+
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "Space Marine candidate selected: " + candidate.getGuardsmanRank().getDisplayName() + "."
+    );
+
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "Candidate is moving to the Imperial Command Core for ascension."
+    );
+}
+
+private void continuePendingSpaceMarinePromotion(ServerLevel serverLevel) {
+    GuardsmanEntity candidate = SpaceMarineUpgradeManager.findGuardsmanByUUID(
+            serverLevel,
+            this,
+            this.pendingSpaceMarineCandidateUUID
+    );
+
+    if (candidate == null || !candidate.isAlive()) {
+        this.pendingSpaceMarineCandidateUUID = null;
+        setChanged();
+        return;
+    }
+
+    if (!SpaceMarineUpgradeManager.isEligibleForSpaceMarineUpgrade(candidate)) {
+        this.pendingSpaceMarineCandidateUUID = null;
+        setChanged();
+        return;
+    }
+
+    SpaceMarineUpgradeManager.commandCandidateToCore(serverLevel, this, candidate);
+
+    if (!SpaceMarineUpgradeManager.isNearPromotionPosition(this, candidate)) {
+        return;
+    }
+
+    if (this.emperorGeneSeed <= 0) {
+        return;
+    }
+
+    this.emperorGeneSeed--;
+
+    SpaceMarineUpgradeManager.upgradeToSpaceMarine(serverLevel, this, candidate);
+
+    this.pendingSpaceMarineCandidateUUID = null;
+    this.spaceMarinePromotionCooldownTicks = getSpaceMarinePromotionCooldownTicks();
+
+    setChanged();
+
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "Gene of the Emperor consumed: 1. Remaining: " + this.emperorGeneSeed + "."
+    );
+
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "Next Space Marine ascension cooldown: " + (this.spaceMarinePromotionCooldownTicks / 20) + " seconds."
+    );
+}
+
+private int getSpaceMarinePromotionCooldownTicks() {
+    return 24000;
+}
+
+    public void tryUpgradeCity(Player player, ItemStack plateStack) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can upgrade this city."), true);
+        return;
+    }
+
+    if (!canUpgradeMore()) {
+        player.displayClientMessage(Component.literal("This city has reached the current max level."), true);
+        return;
+    }
+
+    int ironCost = getUpgradeIronCost();
+    int scrapCost = getUpgradeScrapCost();
+    int coalCost = getUpgradeCoalCost();
+    int plateCost = getUpgradePlateCost();
+
+    if (this.iron < ironCost) {
+        player.displayClientMessage(Component.literal("Missing Iron: " + (ironCost - this.iron)), true);
+        return;
+    }
+
+    if (this.scrapMetal < scrapCost) {
+        player.displayClientMessage(Component.literal("Missing Scrap Metal: " + (scrapCost - this.scrapMetal)), true);
+        return;
+    }
+
+    if (this.coal < coalCost) {
+        player.displayClientMessage(Component.literal("Missing Coal: " + (coalCost - this.coal)), true);
+        return;
+    }
+
+    if (plateStack.getCount() < plateCost) {
+        player.displayClientMessage(Component.literal("Missing Crusadium Plate: " + (plateCost - plateStack.getCount())), true);
+        return;
+    }
+
+    this.iron -= ironCost;
+    this.scrapMetal -= scrapCost;
+    this.coal -= coalCost;
+    plateStack.shrink(plateCost);
+
+    this.cityLevel++;
+
+    if (this.level instanceof ServerLevel serverLevel) {
+        buildCityStructure(serverLevel);
+        reorganizeExistingGuardsmen(serverLevel);
+    }
+
+    setChanged();
+
+    if (this.level != null) {
+        this.level.sendBlockUpdated(this.worldPosition, getBlockState(), getBlockState(), 3);
+    }
+
+    player.displayClientMessage(Component.literal("City upgraded to Level " + this.cityLevel + "."), false);
+    player.displayClientMessage(Component.literal("City structure expanded."), false);
+    player.displayClientMessage(Component.literal("Guardsmen reassigned to defensive posts."), false);
+    player.displayClientMessage(Component.literal("New Storage Capacity: " + getStorageCapacity()), false);
+    player.displayClientMessage(Component.literal("New Daily Production: +" + getDailyIronProduction() + " Iron, +" + getDailyScrapProduction() + " Scrap, +" + getDailyCoalProduction() + " Coal"), false);
+    player.displayClientMessage(Component.literal("New Military Capacity: " + getMilitaryCapacity()), false);
+    player.displayClientMessage(Component.literal("New Recruit Rank: " + getStartingGuardsmanRank().getDisplayName()), false);
+}
+
+private void buildCityStructure(ServerLevel serverLevel) {
+    int radius = getCityStructureRadius();
+    int wallHeight = getCityWallHeight();
+
+    buildFoundation(serverLevel, radius);
+    buildOuterWall(serverLevel, radius, wallHeight);
+    buildCornerTowers(serverLevel, radius, wallHeight);
+
+    if (this.cityLevel >= 3) {
+        buildSimpleHouse(serverLevel, this.worldPosition.offset(4, 0, 4), 5, 5, 3);
+        buildSimpleHouse(serverLevel, this.worldPosition.offset(-8, 0, 4), 5, 5, 3);
+    }
+
+    if (this.cityLevel >= 4) {
+        buildSimpleHouse(serverLevel, this.worldPosition.offset(4, 0, -8), 6, 5, 4);
+        buildSimpleHouse(serverLevel, this.worldPosition.offset(-10, 0, -8), 6, 5, 4);
+    }
+
+    if (this.cityLevel >= 5) {
+        buildCentralRoad(serverLevel, radius);
+        buildSimpleHouse(serverLevel, this.worldPosition.offset(10, 0, 10), 7, 6, 4);
+        buildSimpleHouse(serverLevel, this.worldPosition.offset(-16, 0, 10), 7, 6, 4);
+        buildSimpleHouse(serverLevel, this.worldPosition.offset(10, 0, -14), 7, 6, 4);
+        buildSimpleHouse(serverLevel, this.worldPosition.offset(-16, 0, -14), 7, 6, 4);
+    }
+}
+
+private void buildFoundation(ServerLevel serverLevel, int radius) {
+    for (int x = -radius; x <= radius; x++) {
+        for (int z = -radius; z <= radius; z++) {
+            BlockPos pos = this.worldPosition.offset(x, -1, z);
+
+            if (serverLevel.getBlockState(pos).isAir()) {
+                serverLevel.setBlock(pos, Blocks.STONE_BRICKS.defaultBlockState(), 3);
+            }
+        }
+    }
+}
+
+private void buildOuterWall(ServerLevel serverLevel, int radius, int wallHeight) {
+    for (int x = -radius; x <= radius; x++) {
+        for (int z = -radius; z <= radius; z++) {
+            boolean isWall = Math.abs(x) == radius || Math.abs(z) == radius;
+
+            if (!isWall) {
+                continue;
+            }
+
+            boolean isGate = z == radius && x >= -2 && x <= 2;
+
+            if (isGate) {
+                continue;
+            }
+
+            for (int y = 0; y < wallHeight; y++) {
+                BlockPos pos = this.worldPosition.offset(x, y, z);
+                safePlace(serverLevel, pos, Blocks.STONE_BRICKS.defaultBlockState());
+            }
+
+            BlockPos top = this.worldPosition.offset(x, wallHeight, z);
+            safePlace(serverLevel, top, Blocks.STONE_BRICK_WALL.defaultBlockState());
+        }
+    }
+}
+
+private void buildCornerTowers(ServerLevel serverLevel, int radius, int wallHeight) {
+    buildTower(serverLevel, this.worldPosition.offset(radius, 0, radius), wallHeight + 3);
+    buildTower(serverLevel, this.worldPosition.offset(-radius, 0, radius), wallHeight + 3);
+    buildTower(serverLevel, this.worldPosition.offset(radius, 0, -radius), wallHeight + 3);
+    buildTower(serverLevel, this.worldPosition.offset(-radius, 0, -radius), wallHeight + 3);
+}
+
+private void buildTower(ServerLevel serverLevel, BlockPos corner, int height) {
+    for (int y = 0; y < height; y++) {
+        safePlace(serverLevel, corner.offset(0, y, 0), Blocks.STONE_BRICKS.defaultBlockState());
+        safePlace(serverLevel, corner.offset(1, y, 0), Blocks.STONE_BRICKS.defaultBlockState());
+        safePlace(serverLevel, corner.offset(0, y, 1), Blocks.STONE_BRICKS.defaultBlockState());
+        safePlace(serverLevel, corner.offset(1, y, 1), Blocks.STONE_BRICKS.defaultBlockState());
+    }
+
+    int topY = height;
+
+    for (int x = -1; x <= 2; x++) {
+        for (int z = -1; z <= 2; z++) {
+            safePlace(serverLevel, corner.offset(x, topY, z), Blocks.STONE_BRICKS.defaultBlockState());
+        }
+    }
+
+    safePlace(serverLevel, corner.offset(-1, topY + 1, -1), Blocks.STONE_BRICK_WALL.defaultBlockState());
+    safePlace(serverLevel, corner.offset(2, topY + 1, -1), Blocks.STONE_BRICK_WALL.defaultBlockState());
+    safePlace(serverLevel, corner.offset(-1, topY + 1, 2), Blocks.STONE_BRICK_WALL.defaultBlockState());
+    safePlace(serverLevel, corner.offset(2, topY + 1, 2), Blocks.STONE_BRICK_WALL.defaultBlockState());
+}
+
+private void buildSimpleHouse(ServerLevel serverLevel, BlockPos start, int width, int depth, int height) {
+    for (int x = 0; x < width; x++) {
+        for (int z = 0; z < depth; z++) {
+            safePlace(serverLevel, start.offset(x, -1, z), Blocks.OAK_PLANKS.defaultBlockState());
+
+            boolean border = x == 0 || z == 0 || x == width - 1 || z == depth - 1;
+
+            if (border) {
+                for (int y = 0; y < height; y++) {
+                    boolean doorway = z == 0 && x == width / 2 && y <= 1;
+
+                    if (!doorway) {
+                        safePlace(serverLevel, start.offset(x, y, z), Blocks.OAK_PLANKS.defaultBlockState());
+                    }
+                }
+            }
+        }
+    }
+
+    for (int x = -1; x <= width; x++) {
+        for (int z = -1; z <= depth; z++) {
+            safePlace(serverLevel, start.offset(x, height, z), Blocks.STONE_BRICKS.defaultBlockState());
+        }
+    }
+}
+
+private void buildCentralRoad(ServerLevel serverLevel, int radius) {
+    for (int z = -radius + 1; z <= radius - 1; z++) {
+        safePlace(serverLevel, this.worldPosition.offset(0, -1, z), Blocks.POLISHED_ANDESITE.defaultBlockState());
+        safePlace(serverLevel, this.worldPosition.offset(1, -1, z), Blocks.POLISHED_ANDESITE.defaultBlockState());
+        safePlace(serverLevel, this.worldPosition.offset(-1, -1, z), Blocks.POLISHED_ANDESITE.defaultBlockState());
+    }
+
+    for (int x = -radius + 1; x <= radius - 1; x++) {
+        safePlace(serverLevel, this.worldPosition.offset(x, -1, 0), Blocks.POLISHED_ANDESITE.defaultBlockState());
+        safePlace(serverLevel, this.worldPosition.offset(x, -1, 1), Blocks.POLISHED_ANDESITE.defaultBlockState());
+        safePlace(serverLevel, this.worldPosition.offset(x, -1, -1), Blocks.POLISHED_ANDESITE.defaultBlockState());
+    }
+}
+
+private void safePlace(ServerLevel serverLevel, BlockPos pos, BlockState state) {
+    if (pos.equals(this.worldPosition)) {
+        return;
+    }
+
+    if (serverLevel.getBlockState(pos).isAir()) {
+        serverLevel.setBlock(pos, state, 3);
+    }
+}
+
+private void trySpawnOrkRaid(ServerLevel serverLevel) {
+    long currentDay = serverLevel.getDayTime() / 24000L;
+
+    if (currentDay < 1) {
+        return;
+    }
+
+    if (this.recruitedGuardsmen <= 0 && this.cityLevel <= 1) {
+        return;
+    }
+
+    if (this.lastOrkRaidDay < 0) {
+        this.lastOrkRaidDay = currentDay;
+        setChanged();
+        return;
+    }
+
+    long daysSinceLastRaid = currentDay - this.lastOrkRaidDay;
+
+    if (daysSinceLastRaid < getRaidCooldownDays()) {
+        return;
+    }
+
+    if (serverLevel.random.nextFloat() > getRaidChance()) {
+        return;
+    }
+
+    spawnOrkRaid(serverLevel, currentDay, false);
+}
+
+public void forceOrkRaid(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can force an Ork raid test."), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    long currentDay = serverLevel.getDayTime() / 24000L;
+    spawnOrkRaid(serverLevel, currentDay, true);
+}
+private void checkActiveOrkRaid(ServerLevel serverLevel) {
+    if (!this.activeOrkRaid) {
+        return;
+    }
+
+    this.activeOrkRaidTicks += 200;
+
+    OrkRaidManager.updateRaiders(serverLevel, this);
+
+    int remainingRaiders = OrkRaidManager.countRaidersInsideRadius(serverLevel, this, 160);
+
+    if (remainingRaiders <= 0 && this.activeOrkRaidTicks >= 400) {
+        finishOrkRaidVictory(serverLevel);
+        return;
+    }
+
+    int closeRaiders = OrkRaidManager.countRaidersInsideRadius(serverLevel, this, 12);
+
+    if (closeRaiders > 0) {
+        this.raidPressureTicks += 200;
+
+        if (this.raidPressureTicks >= 600) {
+            int damage = closeRaiders * getRaidCoreDamagePerWave();
+
+            this.cityIntegrity = Math.max(0, this.cityIntegrity - damage);
+            this.raidPressureTicks = 0;
+
+            setChanged();
+
+            OrkRaidManager.notifyNearbyPlayers(
+                    serverLevel,
+                    this.worldPosition,
+                    "Orks are damaging the Imperial Command Core! Integrity: " + this.cityIntegrity + "/100"
+            );
+
+            if (this.cityIntegrity <= 0) {
+                finishOrkRaidDefeat(serverLevel);
+                return;
+            }
+        }
+    } else {
+        this.raidPressureTicks = 0;
+    }
+
+    if (this.activeOrkRaidTicks % 1200 == 0) {
+        OrkRaidManager.notifyNearbyPlayers(
+                serverLevel,
+                this.worldPosition,
+                "Ork raid still active. Remaining enemies: " + remainingRaiders + ". Core Integrity: " + this.cityIntegrity + "/100"
+        );
+    }
+
+    if (this.activeOrkRaidTicks >= 12000) {
+        this.activeOrkRaid = false;
+        this.activeOrkRaidTicks = 0;
+        this.raidPressureTicks = 0;
+
+        setChanged();
+
+        OrkRaidManager.notifyNearbyPlayers(
+                serverLevel,
+                this.worldPosition,
+                "The Ork raid has scattered. Some enemies may still be nearby."
+        );
+    }
+}
+
+private void finishOrkRaidVictory(ServerLevel serverLevel) {
+    this.activeOrkRaid = false;
+    this.activeOrkRaidTicks = 0;
+    this.raidPressureTicks = 0;
+
+    this.orkRaidVictories++;
+
+    int ironReward = getRaidVictoryIronReward();
+    int scrapReward = getRaidVictoryScrapReward();
+    int coalReward = getRaidVictoryCoalReward();
+    int warSupportReward = getRaidVictoryWarSupportReward();
+    int integrityRepairReward = getRaidVictoryIntegrityRepairReward();
+
+    addIron(ironReward);
+    addScrapMetal(scrapReward);
+    addCoal(coalReward);
+
+    this.imperialWarSupport = Math.min(999999, this.imperialWarSupport + warSupportReward);
+    this.cityIntegrity = Math.min(100, this.cityIntegrity + integrityRepairReward);
+
+    setChanged();
+
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "Ork raid defeated! The Imperial settlement stands victorious."
+    );
+
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "Victory reward: +" + ironReward + " Iron, +" + scrapReward + " Scrap, +" + coalReward + " Coal, +" + warSupportReward + " War Support."
+    );
+
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "Core repaired by victory momentum: +" + integrityRepairReward + " Integrity."
+    );
+
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "Total Ork Raid Victories: " + this.orkRaidVictories
+    );
+}
+
+private int getRaidVictoryIronReward() {
+    return switch (this.cityLevel) {
+        case 1 -> 40;
+        case 2 -> 100;
+        case 3 -> 250;
+        case 4 -> 600;
+        case 5 -> 1500;
+        default -> 40;
+    };
+}
+
+private void finishOrkRaidDefeat(ServerLevel serverLevel) {
+    this.activeOrkRaid = false;
+    this.activeOrkRaidTicks = 0;
+    this.raidPressureTicks = 0;
+
+    int lostIron = this.iron / 2;
+    int lostScrap = this.scrapMetal / 2;
+    int lostCoal = this.coal / 2;
+
+    this.iron -= lostIron;
+    this.scrapMetal -= lostScrap;
+    this.coal -= lostCoal;
+
+    this.imperialWarSupport = Math.max(0, this.imperialWarSupport - getRaidDefeatWarSupportPenalty());
+    this.cityIntegrity = 25;
+
+    setChanged();
+
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "The Imperial Command Core was overrun! The settlement has suffered heavy damage."
+    );
+
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "Lost resources: -" + lostIron + " Iron, -" + lostScrap + " Scrap, -" + lostCoal + " Coal."
+    );
+
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "Core Integrity restored to emergency level: 25/100."
+    );
+}
+
+public void repairCity(Player player, ItemStack plateStack) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can repair this city."), true);
+        return;
+    }
+
+    if (this.cityIntegrity >= 100) {
+        player.displayClientMessage(Component.literal("The Imperial Command Core is already fully repaired."), true);
+        return;
+    }
+
+    if (plateStack.isEmpty()) {
+        return;
+    }
+
+    int repairAmount = getManualRepairAmount();
+
+    plateStack.shrink(1);
+    this.cityIntegrity = Math.min(100, this.cityIntegrity + repairAmount);
+
+    setChanged();
+
+    player.displayClientMessage(Component.literal("Used 1 Crusadium Plate to repair the Core."), false);
+    player.displayClientMessage(Component.literal("Core Integrity: " + this.cityIntegrity + "/100"), false);
+}
+
+private int getManualRepairAmount() {
+    return switch (this.cityLevel) {
+        case 1 -> 20;
+        case 2 -> 18;
+        case 3 -> 15;
+        case 4 -> 12;
+        case 5 -> 10;
+        default -> 15;
+    };
+}
+
+private int getRaidCoreDamagePerWave() {
+    return switch (this.cityLevel) {
+        case 1 -> 4;
+        case 2 -> 5;
+        case 3 -> 6;
+        case 4 -> 7;
+        case 5 -> 8;
+        default -> 4;
+    };
+}
+
+private int getRaidVictoryIntegrityRepairReward() {
+    return switch (this.cityLevel) {
+        case 1 -> 10;
+        case 2 -> 12;
+        case 3 -> 15;
+        case 4 -> 18;
+        case 5 -> 25;
+        default -> 10;
+    };
+}
+
+private int getRaidDefeatWarSupportPenalty() {
+    return switch (this.cityLevel) {
+        case 1 -> 5;
+        case 2 -> 10;
+        case 3 -> 20;
+        case 4 -> 40;
+        case 5 -> 80;
+        default -> 5;
+    };
+}
+
+private int getRaidVictoryWarSupportReward() {
+    return switch (this.cityLevel) {
+        case 1 -> 5;
+        case 2 -> 12;
+        case 3 -> 25;
+        case 4 -> 55;
+        case 5 -> 120;
+        default -> 5;
+    };
+}
+
+private String getThreatLevelName() {
+    int threatScore = getThreatScore();
+
+    if (threatScore <= 3) {
+        return "Low";
+    }
+
+    if (threatScore <= 7) {
+        return "Rising";
+    }
+
+    if (threatScore <= 12) {
+        return "Dangerous";
+    }
+
+    if (threatScore <= 18) {
+        return "Critical";
+    }
+
+    return "WAAAGH!";
+}
+
+private String getThreatLevelDescription() {
+    String threatName = getThreatLevelName();
+
+    return switch (threatName) {
+        case "Low" -> "Minor Ork activity detected.";
+        case "Rising" -> "Ork scouts are watching this settlement.";
+        case "Dangerous" -> "Ork warbands are gathering nearby.";
+        case "Critical" -> "Major Ork assault risk is high.";
+        case "WAAAGH!" -> "The settlement has become a major Ork target.";
+        default -> "Unknown threat level.";
+    };
+}
+
+private int getThreatScore() {
+    int score = 0;
+
+    score += this.cityLevel * 2;
+    score += Math.min(this.orkRaidCount, 10);
+
+    if (this.activeOrkRaid) {
+        score += 5;
+    }
+
+    score -= Math.min(this.orkRaidVictories, 8);
+
+    if (score < 0) {
+        score = 0;
+    }
+
+    return score;
+}
+
+private int getRaidVictoryScrapReward() {
+    return switch (this.cityLevel) {
+        case 1 -> 25;
+        case 2 -> 70;
+        case 3 -> 180;
+        case 4 -> 420;
+        case 5 -> 1000;
+        default -> 25;
+    };
+}
+
+private int getRaidVictoryCoalReward() {
+    return switch (this.cityLevel) {
+        case 1 -> 15;
+        case 2 -> 40;
+        case 3 -> 100;
+        case 4 -> 240;
+        case 5 -> 600;
+        default -> 15;
+    };
+}
+
+private void spawnOrkRaid(ServerLevel serverLevel, long currentDay, boolean forced) {
+    if (this.activeOrkRaid) {
+        if (forced) {
+            OrkRaidManager.notifyNearbyPlayers(
+                    serverLevel,
+                    this.worldPosition,
+                    "There is already an active Ork raid. Defeat the current enemies first."
+            );
+        }
+
+        return;
+    }
+
+    OrkRaidManager.spawnRaid(serverLevel, this, forced, this.orkRaidCount);
+
+    this.lastOrkRaidDay = currentDay;
+    this.orkRaidCount++;
+
+    this.activeOrkRaid = true;
+    this.activeOrkRaidTicks = 0;
+
+    setChanged();
+}
+
+private void spawnRaidMob(ServerLevel serverLevel, Mob mob, int index) {
+    BlockPos spawnPos = findRaidSpawnPosition(serverLevel, index);
+
+    mob.moveTo(
+            spawnPos.getX() + 0.5D,
+            spawnPos.getY(),
+            spawnPos.getZ() + 0.5D,
+            serverLevel.random.nextFloat() * 360.0F,
+            0.0F
+    );
+
+    mob.setPersistenceRequired();
+    serverLevel.addFreshEntity(mob);
+}
+
+private BlockPos findRaidSpawnPosition(ServerLevel serverLevel, int index) {
+    int radius = getRaidSpawnRadius();
+
+    double angle = serverLevel.random.nextDouble() * Math.PI * 2.0D;
+    angle += index * 0.65D;
+
+    int x = this.worldPosition.getX() + (int) Math.round(Math.cos(angle) * radius);
+    int z = this.worldPosition.getZ() + (int) Math.round(Math.sin(angle) * radius);
+
+    BlockPos basePos = new BlockPos(x, this.worldPosition.getY(), z);
+
+    return serverLevel.getHeightmapPos(
+            Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+            basePos
+    );
+}
+
+private void notifyNearbyPlayers(ServerLevel serverLevel, String message) {
+    double range = 128.0D;
+    double rangeSquared = range * range;
+
+    for (ServerPlayer serverPlayer : serverLevel.players()) {
+        if (serverPlayer.distanceToSqr(
+                this.worldPosition.getX() + 0.5D,
+                this.worldPosition.getY() + 0.5D,
+                this.worldPosition.getZ() + 0.5D
+        ) <= rangeSquared) {
+            serverPlayer.displayClientMessage(Component.literal(message), false);
+        }
+    }
+}
+
+private int getRaidCooldownDays() {
+    return switch (this.cityLevel) {
+        case 1 -> 4;
+        case 2 -> 3;
+        case 3 -> 3;
+        case 4 -> 2;
+        case 5 -> 2;
+        default -> 4;
+    };
+}
+
+private float getRaidChance() {
+    return switch (this.cityLevel) {
+        case 1 -> 0.20F;
+        case 2 -> 0.28F;
+        case 3 -> 0.36F;
+        case 4 -> 0.45F;
+        case 5 -> 0.55F;
+        default -> 0.20F;
+    };
+}
+
+private int getRaidBoyCount() {
+    int baseAmount = switch (this.cityLevel) {
+        case 1 -> 3;
+        case 2 -> 5;
+        case 3 -> 8;
+        case 4 -> 12;
+        case 5 -> 18;
+        default -> 3;
+    };
+
+    return baseAmount + Math.min(this.orkRaidCount, 10);
+}
+
+private int getRaidNobCount() {
+    int baseAmount = switch (this.cityLevel) {
+        case 1 -> 0;
+        case 2 -> 1;
+        case 3 -> 1;
+        case 4 -> 2;
+        case 5 -> 3;
+        default -> 0;
+    };
+
+    return baseAmount + Math.min(this.orkRaidCount / 3, 3);
+}
+
+private int getRaidSpawnRadius() {
+    return switch (this.cityLevel) {
+        case 1 -> 28;
+        case 2 -> 36;
+        case 3 -> 48;
+        case 4 -> 64;
+        case 5 -> 80;
+        default -> 28;
+    };
+}
+
+private int getCityStructureRadius() {
+    return switch (this.cityLevel) {
+        case 1 -> 4;
+        case 2 -> 8;
+        case 3 -> 12;
+        case 4 -> 18;
+        case 5 -> 26;
+        default -> 4;
+    };
+}
+
+private int getCityWallHeight() {
+    return switch (this.cityLevel) {
+        case 1 -> 1;
+        case 2 -> 3;
+        case 3 -> 5;
+        case 4 -> 7;
+        case 5 -> 9;
+        default -> 1;
+    };
+}
+
+public GuardsmanRank getStartingGuardsmanRank() {
+    return switch (this.cityLevel) {
+        case 1 -> GuardsmanRank.RECRUIT;
+        case 2 -> GuardsmanRank.GUARDSMAN;
+        case 3 -> GuardsmanRank.VETERAN;
+        case 4 -> GuardsmanRank.SERGEANT;
+        case 5 -> GuardsmanRank.LIEUTENANT;
+        default -> GuardsmanRank.RECRUIT;
+    };
+}
+
+public void setOwner(Player player) {
+    this.ownerUUID = player.getUUID();
+    this.ownerName = player.getName().getString();
+    setChanged();
+}
+
+public boolean hasOwner() {
+    return this.ownerUUID != null;
+}
+
+public boolean isOwner(Player player) {
+    return this.ownerUUID != null && this.ownerUUID.equals(player.getUUID());
+}
+
+public boolean canUpgradeMore() {
+    return this.cityLevel < MAX_CITY_LEVEL;
+}
+
+public void showSettlementStatus(Player player) {
+    ImperialMilitaryReportManager.showReport(player, this);
+}
+
+public void openCommandInterface(Player player) {
+    if (!(player instanceof ServerPlayer serverPlayer)) {
+        return;
+    }
+
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can access the Imperial Command Core interface."), true);
+        return;
+    }
+
+    NetworkHooks.openScreen(
+            serverPlayer,
+            new MenuProvider() {
+                @Override
+                public Component getDisplayName() {
+                    return Component.literal("Imperial Command Core");
+                }
+
+                @Override
+                public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
+                    return new ImperialCommandCoreMenu(containerId, playerInventory, ImperialCommandCoreBlockEntity.this);
+                }
+            },
+            this.worldPosition
+    );
+}
+
+public String getBaseName() {
+    return this.baseName;
+}
+
+public String getOwnerName() {
+    return this.ownerName;
+}
+
+public int getCityLevel() {
+    return this.cityLevel;
+}
+
+public int getIron() {
+    return this.iron;
+}
+
+public int getCoal() {
+    return this.coal;
+}
+
+public int getScrapMetal() {
+    return this.scrapMetal;
+}
+
+public int getCityIntegrityValue() {
+    return this.cityIntegrity;
+}
+
+public int getImperialWarSupportValue() {
+    return this.imperialWarSupport;
+}
+
+public boolean hasActiveOrkRaid() {
+    return this.activeOrkRaid;
+}
+
+public int getActiveOrkRaidSeconds() {
+    return this.activeOrkRaidTicks / 20;
+}
+
+public int getOrkRaidCountValue() {
+    return this.orkRaidCount;
+}
+
+public int getOrkRaidVictoriesValue() {
+    return this.orkRaidVictories;
+}
+
+public int getReinforcementCooldownSeconds() {
+    return this.reinforcementCooldownTicks / 20;
+}
+
+public int getSpaceMarinePromotionCooldownSeconds() {
+    return this.spaceMarinePromotionCooldownTicks / 20;
+}
+
+public boolean hasPendingSpaceMarineCandidate() {
+    return this.pendingSpaceMarineCandidateUUID != null;
+}
+
+public String getThreatLevelNameForReport() {
+    return getThreatLevelName();
+}
+
+public String getThreatLevelDescriptionForReport() {
+    return getThreatLevelDescription();
+}
+
+public int getRecruitedGuardsmen() {
+    return this.recruitedGuardsmen;
+}
+
+public int getStorageCapacity() {
+    return switch (this.cityLevel) {
+        case 1 -> 500;
+        case 2 -> 1500;
+        case 3 -> 5000;
+        case 4 -> 15000;
+        case 5 -> 50000;
+        default -> 500;
+    };
+}
+
+public int getMilitaryCapacity() {
+    return switch (this.cityLevel) {
+        case 1 -> 5;
+        case 2 -> 12;
+        case 3 -> 25;
+        case 4 -> 50;
+        case 5 -> 100;
+        default -> 5;
+    };
+}
+
+public int getDailyIronProduction() {
+    return switch (this.cityLevel) {
+        case 1 -> 5;
+        case 2 -> 25;
+        case 3 -> 100;
+        case 4 -> 400;
+        case 5 -> 1500;
+        default -> 5;
+    };
+}
+
+public int getDailyScrapProduction() {
+    return switch (this.cityLevel) {
+        case 1 -> 3;
+        case 2 -> 15;
+        case 3 -> 60;
+        case 4 -> 240;
+        case 5 -> 900;
+        default -> 3;
+    };
+}
+
+public int getDailyCoalProduction() {
+    return switch (this.cityLevel) {
+        case 1 -> 2;
+        case 2 -> 10;
+        case 3 -> 40;
+        case 4 -> 160;
+        case 5 -> 600;
+        default -> 2;
+    };
+}
+
+public int getGuardsmanRecruitIronCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 12;
+        case 2 -> 25;
+        case 3 -> 60;
+        case 4 -> 120;
+        case 5 -> 250;
+        default -> 12;
+    };
+}
+
+public int getGuardsmanRecruitScrapCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 8;
+        case 2 -> 16;
+        case 3 -> 40;
+        case 4 -> 80;
+        case 5 -> 160;
+        default -> 8;
+    };
+}
+
+public int getGuardsmanRecruitCoalCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 4;
+        case 2 -> 8;
+        case 3 -> 20;
+        case 4 -> 40;
+        case 5 -> 80;
+        default -> 4;
+    };
+}
+
+public int getUpgradeIronCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 100;
+        case 2 -> 500;
+        case 3 -> 2500;
+        case 4 -> 12000;
+        default -> 0;
+    };
+}
+
+public int getUpgradeScrapCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 60;
+        case 2 -> 300;
+        case 3 -> 1500;
+        case 4 -> 7200;
+        default -> 0;
+    };
+}
+
+public int getUpgradeCoalCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 30;
+        case 2 -> 150;
+        case 3 -> 750;
+        case 4 -> 3600;
+        default -> 0;
+    };
+}
+
+public int getUpgradePlateCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 2;
+        case 2 -> 6;
+        case 3 -> 18;
+        case 4 -> 54;
+        default -> 0;
+    };
+}
+
+@Override
+protected void saveAdditional(CompoundTag tag) {
+    super.saveAdditional(tag);
+
+    tag.putString("BaseName", this.baseName);
+    tag.putString("OwnerName", this.ownerName);
+
+    if (this.ownerUUID != null) {
+        tag.putUUID("OwnerUUID", this.ownerUUID);
+    }
+
+    tag.putInt("CityLevel", this.cityLevel);
+
+    tag.putInt("Iron", this.iron);
+    tag.putInt("Coal", this.coal);
+    tag.putInt("ScrapMetal", this.scrapMetal);
+
+    tag.putInt("RecruitedGuardsmen", this.recruitedGuardsmen);
+
+    tag.putLong("LastProductionDay", this.lastProductionDay);
+
+    tag.putLong("LastOrkRaidDay", this.lastOrkRaidDay);
+    tag.putInt("OrkRaidCount", this.orkRaidCount);
+
+tag.putBoolean("ActiveOrkRaid", this.activeOrkRaid);
+tag.putInt("ActiveOrkRaidTicks", this.activeOrkRaidTicks);
+
+tag.putInt("OrkRaidVictories", this.orkRaidVictories);
+tag.putInt("ImperialWarSupport", this.imperialWarSupport);
+
+tag.putInt("CityIntegrity", this.cityIntegrity);
+tag.putInt("RaidPressureTicks", this.raidPressureTicks);
+
+tag.putInt("ReinforcementCooldownTicks", this.reinforcementCooldownTicks);
+tag.putInt("EmperorGeneSeed", this.emperorGeneSeed);
+tag.putInt("SpaceMarinePromotionCooldownTicks", this.spaceMarinePromotionCooldownTicks);
+
+if (this.pendingSpaceMarineCandidateUUID != null) {
+    tag.putUUID("PendingSpaceMarineCandidateUUID", this.pendingSpaceMarineCandidateUUID);
+}
+}
+
+@Override
+public void load(CompoundTag tag) {
+    super.load(tag);
+
+    this.baseName = tag.getString("BaseName");
+    this.ownerName = tag.getString("OwnerName");
+
+    if (this.baseName == null || this.baseName.isEmpty()) {
+        this.baseName = "Imperial Outpost";
+    }
+
+    if (this.ownerName == null || this.ownerName.isEmpty()) {
+        this.ownerName = "Unclaimed";
+    }
+
+    if (tag.hasUUID("OwnerUUID")) {
+        this.ownerUUID = tag.getUUID("OwnerUUID");
+    }
+
+    this.cityLevel = tag.getInt("CityLevel");
+
+    if (this.cityLevel <= 0) {
+        this.cityLevel = 1;
+    }
+
+    if (this.cityLevel > MAX_CITY_LEVEL) {
+        this.cityLevel = MAX_CITY_LEVEL;
+    }
+
+    this.iron = Math.min(tag.getInt("Iron"), getStorageCapacity());
+    this.coal = Math.min(tag.getInt("Coal"), getStorageCapacity());
+    this.scrapMetal = Math.min(tag.getInt("ScrapMetal"), getStorageCapacity());
+
+    this.recruitedGuardsmen = tag.getInt("RecruitedGuardsmen");
+
+    if (this.recruitedGuardsmen < 0) {
+        this.recruitedGuardsmen = 0;
+    }
+
+    this.lastProductionDay = tag.getLong("LastProductionDay");
+
+    this.lastOrkRaidDay = tag.getLong("LastOrkRaidDay");
+    this.orkRaidCount = tag.getInt("OrkRaidCount");
+
+    this.activeOrkRaid = tag.getBoolean("ActiveOrkRaid");
+this.activeOrkRaidTicks = tag.getInt("ActiveOrkRaidTicks");
+
+this.orkRaidVictories = tag.getInt("OrkRaidVictories");
+this.imperialWarSupport = tag.getInt("ImperialWarSupport");
+
+if (this.orkRaidVictories < 0) {
+    this.orkRaidVictories = 0;
+}
+
+if (this.imperialWarSupport < 0) {
+    this.imperialWarSupport = 0;
+}
+this.cityIntegrity = tag.getInt("CityIntegrity");
+
+if (this.cityIntegrity <= 0) {
+    this.cityIntegrity = 100;
+}
+
+if (this.cityIntegrity > 100) {
+    this.cityIntegrity = 100;
+}
+
+this.raidPressureTicks = tag.getInt("RaidPressureTicks");
+
+if (this.raidPressureTicks < 0) {
+    this.raidPressureTicks = 0;
+}
+
+this.reinforcementCooldownTicks = tag.getInt("ReinforcementCooldownTicks");
+this.emperorGeneSeed = tag.getInt("EmperorGeneSeed");
+
+if (this.emperorGeneSeed < 0) {
+    this.emperorGeneSeed = 0;
+}
+
+if (this.emperorGeneSeed > getEmperorGeneSeedCapacity()) {
+    this.emperorGeneSeed = getEmperorGeneSeedCapacity();
+}
+this.spaceMarinePromotionCooldownTicks = tag.getInt("SpaceMarinePromotionCooldownTicks");
+
+if (this.spaceMarinePromotionCooldownTicks < 0) {
+    this.spaceMarinePromotionCooldownTicks = 0;
+}
+
+if (tag.hasUUID("PendingSpaceMarineCandidateUUID")) {
+    this.pendingSpaceMarineCandidateUUID = tag.getUUID("PendingSpaceMarineCandidateUUID");
+} else {
+    this.pendingSpaceMarineCandidateUUID = null;
+}
+
+if (this.reinforcementCooldownTicks < 0) {
+    this.reinforcementCooldownTicks = 0;
+}
+
+}
+}

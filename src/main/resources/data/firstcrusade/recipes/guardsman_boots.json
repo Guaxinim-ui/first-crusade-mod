@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "P P",
+    "P P"
+  ],
+  "key": {
+    "P": {
+      "item": "firstcrusade:crusadium_plate"
+    }
+  },
+  "result": {
+    "item": "firstcrusade:guardsman_boots",
+    "count": 1
+  }
+}

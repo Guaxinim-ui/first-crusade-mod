@@ -1,0 +1,426 @@
+package com.example.examplemod;
+
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraftforge.common.extensions.IForgeMenuType;
+import com.mojang.logging.LogUtils;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.common.ForgeSpawnEggItem;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+import org.slf4j.Logger;
+
+@Mod(ExampleMod.MODID)
+public class ExampleMod {
+    public static final String MODID = "firstcrusade";
+
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    private static final String NETWORK_PROTOCOL_VERSION = "1";
+
+public static final SimpleChannel NETWORK_CHANNEL = NetworkRegistry.newSimpleChannel(
+        new ResourceLocation(MODID, "main"),
+        () -> NETWORK_PROTOCOL_VERSION,
+        NETWORK_PROTOCOL_VERSION::equals,
+        NETWORK_PROTOCOL_VERSION::equals
+);
+
+private static int networkPacketId = 0;
+
+    public static final DeferredRegister<Block> BLOCKS =
+            DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
+
+    public static final DeferredRegister<Item> ITEMS =
+            DeferredRegister.create(ForgeRegistries.ITEMS, MODID);
+
+    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
+            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
+
+    public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
+            DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MODID);
+
+    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES =
+            DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MODID);
+            public static final DeferredRegister<MenuType<?>> MENU_TYPES =
+        DeferredRegister.create(ForgeRegistries.MENU_TYPES, MODID);
+
+    // =========================
+    // BLOCKS
+    // =========================
+
+    public static final RegistryObject<Block> IMPERIAL_COMMAND_CORE = BLOCKS.register("imperial_command_core",
+            () -> new ImperialCommandCoreBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .strength(5.0F, 10.0F)));
+
+                    public static final RegistryObject<Block> IMPERIAL_MINE =
+        BLOCKS.register("imperial_mine",
+                () -> new ImperialMineBlock(BlockBehaviour.Properties.of()
+                        .strength(3.5F)
+                        .requiresCorrectToolForDrops()
+                        .sound(SoundType.STONE)));
+
+public static final RegistryObject<Item> IMPERIAL_MINE_ITEM =
+        ITEMS.register("imperial_mine",
+                () -> new BlockItem(IMPERIAL_MINE.get(), new Item.Properties()));
+
+    public static final RegistryObject<Item> IMPERIAL_COMMAND_CORE_ITEM = ITEMS.register("imperial_command_core",
+            () -> new BlockItem(IMPERIAL_COMMAND_CORE.get(), new Item.Properties()));
+
+    public static final RegistryObject<BlockEntityType<ImperialCommandCoreBlockEntity>> IMPERIAL_COMMAND_CORE_BLOCK_ENTITY =
+            BLOCK_ENTITY_TYPES.register("imperial_command_core",
+                    () -> BlockEntityType.Builder.of(ImperialCommandCoreBlockEntity::new, IMPERIAL_COMMAND_CORE.get()).build(null));
+                    public static final RegistryObject<MenuType<ImperialCommandCoreMenu>> IMPERIAL_COMMAND_CORE_MENU =
+        MENU_TYPES.register("imperial_command_core_menu",
+                () -> IForgeMenuType.create((windowId, inventory, data) -> new ImperialCommandCoreMenu(windowId, inventory, data)));
+
+                public static final RegistryObject<BlockEntityType<ImperialMineBlockEntity>> IMPERIAL_MINE_BLOCK_ENTITY =
+        BLOCK_ENTITY_TYPES.register("imperial_mine",
+                () -> BlockEntityType.Builder.of(ImperialMineBlockEntity::new, IMPERIAL_MINE.get()).build(null));
+
+    // =========================
+    // MATERIALS
+    // =========================
+
+    public static final RegistryObject<Item> CRUSADIUM_INGOT = ITEMS.register("crusadium_ingot",
+            () -> new Item(new Item.Properties()));
+
+    public static final RegistryObject<Item> CRUSADIUM_PLATE = ITEMS.register("crusadium_plate",
+            () -> new Item(new Item.Properties()));
+
+    public static final RegistryObject<Item> ORK_TEETH = ITEMS.register("ork_teeth",
+            () -> new Item(new Item.Properties()));
+
+    public static final RegistryObject<Item> SCRAP_METAL = ITEMS.register("scrap_metal",
+            () -> new Item(new Item.Properties()));
+
+    // =========================
+    // GUARDSMEN WEAPONS
+    // =========================
+
+    public static final RegistryObject<Item> LASGUN_POWER_CELL = ITEMS.register("lasgun_power_cell",
+            () -> new Item(new Item.Properties().stacksTo(1).durability(30)));
+
+    public static final RegistryObject<Item> LASGUN = ITEMS.register("lasgun",
+            () -> new LasgunItem(new Item.Properties().stacksTo(1).durability(500)));
+
+    public static final Tier GUARDSMAN_MELEE_TIER = new Tier() {
+        @Override
+        public int getUses() {
+            return 250;
+        }
+
+        @Override
+        public float getSpeed() {
+            return 6.0F;
+        }
+
+        @Override
+        public float getAttackDamageBonus() {
+            return 2.0F;
+        }
+
+        @Override
+        public int getLevel() {
+            return 2;
+        }
+
+        @Override
+        public int getEnchantmentValue() {
+            return 10;
+        }
+
+        @Override
+        public Ingredient getRepairIngredient() {
+            return Ingredient.of(CRUSADIUM_PLATE.get());
+        }
+    };
+
+    public static final RegistryObject<Item> GUARDSMAN_COMBAT_KNIFE = ITEMS.register("guardsman_combat_knife",
+            () -> new SwordItem(GUARDSMAN_MELEE_TIER, 2, -1.8F, new Item.Properties()));
+
+    // =========================
+    // GUARDSMEN SUPPORT ITEMS
+    // =========================
+
+    public static final RegistryObject<Item> GUARDSMAN_MED_KIT = ITEMS.register("guardsman_med_kit",
+            () -> new MedKitItem(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> GUARDSMAN_COMMAND_BATON = ITEMS.register("guardsman_command_baton",
+            () -> new Item(new Item.Properties().stacksTo(1)));
+
+    // =========================
+    // PROJECTILES
+    // =========================
+
+    public static final RegistryObject<EntityType<LasgunShotEntity>> LASGUN_SHOT =
+            ENTITY_TYPES.register("lasgun_shot",
+                    () -> EntityType.Builder.<LasgunShotEntity>of(LasgunShotEntity::new, MobCategory.MISC)
+                            .sized(0.25F, 0.25F)
+                            .clientTrackingRange(64)
+                            .updateInterval(1)
+                            .build(MODID + ":lasgun_shot"));
+
+    // =========================
+    // GUARDSMEN ENTITIES
+    // =========================
+
+    public static final RegistryObject<EntityType<GuardsmanEntity>> GUARDSMAN =
+            ENTITY_TYPES.register("guardsman",
+                    () -> EntityType.Builder.of(GuardsmanEntity::new, MobCategory.CREATURE)
+                            .sized(0.6F, 1.95F)
+                            .clientTrackingRange(8)
+                            .build(MODID + ":guardsman"));
+
+                            public static final RegistryObject<EntityType<ImperialCitizenEntity>> IMPERIAL_CITIZEN =
+        ENTITY_TYPES.register("imperial_citizen",
+                () -> EntityType.Builder.of(ImperialCitizenEntity::new, MobCategory.CREATURE)
+                        .sized(0.6F, 1.95F)
+                        .build("imperial_citizen"));
+
+    public static final RegistryObject<Item> GUARDSMAN_SPAWN_EGG = ITEMS.register("guardsman_spawn_egg",
+            () -> new ForgeSpawnEggItem(GUARDSMAN, 0x3A3A3A, 0xB0A060, new Item.Properties()));
+            public static final RegistryObject<EntityType<SpaceMarineEntity>> SPACE_MARINE =
+        ENTITY_TYPES.register("space_marine",
+                () -> EntityType.Builder.of(SpaceMarineEntity::new, MobCategory.CREATURE)
+                        .sized(0.85F, 2.35F)
+                        .clientTrackingRange(10)
+                        .build(MODID + ":space_marine"));
+
+
+                        public static final RegistryObject<Item> IMPERIAL_CITIZEN_SPAWN_EGG =
+        ITEMS.register("imperial_citizen_spawn_egg",
+                () -> new ForgeSpawnEggItem(IMPERIAL_CITIZEN, 0x7A6A4A, 0xD6B85A, new Item.Properties()));
+
+public static final RegistryObject<Item> SPACE_MARINE_SPAWN_EGG = ITEMS.register("space_marine_spawn_egg",
+        () -> new ForgeSpawnEggItem(SPACE_MARINE, 0x1C3F8F, 0xD8C06A, new Item.Properties()));
+
+    // =========================
+    // ORK ENTITIES
+    // =========================
+
+    public static final RegistryObject<EntityType<OrkBoyEntity>> ORK_BOY =
+            ENTITY_TYPES.register("ork_boy",
+                    () -> EntityType.Builder.of(OrkBoyEntity::new, MobCategory.MONSTER)
+                            .sized(0.7F, 2.05F)
+                            .clientTrackingRange(8)
+                            .build(MODID + ":ork_boy"));
+
+    public static final RegistryObject<Item> ORK_BOY_SPAWN_EGG = ITEMS.register("ork_boy_spawn_egg",
+            () -> new ForgeSpawnEggItem(ORK_BOY, 0x2B5E2B, 0x7A5A22, new Item.Properties()));
+
+    public static final RegistryObject<EntityType<OrkNobEntity>> ORK_NOB =
+            ENTITY_TYPES.register("ork_nob",
+                    () -> EntityType.Builder.of(OrkNobEntity::new, MobCategory.MONSTER)
+                            .sized(0.85F, 2.25F)
+                            .clientTrackingRange(8)
+                            .build(MODID + ":ork_nob"));
+
+    public static final RegistryObject<Item> ORK_NOB_SPAWN_EGG = ITEMS.register("ork_nob_spawn_egg",
+            () -> new ForgeSpawnEggItem(ORK_NOB, 0x1F4D1F, 0x8A6A24, new Item.Properties()));
+
+    // =========================
+    // ARMOR MATERIALS
+    // =========================
+
+    public static final ArmorMaterial GUARDSMAN_ARMOR_MATERIAL = new ArmorMaterial() {
+        @Override
+        public int getDurabilityForType(ArmorItem.Type type) {
+            return switch (type) {
+                case HELMET -> 165;
+                case CHESTPLATE -> 240;
+                case LEGGINGS -> 225;
+                case BOOTS -> 195;
+            };
+        }
+
+        @Override
+        public int getDefenseForType(ArmorItem.Type type) {
+            return switch (type) {
+                case HELMET -> 2;
+                case CHESTPLATE -> 6;
+                case LEGGINGS -> 5;
+                case BOOTS -> 2;
+            };
+        }
+
+        @Override
+        public int getEnchantmentValue() {
+            return 10;
+        }
+
+        @Override
+        public SoundEvent getEquipSound() {
+            return SoundEvents.ARMOR_EQUIP_IRON;
+        }
+
+        @Override
+        public Ingredient getRepairIngredient() {
+            return Ingredient.of(CRUSADIUM_PLATE.get());
+        }
+
+        @Override
+        public String getName() {
+            return MODID + ":guardsman";
+        }
+
+        @Override
+        public float getToughness() {
+            return 1.0F;
+        }
+
+        @Override
+        public float getKnockbackResistance() {
+            return 0.0F;
+        }
+    };
+
+    // =========================
+    // GUARDSMAN ARMOR
+    // =========================
+
+    public static final RegistryObject<Item> GUARDSMAN_HELMET = ITEMS.register("guardsman_helmet",
+            () -> new ArmorItem(GUARDSMAN_ARMOR_MATERIAL, ArmorItem.Type.HELMET, new Item.Properties()));
+
+    public static final RegistryObject<Item> GUARDSMAN_CHESTPLATE = ITEMS.register("guardsman_chestplate",
+            () -> new ArmorItem(GUARDSMAN_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE, new Item.Properties()));
+
+    public static final RegistryObject<Item> GUARDSMAN_LEGGINGS = ITEMS.register("guardsman_leggings",
+            () -> new ArmorItem(GUARDSMAN_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS, new Item.Properties()));
+
+    public static final RegistryObject<Item> GUARDSMAN_BOOTS = ITEMS.register("guardsman_boots",
+            () -> new ArmorItem(GUARDSMAN_ARMOR_MATERIAL, ArmorItem.Type.BOOTS, new Item.Properties()));
+
+    // =========================
+    // CREATIVE TAB
+    // =========================
+
+    public static final RegistryObject<CreativeModeTab> FIRST_CRUSADE_TAB =
+            CREATIVE_MODE_TABS.register("first_crusade_tab", () -> CreativeModeTab.builder()
+                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .title(Component.translatable("itemGroup.firstcrusade.first_crusade_tab"))
+                    .icon(() -> IMPERIAL_COMMAND_CORE_ITEM.get().getDefaultInstance())
+                    .displayItems((parameters, output) -> {
+                        output.accept(IMPERIAL_COMMAND_CORE_ITEM.get());
+
+                        output.accept(CRUSADIUM_INGOT.get());
+                        output.accept(CRUSADIUM_PLATE.get());
+                        output.accept(ORK_TEETH.get());
+                        output.accept(SCRAP_METAL.get());
+                        output.accept(IMPERIAL_CITIZEN_SPAWN_EGG.get());
+                        output.accept(IMPERIAL_MINE_ITEM.get());
+
+                        output.accept(LASGUN_POWER_CELL.get());
+                        output.accept(LASGUN.get());
+                        output.accept(GUARDSMAN_COMBAT_KNIFE.get());
+                        output.accept(GUARDSMAN_MED_KIT.get());
+                        output.accept(GUARDSMAN_COMMAND_BATON.get());
+
+                        output.accept(GUARDSMAN_HELMET.get());
+                        output.accept(GUARDSMAN_CHESTPLATE.get());
+                        output.accept(GUARDSMAN_LEGGINGS.get());
+                        output.accept(GUARDSMAN_BOOTS.get());
+
+                       output.accept(GUARDSMAN_SPAWN_EGG.get());
+output.accept(SPACE_MARINE_SPAWN_EGG.get());
+output.accept(ORK_BOY_SPAWN_EGG.get());
+output.accept(ORK_NOB_SPAWN_EGG.get());
+                    })
+                    .build());
+
+    public ExampleMod(FMLJavaModLoadingContext context) {
+    IEventBus modEventBus = context.getModEventBus();
+
+    modEventBus.addListener(this::commonSetup);
+    modEventBus.addListener(this::registerAttributes);
+
+    BLOCKS.register(modEventBus);
+    ITEMS.register(modEventBus);
+    CREATIVE_MODE_TABS.register(modEventBus);
+    ENTITY_TYPES.register(modEventBus);
+    BLOCK_ENTITY_TYPES.register(modEventBus);
+    MENU_TYPES.register(modEventBus);
+
+    MinecraftForge.EVENT_BUS.register(this);
+}
+
+private void commonSetup(final FMLCommonSetupEvent event) {
+    event.enqueueWork(() -> {
+        NETWORK_CHANNEL.registerMessage(
+                networkPacketId++,
+                ImperialCommandCoreActionPacket.class,
+                ImperialCommandCoreActionPacket::encode,
+                ImperialCommandCoreActionPacket::decode,
+                ImperialCommandCoreActionPacket::handle
+        );
+    });
+
+    LOGGER.info("First Crusade loaded successfully.");
+}
+
+private void registerAttributes(EntityAttributeCreationEvent event) {
+    event.put(GUARDSMAN.get(), GuardsmanEntity.createAttributes().build());
+    event.put(IMPERIAL_CITIZEN.get(), ImperialCitizenEntity.createAttributes().build());
+    event.put(SPACE_MARINE.get(), SpaceMarineEntity.createAttributes().build());
+    event.put(ORK_BOY.get(), OrkBoyEntity.createAttributes().build());
+    event.put(ORK_NOB.get(), OrkNobEntity.createAttributes().build());
+}
+
+@SubscribeEvent
+public void onServerStarting(ServerStartingEvent event) {
+    LOGGER.info("First Crusade server starting.");
+}
+
+@Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+public static class ClientModEvents {
+        @SubscribeEvent
+public static void onClientSetup(FMLClientSetupEvent event) {
+    event.enqueueWork(() -> {
+        MenuScreens.register(IMPERIAL_COMMAND_CORE_MENU.get(), ImperialCommandCoreScreen::new);
+    });
+}
+    @SubscribeEvent
+    public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(IMPERIAL_CITIZEN.get(), ImperialCitizenRenderer::new);
+        event.registerEntityRenderer(LASGUN_SHOT.get(), LasgunShotRenderer::new);
+        event.registerEntityRenderer(GUARDSMAN.get(), GuardsmanRenderer::new);
+        event.registerEntityRenderer(SPACE_MARINE.get(), SpaceMarineRenderer::new);
+        event.registerEntityRenderer(ORK_BOY.get(), OrkBoyRenderer::new);
+        event.registerEntityRenderer(ORK_NOB.get(), OrkNobRenderer::new);
+    }
+}
+}

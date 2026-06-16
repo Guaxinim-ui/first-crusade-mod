@@ -1,0 +1,13 @@
+package com.example.examplemod;
+
+public enum ImperialCommandCoreAction {
+    DEPOSIT_RESOURCES,
+    BUILD_IMPERIAL_MINE,
+    RECRUIT_GUARDSMAN,
+    UPGRADE_CITY,
+    REPAIR_CORE,
+    CALL_REINFORCEMENTS,
+    RALLY_DEFENDERS,
+    FORTIFY_DEFENDERS,
+    FORCE_RAID_TEST
+}
