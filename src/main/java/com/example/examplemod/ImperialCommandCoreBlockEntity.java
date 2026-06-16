@@ -163,6 +163,8 @@ public int receiveProducedResource(ImperialResourceType resourceType, int amount
             return;
         }
 
+        ImperialPopulationManager.tickCitizenGrowth(serverLevel, blockEntity);
+        
         blockEntity.tickCounter++;
 
         if (blockEntity.tickCounter < 200) {
