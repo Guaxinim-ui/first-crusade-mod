@@ -113,6 +113,20 @@ public class ImperialPopulationManager {
         return citizens.size();
     }
 
+    public static int countCitizensWithJob(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, ImperialCitizenJob job) {
+        BlockPos corePos = commandCore.getBlockPos();
+
+        List<ImperialCitizenEntity> citizens = serverLevel.getEntitiesOfClass(
+                ImperialCitizenEntity.class,
+                createSearchBox(corePos, 96),
+                citizen -> citizen.isAlive()
+                        && citizen.isAssignedToCommandCore(corePos)
+                        && citizen.hasJob(job)
+        );
+
+        return citizens.size();
+    }
+
     public static int getCitizenCapacity(ImperialCommandCoreBlockEntity commandCore) {
         return switch (commandCore.getCityLevel()) {
             case 1 -> 3;

@@ -1,9 +1,12 @@
 package com.example.examplemod;
 
+import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
@@ -33,6 +36,7 @@ public class GuardsmanEntity extends PathfinderMob {
 
     private GuardsmanRank guardsmanRank = GuardsmanRank.RECRUIT;
     private ImperiumChapter chapter = ImperiumChapter.IMPERIAL_STANDARD;
+    private GuardsmanSpecialization specialization = GuardsmanSpecialization.NONE;
 
     private boolean chapterAssigned = false;
 
@@ -79,12 +83,76 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
 
         if (!this.level().isClientSide) {
             this.ensureChapterAssigned();
+
+            if (this.specialization.isSpecialist() && this.tickCount % 40 == 0) {
+                this.performSpecializationBehavior();
+            }
         }
     }
 
     private void ensureChapterAssigned() {
         if (!this.chapterAssigned) {
             this.assignRandomChapter();
+        }
+    }
+
+    private void performSpecializationBehavior() {
+        switch (this.specialization) {
+            case MEDIC -> healNearbyAllies();
+            case OFFICER -> buffNearbyAllies();
+            case ENGINEER -> repairCommandCore();
+            default -> {
+            }
+        }
+    }
+
+    private void healNearbyAllies() {
+        List<GuardsmanEntity> allies = this.level().getEntitiesOfClass(
+                GuardsmanEntity.class,
+                this.getBoundingBox().inflate(8.0D),
+                ally -> ally.isAlive() && ally.getHealth() < ally.getMaxHealth()
+        );
+
+        for (GuardsmanEntity ally : allies) {
+            ally.heal(2.0F);
+        }
+
+        if (this.getHealth() < this.getMaxHealth()) {
+            this.heal(1.0F);
+        }
+    }
+
+    private void buffNearbyAllies() {
+        List<GuardsmanEntity> allies = this.level().getEntitiesOfClass(
+                GuardsmanEntity.class,
+                this.getBoundingBox().inflate(10.0D),
+                ally -> ally.isAlive() && ally != this
+        );
+
+        for (GuardsmanEntity ally : allies) {
+            ally.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 100, 0, false, false));
+        }
+    }
+
+    private void repairCommandCore() {
+        if (this.commandCorePos == null) {
+            return;
+        }
+
+        double distance = this.distanceToSqr(
+                this.commandCorePos.getX() + 0.5D,
+                this.commandCorePos.getY() + 0.5D,
+                this.commandCorePos.getZ() + 0.5D
+        );
+
+        if (distance > 12.0D * 12.0D) {
+            return;
+        }
+
+        BlockEntity blockEntity = this.level().getBlockEntity(this.commandCorePos);
+
+        if (blockEntity instanceof ImperialCommandCoreBlockEntity commandCore) {
+            commandCore.engineerRepair(1);
         }
     }
 
@@ -192,19 +260,19 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
         AttributeInstance movementSpeedAttribute = this.getAttribute(Attributes.MOVEMENT_SPEED);
 
         if (maxHealthAttribute != null) {
-            maxHealthAttribute.setBaseValue(this.guardsmanRank.getMaxHealth() + this.chapter.getMaxHealthBonus());
+            maxHealthAttribute.setBaseValue(this.guardsmanRank.getMaxHealth() + this.chapter.getMaxHealthBonus() + this.specialization.getMaxHealthBonus());
         }
 
         if (attackDamageAttribute != null) {
-            attackDamageAttribute.setBaseValue(this.guardsmanRank.getAttackDamage() + this.chapter.getAttackDamageBonus());
+            attackDamageAttribute.setBaseValue(Math.max(0.0D, this.guardsmanRank.getAttackDamage() + this.chapter.getAttackDamageBonus() + this.specialization.getAttackDamageBonus()));
         }
 
         if (armorAttribute != null) {
-            armorAttribute.setBaseValue(Math.max(0.0D, this.guardsmanRank.getArmor() + this.chapter.getArmorBonus()));
+            armorAttribute.setBaseValue(Math.max(0.0D, this.guardsmanRank.getArmor() + this.chapter.getArmorBonus() + this.specialization.getArmorBonus()));
         }
 
         if (movementSpeedAttribute != null) {
-            movementSpeedAttribute.setBaseValue(Math.max(0.1D, 0.28D + this.chapter.getMovementSpeedBonus()));
+            movementSpeedAttribute.setBaseValue(Math.max(0.1D, 0.28D + this.chapter.getMovementSpeedBonus() + this.specialization.getMovementSpeedBonus()));
         }
 
         if (healToFull || this.getHealth() > this.getMaxHealth()) {
@@ -237,11 +305,29 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
     }
 
     private void updateRankName() {
+        String specTag = this.specialization.isSpecialist() ? " {" + this.specialization.getShortTag() + "}" : "";
+
         this.setCustomName(Component.literal(
-                "[" + this.chapter.getShortName() + "] " + this.guardsmanRank.getDisplayName() + " [" + this.merit + "M]"
+                "[" + this.chapter.getShortName() + "] " + this.guardsmanRank.getDisplayName() + specTag + " [" + this.merit + "M]"
         ));
 
         this.setCustomNameVisible(true);
+    }
+
+    public void setSpecialization(GuardsmanSpecialization specialization, boolean healToFull) {
+        this.specialization = specialization == null ? GuardsmanSpecialization.NONE : specialization;
+
+        this.applyRankStats(healToFull);
+        this.updateEquipmentByRank();
+        this.updateRankName();
+    }
+
+    public GuardsmanSpecialization getSpecialization() {
+        return this.specialization;
+    }
+
+    public boolean hasSpecialization() {
+        return this.specialization.isSpecialist();
     }
 
     public GuardsmanRank getGuardsmanRank() {
@@ -273,7 +359,7 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
     }
 
     public double getLasgunDamageWithBonuses() {
-        return Math.max(1.0D, this.guardsmanRank.getLasgunDamage() + this.chapter.getLasgunDamageBonus());
+        return Math.max(1.0D, this.guardsmanRank.getLasgunDamage() + this.chapter.getLasgunDamageBonus() + this.specialization.getLasgunDamageBonus());
     }
 
     public void performLasgunAttack(LivingEntity target) {
@@ -368,6 +454,7 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
 
         tag.putString("GuardsmanRank", this.guardsmanRank.name());
         tag.putString("ImperiumChapter", this.chapter.name());
+        tag.putString("Specialization", this.specialization.name());
         tag.putBoolean("ChapterAssigned", this.chapterAssigned);
 
         tag.putInt("Merit", this.merit);
@@ -396,6 +483,7 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
 
         this.guardsmanRank = GuardsmanRank.fromName(tag.getString("GuardsmanRank"));
         this.chapter = ImperiumChapter.fromName(tag.getString("ImperiumChapter"));
+        this.specialization = GuardsmanSpecialization.fromName(tag.getString("Specialization"));
         this.chapterAssigned = tag.getBoolean("ChapterAssigned");
 
         this.merit = tag.getInt("Merit");

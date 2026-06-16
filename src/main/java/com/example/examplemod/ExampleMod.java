@@ -10,6 +10,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
 import com.mojang.logging.LogUtils;
+
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
@@ -28,7 +29,6 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.common.ForgeSpawnEggItem;
@@ -93,6 +93,48 @@ private static int networkPacketId = 0;
                         .strength(3.5F)
                         .requiresCorrectToolForDrops()
                         .sound(SoundType.STONE)));
+public static final RegistryObject<Block> IMPERIAL_SCRAP_YARD =
+        BLOCKS.register("imperial_scrap_yard",
+                () -> new ImperialScrapYardBlock(BlockBehaviour.Properties.of()
+                        .strength(2.5F)
+                        .sound(SoundType.METAL)));
+
+public static final RegistryObject<Item> IMPERIAL_SCRAP_YARD_ITEM =
+        ITEMS.register("imperial_scrap_yard",
+                () -> new BlockItem(IMPERIAL_SCRAP_YARD.get(), new Item.Properties()));
+
+public static final RegistryObject<Block> IMPERIAL_FORGE =
+        BLOCKS.register("imperial_forge",
+                () -> new ImperialForgeBlock(BlockBehaviour.Properties.of()
+                        .strength(4.0F)
+                        .requiresCorrectToolForDrops()
+                        .sound(SoundType.METAL)));
+
+public static final RegistryObject<Item> IMPERIAL_FORGE_ITEM =
+        ITEMS.register("imperial_forge",
+                () -> new BlockItem(IMPERIAL_FORGE.get(), new Item.Properties()));
+
+public static final RegistryObject<Block> IMPERIAL_PROMETHIUM_REFINERY =
+        BLOCKS.register("imperial_promethium_refinery",
+                () -> new ImperialPromethiumRefineryBlock(BlockBehaviour.Properties.of()
+                        .strength(3.5F)
+                        .requiresCorrectToolForDrops()
+                        .sound(SoundType.METAL)));
+
+public static final RegistryObject<Item> IMPERIAL_PROMETHIUM_REFINERY_ITEM =
+        ITEMS.register("imperial_promethium_refinery",
+                () -> new BlockItem(IMPERIAL_PROMETHIUM_REFINERY.get(), new Item.Properties()));
+
+public static final RegistryObject<Block> IMPERIAL_BARRACKS =
+        BLOCKS.register("imperial_barracks",
+                () -> new ImperialBarracksBlock(BlockBehaviour.Properties.of()
+                        .strength(4.0F)
+                        .requiresCorrectToolForDrops()
+                        .sound(SoundType.STONE)));
+
+public static final RegistryObject<Item> IMPERIAL_BARRACKS_ITEM =
+        ITEMS.register("imperial_barracks",
+                () -> new BlockItem(IMPERIAL_BARRACKS.get(), new Item.Properties()));
 
 public static final RegistryObject<Item> IMPERIAL_MINE_ITEM =
         ITEMS.register("imperial_mine",
@@ -111,6 +153,22 @@ public static final RegistryObject<Item> IMPERIAL_MINE_ITEM =
                 public static final RegistryObject<BlockEntityType<ImperialMineBlockEntity>> IMPERIAL_MINE_BLOCK_ENTITY =
         BLOCK_ENTITY_TYPES.register("imperial_mine",
                 () -> BlockEntityType.Builder.of(ImperialMineBlockEntity::new, IMPERIAL_MINE.get()).build(null));
+        
+        public static final RegistryObject<BlockEntityType<ImperialScrapYardBlockEntity>> IMPERIAL_SCRAP_YARD_BLOCK_ENTITY =
+        BLOCK_ENTITY_TYPES.register("imperial_scrap_yard",
+                () -> BlockEntityType.Builder.of(ImperialScrapYardBlockEntity::new, IMPERIAL_SCRAP_YARD.get()).build(null));
+
+        public static final RegistryObject<BlockEntityType<ImperialForgeBlockEntity>> IMPERIAL_FORGE_BLOCK_ENTITY =
+        BLOCK_ENTITY_TYPES.register("imperial_forge",
+                () -> BlockEntityType.Builder.of(ImperialForgeBlockEntity::new, IMPERIAL_FORGE.get()).build(null));
+
+        public static final RegistryObject<BlockEntityType<ImperialPromethiumRefineryBlockEntity>> IMPERIAL_PROMETHIUM_REFINERY_BLOCK_ENTITY =
+        BLOCK_ENTITY_TYPES.register("imperial_promethium_refinery",
+                () -> BlockEntityType.Builder.of(ImperialPromethiumRefineryBlockEntity::new, IMPERIAL_PROMETHIUM_REFINERY.get()).build(null));
+
+        public static final RegistryObject<BlockEntityType<ImperialBarracksBlockEntity>> IMPERIAL_BARRACKS_BLOCK_ENTITY =
+        BLOCK_ENTITY_TYPES.register("imperial_barracks",
+                () -> BlockEntityType.Builder.of(ImperialBarracksBlockEntity::new, IMPERIAL_BARRACKS.get()).build(null));
 
     // =========================
     // MATERIALS
@@ -336,6 +394,10 @@ public static final RegistryObject<Item> SPACE_MARINE_SPAWN_EGG = ITEMS.register
                     .icon(() -> IMPERIAL_COMMAND_CORE_ITEM.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(IMPERIAL_COMMAND_CORE_ITEM.get());
+                        output.accept(IMPERIAL_SCRAP_YARD_ITEM.get());
+                        output.accept(IMPERIAL_FORGE_ITEM.get());
+                        output.accept(IMPERIAL_PROMETHIUM_REFINERY_ITEM.get());
+                        output.accept(IMPERIAL_BARRACKS_ITEM.get());
 
                         output.accept(CRUSADIUM_INGOT.get());
                         output.accept(CRUSADIUM_PLATE.get());

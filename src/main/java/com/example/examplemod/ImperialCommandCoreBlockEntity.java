@@ -19,12 +19,18 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.network.chat.Component;
 
 import java.util.List;
 import java.util.UUID;
 
 public class ImperialCommandCoreBlockEntity extends BlockEntity {
     private static final int MAX_CITY_LEVEL = 5;
+
+    // Passive "Imperial supply line" production is temporary and is being phased out as
+    // the city's own staffed work sites take over. A fully self-sufficient city keeps only
+    // this fraction of its passive output as an external supply subsidy.
+    private static final double PASSIVE_PRODUCTION_FLOOR = 0.2;
 
     private String baseName = "Imperial Outpost";
     private UUID ownerUUID;
@@ -58,6 +64,9 @@ private int emperorGeneSeed = 0;
 
 private int spaceMarinePromotionCooldownTicks = 0;
 private UUID pendingSpaceMarineCandidateUUID;
+
+// Currently selected specialist type for the Promote Specialist action (1 = first real specialist).
+private int selectedSpecialistOrdinal = 1;
 
 public void tryBuildImperialMine(Player player) {
     if (!isOwner(player)) {
@@ -116,6 +125,44 @@ public int getImperialMineCapacity() {
     return Math.max(1, this.cityLevel);
 }
 
+// Iron produced per Miner work cycle. Scales with city level so staffed mines can
+// replace the passive output that is phased out as the settlement grows.
+public int getMineIronYield() {
+    return switch (this.cityLevel) {
+        case 2 -> 2;
+        case 3 -> 3;
+        case 4 -> 5;
+        case 5 -> 8;
+        default -> 1;
+    };
+}
+
+// Scrap Metal produced per Scrapper work cycle, scaling with city level.
+public int getScrapYardScrapYield() {
+    return switch (this.cityLevel) {
+        case 2 -> 2;
+        case 3 -> 3;
+        case 4 -> 4;
+        case 5 -> 6;
+        default -> 1;
+    };
+}
+
+public int getPromethiumRefineryCapacity() {
+    return Math.max(1, this.cityLevel);
+}
+
+// Coal produced per Stoker work cycle, scaling with city level.
+public int getRefineryCoalYield() {
+    return switch (this.cityLevel) {
+        case 2 -> 1;
+        case 3 -> 2;
+        case 4 -> 3;
+        case 5 -> 4;
+        default -> 1;
+    };
+}
+
 public int receiveProducedResource(ImperialResourceType resourceType, int amount) {
     if (amount <= 0) {
         return 0;
@@ -172,6 +219,7 @@ public int receiveProducedResource(ImperialResourceType resourceType, int amount
         }
 
        blockEntity.tickCounter = 0;
+ImperialWorkforceManager.autoManageWorkforce(serverLevel, blockEntity);
 blockEntity.produceResourcesIfNewDay(level);
 blockEntity.reduceReinforcementCooldown();
 blockEntity.reduceSpaceMarinePromotionCooldown();
@@ -195,13 +243,69 @@ blockEntity.checkActiveOrkRaid(serverLevel);
 
         long daysPassed = currentDay - this.lastProductionDay;
 
-        addIron((int) daysPassed * getDailyIronProduction());
-addScrapMetal((int) daysPassed * getDailyScrapProduction());
-addCoal((int) daysPassed * getDailyCoalProduction());
+        int ironProduction = getDailyIronProduction();
+        int scrapProduction = getDailyScrapProduction();
+        int coalProduction = getDailyCoalProduction();
+
+        if (level instanceof ServerLevel serverLevel) {
+            ironProduction = getEffectiveDailyIronProduction(serverLevel);
+            scrapProduction = getEffectiveDailyScrapProduction(serverLevel);
+            coalProduction = getEffectiveDailyCoalProduction(serverLevel);
+        }
+
+        addIron((int) daysPassed * ironProduction);
+addScrapMetal((int) daysPassed * scrapProduction);
+addCoal((int) daysPassed * coalProduction);
 addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
 
         this.lastProductionDay = currentDay;
         setChanged();
+    }
+
+    // Passive Iron output shrinks as staffed Imperial Mines take over production.
+    public int getEffectiveDailyIronProduction(ServerLevel serverLevel) {
+        int capacity = getImperialMineCapacity();
+
+        if (capacity <= 0) {
+            return getDailyIronProduction();
+        }
+
+        int staffed = Math.min(capacity, ImperialWorkSiteManager.countStaffedImperialMines(serverLevel, this, 128));
+
+        return scalePassiveProduction(getDailyIronProduction(), staffed, capacity);
+    }
+
+    // Passive Scrap output shrinks as staffed Scrap Yards take over production.
+    public int getEffectiveDailyScrapProduction(ServerLevel serverLevel) {
+        int capacity = getScrapYardCapacity();
+
+        if (capacity <= 0) {
+            return getDailyScrapProduction();
+        }
+
+        int staffed = Math.min(capacity, ImperialScrapYardManager.countStaffedScrapYards(serverLevel, this, 128));
+
+        return scalePassiveProduction(getDailyScrapProduction(), staffed, capacity);
+    }
+
+    // Passive Coal output shrinks as staffed Promethium Refineries take over production.
+    public int getEffectiveDailyCoalProduction(ServerLevel serverLevel) {
+        int capacity = getPromethiumRefineryCapacity();
+
+        if (capacity <= 0) {
+            return getDailyCoalProduction();
+        }
+
+        int staffed = Math.min(capacity, ImperialPromethiumRefineryManager.countStaffedRefineries(serverLevel, this, 128));
+
+        return scalePassiveProduction(getDailyCoalProduction(), staffed, capacity);
+    }
+
+    private int scalePassiveProduction(int base, int staffed, int capacity) {
+        double selfSufficiency = (double) staffed / (double) capacity;
+        double passiveFraction = 1.0D - selfSufficiency * (1.0D - PASSIVE_PRODUCTION_FLOOR);
+
+        return (int) Math.round(base * passiveFraction);
     }
 
     public void depositIron(Player player, ItemStack itemStack) {
@@ -425,23 +529,237 @@ public void tryRecruitGuardsman(Player player) {
         return;
     }
 
-    if (this.recruitedGuardsmen >= getMilitaryCapacity()) {
+    int recruitsInTraining = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.RECRUIT);
+
+    if (this.recruitedGuardsmen + recruitsInTraining >= getMilitaryCapacity()) {
         player.displayClientMessage(Component.literal("Military capacity reached. Upgrade the city to train more soldiers."), true);
         return;
     }
 
-    boolean trained = ImperialPopulationManager.trainNearestCitizenAsGuardsman(serverLevel, this, player);
+    BlockPos barracksPos = ImperialBarracksManager.findAvailableBarracks(serverLevel, this, 128);
 
-    if (!trained) {
+    if (barracksPos == null) {
+        int barracksCount = ImperialBarracksManager.countBarracks(serverLevel, this, 128);
+
+        if (barracksCount <= 0) {
+            player.displayClientMessage(Component.literal("You need an Imperial Barracks to train soldiers."), true);
+        } else {
+            player.displayClientMessage(Component.literal("All Barracks are currently training recruits."), true);
+        }
+
         return;
     }
+
+    ImperialCitizenEntity recruit = ImperialPopulationManager.findNearestTrainableCitizen(serverLevel, this, player);
+
+    if (recruit == null) {
+        player.displayClientMessage(Component.literal("No trainable Imperial Citizen found near the Command Core."), true);
+        return;
+    }
+
+    recruit.assignToCommandCore(this.worldPosition);
+    recruit.assignJob(ImperialCitizenJob.RECRUIT, barracksPos);
+
+    setChanged();
+
+    player.displayClientMessage(Component.literal("Imperial Citizen assigned to training as Recruit."), false);
+    player.displayClientMessage(Component.literal(
+            "Recruits in training: " + (recruitsInTraining + 1) + ". Soldiers: " + this.recruitedGuardsmen + "/" + getMilitaryCapacity()
+    ), false);
+}
+
+public boolean completeRecruitTraining(ServerLevel serverLevel, ImperialCitizenEntity recruit) {
+    if (this.recruitedGuardsmen >= getMilitaryCapacity()) {
+        return false;
+    }
+
+    GuardsmanEntity guardsman = ExampleMod.GUARDSMAN.get().create(serverLevel);
+
+    if (guardsman == null) {
+        return false;
+    }
+
+    guardsman.moveTo(
+            recruit.getX(),
+            recruit.getY(),
+            recruit.getZ(),
+            recruit.getYRot(),
+            recruit.getXRot()
+    );
+
+    guardsman.assignToCommandCore(this.worldPosition);
+    guardsman.assignRandomChapter();
+    guardsman.initializeFromCity(getStartingGuardsmanRank());
+
+    recruit.discard();
+    serverLevel.addFreshEntity(guardsman);
 
     this.recruitedGuardsmen++;
     setChanged();
 
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "A Recruit completed training and joined the Guardsmen. Soldiers: " + this.recruitedGuardsmen + "/" + getMilitaryCapacity()
+    );
+
+    return true;
+}
+
+public GuardsmanSpecialization getSelectedSpecialization() {
+    GuardsmanSpecialization spec = GuardsmanSpecialization.fromOrdinal(this.selectedSpecialistOrdinal);
+
+    if (!spec.isSpecialist()) {
+        spec = GuardsmanSpecialization.SNIPER;
+        this.selectedSpecialistOrdinal = spec.ordinal();
+    }
+
+    return spec;
+}
+
+public int getSelectedSpecialistOrdinal() {
+    return this.selectedSpecialistOrdinal;
+}
+
+public void cycleSelectedSpecialist(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can change the specialist selection."), true);
+        return;
+    }
+
+    GuardsmanSpecialization next = getSelectedSpecialization().nextSelectable();
+    this.selectedSpecialistOrdinal = next.ordinal();
+    setChanged();
+
+    player.displayClientMessage(Component.literal("Selected specialist: " + next.getDisplayName() + "."), true);
+}
+
+public void promoteSpecialist(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can promote specialists."), true);
+        return;
+    }
+
+    if (this.cityLevel < 2) {
+        player.displayClientMessage(Component.literal("Specialist promotions require an Imperial settlement of Level 2 or higher."), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    int ironCost = getSpecialistIronCost();
+    int scrapCost = getSpecialistScrapCost();
+    int warSupportCost = getSpecialistWarSupportCost();
+
+    if (this.iron < ironCost || this.scrapMetal < scrapCost) {
+        player.displayClientMessage(Component.literal("Not enough city resources. Need: " + ironCost + " Iron, " + scrapCost + " Scrap."), true);
+        return;
+    }
+
+    if (this.imperialWarSupport < warSupportCost) {
+        player.displayClientMessage(Component.literal("Not enough Imperial War Support. Need: " + warSupportCost + "."), true);
+        return;
+    }
+
+    GuardsmanEntity target = findNearestSpecializableGuardsman(serverLevel, player);
+
+    if (target == null) {
+        player.displayClientMessage(Component.literal("No non-specialist Guardsman found near the Command Core."), true);
+        return;
+    }
+
+    GuardsmanSpecialization spec = getSelectedSpecialization();
+
+    target.setSpecialization(spec, true);
+
+    this.iron -= ironCost;
+    this.scrapMetal -= scrapCost;
+    this.imperialWarSupport -= warSupportCost;
+
+    setChanged();
+
+    player.displayClientMessage(Component.literal("Guardsman promoted to " + spec.getDisplayName() + "."), false);
     player.displayClientMessage(Component.literal(
-            "Military Population: " + this.recruitedGuardsmen + "/" + getMilitaryCapacity()
+            "Cost: " + ironCost + " Iron, " + scrapCost + " Scrap, " + warSupportCost + " War Support."
     ), false);
+}
+
+private int getSpecialistIronCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 40;
+        case 2 -> 60;
+        case 3 -> 100;
+        case 4 -> 180;
+        case 5 -> 320;
+        default -> 60;
+    };
+}
+
+private int getSpecialistScrapCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 25;
+        case 2 -> 40;
+        case 3 -> 70;
+        case 4 -> 120;
+        case 5 -> 220;
+        default -> 40;
+    };
+}
+
+private int getSpecialistWarSupportCost() {
+    return switch (this.cityLevel) {
+        case 1 -> 5;
+        case 2 -> 8;
+        case 3 -> 14;
+        case 4 -> 24;
+        case 5 -> 40;
+        default -> 8;
+    };
+}
+
+private GuardsmanEntity findNearestSpecializableGuardsman(ServerLevel serverLevel, Player player) {
+    AABB searchBox = new AABB(
+            this.worldPosition.getX() - 96,
+            this.worldPosition.getY() - 32,
+            this.worldPosition.getZ() - 96,
+            this.worldPosition.getX() + 96,
+            this.worldPosition.getY() + 64,
+            this.worldPosition.getZ() + 96
+    );
+
+    List<GuardsmanEntity> guardsmen = serverLevel.getEntitiesOfClass(
+            GuardsmanEntity.class,
+            searchBox,
+            guardsman -> guardsman.isAlive()
+                    && guardsman.isAssignedToCommandCore(this.worldPosition)
+                    && !guardsman.hasSpecialization()
+    );
+
+    GuardsmanEntity nearest = null;
+    double nearestDistance = Double.MAX_VALUE;
+
+    for (GuardsmanEntity guardsman : guardsmen) {
+        double distance = guardsman.distanceToSqr(player);
+
+        if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearest = guardsman;
+        }
+    }
+
+    return nearest;
+}
+
+public boolean engineerRepair(int amount) {
+    if (amount <= 0 || this.cityIntegrity >= 100) {
+        return false;
+    }
+
+    this.cityIntegrity = Math.min(100, this.cityIntegrity + amount);
+    setChanged();
+    return true;
 }
 
     private BlockPos findSpawnPosition(ServerLevel serverLevel) {
@@ -617,6 +935,15 @@ public void callImperialReinforcements(Player player) {
         return;
     }
 
+    int warSupportCost = getReinforcementWarSupportCost();
+
+    if (this.imperialWarSupport < warSupportCost) {
+        player.displayClientMessage(Component.literal("Not enough Imperial War Support to call reinforcements."), true);
+        player.displayClientMessage(Component.literal("Required: " + warSupportCost + " War Support."), false);
+        player.displayClientMessage(Component.literal("Current: " + this.imperialWarSupport + " War Support."), false);
+        return;
+    }
+
     if (!(this.level instanceof ServerLevel serverLevel)) {
         return;
     }
@@ -668,6 +995,7 @@ public void callImperialReinforcements(Player player) {
         return;
     }
 
+    this.imperialWarSupport -= warSupportCost;
     this.reinforcementCooldownTicks = getReinforcementCooldownTicks();
 
     setChanged();
@@ -681,7 +1009,7 @@ public void callImperialReinforcements(Player player) {
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "Reinforcement cooldown started. No War Support was spent."
+            "War Support spent: " + warSupportCost + ". Remaining: " + this.imperialWarSupport + "."
     );
 }
 
@@ -2068,6 +2396,7 @@ tag.putInt("RaidPressureTicks", this.raidPressureTicks);
 tag.putInt("ReinforcementCooldownTicks", this.reinforcementCooldownTicks);
 tag.putInt("EmperorGeneSeed", this.emperorGeneSeed);
 tag.putInt("SpaceMarinePromotionCooldownTicks", this.spaceMarinePromotionCooldownTicks);
+tag.putInt("SelectedSpecialistOrdinal", this.selectedSpecialistOrdinal);
 
 if (this.pendingSpaceMarineCandidateUUID != null) {
     tag.putUUID("PendingSpaceMarineCandidateUUID", this.pendingSpaceMarineCandidateUUID);
@@ -2163,6 +2492,12 @@ if (this.spaceMarinePromotionCooldownTicks < 0) {
     this.spaceMarinePromotionCooldownTicks = 0;
 }
 
+this.selectedSpecialistOrdinal = tag.getInt("SelectedSpecialistOrdinal");
+
+if (!GuardsmanSpecialization.fromOrdinal(this.selectedSpecialistOrdinal).isSpecialist()) {
+    this.selectedSpecialistOrdinal = GuardsmanSpecialization.SNIPER.ordinal();
+}
+
 if (tag.hasUUID("PendingSpaceMarineCandidateUUID")) {
     this.pendingSpaceMarineCandidateUUID = tag.getUUID("PendingSpaceMarineCandidateUUID");
 } else {
@@ -2173,5 +2508,235 @@ if (this.reinforcementCooldownTicks < 0) {
     this.reinforcementCooldownTicks = 0;
 }
 
+}
+public void tryBuildScrapYard(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    int currentScrapYards = ImperialScrapYardManager.countScrapYards(serverLevel, this, 128);
+
+    if (currentScrapYards >= getScrapYardCapacity()) {
+        player.displayClientMessage(Component.literal(
+                "Scrap Yard capacity reached. Upgrade the city to build more Scrap Yards."
+        ), true);
+        return;
+    }
+
+    int ironCost = 15;
+    int coalCost = 5;
+
+    if (this.iron < ironCost || this.coal < coalCost) {
+        player.displayClientMessage(Component.literal(
+                "Not enough city resources. Need: "
+                        + ironCost + " Iron, "
+                        + coalCost + " Coal."
+        ), true);
+        return;
+    }
+
+    boolean built = ImperialScrapYardManager.buildScrapYard(serverLevel, this, player);
+
+    if (!built) {
+        return;
+    }
+
+    this.iron -= ironCost;
+    this.coal -= coalCost;
+
+    setChanged();
+
+    player.displayClientMessage(Component.literal(
+            "City Resources: "
+                    + this.iron + " Iron, "
+                    + this.scrapMetal + " Scrap, "
+                    + this.coal + " Coal."
+    ), false);
+}
+
+public int getScrapYardCapacity() {
+    return Math.max(1, this.cityLevel);
+}
+
+public void tryBuildPromethiumRefinery(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    int currentRefineries = ImperialPromethiumRefineryManager.countRefineries(serverLevel, this, 128);
+
+    if (currentRefineries >= getPromethiumRefineryCapacity()) {
+        player.displayClientMessage(Component.literal(
+                "Promethium Refinery capacity reached. Upgrade the city to build more refineries."
+        ), true);
+        return;
+    }
+
+    int ironCost = 18;
+    int scrapCost = 8;
+
+    if (this.iron < ironCost || this.scrapMetal < scrapCost) {
+        player.displayClientMessage(Component.literal(
+                "Not enough city resources. Need: "
+                        + ironCost + " Iron, "
+                        + scrapCost + " Scrap."
+        ), true);
+        return;
+    }
+
+    boolean built = ImperialPromethiumRefineryManager.buildRefinery(serverLevel, this, player);
+
+    if (!built) {
+        return;
+    }
+
+    this.iron -= ironCost;
+    this.scrapMetal -= scrapCost;
+
+    setChanged();
+
+    player.displayClientMessage(Component.literal(
+            "City Resources: "
+                    + this.iron + " Iron, "
+                    + this.scrapMetal + " Scrap, "
+                    + this.coal + " Coal."
+    ), false);
+}
+
+public int getBarracksCapacity() {
+    return Math.max(1, this.cityLevel);
+}
+
+public void tryBuildBarracks(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    int currentBarracks = ImperialBarracksManager.countBarracks(serverLevel, this, 128);
+
+    if (currentBarracks >= getBarracksCapacity()) {
+        player.displayClientMessage(Component.literal(
+                "Barracks capacity reached. Upgrade the city to build more barracks."
+        ), true);
+        return;
+    }
+
+    int ironCost = 25;
+    int scrapCost = 15;
+    int coalCost = 5;
+
+    if (this.iron < ironCost || this.scrapMetal < scrapCost || this.coal < coalCost) {
+        player.displayClientMessage(Component.literal(
+                "Not enough city resources. Need: "
+                        + ironCost + " Iron, "
+                        + scrapCost + " Scrap, "
+                        + coalCost + " Coal."
+        ), true);
+        return;
+    }
+
+    boolean built = ImperialBarracksManager.buildBarracks(serverLevel, this, player);
+
+    if (!built) {
+        return;
+    }
+
+    this.iron -= ironCost;
+    this.scrapMetal -= scrapCost;
+    this.coal -= coalCost;
+
+    setChanged();
+
+    player.displayClientMessage(Component.literal(
+            "City Resources: "
+                    + this.iron + " Iron, "
+                    + this.scrapMetal + " Scrap, "
+                    + this.coal + " Coal."
+    ), false);
+}
+
+public void tryBuildImperialForge(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    int currentForges = ImperialForgeManager.countForges(serverLevel, this, 128);
+
+    if (currentForges >= getImperialForgeCapacity()) {
+        player.displayClientMessage(Component.literal(
+                "Imperial Forge capacity reached. Upgrade the city to build more forges."
+        ), true);
+        return;
+    }
+
+    int ironCost = 30;
+    int scrapCost = 20;
+    int coalCost = 10;
+
+    if (this.iron < ironCost || this.scrapMetal < scrapCost || this.coal < coalCost) {
+        player.displayClientMessage(Component.literal(
+                "Not enough city resources. Need: "
+                        + ironCost + " Iron, "
+                        + scrapCost + " Scrap, "
+                        + coalCost + " Coal."
+        ), true);
+        return;
+    }
+
+    boolean built = ImperialForgeManager.buildForge(serverLevel, this, player);
+
+    if (!built) {
+        return;
+    }
+
+    this.iron -= ironCost;
+    this.scrapMetal -= scrapCost;
+    this.coal -= coalCost;
+
+    setChanged();
+
+    player.displayClientMessage(Component.literal(
+            "City Resources: "
+                    + this.iron + " Iron, "
+                    + this.scrapMetal + " Scrap, "
+                    + this.coal + " Coal."
+    ), false);
+}
+
+public int getImperialForgeCapacity() {
+    return Math.max(1, (this.cityLevel + 1) / 2);
+}
+
+public boolean consumeResourcesForCrusadiumPlateProduction(int ironCost, int scrapCost, int coalCost) {
+    if (this.iron < ironCost || this.scrapMetal < scrapCost || this.coal < coalCost) {
+        return false;
+    }
+
+    this.iron -= ironCost;
+    this.scrapMetal -= scrapCost;
+    this.coal -= coalCost;
+
+    setChanged();
+    return true;
 }
 }

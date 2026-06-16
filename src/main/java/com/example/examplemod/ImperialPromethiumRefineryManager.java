@@ -11,45 +11,45 @@ import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 
-public class ImperialWorkSiteManager {
-    private ImperialWorkSiteManager() {
+public class ImperialPromethiumRefineryManager {
+    private ImperialPromethiumRefineryManager() {
     }
 
-    public static boolean buildImperialMine(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player) {
-        BlockPos minePos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, 28);
+    public static boolean buildRefinery(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player) {
+        BlockPos refineryPos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, 28);
 
-        if (minePos == null) {
-            player.displayClientMessage(Component.literal("No free space found near the city to build an Imperial Mine."), true);
+        if (refineryPos == null) {
+            player.displayClientMessage(Component.literal("No free space found near the city to build a Promethium Refinery."), true);
             return false;
         }
 
-        buildMineStructure(serverLevel, minePos);
+        buildRefineryStructure(serverLevel, refineryPos);
 
-        BlockEntity blockEntity = serverLevel.getBlockEntity(minePos);
+        BlockEntity blockEntity = serverLevel.getBlockEntity(refineryPos);
 
-        if (blockEntity instanceof ImperialMineBlockEntity mineBlockEntity) {
-            mineBlockEntity.assignToCommandCore(commandCore.getBlockPos());
+        if (blockEntity instanceof ImperialPromethiumRefineryBlockEntity refineryBlockEntity) {
+            refineryBlockEntity.assignToCommandCore(commandCore.getBlockPos());
         }
 
         ImperialCitizenEntity worker = findAvailableCitizen(serverLevel, commandCore);
 
         if (worker != null) {
             worker.assignToCommandCore(commandCore.getBlockPos());
-            worker.assignJob(ImperialCitizenJob.MINER, minePos);
+            worker.assignJob(ImperialCitizenJob.STOKER, refineryPos);
 
             player.displayClientMessage(Component.literal(
-                    "Imperial Mine built. An Imperial Citizen was assigned as Miner."
+                    "Promethium Refinery built. An Imperial Citizen was assigned as Stoker."
             ), false);
         } else {
             player.displayClientMessage(Component.literal(
-                    "Imperial Mine built, but no unemployed Imperial Citizen was available."
+                    "Promethium Refinery built, but no unemployed Imperial Citizen was available."
             ), false);
         }
 
         return true;
     }
 
-    public static int countImperialMines(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, int radius) {
+    public static int countRefineries(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, int radius) {
         BlockPos corePos = commandCore.getBlockPos();
         int count = 0;
 
@@ -57,14 +57,14 @@ public class ImperialWorkSiteManager {
                 corePos.offset(-radius, -32, -radius),
                 corePos.offset(radius, 64, radius)
         )) {
-            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_MINE.get())) {
+            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_PROMETHIUM_REFINERY.get())) {
                 continue;
             }
 
             BlockEntity blockEntity = serverLevel.getBlockEntity(pos);
 
-            if (blockEntity instanceof ImperialMineBlockEntity mineBlockEntity
-                    && mineBlockEntity.isAssignedToCommandCore(corePos)) {
+            if (blockEntity instanceof ImperialPromethiumRefineryBlockEntity refineryBlockEntity
+                    && refineryBlockEntity.isAssignedToCommandCore(corePos)) {
                 count++;
             }
         }
@@ -72,7 +72,7 @@ public class ImperialWorkSiteManager {
         return count;
     }
 
-    public static int countStaffedImperialMines(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, int radius) {
+    public static int countStaffedRefineries(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, int radius) {
         BlockPos corePos = commandCore.getBlockPos();
         int count = 0;
 
@@ -80,15 +80,15 @@ public class ImperialWorkSiteManager {
                 corePos.offset(-radius, -32, -radius),
                 corePos.offset(radius, 64, radius)
         )) {
-            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_MINE.get())) {
+            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_PROMETHIUM_REFINERY.get())) {
                 continue;
             }
 
             BlockEntity blockEntity = serverLevel.getBlockEntity(pos);
 
-            if (blockEntity instanceof ImperialMineBlockEntity mineBlockEntity
-                    && mineBlockEntity.isAssignedToCommandCore(corePos)
-                    && mineBlockEntity.hasActiveWorker(serverLevel)) {
+            if (blockEntity instanceof ImperialPromethiumRefineryBlockEntity refineryBlockEntity
+                    && refineryBlockEntity.isAssignedToCommandCore(corePos)
+                    && refineryBlockEntity.hasActiveWorker(serverLevel)) {
                 count++;
             }
         }
@@ -198,10 +198,10 @@ public class ImperialWorkSiteManager {
                 || serverLevel.getBlockState(pos).getCollisionShape(serverLevel, pos).isEmpty();
     }
 
-    private static void buildMineStructure(ServerLevel serverLevel, BlockPos center) {
+    private static void buildRefineryStructure(ServerLevel serverLevel, BlockPos center) {
         for (int x = -2; x <= 2; x++) {
             for (int z = -2; z <= 2; z++) {
-                serverLevel.setBlock(center.offset(x, -1, z), Blocks.COBBLESTONE.defaultBlockState(), 3);
+                serverLevel.setBlock(center.offset(x, -1, z), Blocks.STONE_BRICKS.defaultBlockState(), 3);
 
                 for (int y = 0; y <= 3; y++) {
                     serverLevel.setBlock(center.offset(x, y, z), Blocks.AIR.defaultBlockState(), 3);
@@ -209,19 +209,20 @@ public class ImperialWorkSiteManager {
             }
         }
 
-        serverLevel.setBlock(center, ExampleMod.IMPERIAL_MINE.get().defaultBlockState(), 3);
+        serverLevel.setBlock(center, ExampleMod.IMPERIAL_PROMETHIUM_REFINERY.get().defaultBlockState(), 3);
 
-        for (int y = 0; y <= 2; y++) {
-            serverLevel.setBlock(center.offset(2, y, 2), Blocks.OAK_LOG.defaultBlockState(), 3);
-            serverLevel.setBlock(center.offset(-2, y, 2), Blocks.OAK_LOG.defaultBlockState(), 3);
-            serverLevel.setBlock(center.offset(2, y, -2), Blocks.OAK_LOG.defaultBlockState(), 3);
-            serverLevel.setBlock(center.offset(-2, y, -2), Blocks.OAK_LOG.defaultBlockState(), 3);
+        serverLevel.setBlock(center.offset(1, 0, 0), Blocks.FURNACE.defaultBlockState(), 3);
+        serverLevel.setBlock(center.offset(-1, 0, 0), Blocks.FURNACE.defaultBlockState(), 3);
+        serverLevel.setBlock(center.offset(0, 0, 1), Blocks.CAULDRON.defaultBlockState(), 3);
+        serverLevel.setBlock(center.offset(0, 0, -1), Blocks.IRON_BARS.defaultBlockState(), 3);
+
+        for (int y = 0; y <= 3; y++) {
+            serverLevel.setBlock(center.offset(2, y, 2), Blocks.IRON_BARS.defaultBlockState(), 3);
+            serverLevel.setBlock(center.offset(-2, y, 2), Blocks.IRON_BARS.defaultBlockState(), 3);
+            serverLevel.setBlock(center.offset(2, y, -2), Blocks.IRON_BARS.defaultBlockState(), 3);
+            serverLevel.setBlock(center.offset(-2, y, -2), Blocks.IRON_BARS.defaultBlockState(), 3);
         }
 
-        serverLevel.setBlock(center.offset(0, 3, 0), Blocks.OAK_PLANKS.defaultBlockState(), 3);
-        serverLevel.setBlock(center.offset(1, 3, 0), Blocks.OAK_PLANKS.defaultBlockState(), 3);
-        serverLevel.setBlock(center.offset(-1, 3, 0), Blocks.OAK_PLANKS.defaultBlockState(), 3);
-        serverLevel.setBlock(center.offset(0, 3, 1), Blocks.OAK_PLANKS.defaultBlockState(), 3);
-        serverLevel.setBlock(center.offset(0, 3, -1), Blocks.OAK_PLANKS.defaultBlockState(), 3);
+        serverLevel.setBlock(center.offset(0, 4, 0), Blocks.CAMPFIRE.defaultBlockState(), 3);
     }
 }

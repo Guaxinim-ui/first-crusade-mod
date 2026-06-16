@@ -1,16 +1,17 @@
 package com.example.examplemod;
 
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.item.ItemStack;
 
 public class ImperialCommandCoreMenu extends AbstractContainerMenu {
-    private static final int DATA_COUNT = 22;
+    private static final int DATA_COUNT = 40;
 
     private final ContainerData data;
     private final BlockPos commandCorePos;
@@ -60,6 +61,24 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
                     case 19 -> commandCore.getSpaceMarinePromotionCooldownSeconds();
                     case 20 -> commandCore.hasPendingSpaceMarineCandidate() ? 1 : 0;
                     case 21 -> commandCore.getActiveOrkRaidSeconds();
+                    case 22 -> getCitizenCount(commandCore);
+                    case 23 -> getUnemployedCitizenCount(commandCore);
+                    case 24 -> getMineCount(commandCore);
+                    case 25 -> commandCore.getImperialMineCapacity();
+                    case 26 -> getScrapYardCount(commandCore);
+                    case 27 -> commandCore.getScrapYardCapacity();
+                    case 28 -> getForgeCount(commandCore);
+                    case 29 -> commandCore.getImperialForgeCapacity();
+                    case 30 -> getCitizenJobCount(commandCore, ImperialCitizenJob.MINER);
+                    case 31 -> getCitizenJobCount(commandCore, ImperialCitizenJob.SCRAPPER);
+                    case 32 -> getCitizenJobCount(commandCore, ImperialCitizenJob.SMITH);
+                    case 33 -> getRefineryCount(commandCore);
+                    case 34 -> commandCore.getPromethiumRefineryCapacity();
+                    case 35 -> getCitizenJobCount(commandCore, ImperialCitizenJob.STOKER);
+                    case 36 -> getBarracksCount(commandCore);
+                    case 37 -> commandCore.getBarracksCapacity();
+                    case 38 -> getCitizenJobCount(commandCore, ImperialCitizenJob.RECRUIT);
+                    case 39 -> commandCore.getSelectedSpecialistOrdinal();
                     default -> 0;
                 };
             }
@@ -75,9 +94,78 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
         };
     }
 
+    private int getCitizenCount(ImperialCommandCoreBlockEntity commandCore) {
+        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
+            return 0;
+        }
+
+        return ImperialPopulationManager.countAssignedCitizens(serverLevel, commandCore);
+    }
+
+    private int getUnemployedCitizenCount(ImperialCommandCoreBlockEntity commandCore) {
+        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
+            return 0;
+        }
+
+        return ImperialPopulationManager.countUnemployedCitizens(serverLevel, commandCore);
+    }
+
+    private int getMineCount(ImperialCommandCoreBlockEntity commandCore) {
+        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
+            return 0;
+        }
+
+        return ImperialWorkSiteManager.countImperialMines(serverLevel, commandCore, 128);
+    }
+
+    private int getScrapYardCount(ImperialCommandCoreBlockEntity commandCore) {
+        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
+            return 0;
+        }
+
+        return ImperialScrapYardManager.countScrapYards(serverLevel, commandCore, 128);
+    }
+
+    private int getForgeCount(ImperialCommandCoreBlockEntity commandCore) {
+        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
+            return 0;
+        }
+
+        return ImperialForgeManager.countForges(serverLevel, commandCore, 128);
+    }
+
+    private int getRefineryCount(ImperialCommandCoreBlockEntity commandCore) {
+        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
+            return 0;
+        }
+
+        return ImperialPromethiumRefineryManager.countRefineries(serverLevel, commandCore, 128);
+    }
+
+    private int getBarracksCount(ImperialCommandCoreBlockEntity commandCore) {
+        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
+            return 0;
+        }
+
+        return ImperialBarracksManager.countBarracks(serverLevel, commandCore, 128);
+    }
+
+    private int getCitizenJobCount(ImperialCommandCoreBlockEntity commandCore, ImperialCitizenJob job) {
+        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
+            return 0;
+        }
+
+        return ImperialPopulationManager.countCitizensWithJob(serverLevel, commandCore, job);
+    }
+
     @Override
     public boolean stillValid(Player player) {
         return true;
+    }
+
+    @Override
+    public ItemStack quickMoveStack(Player player, int index) {
+        return ItemStack.EMPTY;
     }
 
     public BlockPos getCommandCorePos() {
@@ -172,8 +260,75 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
         return this.data.get(21);
     }
 
-    @Override
-public ItemStack quickMoveStack(Player player, int index) {
-    return ItemStack.EMPTY;
-}
+    public int getCitizenCount() {
+        return this.data.get(22);
+    }
+
+    public int getUnemployedCitizenCount() {
+        return this.data.get(23);
+    }
+
+    public int getMineCount() {
+        return this.data.get(24);
+    }
+
+    public int getMineCapacity() {
+        return this.data.get(25);
+    }
+
+    public int getScrapYardCount() {
+        return this.data.get(26);
+    }
+
+    public int getScrapYardCapacity() {
+        return this.data.get(27);
+    }
+
+    public int getForgeCount() {
+        return this.data.get(28);
+    }
+
+    public int getForgeCapacity() {
+        return this.data.get(29);
+    }
+
+    public int getMinerCount() {
+        return this.data.get(30);
+    }
+
+    public int getScrapperCount() {
+        return this.data.get(31);
+    }
+
+    public int getSmithCount() {
+        return this.data.get(32);
+    }
+
+    public int getRefineryCount() {
+        return this.data.get(33);
+    }
+
+    public int getRefineryCapacity() {
+        return this.data.get(34);
+    }
+
+    public int getStokerCount() {
+        return this.data.get(35);
+    }
+
+    public int getBarracksCount() {
+        return this.data.get(36);
+    }
+
+    public int getBarracksCapacity() {
+        return this.data.get(37);
+    }
+
+    public int getRecruitsInTraining() {
+        return this.data.get(38);
+    }
+
+    public GuardsmanSpecialization getSelectedSpecialization() {
+        return GuardsmanSpecialization.fromOrdinal(this.data.get(39));
+    }
 }

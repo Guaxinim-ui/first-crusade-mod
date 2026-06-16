@@ -10,22 +10,22 @@ import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 
-public class ImperialMineBlockEntity extends BlockEntity {
-    private static final int REQUIRED_WORK_TICKS = 600;
+public class ImperialScrapYardBlockEntity extends BlockEntity {
+    private static final int REQUIRED_WORK_TICKS = 700;
 
     private BlockPos commandCorePos;
-    private int totalIronProduced;
+    private int totalScrapProduced;
 
-    public ImperialMineBlockEntity(BlockPos pos, BlockState blockState) {
-        super(ExampleMod.IMPERIAL_MINE_BLOCK_ENTITY.get(), pos, blockState);
+    public ImperialScrapYardBlockEntity(BlockPos pos, BlockState blockState) {
+        super(ExampleMod.IMPERIAL_SCRAP_YARD_BLOCK_ENTITY.get(), pos, blockState);
     }
 
-    public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialMineBlockEntity mine) {
+    public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialScrapYardBlockEntity scrapYard) {
         if (!(level instanceof ServerLevel serverLevel)) {
             return;
         }
 
-        mine.tickProduction(serverLevel);
+        scrapYard.tickProduction(serverLevel);
     }
 
     private void tickProduction(ServerLevel serverLevel) {
@@ -37,13 +37,13 @@ public class ImperialMineBlockEntity extends BlockEntity {
             return;
         }
 
-        ImperialCitizenEntity miner = findAssignedMiner(serverLevel);
+        ImperialCitizenEntity scrapper = findAssignedScrapper(serverLevel);
 
-        if (miner == null) {
+        if (scrapper == null) {
             return;
         }
 
-        if (!miner.hasWorkedForTicks(REQUIRED_WORK_TICKS)) {
+        if (!scrapper.hasWorkedForTicks(REQUIRED_WORK_TICKS)) {
             return;
         }
 
@@ -53,18 +53,18 @@ public class ImperialMineBlockEntity extends BlockEntity {
             return;
         }
 
-        int accepted = commandCore.receiveProducedResource(ImperialResourceType.IRON, commandCore.getMineIronYield());
+        int accepted = commandCore.receiveProducedResource(ImperialResourceType.SCRAP, commandCore.getScrapYardScrapYield());
 
         if (accepted <= 0) {
             return;
         }
 
-        miner.resetWorkTicks();
-        this.totalIronProduced += accepted;
+        scrapper.resetWorkTicks();
+        this.totalScrapProduced += accepted;
         setChanged();
     }
 
-    private ImperialCitizenEntity findAssignedMiner(ServerLevel serverLevel) {
+    private ImperialCitizenEntity findAssignedScrapper(ServerLevel serverLevel) {
         AABB searchBox = new AABB(
                 this.worldPosition.getX() - 8,
                 this.worldPosition.getY() - 4,
@@ -78,7 +78,7 @@ public class ImperialMineBlockEntity extends BlockEntity {
                 ImperialCitizenEntity.class,
                 searchBox,
                 citizen -> citizen.isAlive()
-                        && citizen.hasJob(ImperialCitizenJob.MINER)
+                        && citizen.hasJob(ImperialCitizenJob.SCRAPPER)
                         && citizen.isAssignedToCommandCore(this.commandCorePos)
                         && this.worldPosition.equals(citizen.getWorkSitePos())
         );
@@ -99,23 +99,19 @@ public class ImperialMineBlockEntity extends BlockEntity {
         return this.commandCorePos != null && this.commandCorePos.equals(commandCorePos);
     }
 
-    public BlockPos getCommandCorePos() {
-        return this.commandCorePos;
-    }
-
-    public int getTotalIronProduced() {
-        return this.totalIronProduced;
+    public int getTotalScrapProduced() {
+        return this.totalScrapProduced;
     }
 
     public boolean hasActiveWorker(ServerLevel serverLevel) {
-        return findAssignedMiner(serverLevel) != null;
+        return findAssignedScrapper(serverLevel) != null;
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
 
-        tag.putInt("TotalIronProduced", this.totalIronProduced);
+        tag.putInt("TotalScrapProduced", this.totalScrapProduced);
 
         if (this.commandCorePos != null) {
             tag.putBoolean("HasCommandCorePos", true);
@@ -131,7 +127,7 @@ public class ImperialMineBlockEntity extends BlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
 
-        this.totalIronProduced = tag.getInt("TotalIronProduced");
+        this.totalScrapProduced = tag.getInt("TotalScrapProduced");
 
         if (tag.getBoolean("HasCommandCorePos")) {
             this.commandCorePos = new BlockPos(

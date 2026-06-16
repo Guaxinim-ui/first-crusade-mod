@@ -3,6 +3,8 @@ package com.example.examplemod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -10,22 +12,22 @@ import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 
-public class ImperialMineBlockEntity extends BlockEntity {
-    private static final int REQUIRED_WORK_TICKS = 600;
+public class ImperialForgeBlockEntity extends BlockEntity {
+    private static final int REQUIRED_WORK_TICKS = 900;
 
     private BlockPos commandCorePos;
-    private int totalIronProduced;
+    private int totalPlatesProduced;
 
-    public ImperialMineBlockEntity(BlockPos pos, BlockState blockState) {
-        super(ExampleMod.IMPERIAL_MINE_BLOCK_ENTITY.get(), pos, blockState);
+    public ImperialForgeBlockEntity(BlockPos pos, BlockState blockState) {
+        super(ExampleMod.IMPERIAL_FORGE_BLOCK_ENTITY.get(), pos, blockState);
     }
 
-    public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialMineBlockEntity mine) {
+    public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialForgeBlockEntity forge) {
         if (!(level instanceof ServerLevel serverLevel)) {
             return;
         }
 
-        mine.tickProduction(serverLevel);
+        forge.tickProduction(serverLevel);
     }
 
     private void tickProduction(ServerLevel serverLevel) {
@@ -37,13 +39,13 @@ public class ImperialMineBlockEntity extends BlockEntity {
             return;
         }
 
-        ImperialCitizenEntity miner = findAssignedMiner(serverLevel);
+        ImperialCitizenEntity smith = findAssignedSmith(serverLevel);
 
-        if (miner == null) {
+        if (smith == null) {
             return;
         }
 
-        if (!miner.hasWorkedForTicks(REQUIRED_WORK_TICKS)) {
+        if (!smith.hasWorkedForTicks(REQUIRED_WORK_TICKS)) {
             return;
         }
 
@@ -53,18 +55,19 @@ public class ImperialMineBlockEntity extends BlockEntity {
             return;
         }
 
-        int accepted = commandCore.receiveProducedResource(ImperialResourceType.IRON, commandCore.getMineIronYield());
+        boolean consumedResources = commandCore.consumeResourcesForCrusadiumPlateProduction(4, 3, 2);
 
-        if (accepted <= 0) {
+        if (!consumedResources) {
             return;
         }
 
-        miner.resetWorkTicks();
-        this.totalIronProduced += accepted;
+        smith.resetWorkTicks();
+        this.totalPlatesProduced++;
+        spawnCrusadiumPlate(serverLevel);
         setChanged();
     }
 
-    private ImperialCitizenEntity findAssignedMiner(ServerLevel serverLevel) {
+    private ImperialCitizenEntity findAssignedSmith(ServerLevel serverLevel) {
         AABB searchBox = new AABB(
                 this.worldPosition.getX() - 8,
                 this.worldPosition.getY() - 4,
@@ -78,7 +81,7 @@ public class ImperialMineBlockEntity extends BlockEntity {
                 ImperialCitizenEntity.class,
                 searchBox,
                 citizen -> citizen.isAlive()
-                        && citizen.hasJob(ImperialCitizenJob.MINER)
+                        && citizen.hasJob(ImperialCitizenJob.SMITH)
                         && citizen.isAssignedToCommandCore(this.commandCorePos)
                         && this.worldPosition.equals(citizen.getWorkSitePos())
         );
@@ -90,6 +93,19 @@ public class ImperialMineBlockEntity extends BlockEntity {
         return citizens.get(0);
     }
 
+    private void spawnCrusadiumPlate(ServerLevel serverLevel) {
+        ItemEntity itemEntity = new ItemEntity(
+                serverLevel,
+                this.worldPosition.getX() + 0.5D,
+                this.worldPosition.getY() + 1.2D,
+                this.worldPosition.getZ() + 0.5D,
+                new ItemStack(ExampleMod.CRUSADIUM_PLATE.get())
+        );
+
+        itemEntity.setDefaultPickUpDelay();
+        serverLevel.addFreshEntity(itemEntity);
+    }
+
     public void assignToCommandCore(BlockPos commandCorePos) {
         this.commandCorePos = commandCorePos.immutable();
         setChanged();
@@ -99,23 +115,15 @@ public class ImperialMineBlockEntity extends BlockEntity {
         return this.commandCorePos != null && this.commandCorePos.equals(commandCorePos);
     }
 
-    public BlockPos getCommandCorePos() {
-        return this.commandCorePos;
-    }
-
-    public int getTotalIronProduced() {
-        return this.totalIronProduced;
-    }
-
-    public boolean hasActiveWorker(ServerLevel serverLevel) {
-        return findAssignedMiner(serverLevel) != null;
+    public int getTotalPlatesProduced() {
+        return this.totalPlatesProduced;
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
 
-        tag.putInt("TotalIronProduced", this.totalIronProduced);
+        tag.putInt("TotalPlatesProduced", this.totalPlatesProduced);
 
         if (this.commandCorePos != null) {
             tag.putBoolean("HasCommandCorePos", true);
@@ -131,7 +139,7 @@ public class ImperialMineBlockEntity extends BlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
 
-        this.totalIronProduced = tag.getInt("TotalIronProduced");
+        this.totalPlatesProduced = tag.getInt("TotalPlatesProduced");
 
         if (tag.getBoolean("HasCommandCorePos")) {
             this.commandCorePos = new BlockPos(

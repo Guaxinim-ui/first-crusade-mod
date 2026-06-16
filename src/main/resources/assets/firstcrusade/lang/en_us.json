@@ -21,5 +21,9 @@
   "entity.firstcrusade.guardsman": "Guardsman",
   "entity.firstcrusade.space_marine": "Space Marine",
   "entity.firstcrusade.ork_boy": "Ork Boy",
-  "entity.firstcrusade.ork_nob": "Ork Nob"
+  "entity.firstcrusade.ork_nob": "Ork Nob",
+  "block.firstcrusade.imperial_scrap_yard": "Imperial Scrap Yard",
+  "block.firstcrusade.imperial_forge": "Imperial Forge",
+  "block.firstcrusade.imperial_promethium_refinery": "Imperial Promethium Refinery",
+  "block.firstcrusade.imperial_barracks": "Imperial Barracks"
 }

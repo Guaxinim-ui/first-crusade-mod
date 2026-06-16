@@ -11,45 +11,45 @@ import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 
-public class ImperialWorkSiteManager {
-    private ImperialWorkSiteManager() {
+public class ImperialForgeManager {
+    private ImperialForgeManager() {
     }
 
-    public static boolean buildImperialMine(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player) {
-        BlockPos minePos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, 28);
+    public static boolean buildForge(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player) {
+        BlockPos forgePos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, 32);
 
-        if (minePos == null) {
-            player.displayClientMessage(Component.literal("No free space found near the city to build an Imperial Mine."), true);
+        if (forgePos == null) {
+            player.displayClientMessage(Component.literal("No free space found near the city to build an Imperial Forge."), true);
             return false;
         }
 
-        buildMineStructure(serverLevel, minePos);
+        buildForgeStructure(serverLevel, forgePos);
 
-        BlockEntity blockEntity = serverLevel.getBlockEntity(minePos);
+        BlockEntity blockEntity = serverLevel.getBlockEntity(forgePos);
 
-        if (blockEntity instanceof ImperialMineBlockEntity mineBlockEntity) {
-            mineBlockEntity.assignToCommandCore(commandCore.getBlockPos());
+        if (blockEntity instanceof ImperialForgeBlockEntity forgeBlockEntity) {
+            forgeBlockEntity.assignToCommandCore(commandCore.getBlockPos());
         }
 
         ImperialCitizenEntity worker = findAvailableCitizen(serverLevel, commandCore);
 
         if (worker != null) {
             worker.assignToCommandCore(commandCore.getBlockPos());
-            worker.assignJob(ImperialCitizenJob.MINER, minePos);
+            worker.assignJob(ImperialCitizenJob.SMITH, forgePos);
 
             player.displayClientMessage(Component.literal(
-                    "Imperial Mine built. An Imperial Citizen was assigned as Miner."
+                    "Imperial Forge built. An Imperial Citizen was assigned as Smith."
             ), false);
         } else {
             player.displayClientMessage(Component.literal(
-                    "Imperial Mine built, but no unemployed Imperial Citizen was available."
+                    "Imperial Forge built, but no unemployed Imperial Citizen was available."
             ), false);
         }
 
         return true;
     }
 
-    public static int countImperialMines(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, int radius) {
+    public static int countForges(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, int radius) {
         BlockPos corePos = commandCore.getBlockPos();
         int count = 0;
 
@@ -57,38 +57,14 @@ public class ImperialWorkSiteManager {
                 corePos.offset(-radius, -32, -radius),
                 corePos.offset(radius, 64, radius)
         )) {
-            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_MINE.get())) {
+            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_FORGE.get())) {
                 continue;
             }
 
             BlockEntity blockEntity = serverLevel.getBlockEntity(pos);
 
-            if (blockEntity instanceof ImperialMineBlockEntity mineBlockEntity
-                    && mineBlockEntity.isAssignedToCommandCore(corePos)) {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
-    public static int countStaffedImperialMines(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, int radius) {
-        BlockPos corePos = commandCore.getBlockPos();
-        int count = 0;
-
-        for (BlockPos pos : BlockPos.betweenClosed(
-                corePos.offset(-radius, -32, -radius),
-                corePos.offset(radius, 64, radius)
-        )) {
-            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_MINE.get())) {
-                continue;
-            }
-
-            BlockEntity blockEntity = serverLevel.getBlockEntity(pos);
-
-            if (blockEntity instanceof ImperialMineBlockEntity mineBlockEntity
-                    && mineBlockEntity.isAssignedToCommandCore(corePos)
-                    && mineBlockEntity.hasActiveWorker(serverLevel)) {
+            if (blockEntity instanceof ImperialForgeBlockEntity forgeBlockEntity
+                    && forgeBlockEntity.isAssignedToCommandCore(corePos)) {
                 count++;
             }
         }
@@ -198,10 +174,10 @@ public class ImperialWorkSiteManager {
                 || serverLevel.getBlockState(pos).getCollisionShape(serverLevel, pos).isEmpty();
     }
 
-    private static void buildMineStructure(ServerLevel serverLevel, BlockPos center) {
+    private static void buildForgeStructure(ServerLevel serverLevel, BlockPos center) {
         for (int x = -2; x <= 2; x++) {
             for (int z = -2; z <= 2; z++) {
-                serverLevel.setBlock(center.offset(x, -1, z), Blocks.COBBLESTONE.defaultBlockState(), 3);
+                serverLevel.setBlock(center.offset(x, -1, z), Blocks.STONE_BRICKS.defaultBlockState(), 3);
 
                 for (int y = 0; y <= 3; y++) {
                     serverLevel.setBlock(center.offset(x, y, z), Blocks.AIR.defaultBlockState(), 3);
@@ -209,19 +185,20 @@ public class ImperialWorkSiteManager {
             }
         }
 
-        serverLevel.setBlock(center, ExampleMod.IMPERIAL_MINE.get().defaultBlockState(), 3);
+        serverLevel.setBlock(center, ExampleMod.IMPERIAL_FORGE.get().defaultBlockState(), 3);
+
+        serverLevel.setBlock(center.offset(1, 0, 0), Blocks.BLAST_FURNACE.defaultBlockState(), 3);
+        serverLevel.setBlock(center.offset(-1, 0, 0), Blocks.ANVIL.defaultBlockState(), 3);
+        serverLevel.setBlock(center.offset(0, 0, 1), Blocks.SMITHING_TABLE.defaultBlockState(), 3);
+        serverLevel.setBlock(center.offset(0, 0, -1), Blocks.FURNACE.defaultBlockState(), 3);
 
         for (int y = 0; y <= 2; y++) {
-            serverLevel.setBlock(center.offset(2, y, 2), Blocks.OAK_LOG.defaultBlockState(), 3);
-            serverLevel.setBlock(center.offset(-2, y, 2), Blocks.OAK_LOG.defaultBlockState(), 3);
-            serverLevel.setBlock(center.offset(2, y, -2), Blocks.OAK_LOG.defaultBlockState(), 3);
-            serverLevel.setBlock(center.offset(-2, y, -2), Blocks.OAK_LOG.defaultBlockState(), 3);
+            serverLevel.setBlock(center.offset(2, y, 2), Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 3);
+            serverLevel.setBlock(center.offset(-2, y, 2), Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 3);
+            serverLevel.setBlock(center.offset(2, y, -2), Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 3);
+            serverLevel.setBlock(center.offset(-2, y, -2), Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 3);
         }
 
-        serverLevel.setBlock(center.offset(0, 3, 0), Blocks.OAK_PLANKS.defaultBlockState(), 3);
-        serverLevel.setBlock(center.offset(1, 3, 0), Blocks.OAK_PLANKS.defaultBlockState(), 3);
-        serverLevel.setBlock(center.offset(-1, 3, 0), Blocks.OAK_PLANKS.defaultBlockState(), 3);
-        serverLevel.setBlock(center.offset(0, 3, 1), Blocks.OAK_PLANKS.defaultBlockState(), 3);
-        serverLevel.setBlock(center.offset(0, 3, -1), Blocks.OAK_PLANKS.defaultBlockState(), 3);
+        serverLevel.setBlock(center.offset(0, 3, 0), Blocks.IRON_BLOCK.defaultBlockState(), 3);
     }
 }

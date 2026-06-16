@@ -79,7 +79,19 @@ public class ImperialCommandCoreActionPacket {
 
             case BUILD_IMPERIAL_MINE -> commandCore.tryBuildImperialMine(player);
 
+            case BUILD_SCRAP_YARD -> commandCore.tryBuildScrapYard(player);
+
+            case BUILD_IMPERIAL_FORGE -> commandCore.tryBuildImperialForge(player);
+
+            case BUILD_PROMETHIUM_REFINERY -> commandCore.tryBuildPromethiumRefinery(player);
+
+            case BUILD_BARRACKS -> commandCore.tryBuildBarracks(player);
+
             case RECRUIT_GUARDSMAN -> commandCore.tryRecruitGuardsman(player);
+
+            case CYCLE_SPECIALIST -> commandCore.cycleSelectedSpecialist(player);
+
+            case PROMOTE_SPECIALIST -> commandCore.promoteSpecialist(player);
 
             case UPGRADE_CITY -> {
                 ItemStack plateStack = findItemStack(player, ExampleMod.CRUSADIUM_PLATE.get());

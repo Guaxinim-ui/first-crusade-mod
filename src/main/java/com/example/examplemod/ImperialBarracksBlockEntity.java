@@ -10,25 +10,25 @@ import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 
-public class ImperialMineBlockEntity extends BlockEntity {
-    private static final int REQUIRED_WORK_TICKS = 600;
+public class ImperialBarracksBlockEntity extends BlockEntity {
+    private static final int TRAINING_TICKS = 1200;
 
     private BlockPos commandCorePos;
-    private int totalIronProduced;
+    private int totalTrained;
 
-    public ImperialMineBlockEntity(BlockPos pos, BlockState blockState) {
-        super(ExampleMod.IMPERIAL_MINE_BLOCK_ENTITY.get(), pos, blockState);
+    public ImperialBarracksBlockEntity(BlockPos pos, BlockState blockState) {
+        super(ExampleMod.IMPERIAL_BARRACKS_BLOCK_ENTITY.get(), pos, blockState);
     }
 
-    public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialMineBlockEntity mine) {
+    public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialBarracksBlockEntity barracks) {
         if (!(level instanceof ServerLevel serverLevel)) {
             return;
         }
 
-        mine.tickProduction(serverLevel);
+        barracks.tickTraining(serverLevel);
     }
 
-    private void tickProduction(ServerLevel serverLevel) {
+    private void tickTraining(ServerLevel serverLevel) {
         if (this.commandCorePos == null) {
             return;
         }
@@ -37,13 +37,13 @@ public class ImperialMineBlockEntity extends BlockEntity {
             return;
         }
 
-        ImperialCitizenEntity miner = findAssignedMiner(serverLevel);
+        ImperialCitizenEntity recruit = findAssignedRecruit(serverLevel);
 
-        if (miner == null) {
+        if (recruit == null) {
             return;
         }
 
-        if (!miner.hasWorkedForTicks(REQUIRED_WORK_TICKS)) {
+        if (!recruit.hasWorkedForTicks(TRAINING_TICKS)) {
             return;
         }
 
@@ -53,18 +53,17 @@ public class ImperialMineBlockEntity extends BlockEntity {
             return;
         }
 
-        int accepted = commandCore.receiveProducedResource(ImperialResourceType.IRON, commandCore.getMineIronYield());
+        boolean trained = commandCore.completeRecruitTraining(serverLevel, recruit);
 
-        if (accepted <= 0) {
+        if (!trained) {
             return;
         }
 
-        miner.resetWorkTicks();
-        this.totalIronProduced += accepted;
+        this.totalTrained++;
         setChanged();
     }
 
-    private ImperialCitizenEntity findAssignedMiner(ServerLevel serverLevel) {
+    private ImperialCitizenEntity findAssignedRecruit(ServerLevel serverLevel) {
         AABB searchBox = new AABB(
                 this.worldPosition.getX() - 8,
                 this.worldPosition.getY() - 4,
@@ -78,7 +77,7 @@ public class ImperialMineBlockEntity extends BlockEntity {
                 ImperialCitizenEntity.class,
                 searchBox,
                 citizen -> citizen.isAlive()
-                        && citizen.hasJob(ImperialCitizenJob.MINER)
+                        && citizen.hasJob(ImperialCitizenJob.RECRUIT)
                         && citizen.isAssignedToCommandCore(this.commandCorePos)
                         && this.worldPosition.equals(citizen.getWorkSitePos())
         );
@@ -90,6 +89,10 @@ public class ImperialMineBlockEntity extends BlockEntity {
         return citizens.get(0);
     }
 
+    public boolean hasAssignedRecruit(ServerLevel serverLevel) {
+        return findAssignedRecruit(serverLevel) != null;
+    }
+
     public void assignToCommandCore(BlockPos commandCorePos) {
         this.commandCorePos = commandCorePos.immutable();
         setChanged();
@@ -99,23 +102,15 @@ public class ImperialMineBlockEntity extends BlockEntity {
         return this.commandCorePos != null && this.commandCorePos.equals(commandCorePos);
     }
 
-    public BlockPos getCommandCorePos() {
-        return this.commandCorePos;
-    }
-
-    public int getTotalIronProduced() {
-        return this.totalIronProduced;
-    }
-
-    public boolean hasActiveWorker(ServerLevel serverLevel) {
-        return findAssignedMiner(serverLevel) != null;
+    public int getTotalTrained() {
+        return this.totalTrained;
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
 
-        tag.putInt("TotalIronProduced", this.totalIronProduced);
+        tag.putInt("TotalTrained", this.totalTrained);
 
         if (this.commandCorePos != null) {
             tag.putBoolean("HasCommandCorePos", true);
@@ -131,7 +126,7 @@ public class ImperialMineBlockEntity extends BlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
 
-        this.totalIronProduced = tag.getInt("TotalIronProduced");
+        this.totalTrained = tag.getInt("TotalTrained");
 
         if (tag.getBoolean("HasCommandCorePos")) {
             this.commandCorePos = new BlockPos(
