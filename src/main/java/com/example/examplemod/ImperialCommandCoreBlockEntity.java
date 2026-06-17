@@ -11,14 +11,12 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 
 import java.util.List;
@@ -2445,53 +2443,6 @@ private void spawnOrkRaid(ServerLevel serverLevel, long currentDay, boolean forc
     setChanged();
 }
 
-private void spawnRaidMob(ServerLevel serverLevel, Mob mob, int index) {
-    BlockPos spawnPos = findRaidSpawnPosition(serverLevel, index);
-
-    mob.moveTo(
-            spawnPos.getX() + 0.5D,
-            spawnPos.getY(),
-            spawnPos.getZ() + 0.5D,
-            serverLevel.random.nextFloat() * 360.0F,
-            0.0F
-    );
-
-    mob.setPersistenceRequired();
-    serverLevel.addFreshEntity(mob);
-}
-
-private BlockPos findRaidSpawnPosition(ServerLevel serverLevel, int index) {
-    int radius = getRaidSpawnRadius();
-
-    double angle = serverLevel.random.nextDouble() * Math.PI * 2.0D;
-    angle += index * 0.65D;
-
-    int x = this.worldPosition.getX() + (int) Math.round(Math.cos(angle) * radius);
-    int z = this.worldPosition.getZ() + (int) Math.round(Math.sin(angle) * radius);
-
-    BlockPos basePos = new BlockPos(x, this.worldPosition.getY(), z);
-
-    return serverLevel.getHeightmapPos(
-            Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-            basePos
-    );
-}
-
-private void notifyNearbyPlayers(ServerLevel serverLevel, String message) {
-    double range = 128.0D;
-    double rangeSquared = range * range;
-
-    for (ServerPlayer serverPlayer : serverLevel.players()) {
-        if (serverPlayer.distanceToSqr(
-                this.worldPosition.getX() + 0.5D,
-                this.worldPosition.getY() + 0.5D,
-                this.worldPosition.getZ() + 0.5D
-        ) <= rangeSquared) {
-            serverPlayer.displayClientMessage(Component.literal(message), false);
-        }
-    }
-}
-
 private int getRaidCooldownDays() {
     return switch (this.cityLevel) {
         case 1 -> 4;
@@ -2511,43 +2462,6 @@ private float getRaidChance() {
         case 4 -> 0.45F;
         case 5 -> 0.55F;
         default -> 0.20F;
-    };
-}
-
-private int getRaidBoyCount() {
-    int baseAmount = switch (this.cityLevel) {
-        case 1 -> 3;
-        case 2 -> 5;
-        case 3 -> 8;
-        case 4 -> 12;
-        case 5 -> 18;
-        default -> 3;
-    };
-
-    return baseAmount + Math.min(this.orkRaidCount, 10);
-}
-
-private int getRaidNobCount() {
-    int baseAmount = switch (this.cityLevel) {
-        case 1 -> 0;
-        case 2 -> 1;
-        case 3 -> 1;
-        case 4 -> 2;
-        case 5 -> 3;
-        default -> 0;
-    };
-
-    return baseAmount + Math.min(this.orkRaidCount / 3, 3);
-}
-
-private int getRaidSpawnRadius() {
-    return switch (this.cityLevel) {
-        case 1 -> 28;
-        case 2 -> 36;
-        case 3 -> 48;
-        case 4 -> 64;
-        case 5 -> 80;
-        default -> 28;
     };
 }
 
