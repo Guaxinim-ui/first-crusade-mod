@@ -3,19 +3,71 @@ package com.example.examplemod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 
-// An Imperial Farm employs a Farmer. It produces no stored resource; instead a staffed farm
-// counts as a food source that lifts the city's morale and sustains population growth.
+// An Imperial Farm employs a Farmer who produces Food into the city's stockpile each work cycle.
+// A staffed farm also counts toward morale and sustains population growth.
 public class ImperialFarmBlockEntity extends BlockEntity {
+    private static final int REQUIRED_WORK_TICKS = 700;
+
     private BlockPos commandCorePos;
+    private int totalFoodProduced;
 
     public ImperialFarmBlockEntity(BlockPos pos, BlockState blockState) {
         super(ExampleMod.IMPERIAL_FARM_BLOCK_ENTITY.get(), pos, blockState);
+    }
+
+    public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialFarmBlockEntity farm) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        farm.tickProduction(serverLevel);
+    }
+
+    private void tickProduction(ServerLevel serverLevel) {
+        if (this.commandCorePos == null) {
+            return;
+        }
+
+        if (serverLevel.getGameTime() % 40 != 0) {
+            return;
+        }
+
+        ImperialCitizenEntity farmer = findAssignedFarmer(serverLevel);
+
+        if (farmer == null) {
+            return;
+        }
+
+        if (!farmer.hasWorkedForTicks(REQUIRED_WORK_TICKS)) {
+            return;
+        }
+
+        BlockEntity blockEntity = serverLevel.getBlockEntity(this.commandCorePos);
+
+        if (!(blockEntity instanceof ImperialCommandCoreBlockEntity commandCore)) {
+            return;
+        }
+
+        int accepted = commandCore.receiveProducedFood(commandCore.getFarmFoodYield());
+
+        if (accepted <= 0) {
+            return;
+        }
+
+        farmer.resetWorkTicks();
+        this.totalFoodProduced += accepted;
+        setChanged();
+    }
+
+    public int getTotalFoodProduced() {
+        return this.totalFoodProduced;
     }
 
     public void assignToCommandCore(BlockPos commandCorePos) {

@@ -241,6 +241,17 @@ public final class ImperialCityLevelStats {
         };
     }
 
+    // Food produced per Farmer work cycle, scaling with city level. Food is plentiful by design.
+    public static int farmFoodYield(int cityLevel) {
+        return switch (cityLevel) {
+            case 2 -> 3;
+            case 3 -> 5;
+            case 4 -> 7;
+            case 5 -> 10;
+            default -> 2;
+        };
+    }
+
     // Cooldown (ticks) before reinforcements can be called again.
     public static int reinforcementCooldownTicks(int cityLevel) {
         return switch (cityLevel) {

@@ -11,6 +11,7 @@ import java.util.List;
 
 public class ImperialPopulationManager {
     private static final int CITIZEN_GROWTH_INTERVAL_TICKS = 1200;
+    private static final int FOOD_PER_NEW_CITIZEN = 4;
 
     private ImperialPopulationManager() {
     }
@@ -55,6 +56,10 @@ public class ImperialPopulationManager {
 
         citizen.setCustomName(Component.literal("Imperial Citizen"));
         serverLevel.addFreshEntity(citizen);
+
+        // A new mouth to feed: consume some stored Food if available (never blocks growth, so a
+        // fledgling settlement without a Farm can still grow its first workers).
+        commandCore.consumeFood(FOOD_PER_NEW_CITIZEN);
 
         commandCore.setChanged();
     }

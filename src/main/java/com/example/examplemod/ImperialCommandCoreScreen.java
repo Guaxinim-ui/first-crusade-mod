@@ -47,6 +47,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
     private Button withdrawGoldButton;
     private Button withdrawEmeraldButton;
     private Button withdrawCrusadiumButton;
+    private Button withdrawFoodButton;
 
     public ImperialCommandCoreScreen(ImperialCommandCoreMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -98,6 +99,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         this.withdrawGoldButton = null;
         this.withdrawEmeraldButton = null;
         this.withdrawCrusadiumButton = null;
+        this.withdrawFoodButton = null;
     }
 
     private void addTabButtons() {
@@ -172,6 +174,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         this.withdrawGoldButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Withdraw Gold", ImperialCommandCoreAction.WITHDRAW_GOLD);
         this.withdrawEmeraldButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Withdraw Emerald", ImperialCommandCoreAction.WITHDRAW_EMERALD);
         this.withdrawCrusadiumButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Withdraw Crusadium", ImperialCommandCoreAction.WITHDRAW_CRUSADIUM);
+        this.withdrawFoodButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Withdraw Food", ImperialCommandCoreAction.WITHDRAW_FOOD);
     }
 
     private Button addActionButton(int x, int y, int width, int height, String text, ImperialCommandCoreAction action) {
@@ -273,6 +276,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         applyWithdrawButton(this.withdrawGoldButton, "Gold", this.menu.getGold());
         applyWithdrawButton(this.withdrawEmeraldButton, "Emerald", this.menu.getEmerald());
         applyWithdrawButton(this.withdrawCrusadiumButton, "Crusadium", this.menu.getCrusadium());
+        applyWithdrawButton(this.withdrawFoodButton, "Food (Wheat)", this.menu.getFood());
     }
 
     private void applyButton(Button button, boolean active, String title, String cost, String reason) {
@@ -510,6 +514,8 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         drawLine(guiGraphics, "Emerald: " + this.menu.getEmerald() + "/" + cap, 12, y, 0xFF2ECC71);
         y += 11;
         drawLine(guiGraphics, "Crusadium: " + this.menu.getCrusadium() + "/" + cap, 12, y, 0xFFB0C4DE);
+        y += 11;
+        drawLine(guiGraphics, "Food: " + this.menu.getFood() + "/" + cap, 12, y, 0xFFE6D27A);
     }
 
     private void drawLine(GuiGraphics guiGraphics, String text, int x, int y, int color) {

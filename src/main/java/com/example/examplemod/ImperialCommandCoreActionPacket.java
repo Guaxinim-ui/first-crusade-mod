@@ -83,6 +83,7 @@ public class ImperialCommandCoreActionPacket {
             case WITHDRAW_GOLD -> commandCore.withdrawResource(player, ImperialResourceType.GOLD, 64);
             case WITHDRAW_EMERALD -> commandCore.withdrawResource(player, ImperialResourceType.EMERALD, 64);
             case WITHDRAW_CRUSADIUM -> commandCore.withdrawResource(player, ImperialResourceType.CRUSADIUM, 64);
+            case WITHDRAW_FOOD -> commandCore.withdrawFood(player, 64);
 
             case BUILD_IMPERIAL_MINE -> commandCore.tryBuildImperialMine(player);
 

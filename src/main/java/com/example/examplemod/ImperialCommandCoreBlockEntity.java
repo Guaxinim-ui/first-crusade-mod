@@ -58,6 +58,10 @@ public class ImperialCommandCoreBlockEntity extends BlockEntity {
 
     private int recruitedGuardsmen = 0;
 
+    // Food sustains the population: Farms produce it into the stockpile and citizen growth
+    // consumes it. Kept separate from the six tradeable resources (like the Emperor's gene-seed).
+    private int food = 0;
+
     private long lastProductionDay = -1;
     private int tickCounter = 0;
 
@@ -906,6 +910,81 @@ public boolean consumeEmperorGeneSeed(int amount) {
     this.emperorGeneSeed -= amount;
     setChanged();
     return true;
+}
+
+public int getFood() {
+    return this.food;
+}
+
+public int getFoodCapacity() {
+    return getStorageCapacity();
+}
+
+// Food produced per Farmer work cycle, scaling with city level.
+public int getFarmFoodYield() {
+    return ImperialCityLevelStats.farmFoodYield(this.cityLevel);
+}
+
+// Adds food up to the storage capacity; returns the amount accepted.
+public int addFood(int amount) {
+    if (amount <= 0) {
+        return 0;
+    }
+
+    int freeSpace = Math.max(0, getFoodCapacity() - this.food);
+    int accepted = Math.min(amount, freeSpace);
+
+    if (accepted > 0) {
+        this.food += accepted;
+        setChanged();
+    }
+
+    return accepted;
+}
+
+// Receives food produced by a staffed Farm.
+public int receiveProducedFood(int amount) {
+    return addFood(amount);
+}
+
+// Soft-consumes food (e.g. when a citizen is born). Never blocks if food runs out.
+public void consumeFood(int amount) {
+    if (amount <= 0 || this.food <= 0) {
+        return;
+    }
+
+    this.food = Math.max(0, this.food - amount);
+    setChanged();
+}
+
+// Withdraws stored Food into the owner's inventory as Wheat.
+public void withdrawFood(Player player, int requested) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can withdraw resources from this city."), true);
+        return;
+    }
+
+    int amount = Math.min(this.food, requested);
+
+    if (amount <= 0) {
+        player.displayClientMessage(Component.literal("No Food stored to withdraw."), true);
+        return;
+    }
+
+    this.food -= amount;
+
+    ItemStack stack = new ItemStack(Items.WHEAT, amount);
+
+    if (!player.getInventory().add(stack)) {
+        player.drop(stack, false);
+    }
+
+    player.getInventory().setChanged();
+    setChanged();
+
+    player.displayClientMessage(Component.literal(
+            "Withdrew " + amount + " Food (Wheat) from the city."
+    ), false);
 }
 
 public boolean consumeCrusadium(int amount) {
@@ -2802,6 +2881,7 @@ tag.putInt("RaidPressureTicks", this.raidPressureTicks);
 
 tag.putInt("ReinforcementCooldownTicks", this.reinforcementCooldownTicks);
 tag.putInt("EmperorGeneSeed", this.emperorGeneSeed);
+tag.putInt("Food", this.food);
 tag.putInt("SpaceMarinePromotionCooldownTicks", this.spaceMarinePromotionCooldownTicks);
 tag.putInt("SelectedSpecialistOrdinal", this.selectedSpecialistOrdinal);
 
@@ -2842,6 +2922,7 @@ public void load(CompoundTag tag) {
     }
 
     this.resources.load(tag);
+    this.food = Math.min(tag.getInt("Food"), getFoodCapacity());
 
     this.cityMorale = tag.contains("CityMorale")
             ? ImperialCityMoraleManager.clamp(tag.getInt("CityMorale"))

@@ -266,11 +266,14 @@ barrel, crafting table, grindstone, fletching table, cantos de polished andesite
 Ao concluir, chama `commandCore.completeRecruitTraining(...)` → vira Guardsman.
 
 ### Imperial Farm (`ImperialFarmManager` + `ImperialFarmBlockEntity`)
-Custo: **15 Iron, 5 Scrap**. Cap. = nível. Emprega `FARMER`. **Não produz recurso armazenado**:
-uma Farm com trabalhador conta como fonte de comida que alimenta **4 cidadãos** e entra no
-cálculo de **moral** (`foodFactor`: bem-alimentado +15; faminto até −20), sustentando o
-crescimento populacional. Sem ticker (o cidadão só precisa estar trabalhando). Estrutura:
-campo de farmland + trigo, postes de cerca e fardos de feno.
+Custo: **15 Iron, 5 Scrap**. Cap. = nível. Emprega `FARMER`. **Produz Food** para o estoque
+(ciclo de **700 ticks**, yield 2/3/5/7/10 por nível; `receiveProducedFood`). Uma Farm com
+trabalhador também conta no `foodFactor` da **moral** (bem-alimentado +15; faminto até −20).
+Estrutura: campo de farmland + trigo, postes de cerca e fardos de feno.
+
+> **Food** (`food` no Core, capacidade = storage) é um recurso **separado dos 6** (como o Gene
+> Seed). É exibido na aba Resources, sacável como **Wheat**, e o **crescimento popular consome 4
+> Food por cidadão** (`FOOD_PER_NEW_CITIZEN`, consumo suave — não bloqueia o início sem Farm).
 
 ### Imperial Emerald Trade Depot (`ImperialEmeraldTradeDepotManager` + `...BlockEntity`)
 Custo: **30 Iron, 15 Scrap, 10 Coal**. **Requer cidade ≥ nv3.** Cap. = `max(1, nível/2)`.
@@ -334,6 +337,7 @@ habitação (bem alojado +20; sem-teto até −30), segurança (integridade do C
 | Crusadium | ✅ armazenável | Custo do Primarch (32); item ingot existe; sem cadeia de produção própria ainda |
 | Gold | ✅ ativo | Produzido pela Imperial Gold Mine (GOLD_MINER). Uso final (upgrades/itens) ainda a definir |
 | Emerald | ✅ ativo | Obtido no Emerald Trade Depot (TRADER) trocando Gold. Uso final (comércio/reforços) a definir |
+| Food | ✅ ativo | Produzido pela Imperial Farm; sustenta crescimento populacional. Separado dos 6 (saca como Wheat) |
 | Ork Teeth | item existe | Drop de Orks; "moeda" temática (uso a definir) |
 
 `ImperialResourceType`: `IRON, COAL, SCRAP, GOLD, EMERALD, CRUSADIUM`.
