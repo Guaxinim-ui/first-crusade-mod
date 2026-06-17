@@ -362,6 +362,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         drawLine(guiGraphics, "Level: " + this.menu.getCityLevel(), 12, y, 0xFFFFFFFF);
         y += 11;
         drawLine(guiGraphics, "Integrity: " + this.menu.getCityIntegrity() + "/100", 12, y, getIntegrityColor());
+        drawLine(guiGraphics, "Morale: " + this.menu.getCityMorale() + " (" + ImperialCityMoraleManager.getMoraleLabel(this.menu.getCityMorale()) + ")", 130, y, getMoraleColor());
         y += 11;
         drawLine(guiGraphics, "Citizens: " + this.menu.getCitizenCount() + "/" + getCitizenCapacityText(), 12, y, 0xFFBBD7FF);
         y += 11;
@@ -381,12 +382,17 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
         y = 168;
         drawLine(guiGraphics, "Resources", 12, y, 0xFFFFD27D);
+        int cap = this.menu.getStorageCapacity();
+        int col2 = 130;
         y += 13;
-        drawLine(guiGraphics, "Iron: " + this.menu.getIron() + "/" + this.menu.getStorageCapacity(), 12, y, 0xFFD8D8D8);
+        drawLine(guiGraphics, "Iron: " + this.menu.getIron() + "/" + cap, 12, y, 0xFFD8D8D8);
+        drawLine(guiGraphics, "Gold: " + this.menu.getGold() + "/" + cap, col2, y, 0xFFFFD700);
         y += 11;
-        drawLine(guiGraphics, "Scrap: " + this.menu.getScrapMetal() + "/" + this.menu.getStorageCapacity(), 12, y, 0xFFD8D8D8);
+        drawLine(guiGraphics, "Scrap: " + this.menu.getScrapMetal() + "/" + cap, 12, y, 0xFFD8D8D8);
+        drawLine(guiGraphics, "Emerald: " + this.menu.getEmerald() + "/" + cap, col2, y, 0xFF2ECC71);
         y += 11;
-        drawLine(guiGraphics, "Coal: " + this.menu.getCoal() + "/" + this.menu.getStorageCapacity(), 12, y, 0xFFD8D8D8);
+        drawLine(guiGraphics, "Coal: " + this.menu.getCoal() + "/" + cap, 12, y, 0xFFD8D8D8);
+        drawLine(guiGraphics, "Crusadium: " + this.menu.getCrusadium() + "/" + cap, col2, y, 0xFFB0C4DE);
 
         y = 226;
         drawLine(guiGraphics, "Production", 12, y, 0xFFFFD27D);
@@ -416,6 +422,20 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
             case 4 -> "15";
             default -> "25";
         };
+    }
+
+    private int getMoraleColor() {
+        int morale = this.menu.getCityMorale();
+
+        if (morale >= 60) {
+            return 0xFF77FF77;
+        }
+
+        if (morale >= 40) {
+            return 0xFFFFFF77;
+        }
+
+        return 0xFFFF7777;
     }
 
     private int getIntegrityColor() {

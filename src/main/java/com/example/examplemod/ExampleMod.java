@@ -170,6 +170,34 @@ public static final RegistryObject<Item> IMPERIAL_MINE_ITEM =
         BLOCK_ENTITY_TYPES.register("imperial_barracks",
                 () -> BlockEntityType.Builder.of(ImperialBarracksBlockEntity::new, IMPERIAL_BARRACKS.get()).build(null));
 
+public static final RegistryObject<Block> IMPERIAL_HABITATION =
+        BLOCKS.register("imperial_habitation",
+                () -> new ImperialHabitationBlock(BlockBehaviour.Properties.of()
+                        .strength(3.0F)
+                        .sound(SoundType.STONE)));
+
+public static final RegistryObject<Item> IMPERIAL_HABITATION_ITEM =
+        ITEMS.register("imperial_habitation",
+                () -> new BlockItem(IMPERIAL_HABITATION.get(), new Item.Properties()));
+
+public static final RegistryObject<BlockEntityType<ImperialHabitationBlockEntity>> IMPERIAL_HABITATION_BLOCK_ENTITY =
+        BLOCK_ENTITY_TYPES.register("imperial_habitation",
+                () -> BlockEntityType.Builder.of(ImperialHabitationBlockEntity::new, IMPERIAL_HABITATION.get()).build(null));
+
+public static final RegistryObject<Block> ORK_CAMP =
+        BLOCKS.register("ork_camp",
+                () -> new OrkCampBlock(BlockBehaviour.Properties.of()
+                        .strength(3.0F)
+                        .sound(SoundType.WOOD)));
+
+public static final RegistryObject<Item> ORK_CAMP_ITEM =
+        ITEMS.register("ork_camp",
+                () -> new BlockItem(ORK_CAMP.get(), new Item.Properties()));
+
+public static final RegistryObject<BlockEntityType<OrkCampBlockEntity>> ORK_CAMP_BLOCK_ENTITY =
+        BLOCK_ENTITY_TYPES.register("ork_camp",
+                () -> BlockEntityType.Builder.of(OrkCampBlockEntity::new, ORK_CAMP.get()).build(null));
+
     // =========================
     // MATERIALS
     // =========================
@@ -287,6 +315,26 @@ public static final RegistryObject<Item> IMPERIAL_MINE_ITEM =
 public static final RegistryObject<Item> SPACE_MARINE_SPAWN_EGG = ITEMS.register("space_marine_spawn_egg",
         () -> new ForgeSpawnEggItem(SPACE_MARINE, 0x1C3F8F, 0xD8C06A, new Item.Properties()));
 
+public static final RegistryObject<EntityType<CustodesEntity>> CUSTODES =
+        ENTITY_TYPES.register("custodes",
+                () -> EntityType.Builder.of(CustodesEntity::new, MobCategory.CREATURE)
+                        .sized(0.9F, 2.5F)
+                        .clientTrackingRange(12)
+                        .build(MODID + ":custodes"));
+
+public static final RegistryObject<Item> CUSTODES_SPAWN_EGG = ITEMS.register("custodes_spawn_egg",
+        () -> new ForgeSpawnEggItem(CUSTODES, 0xC9A227, 0x5A0A0A, new Item.Properties()));
+
+public static final RegistryObject<EntityType<PrimarchEntity>> PRIMARCH =
+        ENTITY_TYPES.register("primarch",
+                () -> EntityType.Builder.of(PrimarchEntity::new, MobCategory.CREATURE)
+                        .sized(1.4F, 3.6F)
+                        .clientTrackingRange(16)
+                        .build(MODID + ":primarch"));
+
+public static final RegistryObject<Item> PRIMARCH_SPAWN_EGG = ITEMS.register("primarch_spawn_egg",
+        () -> new ForgeSpawnEggItem(PRIMARCH, 0xD4AF37, 0x2B1B5A, new Item.Properties()));
+
     // =========================
     // ORK ENTITIES
     // =========================
@@ -384,6 +432,76 @@ public static final RegistryObject<Item> SPACE_MARINE_SPAWN_EGG = ITEMS.register
             () -> new ArmorItem(GUARDSMAN_ARMOR_MATERIAL, ArmorItem.Type.BOOTS, new Item.Properties()));
 
     // =========================
+    // SPACE MARINE ARMOR
+    // =========================
+
+    // Power armor: significantly tougher than Guardsman flak. Worn-layer textures are
+    // placeholders copied from the Guardsman layers until dedicated art is added.
+    public static final ArmorMaterial SPACE_MARINE_ARMOR_MATERIAL = new ArmorMaterial() {
+        @Override
+        public int getDurabilityForType(ArmorItem.Type type) {
+            return switch (type) {
+                case HELMET -> 407;
+                case CHESTPLATE -> 592;
+                case LEGGINGS -> 555;
+                case BOOTS -> 481;
+            };
+        }
+
+        @Override
+        public int getDefenseForType(ArmorItem.Type type) {
+            return switch (type) {
+                case HELMET -> 3;
+                case CHESTPLATE -> 8;
+                case LEGGINGS -> 6;
+                case BOOTS -> 3;
+            };
+        }
+
+        @Override
+        public int getEnchantmentValue() {
+            return 12;
+        }
+
+        @Override
+        public SoundEvent getEquipSound() {
+            return SoundEvents.ARMOR_EQUIP_NETHERITE;
+        }
+
+        @Override
+        public Ingredient getRepairIngredient() {
+            return Ingredient.of(CRUSADIUM_PLATE.get());
+        }
+
+        @Override
+        public String getName() {
+            return MODID + ":space_marine";
+        }
+
+        @Override
+        public float getToughness() {
+            return 3.0F;
+        }
+
+        @Override
+        public float getKnockbackResistance() {
+            return 0.1F;
+        }
+    };
+
+    public static final RegistryObject<Item> SPACE_MARINE_HELMET = ITEMS.register("space_marine_helmet",
+            () -> new ArmorItem(SPACE_MARINE_ARMOR_MATERIAL, ArmorItem.Type.HELMET, new Item.Properties()));
+
+    public static final RegistryObject<Item> SPACE_MARINE_CHESTPLATE = ITEMS.register("space_marine_chestplate",
+            () -> new ArmorItem(SPACE_MARINE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE, new Item.Properties()));
+
+    public static final RegistryObject<Item> SPACE_MARINE_LEGGINGS = ITEMS.register("space_marine_leggings",
+            () -> new ArmorItem(SPACE_MARINE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS, new Item.Properties()));
+
+    public static final RegistryObject<Item> SPACE_MARINE_BOOTS = ITEMS.register("space_marine_boots",
+            () -> new ArmorItem(SPACE_MARINE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS, new Item.Properties()));
+
+    // =========================
     // CREATIVE TAB
     // =========================
 
@@ -398,6 +516,8 @@ public static final RegistryObject<Item> SPACE_MARINE_SPAWN_EGG = ITEMS.register
                         output.accept(IMPERIAL_FORGE_ITEM.get());
                         output.accept(IMPERIAL_PROMETHIUM_REFINERY_ITEM.get());
                         output.accept(IMPERIAL_BARRACKS_ITEM.get());
+                        output.accept(IMPERIAL_HABITATION_ITEM.get());
+                        output.accept(ORK_CAMP_ITEM.get());
 
                         output.accept(CRUSADIUM_INGOT.get());
                         output.accept(CRUSADIUM_PLATE.get());
@@ -417,8 +537,15 @@ public static final RegistryObject<Item> SPACE_MARINE_SPAWN_EGG = ITEMS.register
                         output.accept(GUARDSMAN_LEGGINGS.get());
                         output.accept(GUARDSMAN_BOOTS.get());
 
+                        output.accept(SPACE_MARINE_HELMET.get());
+                        output.accept(SPACE_MARINE_CHESTPLATE.get());
+                        output.accept(SPACE_MARINE_LEGGINGS.get());
+                        output.accept(SPACE_MARINE_BOOTS.get());
+
                        output.accept(GUARDSMAN_SPAWN_EGG.get());
 output.accept(SPACE_MARINE_SPAWN_EGG.get());
+output.accept(CUSTODES_SPAWN_EGG.get());
+output.accept(PRIMARCH_SPAWN_EGG.get());
 output.accept(ORK_BOY_SPAWN_EGG.get());
 output.accept(ORK_NOB_SPAWN_EGG.get());
                     })
@@ -458,6 +585,8 @@ private void registerAttributes(EntityAttributeCreationEvent event) {
     event.put(GUARDSMAN.get(), GuardsmanEntity.createAttributes().build());
     event.put(IMPERIAL_CITIZEN.get(), ImperialCitizenEntity.createAttributes().build());
     event.put(SPACE_MARINE.get(), SpaceMarineEntity.createAttributes().build());
+    event.put(CUSTODES.get(), CustodesEntity.createAttributes().build());
+    event.put(PRIMARCH.get(), PrimarchEntity.createAttributes().build());
     event.put(ORK_BOY.get(), OrkBoyEntity.createAttributes().build());
     event.put(ORK_NOB.get(), OrkNobEntity.createAttributes().build());
 }
@@ -481,6 +610,8 @@ public static void onClientSetup(FMLClientSetupEvent event) {
         event.registerEntityRenderer(LASGUN_SHOT.get(), LasgunShotRenderer::new);
         event.registerEntityRenderer(GUARDSMAN.get(), GuardsmanRenderer::new);
         event.registerEntityRenderer(SPACE_MARINE.get(), SpaceMarineRenderer::new);
+        event.registerEntityRenderer(CUSTODES.get(), CustodesRenderer::new);
+        event.registerEntityRenderer(PRIMARCH.get(), PrimarchRenderer::new);
         event.registerEntityRenderer(ORK_BOY.get(), OrkBoyRenderer::new);
         event.registerEntityRenderer(ORK_NOB.get(), OrkNobRenderer::new);
     }

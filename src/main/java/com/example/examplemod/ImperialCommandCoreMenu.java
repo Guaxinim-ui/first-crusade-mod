@@ -11,7 +11,7 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 
 public class ImperialCommandCoreMenu extends AbstractContainerMenu {
-    private static final int DATA_COUNT = 40;
+    private static final int DATA_COUNT = 44;
 
     private final ContainerData data;
     private final BlockPos commandCorePos;
@@ -79,6 +79,10 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
                     case 37 -> commandCore.getBarracksCapacity();
                     case 38 -> getCitizenJobCount(commandCore, ImperialCitizenJob.RECRUIT);
                     case 39 -> commandCore.getSelectedSpecialistOrdinal();
+                    case 40 -> commandCore.getGold();
+                    case 41 -> commandCore.getEmerald();
+                    case 42 -> commandCore.getCrusadium();
+                    case 43 -> commandCore.getCityMorale();
                     default -> 0;
                 };
             }
@@ -330,5 +334,21 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
 
     public GuardsmanSpecialization getSelectedSpecialization() {
         return GuardsmanSpecialization.fromOrdinal(this.data.get(39));
+    }
+
+    public int getGold() {
+        return this.data.get(40);
+    }
+
+    public int getEmerald() {
+        return this.data.get(41);
+    }
+
+    public int getCrusadium() {
+        return this.data.get(42);
+    }
+
+    public int getCityMorale() {
+        return this.data.get(43);
     }
 }

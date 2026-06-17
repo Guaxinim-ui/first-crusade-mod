@@ -3,6 +3,7 @@ package com.example.examplemod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
@@ -12,6 +13,8 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -30,8 +33,15 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import javax.annotation.Nullable;
 
 public class SpaceMarineEntity extends PathfinderMob {
+    // Autonomous Neophyte maturation: an ascended Guardsman first serves as a Neophyte
+    // (reduced gene-seed implants) and matures into a full Battle-Brother over time.
+    private static final int NEOPHYTE_MATURATION_TICKS = 6000; // ~5 minutes of trials
+
     private BlockPos commandCorePos;
     private BlockPos guardPostPos;
+
+    private boolean neophyte = false;
+    private int neophyteTicks = 0;
 
     public SpaceMarineEntity(EntityType<? extends SpaceMarineEntity> entityType, Level level) {
         super(entityType, level);
@@ -84,6 +94,14 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
             this.setTarget(null);
         }
 
+        if (this.neophyte) {
+            this.neophyteTicks++;
+
+            if (this.neophyteTicks >= NEOPHYTE_MATURATION_TICKS) {
+                matureIntoFullMarine();
+            }
+        }
+
         if (this.tickCount % 100 == 0) {
             prepareSpaceMarine();
             moveToGuardPostIfNeeded();
@@ -91,11 +109,67 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
     }
 
     private void prepareSpaceMarine() {
-        this.setCustomName(Component.literal("Space Marine Initiate"));
-        this.setCustomNameVisible(true);
+        updateNameForState();
         this.setPersistenceRequired();
 
         equipAsSpaceMarine();
+    }
+
+    private void updateNameForState() {
+        this.setCustomName(Component.literal(this.neophyte ? "Neophyte" : "Space Marine"));
+        this.setCustomNameVisible(true);
+    }
+
+    // Marks a freshly ascended Guardsman as a Neophyte with reduced implants. Called by the
+    // upgrade manager; the Neophyte then matures on its own (see aiStep).
+    public void beginAsNeophyte() {
+        this.neophyte = true;
+        this.neophyteTicks = 0;
+
+        applyNeophyteStats();
+        updateNameForState();
+    }
+
+    public boolean isNeophyte() {
+        return this.neophyte;
+    }
+
+    private void applyNeophyteStats() {
+        setBaseAttribute(Attributes.MAX_HEALTH, 55.0D);
+        setBaseAttribute(Attributes.ATTACK_DAMAGE, 8.0D);
+        setBaseAttribute(Attributes.ARMOR, 12.0D);
+        this.setHealth(this.getMaxHealth());
+    }
+
+    private void applyFullMarineStats() {
+        setBaseAttribute(Attributes.MAX_HEALTH, 90.0D);
+        setBaseAttribute(Attributes.ATTACK_DAMAGE, 13.0D);
+        setBaseAttribute(Attributes.ARMOR, 18.0D);
+        this.setHealth(this.getMaxHealth());
+    }
+
+    private void matureIntoFullMarine() {
+        this.neophyte = false;
+        this.neophyteTicks = 0;
+
+        applyFullMarineStats();
+        updateNameForState();
+
+        if (this.commandCorePos != null && this.level() instanceof ServerLevel serverLevel) {
+            OrkRaidManager.notifyNearbyPlayers(
+                    serverLevel,
+                    this.commandCorePos,
+                    "A Neophyte has completed his trials and is now a full Space Marine."
+            );
+        }
+    }
+
+    private void setBaseAttribute(Attribute attribute, double value) {
+        AttributeInstance instance = this.getAttribute(attribute);
+
+        if (instance != null) {
+            instance.setBaseValue(value);
+        }
     }
 
     private void moveToGuardPostIfNeeded() {
@@ -210,6 +284,9 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
         if (this.guardPostPos != null) {
             tag.putLong("GuardPostPos", this.guardPostPos.asLong());
         }
+
+        tag.putBoolean("Neophyte", this.neophyte);
+        tag.putInt("NeophyteTicks", this.neophyteTicks);
     }
 
     @Override
@@ -224,6 +301,13 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
             this.guardPostPos = BlockPos.of(tag.getLong("GuardPostPos"));
         }
 
+        this.neophyte = tag.getBoolean("Neophyte");
+        this.neophyteTicks = tag.getInt("NeophyteTicks");
+
         prepareSpaceMarine();
+
+        if (this.neophyte) {
+            applyNeophyteStats();
+        }
     }
 }

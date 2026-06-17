@@ -19,7 +19,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.network.chat.Component;
 
 import java.util.List;
 import java.util.UUID;
@@ -41,6 +40,22 @@ public class ImperialCommandCoreBlockEntity extends BlockEntity {
     private int iron = 0;
     private int coal = 0;
     private int scrapMetal = 0;
+
+    // Advanced resources. Previously produced amounts were silently discarded; now stored.
+    private int gold = 0;
+    private int emerald = 0;
+    private int crusadium = 0;
+
+    // Civilian morale (0-100). Eased toward a target each slow tick by ImperialCityMoraleManager.
+    private int cityMorale = ImperialCityMoraleManager.DEFAULT_MORALE;
+
+    // While > 0 the city mourns a fallen Primarch and no new one may rise.
+    private int primarchMourningCooldownTicks = 0;
+
+    // A single Ork Camp is seeded once the city draws enough attention; its position is
+    // remembered so the Primarch can lead a sortie against it.
+    private boolean orkCampSeeded = false;
+    private BlockPos orkCampPos;
 
     private int recruitedGuardsmen = 0;
 
@@ -189,8 +204,22 @@ public int receiveProducedResource(ImperialResourceType resourceType, int amount
             this.scrapMetal += accepted;
         }
 
-        case GOLD, EMERALD, CRUSADIUM -> {
-            accepted = 0;
+        case GOLD -> {
+            int freeSpace = Math.max(0, getStorageCapacity() - this.gold);
+            accepted = Math.min(amount, freeSpace);
+            this.gold += accepted;
+        }
+
+        case EMERALD -> {
+            int freeSpace = Math.max(0, getStorageCapacity() - this.emerald);
+            accepted = Math.min(amount, freeSpace);
+            this.emerald += accepted;
+        }
+
+        case CRUSADIUM -> {
+            int freeSpace = Math.max(0, getStorageCapacity() - this.crusadium);
+            accepted = Math.min(amount, freeSpace);
+            this.crusadium += accepted;
         }
     }
 
@@ -219,11 +248,17 @@ public int receiveProducedResource(ImperialResourceType resourceType, int amount
         }
 
        blockEntity.tickCounter = 0;
+ImperialCityMoraleManager.tickMorale(serverLevel, blockEntity);
+ImperialPatrolManager.tickPatrols(serverLevel, blockEntity);
 ImperialWorkforceManager.autoManageWorkforce(serverLevel, blockEntity);
 blockEntity.produceResourcesIfNewDay(level);
 blockEntity.reduceReinforcementCooldown();
 blockEntity.reduceSpaceMarinePromotionCooldown();
 blockEntity.processAutomaticSpaceMarinePromotion(serverLevel);
+ImperialCustodesManager.tickCustodes(serverLevel, blockEntity);
+blockEntity.reducePrimarchMourningCooldown();
+ImperialPrimarchManager.tickPrimarch(serverLevel, blockEntity);
+blockEntity.trySeedOrkCamp(serverLevel);
 blockEntity.trySpawnOrkRaid(serverLevel);
 blockEntity.checkActiveOrkRaid(serverLevel);
     }
@@ -252,6 +287,11 @@ blockEntity.checkActiveOrkRaid(serverLevel);
             scrapProduction = getEffectiveDailyScrapProduction(serverLevel);
             coalProduction = getEffectiveDailyCoalProduction(serverLevel);
         }
+
+        double moraleMultiplier = ImperialCityMoraleManager.getProductionMultiplier(this.cityMorale);
+        ironProduction = (int) Math.round(ironProduction * moraleMultiplier);
+        scrapProduction = (int) Math.round(scrapProduction * moraleMultiplier);
+        coalProduction = (int) Math.round(coalProduction * moraleMultiplier);
 
         addIron((int) daysPassed * ironProduction);
 addScrapMetal((int) daysPassed * scrapProduction);
@@ -377,6 +417,9 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
     int totalIron = 0;
     int totalCoal = 0;
     int totalScrap = 0;
+    int totalGold = 0;
+    int totalEmerald = 0;
+    int totalCrusadium = 0;
     boolean foundResource = false;
 
     for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
@@ -418,10 +461,47 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
                 stack.shrink(accepted);
                 totalScrap += accepted;
             }
+
+            continue;
+        }
+
+        if (stack.is(Items.GOLD_INGOT)) {
+            foundResource = true;
+            int accepted = addGold(stack.getCount());
+
+            if (accepted > 0) {
+                stack.shrink(accepted);
+                totalGold += accepted;
+            }
+
+            continue;
+        }
+
+        if (stack.is(Items.EMERALD)) {
+            foundResource = true;
+            int accepted = addEmerald(stack.getCount());
+
+            if (accepted > 0) {
+                stack.shrink(accepted);
+                totalEmerald += accepted;
+            }
+
+            continue;
+        }
+
+        if (stack.is(ExampleMod.CRUSADIUM_INGOT.get())) {
+            foundResource = true;
+            int accepted = addCrusadium(stack.getCount());
+
+            if (accepted > 0) {
+                stack.shrink(accepted);
+                totalCrusadium += accepted;
+            }
         }
     }
 
-    if (totalIron <= 0 && totalCoal <= 0 && totalScrap <= 0) {
+    if (totalIron <= 0 && totalCoal <= 0 && totalScrap <= 0
+            && totalGold <= 0 && totalEmerald <= 0 && totalCrusadium <= 0) {
         if (foundResource) {
             player.displayClientMessage(Component.literal("City storage is full. No resources were deposited."), true);
         } else {
@@ -435,11 +515,13 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
     setChanged();
 
     player.displayClientMessage(Component.literal(
-            "Deposited: " + totalIron + " Iron, " + totalCoal + " Coal, " + totalScrap + " Scrap Metal."
+            "Deposited: " + totalIron + " Iron, " + totalCoal + " Coal, " + totalScrap + " Scrap, "
+                    + totalGold + " Gold, " + totalEmerald + " Emerald, " + totalCrusadium + " Crusadium."
     ), false);
 
     player.displayClientMessage(Component.literal(
-            "City Storage: " + this.iron + " Iron, " + this.coal + " Coal, " + this.scrapMetal + " Scrap."
+            "City Storage: " + this.iron + " Iron, " + this.coal + " Coal, " + this.scrapMetal + " Scrap, "
+                    + this.gold + " Gold, " + this.emerald + " Emerald, " + this.crusadium + " Crusadium."
     ), false);
 }
 
@@ -458,6 +540,24 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
     private int addScrapMetal(int amount) {
         int acceptedAmount = getAcceptedAmount(this.scrapMetal, amount);
         this.scrapMetal += acceptedAmount;
+        return acceptedAmount;
+    }
+
+    private int addGold(int amount) {
+        int acceptedAmount = getAcceptedAmount(this.gold, amount);
+        this.gold += acceptedAmount;
+        return acceptedAmount;
+    }
+
+    private int addEmerald(int amount) {
+        int acceptedAmount = getAcceptedAmount(this.emerald, amount);
+        this.emerald += acceptedAmount;
+        return acceptedAmount;
+    }
+
+    private int addCrusadium(int amount) {
+        int acceptedAmount = getAcceptedAmount(this.crusadium, amount);
+        this.crusadium += acceptedAmount;
         return acceptedAmount;
     }
 
@@ -480,6 +580,72 @@ private int addEmperorGeneSeed(int amount) {
 
 public int getEmperorGeneSeed() {
     return this.emperorGeneSeed;
+}
+
+public boolean consumeEmperorGeneSeed(int amount) {
+    if (amount <= 0 || this.emperorGeneSeed < amount) {
+        return false;
+    }
+
+    this.emperorGeneSeed -= amount;
+    setChanged();
+    return true;
+}
+
+public boolean consumeCrusadium(int amount) {
+    if (amount <= 0 || this.crusadium < amount) {
+        return false;
+    }
+
+    this.crusadium -= amount;
+    setChanged();
+    return true;
+}
+
+public int getPrimarchMourningCooldownTicks() {
+    return this.primarchMourningCooldownTicks;
+}
+
+public int getPrimarchMourningCooldownSeconds() {
+    return this.primarchMourningCooldownTicks / 20;
+}
+
+// Called when the city's Primarch dies: the settlement mourns and morale collapses.
+public void onPrimarchDeath() {
+    this.primarchMourningCooldownTicks = 24000; // ~20 minutes before another may rise
+    setCityMorale(this.cityMorale - 25);
+    setChanged();
+}
+
+private void reducePrimarchMourningCooldown() {
+    if (this.primarchMourningCooldownTicks <= 0) {
+        return;
+    }
+
+    this.primarchMourningCooldownTicks -= 200;
+
+    if (this.primarchMourningCooldownTicks < 0) {
+        this.primarchMourningCooldownTicks = 0;
+    }
+
+    setChanged();
+}
+
+public BlockPos getOrkCampPos() {
+    return this.orkCampPos;
+}
+
+// Seeds one Ork Camp once the settlement is large enough to attract a warband.
+private void trySeedOrkCamp(ServerLevel serverLevel) {
+    if (this.orkCampSeeded || this.cityLevel < 2) {
+        return;
+    }
+
+    BlockPos campPos = OrkCampManager.seedCamp(serverLevel, this);
+
+    this.orkCampSeeded = true;
+    this.orkCampPos = campPos;
+    setChanged();
 }
 
 public int getDailyEmperorGeneProduction() {
@@ -2184,6 +2350,31 @@ public int getScrapMetal() {
     return this.scrapMetal;
 }
 
+public int getGold() {
+    return this.gold;
+}
+
+public int getEmerald() {
+    return this.emerald;
+}
+
+public int getCrusadium() {
+    return this.crusadium;
+}
+
+public int getCityMorale() {
+    return this.cityMorale;
+}
+
+public void setCityMorale(int morale) {
+    int clamped = ImperialCityMoraleManager.clamp(morale);
+
+    if (clamped != this.cityMorale) {
+        this.cityMorale = clamped;
+        setChanged();
+    }
+}
+
 public int getCityIntegrityValue() {
     return this.cityIntegrity;
 }
@@ -2377,6 +2568,19 @@ protected void saveAdditional(CompoundTag tag) {
     tag.putInt("Coal", this.coal);
     tag.putInt("ScrapMetal", this.scrapMetal);
 
+    tag.putInt("Gold", this.gold);
+    tag.putInt("Emerald", this.emerald);
+    tag.putInt("Crusadium", this.crusadium);
+
+    tag.putInt("CityMorale", this.cityMorale);
+    tag.putInt("PrimarchMourningCooldownTicks", this.primarchMourningCooldownTicks);
+
+    tag.putBoolean("OrkCampSeeded", this.orkCampSeeded);
+
+    if (this.orkCampPos != null) {
+        tag.putLong("OrkCampPos", this.orkCampPos.asLong());
+    }
+
     tag.putInt("RecruitedGuardsmen", this.recruitedGuardsmen);
 
     tag.putLong("LastProductionDay", this.lastProductionDay);
@@ -2435,6 +2639,19 @@ public void load(CompoundTag tag) {
     this.iron = Math.min(tag.getInt("Iron"), getStorageCapacity());
     this.coal = Math.min(tag.getInt("Coal"), getStorageCapacity());
     this.scrapMetal = Math.min(tag.getInt("ScrapMetal"), getStorageCapacity());
+
+    this.gold = Math.min(tag.getInt("Gold"), getStorageCapacity());
+    this.emerald = Math.min(tag.getInt("Emerald"), getStorageCapacity());
+    this.crusadium = Math.min(tag.getInt("Crusadium"), getStorageCapacity());
+
+    this.cityMorale = tag.contains("CityMorale")
+            ? ImperialCityMoraleManager.clamp(tag.getInt("CityMorale"))
+            : ImperialCityMoraleManager.DEFAULT_MORALE;
+
+    this.primarchMourningCooldownTicks = Math.max(0, tag.getInt("PrimarchMourningCooldownTicks"));
+
+    this.orkCampSeeded = tag.getBoolean("OrkCampSeeded");
+    this.orkCampPos = tag.contains("OrkCampPos") ? BlockPos.of(tag.getLong("OrkCampPos")) : null;
 
     this.recruitedGuardsmen = tag.getInt("RecruitedGuardsmen");
 

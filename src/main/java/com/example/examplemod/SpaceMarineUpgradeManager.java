@@ -206,9 +206,9 @@ public class SpaceMarineUpgradeManager {
         spaceMarine.assignToCommandCore(corePos);
         spaceMarine.assignGuardPost(promotionPos);
         spaceMarine.equipAsSpaceMarine();
-        spaceMarine.setHealth(spaceMarine.getMaxHealth());
-        spaceMarine.setCustomName(Component.literal("Space Marine Initiate"));
-        spaceMarine.setCustomNameVisible(true);
+
+        // Ascends as a Neophyte first; he matures into a full Space Marine on his own.
+        spaceMarine.beginAsNeophyte();
         spaceMarine.setPersistenceRequired();
 
         guardsman.discard();
@@ -218,7 +218,7 @@ public class SpaceMarineUpgradeManager {
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel,
                 corePos,
-                "A veteran Guardsman has ascended into a true Space Marine Initiate."
+                "A veteran Guardsman has begun his trials as a Neophyte."
         );
     }
 

@@ -18,6 +18,14 @@ public class FirstCrusadeFactionManager {
             return FirstCrusadeFaction.IMPERIUM;
         }
 
+        if (entity instanceof CustodesEntity) {
+            return FirstCrusadeFaction.IMPERIUM;
+        }
+
+        if (entity instanceof PrimarchEntity) {
+            return FirstCrusadeFaction.IMPERIUM;
+        }
+
         if (entity instanceof OrkBoyEntity) {
             return FirstCrusadeFaction.ORKS;
         }

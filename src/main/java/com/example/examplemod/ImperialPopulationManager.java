@@ -20,6 +20,11 @@ public class ImperialPopulationManager {
             return;
         }
 
+        // A discontented populace stops producing children until conditions improve.
+        if (!ImperialCityMoraleManager.allowsGrowth(commandCore.getCityMorale())) {
+            return;
+        }
+
         int currentCitizens = countAssignedCitizens(serverLevel, commandCore);
         int capacity = getCitizenCapacity(commandCore);
 
