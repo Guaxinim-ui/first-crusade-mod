@@ -429,6 +429,26 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
     public static final RegistryObject<Item> WARBOSS_SPAWN_EGG = ITEMS.register("warboss_spawn_egg",
             () -> new ForgeSpawnEggItem(WARBOSS, 0x143314, 0xB02020, new Item.Properties()));
 
+    public static final RegistryObject<EntityType<MeganobEntity>> MEGANOB =
+            ENTITY_TYPES.register("meganob",
+                    () -> EntityType.Builder.of(MeganobEntity::new, MobCategory.MONSTER)
+                            .sized(0.9F, 2.3F)
+                            .clientTrackingRange(10)
+                            .build(MODID + ":meganob"));
+
+    public static final RegistryObject<Item> MEGANOB_SPAWN_EGG = ITEMS.register("meganob_spawn_egg",
+            () -> new ForgeSpawnEggItem(MEGANOB, 0x254D25, 0x6E6E6E, new Item.Properties()));
+
+    public static final RegistryObject<EntityType<GretchinEntity>> GRETCHIN =
+            ENTITY_TYPES.register("gretchin",
+                    () -> EntityType.Builder.of(GretchinEntity::new, MobCategory.MONSTER)
+                            .sized(0.5F, 1.2F)
+                            .clientTrackingRange(8)
+                            .build(MODID + ":gretchin"));
+
+    public static final RegistryObject<Item> GRETCHIN_SPAWN_EGG = ITEMS.register("gretchin_spawn_egg",
+            () -> new ForgeSpawnEggItem(GRETCHIN, 0x3A7A1F, 0x9A7A30, new Item.Properties()));
+
     // =========================
     // ARMOR MATERIALS
     // =========================
@@ -623,6 +643,8 @@ output.accept(ROBOUTE_GUILLIMAN_SPAWN_EGG.get());
 output.accept(ORK_BOY_SPAWN_EGG.get());
 output.accept(ORK_NOB_SPAWN_EGG.get());
 output.accept(WARBOSS_SPAWN_EGG.get());
+output.accept(MEGANOB_SPAWN_EGG.get());
+output.accept(GRETCHIN_SPAWN_EGG.get());
                     })
                     .build());
 
@@ -666,6 +688,8 @@ private void registerAttributes(EntityAttributeCreationEvent event) {
     event.put(ORK_BOY.get(), OrkBoyEntity.createAttributes().build());
     event.put(ORK_NOB.get(), OrkNobEntity.createAttributes().build());
     event.put(WARBOSS.get(), WarbossEntity.createAttributes().build());
+    event.put(MEGANOB.get(), MeganobEntity.createAttributes().build());
+    event.put(GRETCHIN.get(), GretchinEntity.createAttributes().build());
 }
 
 @SubscribeEvent
@@ -700,6 +724,8 @@ public static void onClientSetup(FMLClientSetupEvent event) {
         event.registerEntityRenderer(ORK_BOY.get(), OrkBoyRenderer::new);
         event.registerEntityRenderer(ORK_NOB.get(), OrkNobRenderer::new);
         event.registerEntityRenderer(WARBOSS.get(), WarbossRenderer::new);
+        event.registerEntityRenderer(MEGANOB.get(), MeganobRenderer::new);
+        event.registerEntityRenderer(GRETCHIN.get(), GretchinRenderer::new);
         event.registerEntityRenderer(ROBOUTE_GUILLIMAN.get(), RobouteGuillimanRenderer::new);
     }
 }

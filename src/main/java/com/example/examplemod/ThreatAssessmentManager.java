@@ -86,14 +86,26 @@ public final class ThreatAssessmentManager {
         return faction == FirstCrusadeFaction.ORKS || faction == FirstCrusadeFaction.HOSTILE;
     }
 
-    // Quality weight per unit. Expands as new units (Meganob, Killa Kan, Warboss...) are added.
+    // Quality weight per unit. Expands as new units (Killa Kan, etc.) are added.
     private static int weightOf(Mob mob) {
+        if (mob.getType() == ExampleMod.WARBOSS.get()) {
+            return 30;
+        }
+
+        if (mob.getType() == ExampleMod.MEGANOB.get()) {
+            return 12;
+        }
+
         if (mob.getType() == ExampleMod.ORK_NOB.get()) {
             return 6;
         }
 
         if (mob.getType() == ExampleMod.ORK_BOY.get()) {
             return 3;
+        }
+
+        if (mob.getType() == ExampleMod.GRETCHIN.get()) {
+            return 1;
         }
 
         // Generic hostile (zombies, etc.) count as minor pressure.

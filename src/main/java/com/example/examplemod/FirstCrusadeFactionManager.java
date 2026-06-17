@@ -38,6 +38,14 @@ public class FirstCrusadeFactionManager {
             return FirstCrusadeFaction.ORKS;
         }
 
+        if (entity instanceof MeganobEntity) {
+            return FirstCrusadeFaction.ORKS;
+        }
+
+        if (entity instanceof GretchinEntity) {
+            return FirstCrusadeFaction.ORKS;
+        }
+
         if (entity instanceof Player) {
             return FirstCrusadeFaction.PLAYER;
         }

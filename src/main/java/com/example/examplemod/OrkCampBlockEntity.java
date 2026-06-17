@@ -99,35 +99,18 @@ public class OrkCampBlockEntity extends BlockEntity {
             return;
         }
 
+        // Core of the column: Ork Boyz.
         for (int i = 0; i < WAR_PARTY_SIZE; i++) {
-            Mob ork = ExampleMod.ORK_BOY.get().create(serverLevel);
+            dispatchMarcher(serverLevel, pos, ExampleMod.ORK_BOY.get().create(serverLevel));
+        }
 
-            if (ork == null) {
-                continue;
-            }
+        // Grots tag along as fodder.
+        dispatchMarcher(serverLevel, pos, ExampleMod.GRETCHIN.get().create(serverLevel));
+        dispatchMarcher(serverLevel, pos, ExampleMod.GRETCHIN.get().create(serverLevel));
 
-            BlockPos spawnPos = groundPos(serverLevel, pos.offset(serverLevel.random.nextInt(5) - 2, 0, serverLevel.random.nextInt(5) - 2));
-
-            ork.moveTo(
-                    spawnPos.getX() + 0.5D,
-                    spawnPos.getY(),
-                    spawnPos.getZ() + 0.5D,
-                    serverLevel.random.nextFloat() * 360.0F,
-                    0.0F
-            );
-
-            this.clan.applyTo(ork);
-
-            // War party leaves the camp and marches on the city.
-            ork.getNavigation().moveTo(
-                    this.targetCorePos.getX() + 0.5D,
-                    this.targetCorePos.getY(),
-                    this.targetCorePos.getZ() + 0.5D,
-                    1.1D
-            );
-
-            ork.setPersistenceRequired();
-            serverLevel.addFreshEntity(ork);
+        // A grown WAAAGH! puts a Meganob at the head of the column.
+        if (this.warbossSpawned) {
+            dispatchMarcher(serverLevel, pos, ExampleMod.MEGANOB.get().create(serverLevel));
         }
 
         OrkRaidManager.notifyNearbyPlayers(
@@ -142,6 +125,35 @@ public class OrkCampBlockEntity extends BlockEntity {
         if (!this.warbossSpawned && this.warPartiesLaunched >= WAR_PARTIES_BEFORE_WARBOSS) {
             spawnWarboss(serverLevel, pos);
         }
+    }
+
+    // Positions an Ork at the camp, applies its clan profile, and sends it marching on the city.
+    private void dispatchMarcher(ServerLevel serverLevel, BlockPos pos, Mob ork) {
+        if (ork == null) {
+            return;
+        }
+
+        BlockPos spawnPos = groundPos(serverLevel, pos.offset(serverLevel.random.nextInt(5) - 2, 0, serverLevel.random.nextInt(5) - 2));
+
+        ork.moveTo(
+                spawnPos.getX() + 0.5D,
+                spawnPos.getY(),
+                spawnPos.getZ() + 0.5D,
+                serverLevel.random.nextFloat() * 360.0F,
+                0.0F
+        );
+
+        this.clan.applyTo(ork);
+
+        ork.getNavigation().moveTo(
+                this.targetCorePos.getX() + 0.5D,
+                this.targetCorePos.getY(),
+                this.targetCorePos.getZ() + 0.5D,
+                1.1D
+        );
+
+        ork.setPersistenceRequired();
+        serverLevel.addFreshEntity(ork);
     }
 
     // Once the WAAAGH! has built enough momentum, the camp's biggest Ork rises to lead it.
