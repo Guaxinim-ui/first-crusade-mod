@@ -1,5 +1,6 @@
 package com.example.examplemod;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -11,8 +12,15 @@ public class PrimarchRenderer extends HumanoidMobRenderer<PrimarchEntity, Humano
             new ResourceLocation(ExampleMod.MODID, "textures/entity/primarch.png");
 
     // Towering scale: the Primarch dwarfs even a Space Marine.
+    private static final float SCALE = 2.0F;
+
     public PrimarchRenderer(EntityRendererProvider.Context context) {
         super(context, new HumanoidModel<>(context.bakeLayer(ModelLayers.ZOMBIE)), 1.6F);
+    }
+
+    @Override
+    protected void scale(PrimarchEntity entity, PoseStack poseStack, float partialTick) {
+        poseStack.scale(SCALE, SCALE, SCALE);
     }
 
     @Override
