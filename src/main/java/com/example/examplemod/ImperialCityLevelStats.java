@@ -127,4 +127,26 @@ public final class ImperialCityLevelStats {
             default -> 1;
         };
     }
+
+    // War Support cost to call reinforcements during a raid (also shown in the Core screen).
+    public static int reinforcementWarSupportCost(int cityLevel) {
+        return switch (cityLevel) {
+            case 2 -> 10;
+            case 3 -> 18;
+            case 4 -> 30;
+            case 5 -> 50;
+            default -> 5;
+        };
+    }
+
+    // War Support cost to fortify defenders during a raid (also shown in the Core screen).
+    public static int fortifyWarSupportCost(int cityLevel) {
+        return switch (cityLevel) {
+            case 2 -> 10;
+            case 3 -> 18;
+            case 4 -> 30;
+            case 5 -> 45;
+            default -> 5;
+        };
+    }
 }

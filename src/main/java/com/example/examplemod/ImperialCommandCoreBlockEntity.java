@@ -1444,14 +1444,7 @@ public void callImperialReinforcements(Player player) {
 }
 
 private int getReinforcementWarSupportCost() {
-    return switch (this.cityLevel) {
-        case 1 -> 5;
-        case 2 -> 10;
-        case 3 -> 18;
-        case 4 -> 30;
-        case 5 -> 50;
-        default -> 5;
-    };
+    return ImperialCityLevelStats.reinforcementWarSupportCost(this.cityLevel);
 }
 
 private int getReinforcementCount() {
@@ -1572,14 +1565,7 @@ public void fortifyDefenders(Player player) {
 }
 
 private int getFortifyDefendersWarSupportCost() {
-    return switch (this.cityLevel) {
-        case 1 -> 5;
-        case 2 -> 10;
-        case 3 -> 18;
-        case 4 -> 30;
-        case 5 -> 45;
-        default -> 5;
-    };
+    return ImperialCityLevelStats.fortifyWarSupportCost(this.cityLevel);
 }
 
 public void upgradeNearestGuardsmanToSpaceMarine(Player player, ItemStack catalystStack) {

@@ -386,23 +386,11 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
     }
 
     private int reinforcementWarSupportCost() {
-        return switch (this.menu.getCityLevel()) {
-            case 2 -> 10;
-            case 3 -> 18;
-            case 4 -> 30;
-            case 5 -> 50;
-            default -> 5;
-        };
+        return ImperialCityLevelStats.reinforcementWarSupportCost(this.menu.getCityLevel());
     }
 
     private int fortifyWarSupportCost() {
-        return switch (this.menu.getCityLevel()) {
-            case 2 -> 10;
-            case 3 -> 18;
-            case 4 -> 30;
-            case 5 -> 45;
-            default -> 5;
-        };
+        return ImperialCityLevelStats.fortifyWarSupportCost(this.menu.getCityLevel());
     }
 
     @Override
