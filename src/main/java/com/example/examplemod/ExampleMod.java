@@ -449,6 +449,16 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
     public static final RegistryObject<Item> GRETCHIN_SPAWN_EGG = ITEMS.register("gretchin_spawn_egg",
             () -> new ForgeSpawnEggItem(GRETCHIN, 0x3A7A1F, 0x9A7A30, new Item.Properties()));
 
+    public static final RegistryObject<EntityType<KillaKanEntity>> KILLA_KAN =
+            ENTITY_TYPES.register("killa_kan",
+                    () -> EntityType.Builder.of(KillaKanEntity::new, MobCategory.MONSTER)
+                            .sized(1.1F, 2.6F)
+                            .clientTrackingRange(10)
+                            .build(MODID + ":killa_kan"));
+
+    public static final RegistryObject<Item> KILLA_KAN_SPAWN_EGG = ITEMS.register("killa_kan_spawn_egg",
+            () -> new ForgeSpawnEggItem(KILLA_KAN, 0x4A4A2A, 0x8A2020, new Item.Properties()));
+
     // =========================
     // ARMOR MATERIALS
     // =========================
@@ -645,6 +655,7 @@ output.accept(ORK_NOB_SPAWN_EGG.get());
 output.accept(WARBOSS_SPAWN_EGG.get());
 output.accept(MEGANOB_SPAWN_EGG.get());
 output.accept(GRETCHIN_SPAWN_EGG.get());
+output.accept(KILLA_KAN_SPAWN_EGG.get());
                     })
                     .build());
 
@@ -690,6 +701,7 @@ private void registerAttributes(EntityAttributeCreationEvent event) {
     event.put(WARBOSS.get(), WarbossEntity.createAttributes().build());
     event.put(MEGANOB.get(), MeganobEntity.createAttributes().build());
     event.put(GRETCHIN.get(), GretchinEntity.createAttributes().build());
+    event.put(KILLA_KAN.get(), KillaKanEntity.createAttributes().build());
 }
 
 @SubscribeEvent
@@ -726,6 +738,7 @@ public static void onClientSetup(FMLClientSetupEvent event) {
         event.registerEntityRenderer(WARBOSS.get(), WarbossRenderer::new);
         event.registerEntityRenderer(MEGANOB.get(), MeganobRenderer::new);
         event.registerEntityRenderer(GRETCHIN.get(), GretchinRenderer::new);
+        event.registerEntityRenderer(KILLA_KAN.get(), KillaKanRenderer::new);
         event.registerEntityRenderer(ROBOUTE_GUILLIMAN.get(), RobouteGuillimanRenderer::new);
     }
 }

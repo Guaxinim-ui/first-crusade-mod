@@ -46,6 +46,10 @@ public class FirstCrusadeFactionManager {
             return FirstCrusadeFaction.ORKS;
         }
 
+        if (entity instanceof KillaKanEntity) {
+            return FirstCrusadeFaction.ORKS;
+        }
+
         if (entity instanceof Player) {
             return FirstCrusadeFaction.PLAYER;
         }

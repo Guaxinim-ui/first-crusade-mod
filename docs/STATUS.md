@@ -72,11 +72,10 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
 
 - [x] **Fase A** — fundações estratégicas: tipos de cidade + clãs (sabor), Threat Score numérico,
   exército pessoal do líder.
-- [~] **Fase B** — profundidade Ork: **Warboss, Meganob, Gretchin e WAAAGH! Overlord feitos**.
-  O Overlord (`WaaaghOverlordData` SavedData global + `WaaaghOverlordManager`) cresce com a
-  prosperidade imperial (cada cidade alimenta), tem tier 0-4 com anúncio global, e escala todos
-  os camps (warbands maiores + Meganobz mais cedo). **Warbands por clã feitas** (Goffs horda, Bad
-  Moons Nobz, Deathskulls grots, Evil Sunz rápidos, Snakebites durões). Faltando: Killa Kan.
+- [x] **Fase B COMPLETA** — profundidade Ork: **Warboss** (líder), **Meganob** (elite), **Gretchin**
+  (bucha), **Killa Kan** (máquina, tier 3+), **WAAAGH! Overlord** (`WaaaghOverlordData` SavedData
+  global + `WaaaghOverlordManager`: cresce com a prosperidade imperial, tier 0-4 com anúncio global,
+  escala todos os camps), e **warbands por clã** (Goffs/Bad Moons/Deathskulls/Evil Sunz/Snakebites).
 - [ ] **Fase C** — tipos de cidade implementados de fato com tropas-tema (Skitarii/Forge,
   Cadian-Kasrkin/Fortress, Sisters/Shrine, Arbites-Enforcer/Hive). Hoje os tipos só variam
   nome/produção/população — falta variar as tropas recrutadas.
@@ -86,7 +85,9 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
   + viagem planetária (via Spaceport).
 - [ ] **Transversal** — conteúdo (armas/armaduras/recursos por facção) para não ficar entediante.
 
-**Foco atual recomendado:** terminar a Fase B (WAAAGH! overlord + Meganob/Gretchin), depois Fase C.
+**Foco atual recomendado:** Fase C — fazer cada tipo de cidade recrutar tropas-tema próprias
+(começar reusando GuardsmanEntity com ranks/equipamentos distintos por tipo antes de criar
+entidades novas como Skitarii/Sisters).
 
 ## 5. Convenções de arquitetura (seguir)
 
@@ -109,6 +110,8 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-17: Fase B COMPLETA — **Killa Kan** (andador/máquina Ork, 110 HP/16 dano/16 armor, peso
+  de ameaça 20, entra na warband em WAAAGH! tier 3+). Placeholder humanoide até ter modelo próprio.
 - 2026-06-17: Fase B — **warbands por clã**: `OrkClan` ganhou composição (bonusBoyz/nobz/
   bonusGretchin/tactics). Cada clã marcha diferente: Goffs horda, Bad Moons Nobz, Deathskulls
   grots, Evil Sunz rápidos, Snakebites durões; mensagem cita a tática do clã.

@@ -92,6 +92,10 @@ public final class ThreatAssessmentManager {
             return 30;
         }
 
+        if (mob.getType() == ExampleMod.KILLA_KAN.get()) {
+            return 20;
+        }
+
         if (mob.getType() == ExampleMod.MEGANOB.get()) {
             return 12;
         }

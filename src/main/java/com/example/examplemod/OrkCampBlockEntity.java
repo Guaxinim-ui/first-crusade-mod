@@ -125,6 +125,11 @@ public class OrkCampBlockEntity extends BlockEntity {
             dispatchMarcher(serverLevel, pos, ExampleMod.MEGANOB.get().create(serverLevel));
         }
 
+        // The greatest WAAAGH!s (global tier 3+) roll out a Killa Kan war machine.
+        if (tier >= 3) {
+            dispatchMarcher(serverLevel, pos, ExampleMod.KILLA_KAN.get().create(serverLevel));
+        }
+
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel,
                 this.targetCorePos,
