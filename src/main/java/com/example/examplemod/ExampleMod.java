@@ -379,6 +379,22 @@ public static final RegistryObject<EntityType<PrimarchEntity>> PRIMARCH =
 public static final RegistryObject<Item> PRIMARCH_SPAWN_EGG = ITEMS.register("primarch_spawn_egg",
         () -> new ForgeSpawnEggItem(PRIMARCH, 0xD4AF37, 0x2B1B5A, new Item.Properties()));
 
+        public static final RegistryObject<EntityType<RobouteGuillimanEntity>> ROBOUTE_GUILLIMAN =
+        ENTITY_TYPES.register("roboute_guilliman",
+                () -> EntityType.Builder.of(RobouteGuillimanEntity::new, MobCategory.CREATURE)
+                        .sized(1.4F, 3.2F)
+                        .clientTrackingRange(16)
+                        .build(MODID + ":roboute_guilliman"));
+
+public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
+        ITEMS.register("roboute_guilliman_spawn_egg",
+                () -> new ForgeSpawnEggItem(
+                        ROBOUTE_GUILLIMAN,
+                        0x0B2A66,
+                        0xD6A23A,
+                        new Item.Properties()
+                ));
+
     // =========================
     // ORK ENTITIES
     // =========================
@@ -603,6 +619,7 @@ public static final RegistryObject<Item> PRIMARCH_SPAWN_EGG = ITEMS.register("pr
 output.accept(SPACE_MARINE_SPAWN_EGG.get());
 output.accept(CUSTODES_SPAWN_EGG.get());
 output.accept(PRIMARCH_SPAWN_EGG.get());
+output.accept(ROBOUTE_GUILLIMAN_SPAWN_EGG.get());
 output.accept(ORK_BOY_SPAWN_EGG.get());
 output.accept(ORK_NOB_SPAWN_EGG.get());
 output.accept(WARBOSS_SPAWN_EGG.get());
@@ -645,6 +662,7 @@ private void registerAttributes(EntityAttributeCreationEvent event) {
     event.put(SPACE_MARINE.get(), SpaceMarineEntity.createAttributes().build());
     event.put(CUSTODES.get(), CustodesEntity.createAttributes().build());
     event.put(PRIMARCH.get(), PrimarchEntity.createAttributes().build());
+    event.put(ROBOUTE_GUILLIMAN.get(), RobouteGuillimanEntity.createAttributes().build());
     event.put(ORK_BOY.get(), OrkBoyEntity.createAttributes().build());
     event.put(ORK_NOB.get(), OrkNobEntity.createAttributes().build());
     event.put(WARBOSS.get(), WarbossEntity.createAttributes().build());
@@ -665,6 +683,7 @@ public static void onClientSetup(FMLClientSetupEvent event) {
 }
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(RobouteGuillimanModel.LAYER_LOCATION, RobouteGuillimanModel::createBodyLayer);
         event.registerLayerDefinition(EliteModelLayers.SPACE_MARINE, EliteModelLayers::createSpaceMarineLayer);
         event.registerLayerDefinition(EliteModelLayers.CUSTODES, EliteModelLayers::createCustodesLayer);
         event.registerLayerDefinition(EliteModelLayers.PRIMARCH, EliteModelLayers::createPrimarchLayer);
@@ -681,6 +700,7 @@ public static void onClientSetup(FMLClientSetupEvent event) {
         event.registerEntityRenderer(ORK_BOY.get(), OrkBoyRenderer::new);
         event.registerEntityRenderer(ORK_NOB.get(), OrkNobRenderer::new);
         event.registerEntityRenderer(WARBOSS.get(), WarbossRenderer::new);
+        event.registerEntityRenderer(ROBOUTE_GUILLIMAN.get(), RobouteGuillimanRenderer::new);
     }
 }
 }

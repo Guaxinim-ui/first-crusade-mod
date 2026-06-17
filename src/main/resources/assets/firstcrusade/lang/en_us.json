@@ -35,6 +35,8 @@
   "entity.firstcrusade.custodes": "Custodian Guard",
   "entity.firstcrusade.primarch": "Primarch",
   "entity.firstcrusade.imperial_citizen": "Imperial Citizen",
+  "entity.firstcrusade.roboute_guilliman": "Roboute Guilliman",
+"item.firstcrusade.roboute_guilliman_spawn_egg": "Roboute Guilliman Spawn Egg",
   "entity.firstcrusade.ork_boy": "Ork Boy",
   "entity.firstcrusade.ork_nob": "Ork Nob",
   "entity.firstcrusade.warboss": "Ork Warboss",
