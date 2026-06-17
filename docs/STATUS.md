@@ -75,7 +75,8 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
 - [~] **Fase B** — profundidade Ork: **Warboss, Meganob, Gretchin e WAAAGH! Overlord feitos**.
   O Overlord (`WaaaghOverlordData` SavedData global + `WaaaghOverlordManager`) cresce com a
   prosperidade imperial (cada cidade alimenta), tem tier 0-4 com anúncio global, e escala todos
-  os camps (warbands maiores + Meganobz mais cedo). Faltando: Killa Kan, warbands distintas por clã.
+  os camps (warbands maiores + Meganobz mais cedo). **Warbands por clã feitas** (Goffs horda, Bad
+  Moons Nobz, Deathskulls grots, Evil Sunz rápidos, Snakebites durões). Faltando: Killa Kan.
 - [ ] **Fase C** — tipos de cidade implementados de fato com tropas-tema (Skitarii/Forge,
   Cadian-Kasrkin/Fortress, Sisters/Shrine, Arbites-Enforcer/Hive). Hoje os tipos só variam
   nome/produção/população — falta variar as tropas recrutadas.
@@ -108,6 +109,9 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-17: Fase B — **warbands por clã**: `OrkClan` ganhou composição (bonusBoyz/nobz/
+  bonusGretchin/tactics). Cada clã marcha diferente: Goffs horda, Bad Moons Nobz, Deathskulls
+  grots, Evil Sunz rápidos, Snakebites durões; mensagem cita a tática do clã.
 - 2026-06-17: Fase B — **WAAAGH! Overlord**: estado global persistente (`WaaaghOverlordData`,
   SavedData no overworld) que cresce com a prosperidade imperial; tier 0-4 com aviso global;
   camps leem o tier (`WaaaghOverlordManager.getTier`) para warbands maiores e Meganobz mais cedo.

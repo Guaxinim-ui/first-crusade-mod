@@ -12,26 +12,52 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
  * {@code docs/DESIGN_WORLD_CITIES_FACTIONS.md}; more clans and unique units come later.
  */
 public enum OrkClan {
-    GOFFS("Goffs", 1.35D, 1.25D, 1.0D),        // brutal melee, tough
-    BAD_MOONS("Bad Moons", 1.1D, 1.45D, 1.0D), // rich, more dakka/damage
-    DEATHSKULLS("Deathskulls", 1.0D, 1.0D, 1.0D), // looters (scrap theme)
-    EVIL_SUNZ("Evil Sunz", 0.9D, 1.1D, 1.35D),  // speed freaks
-    SNAKEBITES("Snakebites", 1.45D, 1.0D, 0.95D); // primitive, very tough
+    //         name            hp     dmg    spd   +boyz nobz +grots  tactics
+    GOFFS("Goffs", 1.35D, 1.25D, 1.0D, 2, 1, 0, "a brutal melee horde"),
+    BAD_MOONS("Bad Moons", 1.1D, 1.45D, 1.0D, 0, 2, 0, "well-armed Nobz with more dakka"),
+    DEATHSKULLS("Deathskulls", 1.0D, 1.0D, 1.0D, 0, 0, 3, "looters with grot mobs"),
+    EVIL_SUNZ("Evil Sunz", 0.9D, 1.1D, 1.35D, 1, 0, 0, "a fast-moving speed raid"),
+    SNAKEBITES("Snakebites", 1.45D, 1.0D, 0.95D, 1, 1, -2, "tough, primitive savages");
 
     private final String displayName;
     private final double healthFactor;
     private final double damageFactor;
     private final double speedFactor;
+    private final int bonusBoyz;
+    private final int nobz;
+    private final int bonusGretchin;
+    private final String tactics;
 
-    OrkClan(String displayName, double healthFactor, double damageFactor, double speedFactor) {
+    OrkClan(String displayName, double healthFactor, double damageFactor, double speedFactor,
+            int bonusBoyz, int nobz, int bonusGretchin, String tactics) {
         this.displayName = displayName;
         this.healthFactor = healthFactor;
         this.damageFactor = damageFactor;
         this.speedFactor = speedFactor;
+        this.bonusBoyz = bonusBoyz;
+        this.nobz = nobz;
+        this.bonusGretchin = bonusGretchin;
+        this.tactics = tactics;
     }
 
     public String getDisplayName() {
         return this.displayName;
+    }
+
+    public int getBonusBoyz() {
+        return this.bonusBoyz;
+    }
+
+    public int getNobz() {
+        return this.nobz;
+    }
+
+    public int getBonusGretchin() {
+        return this.bonusGretchin;
+    }
+
+    public String getTactics() {
+        return this.tactics;
     }
 
     // Applies this clan's stat profile to a freshly created Ork.

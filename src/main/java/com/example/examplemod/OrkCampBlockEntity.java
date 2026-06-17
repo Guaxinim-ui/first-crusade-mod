@@ -103,15 +103,21 @@ public class OrkCampBlockEntity extends BlockEntity {
 
         int tier = WaaaghOverlordManager.getTier(serverLevel);
 
-        // Core of the column: Ork Boyz. A bigger global WAAAGH! sends bigger columns.
-        int boyz = WAR_PARTY_SIZE + tier;
+        // Composition varies by clan: Goffs swarm Boyz, Bad Moons bring Nobz, Deathskulls grots...
+        int boyz = WAR_PARTY_SIZE + tier + this.clan.getBonusBoyz();
         for (int i = 0; i < boyz; i++) {
             dispatchMarcher(serverLevel, pos, ExampleMod.ORK_BOY.get().create(serverLevel));
         }
 
-        // Grots tag along as fodder.
-        dispatchMarcher(serverLevel, pos, ExampleMod.GRETCHIN.get().create(serverLevel));
-        dispatchMarcher(serverLevel, pos, ExampleMod.GRETCHIN.get().create(serverLevel));
+        for (int i = 0; i < this.clan.getNobz(); i++) {
+            dispatchMarcher(serverLevel, pos, ExampleMod.ORK_NOB.get().create(serverLevel));
+        }
+
+        // Grots tag along as fodder (Deathskulls bring extra, Snakebites fewer).
+        int gretchin = Math.max(0, 2 + this.clan.getBonusGretchin());
+        for (int i = 0; i < gretchin; i++) {
+            dispatchMarcher(serverLevel, pos, ExampleMod.GRETCHIN.get().create(serverLevel));
+        }
 
         // A grown WAAAGH! (camp Warboss risen, or global tier 2+) fields Meganobz at the head.
         int meganobz = (this.warbossSpawned ? 1 : 0) + Math.max(0, tier - 1);
@@ -122,7 +128,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel,
                 this.targetCorePos,
-                "WAAAGH! A " + this.clan.getDisplayName() + " war party marches from a nearby camp!"
+                "WAAAGH! A " + this.clan.getDisplayName() + " war party (" + this.clan.getTactics() + ") marches on the city!"
         );
 
         this.warPartiesLaunched++;
