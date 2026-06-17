@@ -15,6 +15,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
     private Button buildForgeButton;
     private Button buildRefineryButton;
     private Button buildFarmButton;
+    private Button buildTradeDepotButton;
     private Button buildBarracksButton;
     private Button recruitButton;
     private Button cycleSpecialistButton;
@@ -30,7 +31,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         super(menu, playerInventory, title);
 
         this.imageWidth = 400;
-        this.imageHeight = 372;
+        this.imageHeight = 384;
     }
 
     @Override
@@ -41,7 +42,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         int buttonY = this.topPos + 34;
         int buttonWidth = 130;
         int buttonHeight = 18;
-        int gap = 18;
+        int gap = 17;
         int row = 0;
 
         this.depositButton = addActionButton(buttonX, buttonY + gap * row++, buttonWidth, buttonHeight,
@@ -64,6 +65,9 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
         this.buildFarmButton = addActionButton(buttonX, buttonY + gap * row++, buttonWidth, buttonHeight,
                 "Build Farm", ImperialCommandCoreAction.BUILD_FARM);
+
+        this.buildTradeDepotButton = addActionButton(buttonX, buttonY + gap * row++, buttonWidth, buttonHeight,
+                "Build Trade Depot", ImperialCommandCoreAction.BUILD_EMERALD_TRADE_DEPOT);
 
         this.buildBarracksButton = addActionButton(buttonX, buttonY + gap * row++, buttonWidth, buttonHeight,
                 "Build Barracks", ImperialCommandCoreAction.BUILD_BARRACKS);
@@ -170,6 +174,14 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
                 "Build Imperial Farm",
                 "Cost: 15 Iron, 5 Scrap. Assigns a Farmer; staffed farms feed the city (morale + growth).",
                 "Farm capacity reached. Upgrade the city to build more."
+        );
+
+        applyButton(
+                this.buildTradeDepotButton,
+                this.menu.getCityLevel() >= 3 && this.menu.getTradeDepotCount() < this.menu.getTradeDepotCapacity(),
+                "Build Emerald Trade Depot",
+                "Cost: 30 Iron, 15 Scrap, 10 Coal. Assigns a Trader who trades Gold for Emerald (4 Gold each).",
+                getTradeDepotBlockReason()
         );
 
         applyButton(
@@ -283,6 +295,14 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         return "Gold Mine capacity reached. Upgrade the city to build more.";
     }
 
+    private String getTradeDepotBlockReason() {
+        if (this.menu.getCityLevel() < 3) {
+            return "Requires an Imperial settlement of Level 3 or higher.";
+        }
+
+        return "Trade Depot capacity reached. Upgrade the city to build more.";
+    }
+
     private boolean hasRecruitCapacity() {
         return this.menu.getRecruitedGuardsmen() < this.menu.getMilitaryCapacity();
     }
@@ -375,11 +395,11 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         guiGraphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, 0xEE0B0B0B);
         guiGraphics.fill(x, y, x + this.imageWidth, y + 22, 0xEE3A2A12);
 
-        guiGraphics.fill(x + 8, y + 30, x + 248, y + 182, 0xAA202020);
-        guiGraphics.fill(x + 8, y + 188, x + 248, y + 240, 0xAA202020);
-        guiGraphics.fill(x + 8, y + 246, x + 248, y + 358, 0xAA202020);
+        guiGraphics.fill(x + 8, y + 30, x + 248, y + 194, 0xAA202020);
+        guiGraphics.fill(x + 8, y + 200, x + 248, y + 252, 0xAA202020);
+        guiGraphics.fill(x + 8, y + 258, x + 248, y + 370, 0xAA202020);
 
-        guiGraphics.fill(x + 253, y + 30, x + 392, y + 364, 0xAA202020);
+        guiGraphics.fill(x + 253, y + 30, x + 392, y + 378, 0xAA202020);
     }
 
     @Override
@@ -416,8 +436,10 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         drawLine(guiGraphics, "Barracks: " + this.menu.getBarracksCount() + "/" + this.menu.getBarracksCapacity() + "  (Training: " + this.menu.getRecruitsInTraining() + ")", 12, y, 0xFFFFDD77);
         y += 11;
         drawLine(guiGraphics, "Farms: " + this.menu.getFarmCount() + "/" + this.menu.getFarmCapacity() + "  (Farmers: " + this.menu.getFarmerCount() + ")", 12, y, 0xFF9BE07A);
+        y += 11;
+        drawLine(guiGraphics, "Trade Depots: " + this.menu.getTradeDepotCount() + "/" + this.menu.getTradeDepotCapacity() + "  (Traders: " + this.menu.getTraderCount() + ")", 12, y, 0xFF7AE0B0);
 
-        y = 192;
+        y = 204;
         drawLine(guiGraphics, "Resources", 12, y, 0xFFFFD27D);
         int cap = this.menu.getStorageCapacity();
         int col2 = 130;
@@ -431,7 +453,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         drawLine(guiGraphics, "Coal: " + this.menu.getCoal() + "/" + cap, 12, y, 0xFFD8D8D8);
         drawLine(guiGraphics, "Crusadium: " + this.menu.getCrusadium() + "/" + cap, col2, y, 0xFFB0C4DE);
 
-        y = 250;
+        y = 262;
         drawLine(guiGraphics, "Production", 12, y, 0xFFFFD27D);
         y += 13;
         drawLine(guiGraphics, "Specialist (selected): " + this.menu.getSelectedSpecialization().getDisplayName(), 12, y, 0xFF9AD0FF);

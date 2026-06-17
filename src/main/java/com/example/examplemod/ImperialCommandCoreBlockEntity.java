@@ -266,6 +266,109 @@ public int getFarmCapacity() {
     return Math.max(1, this.cityLevel);
 }
 
+// Trade Depots unlock at city level 3 and trade Gold for Emerald with the capital.
+public void tryBuildEmeraldTradeDepot(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    if (this.cityLevel < 3) {
+        player.displayClientMessage(Component.literal(
+                "Emerald Trade Depots require an Imperial settlement of Level 3 or higher."
+        ), true);
+        return;
+    }
+
+    int currentDepots = ImperialEmeraldTradeDepotManager.countTradeDepots(serverLevel, this, 128);
+
+    if (currentDepots >= getTradeDepotCapacity()) {
+        player.displayClientMessage(Component.literal(
+                "Emerald Trade Depot capacity reached. Upgrade the city to build more."
+        ), true);
+        return;
+    }
+
+    int ironCost = 30;
+    int scrapCost = 15;
+    int coalCost = 10;
+
+    if (this.iron < ironCost || this.scrapMetal < scrapCost || this.coal < coalCost) {
+        player.displayClientMessage(Component.literal(
+                "Not enough city resources. Need: "
+                        + ironCost + " Iron, "
+                        + scrapCost + " Scrap, "
+                        + coalCost + " Coal."
+        ), true);
+        return;
+    }
+
+    boolean built = ImperialEmeraldTradeDepotManager.buildTradeDepot(serverLevel, this, player);
+
+    if (!built) {
+        return;
+    }
+
+    this.iron -= ironCost;
+    this.scrapMetal -= scrapCost;
+    this.coal -= coalCost;
+
+    setChanged();
+
+    player.displayClientMessage(Component.literal(
+            "City Resources: "
+                    + this.iron + " Iron, "
+                    + this.scrapMetal + " Scrap, "
+                    + this.coal + " Coal."
+    ), false);
+}
+
+public int getTradeDepotCapacity() {
+    if (this.cityLevel < 3) {
+        return 0;
+    }
+
+    return Math.max(1, this.cityLevel / 2);
+}
+
+// Emerald obtained per Trader work cycle, scaling with city level.
+public int getTradeDepotEmeraldYield() {
+    return switch (this.cityLevel) {
+        case 4 -> 2;
+        case 5 -> 3;
+        default -> 1;
+    };
+}
+
+// Trades stored Gold for Emerald at a fixed rate. Returns the Emerald produced (0 if it can't).
+public int tradeGoldForEmeraldAtDepot() {
+    int goldPerEmerald = 4;
+    int emeraldYield = getTradeDepotEmeraldYield();
+
+    int freeSpace = Math.max(0, getStorageCapacity() - this.emerald);
+    int produced = Math.min(emeraldYield, freeSpace);
+
+    if (produced <= 0) {
+        return 0;
+    }
+
+    int goldCost = produced * goldPerEmerald;
+
+    if (this.gold < goldCost) {
+        return 0;
+    }
+
+    this.gold -= goldCost;
+    this.emerald += produced;
+    setChanged();
+
+    return produced;
+}
+
 // Gold produced per Gold Miner work cycle. Kept low because Gold is a premium resource.
 public int getGoldMineYield() {
     return switch (this.cityLevel) {

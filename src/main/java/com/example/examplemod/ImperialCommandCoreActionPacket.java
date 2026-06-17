@@ -89,6 +89,8 @@ public class ImperialCommandCoreActionPacket {
 
             case BUILD_FARM -> commandCore.tryBuildImperialFarm(player);
 
+            case BUILD_EMERALD_TRADE_DEPOT -> commandCore.tryBuildEmeraldTradeDepot(player);
+
             case BUILD_BARRACKS -> commandCore.tryBuildBarracks(player);
 
             case RECRUIT_GUARDSMAN -> commandCore.tryRecruitGuardsman(player);

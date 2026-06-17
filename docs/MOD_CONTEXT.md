@@ -117,6 +117,7 @@ spawn/checagem de Ork Raid.
 | Cap. Imperial Mine | 1 | 2 | 3 | 4 | 5 (=nível) |
 | Cap. Gold Mine | — | 1 | 1 | 2 | 2 (≥nv2) |
 | Cap. Imperial Farm | 1 | 2 | 3 | 4 | 5 (=nível) |
+| Cap. Trade Depot | — | — | 1 | 2 | 2 (≥nv3) |
 | Cap. Scrap Yard | 1 | 2 | 3 | 4 | 5 (=nível) |
 | Cap. Imperial Forge | 1 | 1 | 2 | 2 | 3 ((nível+1)/2) |
 | Cap. Promethium Refinery | 1 | 2 | 3 | 4 | 5 (=nível) |
@@ -158,7 +159,8 @@ RECRUIT → GUARDSMAN → VETERAN → SERGEANT → LIEUTENANT (níveis 1–5).
 
 **Enum `ImperialCommandCoreAction` (atual):**
 `DEPOSIT_RESOURCES, BUILD_IMPERIAL_MINE, BUILD_GOLD_MINE, BUILD_SCRAP_YARD, BUILD_IMPERIAL_FORGE,
-BUILD_PROMETHIUM_REFINERY, BUILD_FARM, BUILD_BARRACKS, RECRUIT_GUARDSMAN, CYCLE_SPECIALIST,
+BUILD_PROMETHIUM_REFINERY, BUILD_FARM, BUILD_EMERALD_TRADE_DEPOT, BUILD_BARRACKS,
+RECRUIT_GUARDSMAN, CYCLE_SPECIALIST,
 PROMOTE_SPECIALIST, UPGRADE_CITY, REPAIR_CORE, CALL_REINFORCEMENTS, RALLY_DEFENDERS,
 FORTIFY_DEFENDERS, FORCE_RAID_TEST`.
 
@@ -199,8 +201,9 @@ libera trabalhadores cujo posto sumiu e atribui cidadãos ociosos a postos vagos
 auto-organizar sem microgerência.
 
 ### Empregos (`ImperialCitizenJob`)
-`UNEMPLOYED, MINER, GOLD_MINER, SCRAPPER, SMITH, STOKER, FARMER, BUILDER, RECRUIT`
+`UNEMPLOYED, MINER, GOLD_MINER, SCRAPPER, SMITH, STOKER, FARMER, TRADER, BUILDER, RECRUIT`
 → GOLD_MINER trabalha na Imperial Gold Mine (produz Gold).
+→ TRADER trabalha no Emerald Trade Depot (converte Gold em Emerald).
 → FARMER trabalha na Imperial Farm (alimenta a cidade → moral/crescimento).
 → BUILDER existe no enum mas **ainda não tem posto/lógica**.
 → STOKER trabalha na Promethium Refinery (produz Coal).
@@ -253,6 +256,12 @@ uma Farm com trabalhador conta como fonte de comida que alimenta **4 cidadãos**
 cálculo de **moral** (`foodFactor`: bem-alimentado +15; faminto até −20), sustentando o
 crescimento populacional. Sem ticker (o cidadão só precisa estar trabalhando). Estrutura:
 campo de farmland + trigo, postes de cerca e fardos de feno.
+
+### Imperial Emerald Trade Depot (`ImperialEmeraldTradeDepotManager` + `...BlockEntity`)
+Custo: **30 Iron, 15 Scrap, 10 Coal**. **Requer cidade ≥ nv3.** Cap. = `max(1, nível/2)`.
+Emprega `TRADER`. A cada ciclo (**800 ticks**) o Core converte **4 Gold → 1 Emerald**
+(yield 1/1/1/2/3 por nível; `tradeGoldForEmeraldAtDepot`). Cria a cadeia Gold→Emerald.
+Estrutura: barracas de mercado (barrels, chests, lanterns) com topo de bloco de esmeralda.
 
 ### Imperial Habitation (`ImperialHabitationBlock` + `ImperialHabitationBlockEntity`)
 Bloco de moradia. **Não emprega ninguém**; cada Habitation hospeda **3 cidadãos**
@@ -309,7 +318,7 @@ habitação (bem alojado +20; sem-teto até −30), segurança (integridade do C
 | Imperial War Support | ✅ ativo | Reforços, comandos militares, suporte imperial |
 | Crusadium | ✅ armazenável | Custo do Primarch (32); item ingot existe; sem cadeia de produção própria ainda |
 | Gold | ✅ ativo | Produzido pela Imperial Gold Mine (GOLD_MINER). Uso final (upgrades/itens) ainda a definir |
-| Emerald | ✅ armazenável | Exibido na GUI; ainda sem fonte/uso (Emerald Trade Depot planejado) |
+| Emerald | ✅ ativo | Obtido no Emerald Trade Depot (TRADER) trocando Gold. Uso final (comércio/reforços) a definir |
 | Ork Teeth | item existe | Drop de Orks; "moeda" temática (uso a definir) |
 
 `ImperialResourceType`: `IRON, COAL, SCRAP, GOLD, EMERALD, CRUSADIUM`.
@@ -521,14 +530,15 @@ ork_nob, warboss.
 Aba criativa: `first_crusade_tab` (ícone: Command Core).
 
 **Blocos:** imperial_command_core, imperial_mine, imperial_gold_mine, imperial_scrap_yard,
-imperial_forge, imperial_promethium_refinery, imperial_farm, imperial_barracks,
-imperial_habitation, ork_camp.
+imperial_forge, imperial_promethium_refinery, imperial_farm, imperial_emerald_trade_depot,
+imperial_barracks, imperial_habitation, ork_camp.
 
 **Entidades:** imperial_citizen, guardsman, space_marine, custodes, primarch, ork_boy,
 ork_nob, warboss, lasgun_shot.
 
 **Managers (atuais):** ImperialPopulationManager, ImperialWorkSiteManager, ImperialGoldMineManager,
 ImperialScrapYardManager, ImperialForgeManager, ImperialPromethiumRefineryManager, ImperialFarmManager,
+ImperialEmeraldTradeDepotManager,
 ImperialBarracksManager, ImperialWorkforceManager, ImperialDefenseManager, OrkRaidManager,
 OrkCampManager, SpaceMarineUpgradeManager, ImperialCustodesManager, ImperialPrimarchManager,
 ImperialPatrolManager, ImperialCityMoraleManager, ThreatAssessmentManager,
@@ -578,7 +588,8 @@ ex.: armadura de Space Marine).
 - ✅ Custodes e Primarch (endgame)
 - ✅ Fonte de Gold (Imperial Gold Mine, GOLD_MINER)
 - ✅ Imperial Farm (FARMER) + fator comida na moral
-- Dar **uso final** a Gold; fonte+uso de Emerald (Emerald Trade Depot); posto para BUILDER
+- ✅ Emerald Trade Depot (TRADER, Gold→Emerald)
+- Dar **uso final** a Gold e Emerald (comércio/reforços/itens); posto para BUILDER
 
 ### Longo prazo
 - Portão funcional (Wall Gate); geração de vila imperial mais rica

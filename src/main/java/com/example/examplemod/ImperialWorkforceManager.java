@@ -135,6 +135,11 @@ public class ImperialWorkforceManager {
                     && farm.isAssignedToCommandCore(corePos) ? ImperialCitizenJob.FARMER : null;
         }
 
+        if (state.is(ExampleMod.IMPERIAL_EMERALD_TRADE_DEPOT.get())) {
+            return serverLevel.getBlockEntity(pos) instanceof ImperialEmeraldTradeDepotBlockEntity depot
+                    && depot.isAssignedToCommandCore(corePos) ? ImperialCitizenJob.TRADER : null;
+        }
+
         return null;
     }
 
@@ -152,7 +157,8 @@ public class ImperialWorkforceManager {
                 || job == ImperialCitizenJob.SCRAPPER
                 || job == ImperialCitizenJob.SMITH
                 || job == ImperialCitizenJob.STOKER
-                || job == ImperialCitizenJob.FARMER;
+                || job == ImperialCitizenJob.FARMER
+                || job == ImperialCitizenJob.TRADER;
     }
 
     private static AABB citizenSearchBox(BlockPos corePos) {

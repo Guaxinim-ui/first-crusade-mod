@@ -8,6 +8,7 @@ public enum ImperialCitizenJob {
     SMITH("Smith"),
     STOKER("Stoker"),
     FARMER("Farmer"),
+    TRADER("Trader"),
     BUILDER("Builder"),
     RECRUIT("Recruit");
 

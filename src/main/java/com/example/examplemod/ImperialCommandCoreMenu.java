@@ -11,7 +11,7 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 
 public class ImperialCommandCoreMenu extends AbstractContainerMenu {
-    private static final int DATA_COUNT = 52;
+    private static final int DATA_COUNT = 55;
 
     private final ContainerData data;
     private final BlockPos commandCorePos;
@@ -91,6 +91,9 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
                     case 49 -> getFarmCount(commandCore);
                     case 50 -> commandCore.getFarmCapacity();
                     case 51 -> getCitizenJobCount(commandCore, ImperialCitizenJob.FARMER);
+                    case 52 -> getTradeDepotCount(commandCore);
+                    case 53 -> commandCore.getTradeDepotCapacity();
+                    case 54 -> getCitizenJobCount(commandCore, ImperialCitizenJob.TRADER);
                     default -> 0;
                 };
             }
@@ -136,6 +139,14 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
         }
 
         return ImperialGoldMineManager.countGoldMines(serverLevel, commandCore, 128);
+    }
+
+    private int getTradeDepotCount(ImperialCommandCoreBlockEntity commandCore) {
+        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
+            return 0;
+        }
+
+        return ImperialEmeraldTradeDepotManager.countTradeDepots(serverLevel, commandCore, 128);
     }
 
     private int getFarmCount(ImperialCommandCoreBlockEntity commandCore) {
@@ -413,5 +424,17 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
 
     public int getFarmerCount() {
         return this.data.get(51);
+    }
+
+    public int getTradeDepotCount() {
+        return this.data.get(52);
+    }
+
+    public int getTradeDepotCapacity() {
+        return this.data.get(53);
+    }
+
+    public int getTraderCount() {
+        return this.data.get(54);
     }
 }
