@@ -14,6 +14,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
     private Button buildScrapYardButton;
     private Button buildForgeButton;
     private Button buildRefineryButton;
+    private Button buildFarmButton;
     private Button buildBarracksButton;
     private Button recruitButton;
     private Button cycleSpecialistButton;
@@ -29,7 +30,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         super(menu, playerInventory, title);
 
         this.imageWidth = 400;
-        this.imageHeight = 360;
+        this.imageHeight = 372;
     }
 
     @Override
@@ -40,7 +41,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         int buttonY = this.topPos + 34;
         int buttonWidth = 130;
         int buttonHeight = 18;
-        int gap = 20;
+        int gap = 18;
         int row = 0;
 
         this.depositButton = addActionButton(buttonX, buttonY + gap * row++, buttonWidth, buttonHeight,
@@ -60,6 +61,9 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
         this.buildRefineryButton = addActionButton(buttonX, buttonY + gap * row++, buttonWidth, buttonHeight,
                 "Build Refinery", ImperialCommandCoreAction.BUILD_PROMETHIUM_REFINERY);
+
+        this.buildFarmButton = addActionButton(buttonX, buttonY + gap * row++, buttonWidth, buttonHeight,
+                "Build Farm", ImperialCommandCoreAction.BUILD_FARM);
 
         this.buildBarracksButton = addActionButton(buttonX, buttonY + gap * row++, buttonWidth, buttonHeight,
                 "Build Barracks", ImperialCommandCoreAction.BUILD_BARRACKS);
@@ -158,6 +162,14 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
                 "Build Promethium Refinery",
                 "Cost: 18 Iron, 8 Scrap. Assigns a Stoker who produces Coal.",
                 "Refinery capacity reached. Upgrade the city to build more."
+        );
+
+        applyButton(
+                this.buildFarmButton,
+                this.menu.getFarmCount() < this.menu.getFarmCapacity(),
+                "Build Imperial Farm",
+                "Cost: 15 Iron, 5 Scrap. Assigns a Farmer; staffed farms feed the city (morale + growth).",
+                "Farm capacity reached. Upgrade the city to build more."
         );
 
         applyButton(
@@ -363,11 +375,11 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         guiGraphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, 0xEE0B0B0B);
         guiGraphics.fill(x, y, x + this.imageWidth, y + 22, 0xEE3A2A12);
 
-        guiGraphics.fill(x + 8, y + 30, x + 248, y + 170, 0xAA202020);
-        guiGraphics.fill(x + 8, y + 176, x + 248, y + 228, 0xAA202020);
-        guiGraphics.fill(x + 8, y + 234, x + 248, y + 346, 0xAA202020);
+        guiGraphics.fill(x + 8, y + 30, x + 248, y + 182, 0xAA202020);
+        guiGraphics.fill(x + 8, y + 188, x + 248, y + 240, 0xAA202020);
+        guiGraphics.fill(x + 8, y + 246, x + 248, y + 358, 0xAA202020);
 
-        guiGraphics.fill(x + 253, y + 30, x + 392, y + 352, 0xAA202020);
+        guiGraphics.fill(x + 253, y + 30, x + 392, y + 364, 0xAA202020);
     }
 
     @Override
@@ -402,8 +414,10 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         drawLine(guiGraphics, "Refineries: " + this.menu.getRefineryCount() + "/" + this.menu.getRefineryCapacity() + "  (Stokers: " + this.menu.getStokerCount() + ")", 12, y, 0xFFFFDD77);
         y += 11;
         drawLine(guiGraphics, "Barracks: " + this.menu.getBarracksCount() + "/" + this.menu.getBarracksCapacity() + "  (Training: " + this.menu.getRecruitsInTraining() + ")", 12, y, 0xFFFFDD77);
+        y += 11;
+        drawLine(guiGraphics, "Farms: " + this.menu.getFarmCount() + "/" + this.menu.getFarmCapacity() + "  (Farmers: " + this.menu.getFarmerCount() + ")", 12, y, 0xFF9BE07A);
 
-        y = 180;
+        y = 192;
         drawLine(guiGraphics, "Resources", 12, y, 0xFFFFD27D);
         int cap = this.menu.getStorageCapacity();
         int col2 = 130;
@@ -417,7 +431,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         drawLine(guiGraphics, "Coal: " + this.menu.getCoal() + "/" + cap, 12, y, 0xFFD8D8D8);
         drawLine(guiGraphics, "Crusadium: " + this.menu.getCrusadium() + "/" + cap, col2, y, 0xFFB0C4DE);
 
-        y = 238;
+        y = 250;
         drawLine(guiGraphics, "Production", 12, y, 0xFFFFD27D);
         y += 13;
         drawLine(guiGraphics, "Specialist (selected): " + this.menu.getSelectedSpecialization().getDisplayName(), 12, y, 0xFF9AD0FF);

@@ -10,7 +10,7 @@ import net.minecraft.server.level.ServerLevel;
  * stored value eases toward that target so the city feels alive rather than snapping.
  * High morale boosts production and allows population growth; low morale chokes both.
  *
- * Food (Farm) is a planned input and is intentionally left as a future factor.
+ * Inputs: housing (Habitation), food (staffed Farms), security and crowding.
  */
 public final class ImperialCityMoraleManager {
     public static final int MIN_MORALE = 0;
@@ -23,6 +23,10 @@ public final class ImperialCityMoraleManager {
     // Each Habitation block comfortably houses this many citizens.
     private static final int CITIZENS_PER_HABITATION = 3;
     private static final int HABITATION_SCAN_RADIUS = 96;
+
+    // Each staffed Farm feeds this many citizens.
+    private static final int CITIZENS_PER_FARM = 4;
+    private static final int FARM_SCAN_RADIUS = 128;
 
     // How many morale points the stored value can move per slow tick toward the target.
     private static final int EASE_STEP = 2;
@@ -45,6 +49,7 @@ public final class ImperialCityMoraleManager {
 
         int morale = DEFAULT_MORALE;
         morale += housingFactor(serverLevel, core, population);
+        morale += foodFactor(serverLevel, core, population);
         morale += securityFactor(core);
         morale += crowdingFactor(core, population);
 
@@ -72,6 +77,24 @@ public final class ImperialCityMoraleManager {
         double homelessRatio = (double) homeless / (double) population;
 
         return -(int) Math.round(homelessRatio * 30.0);
+    }
+
+    // Food: a well-fed city is content; a hungry one grows restless. Only staffed Farms count.
+    private static int foodFactor(ServerLevel serverLevel, ImperialCommandCoreBlockEntity core, int population) {
+        if (population <= 0) {
+            return 0;
+        }
+
+        int foodCapacity = ImperialFarmManager.countStaffedFarms(serverLevel, core, FARM_SCAN_RADIUS) * CITIZENS_PER_FARM;
+
+        if (foodCapacity >= population) {
+            return 15;
+        }
+
+        int hungry = population - foodCapacity;
+        double hungryRatio = (double) hungry / (double) population;
+
+        return -(int) Math.round(hungryRatio * 20.0);
     }
 
     // Security: Core integrity and the absence of active raids reassure the populace.

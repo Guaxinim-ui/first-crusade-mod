@@ -104,6 +104,16 @@ public static final RegistryObject<Item> IMPERIAL_GOLD_MINE_ITEM =
         ITEMS.register("imperial_gold_mine",
                 () -> new BlockItem(IMPERIAL_GOLD_MINE.get(), new Item.Properties()));
 
+public static final RegistryObject<Block> IMPERIAL_FARM =
+        BLOCKS.register("imperial_farm",
+                () -> new ImperialFarmBlock(BlockBehaviour.Properties.of()
+                        .strength(2.5F)
+                        .sound(SoundType.GRASS)));
+
+public static final RegistryObject<Item> IMPERIAL_FARM_ITEM =
+        ITEMS.register("imperial_farm",
+                () -> new BlockItem(IMPERIAL_FARM.get(), new Item.Properties()));
+
 public static final RegistryObject<Block> IMPERIAL_SCRAP_YARD =
         BLOCKS.register("imperial_scrap_yard",
                 () -> new ImperialScrapYardBlock(BlockBehaviour.Properties.of()
@@ -165,6 +175,10 @@ public static final RegistryObject<Item> IMPERIAL_MINE_ITEM =
         BLOCK_ENTITY_TYPES.register("imperial_mine",
                 () -> BlockEntityType.Builder.of(ImperialMineBlockEntity::new, IMPERIAL_MINE.get()).build(null));
         
+        public static final RegistryObject<BlockEntityType<ImperialFarmBlockEntity>> IMPERIAL_FARM_BLOCK_ENTITY =
+        BLOCK_ENTITY_TYPES.register("imperial_farm",
+                () -> BlockEntityType.Builder.of(ImperialFarmBlockEntity::new, IMPERIAL_FARM.get()).build(null));
+
         public static final RegistryObject<BlockEntityType<ImperialGoldMineBlockEntity>> IMPERIAL_GOLD_MINE_BLOCK_ENTITY =
         BLOCK_ENTITY_TYPES.register("imperial_gold_mine",
                 () -> BlockEntityType.Builder.of(ImperialGoldMineBlockEntity::new, IMPERIAL_GOLD_MINE.get()).build(null));
@@ -551,6 +565,7 @@ public static final RegistryObject<Item> PRIMARCH_SPAWN_EGG = ITEMS.register("pr
                         output.accept(IMPERIAL_CITIZEN_SPAWN_EGG.get());
                         output.accept(IMPERIAL_MINE_ITEM.get());
                         output.accept(IMPERIAL_GOLD_MINE_ITEM.get());
+                        output.accept(IMPERIAL_FARM_ITEM.get());
 
                         output.accept(LASGUN_POWER_CELL.get());
                         output.accept(LASGUN.get());

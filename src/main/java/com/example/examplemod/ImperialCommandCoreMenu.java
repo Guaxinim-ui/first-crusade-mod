@@ -11,7 +11,7 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 
 public class ImperialCommandCoreMenu extends AbstractContainerMenu {
-    private static final int DATA_COUNT = 49;
+    private static final int DATA_COUNT = 52;
 
     private final ContainerData data;
     private final BlockPos commandCorePos;
@@ -88,6 +88,9 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
                     case 46 -> getGoldMineCount(commandCore);
                     case 47 -> commandCore.getGoldMineCapacity();
                     case 48 -> getCitizenJobCount(commandCore, ImperialCitizenJob.GOLD_MINER);
+                    case 49 -> getFarmCount(commandCore);
+                    case 50 -> commandCore.getFarmCapacity();
+                    case 51 -> getCitizenJobCount(commandCore, ImperialCitizenJob.FARMER);
                     default -> 0;
                 };
             }
@@ -133,6 +136,14 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
         }
 
         return ImperialGoldMineManager.countGoldMines(serverLevel, commandCore, 128);
+    }
+
+    private int getFarmCount(ImperialCommandCoreBlockEntity commandCore) {
+        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
+            return 0;
+        }
+
+        return ImperialFarmManager.countFarms(serverLevel, commandCore, 128);
     }
 
     private int getScrapYardCount(ImperialCommandCoreBlockEntity commandCore) {
@@ -390,5 +401,17 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
 
     public int getGoldMinerCount() {
         return this.data.get(48);
+    }
+
+    public int getFarmCount() {
+        return this.data.get(49);
+    }
+
+    public int getFarmCapacity() {
+        return this.data.get(50);
+    }
+
+    public int getFarmerCount() {
+        return this.data.get(51);
     }
 }

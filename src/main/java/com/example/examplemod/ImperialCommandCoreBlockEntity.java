@@ -212,6 +212,60 @@ public int getGoldMineCapacity() {
     return Math.max(1, this.cityLevel / 2);
 }
 
+// Farms feed the city: a staffed Farm raises morale and sustains population growth.
+public void tryBuildImperialFarm(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    int currentFarms = ImperialFarmManager.countFarms(serverLevel, this, 128);
+
+    if (currentFarms >= getFarmCapacity()) {
+        player.displayClientMessage(Component.literal(
+                "Farm capacity reached. Upgrade the city to build more farms."
+        ), true);
+        return;
+    }
+
+    int ironCost = 15;
+    int scrapCost = 5;
+
+    if (this.iron < ironCost || this.scrapMetal < scrapCost) {
+        player.displayClientMessage(Component.literal(
+                "Not enough city resources. Need: "
+                        + ironCost + " Iron, "
+                        + scrapCost + " Scrap."
+        ), true);
+        return;
+    }
+
+    boolean built = ImperialFarmManager.buildImperialFarm(serverLevel, this, player);
+
+    if (!built) {
+        return;
+    }
+
+    this.iron -= ironCost;
+    this.scrapMetal -= scrapCost;
+
+    setChanged();
+
+    player.displayClientMessage(Component.literal(
+            "City Resources: "
+                    + this.iron + " Iron, "
+                    + this.scrapMetal + " Scrap."
+    ), false);
+}
+
+public int getFarmCapacity() {
+    return Math.max(1, this.cityLevel);
+}
+
 // Gold produced per Gold Miner work cycle. Kept low because Gold is a premium resource.
 public int getGoldMineYield() {
     return switch (this.cityLevel) {

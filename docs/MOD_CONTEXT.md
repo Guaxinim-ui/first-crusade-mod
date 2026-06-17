@@ -116,6 +116,7 @@ spawn/checagem de Ork Raid.
 | Altura da muralha | 1 | 3 | 5 | 7 | 9 |
 | Cap. Imperial Mine | 1 | 2 | 3 | 4 | 5 (=nível) |
 | Cap. Gold Mine | — | 1 | 1 | 2 | 2 (≥nv2) |
+| Cap. Imperial Farm | 1 | 2 | 3 | 4 | 5 (=nível) |
 | Cap. Scrap Yard | 1 | 2 | 3 | 4 | 5 (=nível) |
 | Cap. Imperial Forge | 1 | 1 | 2 | 2 | 3 ((nível+1)/2) |
 | Cap. Promethium Refinery | 1 | 2 | 3 | 4 | 5 (=nível) |
@@ -157,7 +158,7 @@ RECRUIT → GUARDSMAN → VETERAN → SERGEANT → LIEUTENANT (níveis 1–5).
 
 **Enum `ImperialCommandCoreAction` (atual):**
 `DEPOSIT_RESOURCES, BUILD_IMPERIAL_MINE, BUILD_GOLD_MINE, BUILD_SCRAP_YARD, BUILD_IMPERIAL_FORGE,
-BUILD_PROMETHIUM_REFINERY, BUILD_BARRACKS, RECRUIT_GUARDSMAN, CYCLE_SPECIALIST,
+BUILD_PROMETHIUM_REFINERY, BUILD_FARM, BUILD_BARRACKS, RECRUIT_GUARDSMAN, CYCLE_SPECIALIST,
 PROMOTE_SPECIALIST, UPGRADE_CITY, REPAIR_CORE, CALL_REINFORCEMENTS, RALLY_DEFENDERS,
 FORTIFY_DEFENDERS, FORCE_RAID_TEST`.
 
@@ -200,7 +201,8 @@ auto-organizar sem microgerência.
 ### Empregos (`ImperialCitizenJob`)
 `UNEMPLOYED, MINER, GOLD_MINER, SCRAPPER, SMITH, STOKER, FARMER, BUILDER, RECRUIT`
 → GOLD_MINER trabalha na Imperial Gold Mine (produz Gold).
-→ FARMER e BUILDER existem no enum mas **ainda não têm posto/lógica**.
+→ FARMER trabalha na Imperial Farm (alimenta a cidade → moral/crescimento).
+→ BUILDER existe no enum mas **ainda não tem posto/lógica**.
 → STOKER trabalha na Promethium Refinery (produz Coal).
 → RECRUIT treina num Barracks e vira Guardsman ao completar o treino.
 
@@ -245,6 +247,13 @@ Custo: **25 Iron, 15 Scrap, 5 Coal**. Cap. = nível. **Não** tem trabalhador fi
 barrel, crafting table, grindstone, fletching table, cantos de polished andesite.
 Ao concluir, chama `commandCore.completeRecruitTraining(...)` → vira Guardsman.
 
+### Imperial Farm (`ImperialFarmManager` + `ImperialFarmBlockEntity`)
+Custo: **15 Iron, 5 Scrap**. Cap. = nível. Emprega `FARMER`. **Não produz recurso armazenado**:
+uma Farm com trabalhador conta como fonte de comida que alimenta **4 cidadãos** e entra no
+cálculo de **moral** (`foodFactor`: bem-alimentado +15; faminto até −20), sustentando o
+crescimento populacional. Sem ticker (o cidadão só precisa estar trabalhando). Estrutura:
+campo de farmland + trigo, postes de cerca e fardos de feno.
+
 ### Imperial Habitation (`ImperialHabitationBlock` + `ImperialHabitationBlockEntity`)
 Bloco de moradia. **Não emprega ninguém**; cada Habitation hospeda **3 cidadãos**
 (`CITIZENS_PER_HABITATION`) e é o principal fator positivo de **moral** (ver §6.2).
@@ -283,7 +292,8 @@ habitação (bem alojado +20; sem-teto até −30), segurança (integridade do C
 - **Multiplicador de produção:** 0.5× (moral 0) → 1.0× (50) → 1.25× (100).
 - **Crescimento populacional** estagna abaixo de **35** (`allowsGrowth`).
 - Rótulos: Jubilant (≥80) / Content (≥60) / Uneasy (≥40) / Discontent (≥20) / Rebellious.
-- Comida (Farm) é um fator **planejado** (ainda não entra na conta).
+- **Comida:** Farms com trabalhador alimentam 4 cidadãos cada (`foodFactor`: +15 se bem
+  alimentado; até −20 se faminto).
 
 ---
 
@@ -511,13 +521,14 @@ ork_nob, warboss.
 Aba criativa: `first_crusade_tab` (ícone: Command Core).
 
 **Blocos:** imperial_command_core, imperial_mine, imperial_gold_mine, imperial_scrap_yard,
-imperial_forge, imperial_promethium_refinery, imperial_barracks, imperial_habitation, ork_camp.
+imperial_forge, imperial_promethium_refinery, imperial_farm, imperial_barracks,
+imperial_habitation, ork_camp.
 
 **Entidades:** imperial_citizen, guardsman, space_marine, custodes, primarch, ork_boy,
 ork_nob, warboss, lasgun_shot.
 
 **Managers (atuais):** ImperialPopulationManager, ImperialWorkSiteManager, ImperialGoldMineManager,
-ImperialScrapYardManager, ImperialForgeManager, ImperialPromethiumRefineryManager,
+ImperialScrapYardManager, ImperialForgeManager, ImperialPromethiumRefineryManager, ImperialFarmManager,
 ImperialBarracksManager, ImperialWorkforceManager, ImperialDefenseManager, OrkRaidManager,
 OrkCampManager, SpaceMarineUpgradeManager, ImperialCustodesManager, ImperialPrimarchManager,
 ImperialPatrolManager, ImperialCityMoraleManager, ThreatAssessmentManager,
@@ -566,7 +577,8 @@ ex.: armadura de Space Marine).
 - ✅ Ork Camps vivos (WAAAGH!, war parties, Warboss) + clãs Ork
 - ✅ Custodes e Primarch (endgame)
 - ✅ Fonte de Gold (Imperial Gold Mine, GOLD_MINER)
-- Dar **uso final** a Gold; fonte+uso de Emerald (Emerald Trade Depot); Farm para FARMER/BUILDER
+- ✅ Imperial Farm (FARMER) + fator comida na moral
+- Dar **uso final** a Gold; fonte+uso de Emerald (Emerald Trade Depot); posto para BUILDER
 
 ### Longo prazo
 - Portão funcional (Wall Gate); geração de vila imperial mais rica
