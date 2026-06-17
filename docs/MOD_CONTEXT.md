@@ -154,14 +154,28 @@ RECRUIT → GUARDSMAN → VETERAN → SERGEANT → LIEUTENANT (níveis 1–5).
 
 ## 2.1 / 4. Interface do Core (GUI)
 
-`ImperialCommandCoreMenu` (`imperial_command_core_menu`, **46 data slots**) +
-`ImperialCommandCoreScreen` (400×344). Só o dono abre. Ações via packet
+`ImperialCommandCoreMenu` (`imperial_command_core_menu`, **55 data slots**) +
+`ImperialCommandCoreScreen` (320×240, **em abas**). Só o dono abre. Ações via packet
 `ImperialCommandCoreActionPacket` (canal `firstcrusade:main`).
 
+**Interface em abas** (`activeTab`, reconstruída via `rebuildWidgets`): coluna de info à
+esquerda + botões de ação à direita, alternando por aba:
+- **City** — tipo/nível/integridade/moral/cidadãos/soldados/ameaça/raid + Upgrade City.
+- **Build** — contagem de estruturas + 8 botões de construção (Mine, Gold Mine, Scrap, Forge,
+  Refinery, Farm, Trade Depot, Barracks).
+- **Military** — soldados/recrutas/especialista/Gene/SM + Recruit, Cycle/Promote Specialist.
+- **Defense** — integridade/ameaça/raid/cooldowns + Repair Core, Reinforcements, Rally, Fortify, Force Raid.
+- **Resources** — recursos armazenados + Deposit All e **Withdraw** (Iron/Coal/Scrap/Gold/Emerald/Crusadium).
+
+**Withdraw:** o dono pode **sacar até 1 stack (64)** de cada recurso do Core para o inventário
+(vira item: Iron→iron_ingot, Coal→coal, Scrap→scrap_metal, Gold→gold_ingot, Emerald→emerald,
+Crusadium→crusadium_ingot). Método no Core: `withdrawResource(player, type, amount)`. Deposit
+aceita os 6 recursos. Permite usar os recursos da cidade em crafting normal.
+
 **Enum `ImperialCommandCoreAction` (atual):**
-`DEPOSIT_RESOURCES, BUILD_IMPERIAL_MINE, BUILD_GOLD_MINE, BUILD_SCRAP_YARD, BUILD_IMPERIAL_FORGE,
-BUILD_PROMETHIUM_REFINERY, BUILD_FARM, BUILD_EMERALD_TRADE_DEPOT, BUILD_BARRACKS,
-RECRUIT_GUARDSMAN, CYCLE_SPECIALIST,
+`DEPOSIT_RESOURCES, WITHDRAW_IRON/COAL/SCRAP/GOLD/EMERALD/CRUSADIUM, BUILD_IMPERIAL_MINE,
+BUILD_GOLD_MINE, BUILD_SCRAP_YARD, BUILD_IMPERIAL_FORGE, BUILD_PROMETHIUM_REFINERY, BUILD_FARM,
+BUILD_EMERALD_TRADE_DEPOT, BUILD_BARRACKS, RECRUIT_GUARDSMAN, CYCLE_SPECIALIST,
 PROMOTE_SPECIALIST, UPGRADE_CITY, REPAIR_CORE, CALL_REINFORCEMENTS, RALLY_DEFENDERS,
 FORTIFY_DEFENDERS, FORCE_RAID_TEST`.
 
@@ -179,8 +193,8 @@ cooldown de reforços.
 em vermelho** quando não pode ser usado (`applyButton`/`getRecruitBlockReason`/etc.).
 
 **Melhorias futuras da interface:**
-- Abas separadas: economia / população / guerra
 - Texturas/arte própria (hoje é desenhada com `fill`/`drawString`, sem PNG de fundo)
+- Campo de quantidade no withdraw (hoje saca 1 stack por clique)
 
 ---
 

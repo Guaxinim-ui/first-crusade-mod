@@ -1,5 +1,6 @@
 package com.example.examplemod;
 
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
@@ -746,6 +747,61 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
                     + this.gold + " Gold, " + this.emerald + " Emerald, " + this.crusadium + " Crusadium."
     ), false);
 }
+
+    // Withdraws stored resources back into the owner's inventory as items (for crafting, etc.).
+    public void withdrawResource(Player player, ImperialResourceType type, int requested) {
+        if (!isOwner(player)) {
+            player.displayClientMessage(Component.literal("Only the owner can withdraw resources from this city."), true);
+            return;
+        }
+
+        int available = switch (type) {
+            case IRON -> this.iron;
+            case COAL -> this.coal;
+            case SCRAP -> this.scrapMetal;
+            case GOLD -> this.gold;
+            case EMERALD -> this.emerald;
+            case CRUSADIUM -> this.crusadium;
+        };
+
+        int amount = Math.min(available, requested);
+
+        if (amount <= 0) {
+            player.displayClientMessage(Component.literal("No " + type.getDisplayName() + " stored to withdraw."), true);
+            return;
+        }
+
+        Item item = switch (type) {
+            case IRON -> Items.IRON_INGOT;
+            case COAL -> Items.COAL;
+            case SCRAP -> ExampleMod.SCRAP_METAL.get();
+            case GOLD -> Items.GOLD_INGOT;
+            case EMERALD -> Items.EMERALD;
+            case CRUSADIUM -> ExampleMod.CRUSADIUM_INGOT.get();
+        };
+
+        switch (type) {
+            case IRON -> this.iron -= amount;
+            case COAL -> this.coal -= amount;
+            case SCRAP -> this.scrapMetal -= amount;
+            case GOLD -> this.gold -= amount;
+            case EMERALD -> this.emerald -= amount;
+            case CRUSADIUM -> this.crusadium -= amount;
+        }
+
+        ItemStack stack = new ItemStack(item, amount);
+
+        if (!player.getInventory().add(stack)) {
+            player.drop(stack, false);
+        }
+
+        player.getInventory().setChanged();
+        setChanged();
+
+        player.displayClientMessage(Component.literal(
+                "Withdrew " + amount + " " + type.getDisplayName() + " from the city."
+        ), false);
+    }
 
     private int addIron(int amount) {
         int acceptedAmount = getAcceptedAmount(this.iron, amount);
