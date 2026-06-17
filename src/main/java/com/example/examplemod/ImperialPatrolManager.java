@@ -34,12 +34,15 @@ public final class ImperialPatrolManager {
 
         BlockPos corePos = core.getBlockPos();
 
+        long gameTime = serverLevel.getGameTime();
+
         List<GuardsmanEntity> guardsmen = serverLevel.getEntitiesOfClass(
                 GuardsmanEntity.class,
                 searchBox(corePos, GUARD_SEARCH_RADIUS),
                 guardsman -> guardsman.isAlive()
                         && guardsman.isAssignedToCommandCore(corePos)
                         && guardsman.getTarget() == null
+                        && !ImperialPrimarchManager.isInRetinue(guardsman, gameTime)
         );
 
         if (guardsmen.isEmpty()) {

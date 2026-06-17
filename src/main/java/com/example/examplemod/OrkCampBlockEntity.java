@@ -27,8 +27,13 @@ public class OrkCampBlockEntity extends BlockEntity {
     private static final int WAAAGH_THRESHOLD = 100;
     private static final int WAR_PARTY_SIZE = 4;
 
+    private static final int WAR_PARTIES_BEFORE_WARBOSS = 3;
+
     private BlockPos targetCorePos;
+    private OrkClan clan = OrkClan.GOFFS;
     private int waaagh = 0;
+    private int warPartiesLaunched = 0;
+    private boolean warbossSpawned = false;
     private int tickCounter = 0;
 
     public OrkCampBlockEntity(BlockPos pos, BlockState state) {
@@ -38,6 +43,15 @@ public class OrkCampBlockEntity extends BlockEntity {
     public void setTargetCore(BlockPos corePos) {
         this.targetCorePos = corePos == null ? null : corePos.immutable();
         setChanged();
+    }
+
+    public void setClan(OrkClan clan) {
+        this.clan = clan == null ? OrkClan.GOFFS : clan;
+        setChanged();
+    }
+
+    public OrkClan getClan() {
+        return this.clan;
     }
 
     public int getWaaagh() {
@@ -102,6 +116,8 @@ public class OrkCampBlockEntity extends BlockEntity {
                     0.0F
             );
 
+            this.clan.applyTo(ork);
+
             // War party leaves the camp and marches on the city.
             ork.getNavigation().moveTo(
                     this.targetCorePos.getX() + 0.5D,
@@ -117,7 +133,52 @@ public class OrkCampBlockEntity extends BlockEntity {
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel,
                 this.targetCorePos,
-                "WAAAGH! An Ork war party marches from a nearby camp!"
+                "WAAAGH! A " + this.clan.getDisplayName() + " war party marches from a nearby camp!"
+        );
+
+        this.warPartiesLaunched++;
+        setChanged();
+
+        if (!this.warbossSpawned && this.warPartiesLaunched >= WAR_PARTIES_BEFORE_WARBOSS) {
+            spawnWarboss(serverLevel, pos);
+        }
+    }
+
+    // Once the WAAAGH! has built enough momentum, the camp's biggest Ork rises to lead it.
+    private void spawnWarboss(ServerLevel serverLevel, BlockPos pos) {
+        if (this.targetCorePos == null) {
+            return;
+        }
+
+        WarbossEntity warboss = ExampleMod.WARBOSS.get().create(serverLevel);
+
+        if (warboss == null) {
+            return;
+        }
+
+        BlockPos spawnPos = groundPos(serverLevel, pos);
+
+        warboss.moveTo(
+                spawnPos.getX() + 0.5D,
+                spawnPos.getY(),
+                spawnPos.getZ() + 0.5D,
+                serverLevel.random.nextFloat() * 360.0F,
+                0.0F
+        );
+
+        this.clan.applyTo(warboss);
+        warboss.setTargetCore(this.targetCorePos);
+        warboss.setHealth(warboss.getMaxHealth());
+
+        serverLevel.addFreshEntity(warboss);
+
+        this.warbossSpawned = true;
+        setChanged();
+
+        OrkRaidManager.notifyNearbyPlayers(
+                serverLevel,
+                this.targetCorePos,
+                "A " + this.clan.getDisplayName() + " Warboss rises to lead the WAAAGH! against the city!"
         );
     }
 
@@ -148,6 +209,7 @@ public class OrkCampBlockEntity extends BlockEntity {
                 0.0F
         );
 
+        this.clan.applyTo(ork);
         markAsCampOrk(ork, pos);
         ork.setPersistenceRequired();
         serverLevel.addFreshEntity(ork);
@@ -184,6 +246,9 @@ public class OrkCampBlockEntity extends BlockEntity {
         super.saveAdditional(tag);
 
         tag.putInt("Waaagh", this.waaagh);
+        tag.putInt("WarPartiesLaunched", this.warPartiesLaunched);
+        tag.putBoolean("WarbossSpawned", this.warbossSpawned);
+        tag.putString("Clan", this.clan.name());
 
         if (this.targetCorePos != null) {
             tag.putLong("TargetCorePos", this.targetCorePos.asLong());
@@ -195,6 +260,9 @@ public class OrkCampBlockEntity extends BlockEntity {
         super.load(tag);
 
         this.waaagh = tag.getInt("Waaagh");
+        this.warPartiesLaunched = tag.getInt("WarPartiesLaunched");
+        this.warbossSpawned = tag.getBoolean("WarbossSpawned");
+        this.clan = OrkClan.fromName(tag.getString("Clan"));
 
         if (tag.contains("TargetCorePos")) {
             this.targetCorePos = BlockPos.of(tag.getLong("TargetCorePos"));

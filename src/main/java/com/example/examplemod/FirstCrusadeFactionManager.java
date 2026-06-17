@@ -34,6 +34,10 @@ public class FirstCrusadeFactionManager {
             return FirstCrusadeFaction.ORKS;
         }
 
+        if (entity instanceof WarbossEntity) {
+            return FirstCrusadeFaction.ORKS;
+        }
+
         if (entity instanceof Player) {
             return FirstCrusadeFaction.PLAYER;
         }

@@ -11,7 +11,7 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 
 public class ImperialCommandCoreMenu extends AbstractContainerMenu {
-    private static final int DATA_COUNT = 44;
+    private static final int DATA_COUNT = 46;
 
     private final ContainerData data;
     private final BlockPos commandCorePos;
@@ -83,6 +83,8 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
                     case 41 -> commandCore.getEmerald();
                     case 42 -> commandCore.getCrusadium();
                     case 43 -> commandCore.getCityMorale();
+                    case 44 -> commandCore.getCityTypeOrdinal();
+                    case 45 -> commandCore.getLiveThreatScore();
                     default -> 0;
                 };
             }
@@ -350,5 +352,20 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
 
     public int getCityMorale() {
         return this.data.get(43);
+    }
+
+    public ImperialCityType getCityType() {
+        ImperialCityType[] values = ImperialCityType.values();
+        int ordinal = this.data.get(44);
+
+        if (ordinal < 0 || ordinal >= values.length) {
+            return ImperialCityType.CIVILISED;
+        }
+
+        return values[ordinal];
+    }
+
+    public int getThreatScore() {
+        return this.data.get(45);
     }
 }

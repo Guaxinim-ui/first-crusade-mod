@@ -358,6 +358,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
         y = 34;
         drawLine(guiGraphics, "Settlement", 12, y, 0xFFFFD27D);
+        drawLine(guiGraphics, this.menu.getCityType().getDisplayName(), 130, y, 0xFFE0C070);
         y += 13;
         drawLine(guiGraphics, "Level: " + this.menu.getCityLevel(), 12, y, 0xFFFFFFFF);
         y += 11;
@@ -402,6 +403,8 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         drawLine(guiGraphics, "Gene " + this.menu.getEmperorGeneSeed() + "/" + this.menu.getEmperorGeneSeedCapacity() + " +" + this.menu.getDailyGeneProduction() + "/day", 12, y, 0xFFB066FF);
         y += 11;
         drawLine(guiGraphics, getSpaceMarineText(), 12, y, 0xFFFFD27D);
+        y += 11;
+        drawLine(guiGraphics, "Threat: " + getThreatText(), 12, y, getThreatColor());
         y += 11;
         drawLine(guiGraphics, "Raid: " + getRaidStatusText(), 12, y, getRaidStatusColor());
         y += 11;
@@ -448,6 +451,24 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         }
 
         return 0xFFFF7777;
+    }
+
+    private String getThreatText() {
+        int score = this.menu.getThreatScore();
+        int level = ThreatAssessmentManager.threatLevel(score);
+        return ThreatAssessmentManager.threatLevelName(level) + " (" + score + ")";
+    }
+
+    private int getThreatColor() {
+        int level = ThreatAssessmentManager.threatLevel(this.menu.getThreatScore());
+
+        return switch (level) {
+            case ThreatAssessmentManager.LEVEL_CRITICAL -> 0xFFFF3333;
+            case ThreatAssessmentManager.LEVEL_SIEGE -> 0xFFFF7777;
+            case ThreatAssessmentManager.LEVEL_ALERT -> 0xFFFFCC55;
+            case ThreatAssessmentManager.LEVEL_VIGILANT -> 0xFFFFFF99;
+            default -> 0xFF99FF99;
+        };
     }
 
     private String getRaidStatusText() {

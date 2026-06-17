@@ -2,8 +2,11 @@ package com.example.examplemod;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -22,7 +25,54 @@ public final class ImperialPrimarchManager {
     private static final int CRUSADIUM_COST = 32;
     private static final int SEARCH_RADIUS = 192;
 
+    // Personal army (retinue): the nearest Guardsmen who march and fight alongside the Primarch.
+    private static final String RETINUE_TAG = "FirstCrusadeRetinueUntil";
+    private static final int RETINUE_SIZE = 6;
+    private static final double RETINUE_GATHER_RADIUS = 32.0D;
+    private static final double RETINUE_FOLLOW_DISTANCE_SQR = 8.0D * 8.0D;
+    private static final long RETINUE_DURATION_TICKS = 300L;
+
     private ImperialPrimarchManager() {
+    }
+
+    // Used by the patrol manager to leave the Primarch's retinue out of normal patrols.
+    public static boolean isInRetinue(Entity entity, long gameTime) {
+        return entity.getPersistentData().getLong(RETINUE_TAG) > gameTime;
+    }
+
+    // Each tick, the Primarch gathers his nearest Guardsmen as a personal army: freed from their
+    // patrol posts, they follow him on the march and charge whatever he fights.
+    private static void updatePersonalArmy(ServerLevel serverLevel, ImperialCommandCoreBlockEntity core, PrimarchEntity primarch) {
+        long expiry = serverLevel.getGameTime() + RETINUE_DURATION_TICKS;
+        BlockPos corePos = core.getBlockPos();
+
+        List<GuardsmanEntity> nearby = serverLevel.getEntitiesOfClass(
+                GuardsmanEntity.class,
+                primarch.getBoundingBox().inflate(RETINUE_GATHER_RADIUS),
+                guardsman -> guardsman.isAlive() && guardsman.isAssignedToCommandCore(corePos)
+        );
+
+        nearby.sort(Comparator.comparingDouble(guardsman -> guardsman.distanceToSqr(primarch)));
+
+        int count = Math.min(RETINUE_SIZE, nearby.size());
+        LivingEntity primarchTarget = primarch.getTarget();
+
+        for (int i = 0; i < count; i++) {
+            GuardsmanEntity soldier = nearby.get(i);
+
+            soldier.getPersistentData().putLong(RETINUE_TAG, expiry);
+            soldier.clearGuardPost(); // released from patrol so it can follow the Primarch
+
+            if (primarchTarget != null
+                    && soldier.getTarget() == null
+                    && FirstCrusadeFactionManager.canAttack(soldier, primarchTarget)) {
+                soldier.setTarget(primarchTarget);
+            } else if (primarchTarget == null
+                    && soldier.getTarget() == null
+                    && soldier.distanceToSqr(primarch) > RETINUE_FOLLOW_DISTANCE_SQR) {
+                soldier.getNavigation().moveTo(primarch.getX(), primarch.getY(), primarch.getZ(), 1.1D);
+            }
+        }
     }
 
     public static void tickPrimarch(ServerLevel serverLevel, ImperialCommandCoreBlockEntity core) {
@@ -31,6 +81,8 @@ public final class ImperialPrimarchManager {
         if (primarch != null) {
             // A living Primarch personally steadies the city's defences...
             core.engineerRepair(1);
+            // ...gathers his personal army...
+            updatePersonalArmy(serverLevel, core, primarch);
             // ...and, when the city is safe, marches out to break the nearby Ork camp.
             leadSortieAgainstCamp(serverLevel, core, primarch);
             return;
@@ -80,8 +132,13 @@ public final class ImperialPrimarchManager {
     }
 
     // While the city is safe, the Primarch marches on the Ork camp to break it at the source.
+    // If a real threat is gathering at home (Alert level or higher), he stays to defend instead.
     private static void leadSortieAgainstCamp(ServerLevel serverLevel, ImperialCommandCoreBlockEntity core, PrimarchEntity primarch) {
-        if (core.hasActiveOrkRaid() || primarch.getTarget() != null) {
+        if (primarch.getTarget() != null) {
+            return;
+        }
+
+        if (core.hasActiveOrkRaid() || core.getLiveThreatLevel() >= ThreatAssessmentManager.LEVEL_ALERT) {
             return;
         }
 

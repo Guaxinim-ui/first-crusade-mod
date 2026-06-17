@@ -133,13 +133,18 @@ public class ImperialPopulationManager {
     }
 
     public static int getCitizenCapacity(ImperialCommandCoreBlockEntity commandCore) {
-        return switch (commandCore.getCityLevel()) {
+        int base = switch (commandCore.getCityLevel()) {
             case 1 -> 3;
             case 2 -> 6;
             case 3 -> 10;
             case 4 -> 15;
             default -> 25;
         };
+
+        // City type scales population (e.g. Hive cities are far more crowded).
+        int scaled = (int) Math.round(base * commandCore.getCityType().getPopulationFactor());
+
+        return Math.max(1, scaled);
     }
 
     public static ImperialCitizenEntity findNearestTrainableCitizen(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player) {

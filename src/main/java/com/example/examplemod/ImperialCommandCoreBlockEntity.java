@@ -35,6 +35,9 @@ public class ImperialCommandCoreBlockEntity extends BlockEntity {
     private UUID ownerUUID;
     private String ownerName = "Unclaimed";
 
+    // Settlement flavour (Hive, Forge, Fortress, ...). Assigned on first server tick.
+    private ImperialCityType cityType;
+
     private int cityLevel = 1;
 
     private int iron = 0;
@@ -239,8 +242,12 @@ public int receiveProducedResource(ImperialResourceType resourceType, int amount
             return;
         }
 
+        if (blockEntity.cityType == null) {
+            blockEntity.assignCityType(serverLevel.random);
+        }
+
         ImperialPopulationManager.tickCitizenGrowth(serverLevel, blockEntity);
-        
+
         blockEntity.tickCounter++;
 
         if (blockEntity.tickCounter < 200) {
@@ -292,6 +299,12 @@ blockEntity.checkActiveOrkRaid(serverLevel);
         ironProduction = (int) Math.round(ironProduction * moraleMultiplier);
         scrapProduction = (int) Math.round(scrapProduction * moraleMultiplier);
         coalProduction = (int) Math.round(coalProduction * moraleMultiplier);
+
+        // The city's type boosts its focus resource (e.g. Mining -> Iron, Forge -> Scrap).
+        ImperialCityType type = getCityType();
+        ironProduction = type.applyProductionFocus(ImperialResourceType.IRON, ironProduction);
+        scrapProduction = type.applyProductionFocus(ImperialResourceType.SCRAP, scrapProduction);
+        coalProduction = type.applyProductionFocus(ImperialResourceType.COAL, coalProduction);
 
         addIron((int) daysPassed * ironProduction);
 addScrapMetal((int) daysPassed * scrapProduction);
@@ -2330,6 +2343,42 @@ public String getBaseName() {
     return this.baseName;
 }
 
+public ImperialCityType getCityType() {
+    return this.cityType == null ? ImperialCityType.CIVILISED : this.cityType;
+}
+
+public int getCityTypeOrdinal() {
+    return getCityType().ordinal();
+}
+
+// Live threat from actual nearby enemies (quantity x quality), not raid history.
+public int getLiveThreatScore() {
+    if (this.level instanceof ServerLevel serverLevel) {
+        return ThreatAssessmentManager.assessThreat(
+                serverLevel,
+                this.worldPosition,
+                ThreatAssessmentManager.DEFAULT_RADIUS
+        );
+    }
+
+    return 0;
+}
+
+public int getLiveThreatLevel() {
+    return ThreatAssessmentManager.threatLevel(getLiveThreatScore());
+}
+
+private void assignCityType(net.minecraft.util.RandomSource random) {
+    this.cityType = ImperialCityType.random(random);
+
+    // Only rename a still-default outpost so player-claimed names are kept.
+    if (this.baseName == null || this.baseName.isEmpty() || this.baseName.equals("Imperial Outpost")) {
+        this.baseName = this.cityType.getDisplayName();
+    }
+
+    setChanged();
+}
+
 public String getOwnerName() {
     return this.ownerName;
 }
@@ -2558,6 +2607,10 @@ protected void saveAdditional(CompoundTag tag) {
     tag.putString("BaseName", this.baseName);
     tag.putString("OwnerName", this.ownerName);
 
+    if (this.cityType != null) {
+        tag.putString("CityType", this.cityType.name());
+    }
+
     if (this.ownerUUID != null) {
         tag.putUUID("OwnerUUID", this.ownerUUID);
     }
@@ -2613,6 +2666,8 @@ public void load(CompoundTag tag) {
 
     this.baseName = tag.getString("BaseName");
     this.ownerName = tag.getString("OwnerName");
+
+    this.cityType = tag.contains("CityType") ? ImperialCityType.fromName(tag.getString("CityType")) : null;
 
     if (this.baseName == null || this.baseName.isEmpty()) {
         this.baseName = "Imperial Outpost";

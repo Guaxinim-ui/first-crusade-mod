@@ -359,6 +359,16 @@ public static final RegistryObject<Item> PRIMARCH_SPAWN_EGG = ITEMS.register("pr
     public static final RegistryObject<Item> ORK_NOB_SPAWN_EGG = ITEMS.register("ork_nob_spawn_egg",
             () -> new ForgeSpawnEggItem(ORK_NOB, 0x1F4D1F, 0x8A6A24, new Item.Properties()));
 
+    public static final RegistryObject<EntityType<WarbossEntity>> WARBOSS =
+            ENTITY_TYPES.register("warboss",
+                    () -> EntityType.Builder.of(WarbossEntity::new, MobCategory.MONSTER)
+                            .sized(1.0F, 2.6F)
+                            .clientTrackingRange(12)
+                            .build(MODID + ":warboss"));
+
+    public static final RegistryObject<Item> WARBOSS_SPAWN_EGG = ITEMS.register("warboss_spawn_egg",
+            () -> new ForgeSpawnEggItem(WARBOSS, 0x143314, 0xB02020, new Item.Properties()));
+
     // =========================
     // ARMOR MATERIALS
     // =========================
@@ -548,6 +558,7 @@ output.accept(CUSTODES_SPAWN_EGG.get());
 output.accept(PRIMARCH_SPAWN_EGG.get());
 output.accept(ORK_BOY_SPAWN_EGG.get());
 output.accept(ORK_NOB_SPAWN_EGG.get());
+output.accept(WARBOSS_SPAWN_EGG.get());
                     })
                     .build());
 
@@ -589,6 +600,7 @@ private void registerAttributes(EntityAttributeCreationEvent event) {
     event.put(PRIMARCH.get(), PrimarchEntity.createAttributes().build());
     event.put(ORK_BOY.get(), OrkBoyEntity.createAttributes().build());
     event.put(ORK_NOB.get(), OrkNobEntity.createAttributes().build());
+    event.put(WARBOSS.get(), WarbossEntity.createAttributes().build());
 }
 
 @SubscribeEvent
@@ -614,6 +626,7 @@ public static void onClientSetup(FMLClientSetupEvent event) {
         event.registerEntityRenderer(PRIMARCH.get(), PrimarchRenderer::new);
         event.registerEntityRenderer(ORK_BOY.get(), OrkBoyRenderer::new);
         event.registerEntityRenderer(ORK_NOB.get(), OrkNobRenderer::new);
+        event.registerEntityRenderer(WARBOSS.get(), WarbossRenderer::new);
     }
 }
 }

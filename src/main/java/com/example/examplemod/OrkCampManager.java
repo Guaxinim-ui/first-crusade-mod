@@ -38,16 +38,19 @@ public final class OrkCampManager {
 
         serverLevel.setBlock(surface, ExampleMod.ORK_CAMP.get().defaultBlockState(), 3);
 
+        OrkClan clan = OrkClan.random(serverLevel.random);
+
         BlockEntity blockEntity = serverLevel.getBlockEntity(surface);
 
         if (blockEntity instanceof OrkCampBlockEntity camp) {
             camp.setTargetCore(corePos);
+            camp.setClan(clan);
         }
 
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel,
                 corePos,
-                "Ork scouts have raised a camp nearby. It will grow into a threat."
+                clan.getDisplayName() + " Orks have raised a camp nearby. It will grow into a threat."
         );
 
         return surface.immutable();
