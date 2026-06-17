@@ -582,8 +582,12 @@ src/main/resources/assets/firstcrusade/lang/en_us.json
 ```
 **ERRADO (evitar):** `src/main/resources/assets/assets/firstcrusade/` (assets duplicado).
 
-Pendente provável: lang `pt_br`, texturas/modelos próprios (alguns ainda placeholder,
-ex.: armadura de Space Marine).
+Modelos de elite (`EliteModelLayers`): Space Marine/Custodes/Primarch usam layers customizadas
+(esqueleto humanoide + ombreiras, mochila/vents, crista do Custodes, capa+auréola do Primarch),
+texturas 128×128 geradas por `tools/TextureGen.java` no esquema de cor de cada facção. Renderers
+ainda aplicam escala (1.3×/1.45×/2.0×). Detalhe fino (filigranas, espada) pede Blockbench.
+
+Pendente provável: lang `pt_br`; texturas mais detalhadas (hoje cores de facção, sem arte fina).
 
 ---
 

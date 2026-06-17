@@ -2,7 +2,6 @@ package com.example.examplemod;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.HumanoidModel;
-import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
@@ -15,7 +14,7 @@ public class SpaceMarineRenderer extends HumanoidMobRenderer<SpaceMarineEntity, 
     private static final float SCALE = 1.3F;
 
     public SpaceMarineRenderer(EntityRendererProvider.Context context) {
-        super(context, new HumanoidModel<>(context.bakeLayer(ModelLayers.ZOMBIE)), 0.75F);
+        super(context, new HumanoidModel<>(context.bakeLayer(EliteModelLayers.SPACE_MARINE)), 0.75F);
     }
 
     @Override

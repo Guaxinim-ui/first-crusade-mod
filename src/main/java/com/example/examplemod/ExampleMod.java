@@ -664,6 +664,13 @@ public static void onClientSetup(FMLClientSetupEvent event) {
     });
 }
     @SubscribeEvent
+    public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(EliteModelLayers.SPACE_MARINE, EliteModelLayers::createSpaceMarineLayer);
+        event.registerLayerDefinition(EliteModelLayers.CUSTODES, EliteModelLayers::createCustodesLayer);
+        event.registerLayerDefinition(EliteModelLayers.PRIMARCH, EliteModelLayers::createPrimarchLayer);
+    }
+
+    @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(IMPERIAL_CITIZEN.get(), ImperialCitizenRenderer::new);
         event.registerEntityRenderer(LASGUN_SHOT.get(), LasgunShotRenderer::new);
