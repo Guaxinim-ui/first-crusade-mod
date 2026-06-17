@@ -376,13 +376,16 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
     }
 
     private String getUpgradeCostText() {
-        return switch (this.menu.getCityLevel()) {
-            case 1 -> "Cost: 100 Iron, 60 Scrap, 30 Coal, 2 Crusadium Plate.";
-            case 2 -> "Cost: 500 Iron, 300 Scrap, 150 Coal, 6 Crusadium Plate.";
-            case 3 -> "Cost: 2500 Iron, 1500 Scrap, 750 Coal, 18 Crusadium Plate.";
-            case 4 -> "Cost: 12000 Iron, 7200 Scrap, 3600 Coal, 54 Crusadium Plate.";
-            default -> "City is at the maximum level.";
-        };
+        int level = this.menu.getCityLevel();
+
+        if (level >= 5) {
+            return "City is at the maximum level.";
+        }
+
+        return "Cost: " + ImperialCityLevelStats.upgradeIronCost(level) + " Iron, "
+                + ImperialCityLevelStats.upgradeScrapCost(level) + " Scrap, "
+                + ImperialCityLevelStats.upgradeCoalCost(level) + " Coal, "
+                + ImperialCityLevelStats.upgradePlateCost(level) + " Crusadium Plate.";
     }
 
     private int reinforcementWarSupportCost() {

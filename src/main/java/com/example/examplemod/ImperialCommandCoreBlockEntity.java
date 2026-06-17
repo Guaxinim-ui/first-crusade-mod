@@ -1139,14 +1139,7 @@ private int getSpecialistScrapCost() {
 }
 
 private int getSpecialistWarSupportCost() {
-    return switch (this.cityLevel) {
-        case 1 -> 5;
-        case 2 -> 8;
-        case 3 -> 14;
-        case 4 -> 24;
-        case 5 -> 40;
-        default -> 8;
-    };
+    return ImperialCityLevelStats.specialistWarSupportCost(this.cityLevel);
 }
 
 private GuardsmanEntity findNearestSpecializableGuardsman(ServerLevel serverLevel, Player player) {
@@ -1459,14 +1452,7 @@ private int getReinforcementCount() {
 }
 
 private int getReinforcementCooldownTicks() {
-    return switch (this.cityLevel) {
-        case 1 -> 2400;
-        case 2 -> 2200;
-        case 3 -> 2000;
-        case 4 -> 1800;
-        case 5 -> 1600;
-        default -> 2400;
-    };
+    return ImperialCityLevelStats.reinforcementCooldownTicks(this.cityLevel);
 }
 
 private GuardsmanRank getReinforcementRank() {
@@ -1639,47 +1625,19 @@ public void upgradeNearestGuardsmanToSpaceMarine(Player player, ItemStack cataly
 }
 
 private int getSpaceMarineUpgradeIronCost() {
-    return switch (this.cityLevel) {
-        case 1 -> 0;
-        case 2 -> 0;
-        case 3 -> 750;
-        case 4 -> 1500;
-        case 5 -> 3000;
-        default -> 750;
-    };
+    return ImperialCityLevelStats.spaceMarineUpgradeIronCost(this.cityLevel);
 }
 
 private int getSpaceMarineUpgradeScrapCost() {
-    return switch (this.cityLevel) {
-        case 1 -> 0;
-        case 2 -> 0;
-        case 3 -> 450;
-        case 4 -> 900;
-        case 5 -> 1800;
-        default -> 450;
-    };
+    return ImperialCityLevelStats.spaceMarineUpgradeScrapCost(this.cityLevel);
 }
 
 private int getSpaceMarineUpgradeCoalCost() {
-    return switch (this.cityLevel) {
-        case 1 -> 0;
-        case 2 -> 0;
-        case 3 -> 200;
-        case 4 -> 400;
-        case 5 -> 800;
-        default -> 200;
-    };
+    return ImperialCityLevelStats.spaceMarineUpgradeCoalCost(this.cityLevel);
 }
 
 private int getSpaceMarineUpgradeWarSupportCost() {
-    return switch (this.cityLevel) {
-        case 1 -> 0;
-        case 2 -> 0;
-        case 3 -> 25;
-        case 4 -> 50;
-        case 5 -> 100;
-        default -> 25;
-    };
+    return ImperialCityLevelStats.spaceMarineUpgradeWarSupportCost(this.cityLevel);
 }
 
     private void reduceSpaceMarinePromotionCooldown() {
@@ -2763,43 +2721,19 @@ public int getGuardsmanRecruitCoalCost() {
 }
 
 public int getUpgradeIronCost() {
-    return switch (this.cityLevel) {
-        case 1 -> 100;
-        case 2 -> 500;
-        case 3 -> 2500;
-        case 4 -> 12000;
-        default -> 0;
-    };
+    return ImperialCityLevelStats.upgradeIronCost(this.cityLevel);
 }
 
 public int getUpgradeScrapCost() {
-    return switch (this.cityLevel) {
-        case 1 -> 60;
-        case 2 -> 300;
-        case 3 -> 1500;
-        case 4 -> 7200;
-        default -> 0;
-    };
+    return ImperialCityLevelStats.upgradeScrapCost(this.cityLevel);
 }
 
 public int getUpgradeCoalCost() {
-    return switch (this.cityLevel) {
-        case 1 -> 30;
-        case 2 -> 150;
-        case 3 -> 750;
-        case 4 -> 3600;
-        default -> 0;
-    };
+    return ImperialCityLevelStats.upgradeCoalCost(this.cityLevel);
 }
 
 public int getUpgradePlateCost() {
-    return switch (this.cityLevel) {
-        case 1 -> 2;
-        case 2 -> 6;
-        case 3 -> 18;
-        case 4 -> 54;
-        default -> 0;
-    };
+    return ImperialCityLevelStats.upgradePlateCost(this.cityLevel);
 }
 
 @Override

@@ -149,4 +149,106 @@ public final class ImperialCityLevelStats {
             default -> 5;
         };
     }
+
+    // ----- City upgrade costs (current level -> next level) -----
+
+    public static int upgradeIronCost(int cityLevel) {
+        return switch (cityLevel) {
+            case 1 -> 100;
+            case 2 -> 500;
+            case 3 -> 2500;
+            case 4 -> 12000;
+            default -> 0;
+        };
+    }
+
+    public static int upgradeScrapCost(int cityLevel) {
+        return switch (cityLevel) {
+            case 1 -> 60;
+            case 2 -> 300;
+            case 3 -> 1500;
+            case 4 -> 7200;
+            default -> 0;
+        };
+    }
+
+    public static int upgradeCoalCost(int cityLevel) {
+        return switch (cityLevel) {
+            case 1 -> 30;
+            case 2 -> 150;
+            case 3 -> 750;
+            case 4 -> 3600;
+            default -> 0;
+        };
+    }
+
+    public static int upgradePlateCost(int cityLevel) {
+        return switch (cityLevel) {
+            case 1 -> 2;
+            case 2 -> 6;
+            case 3 -> 18;
+            case 4 -> 54;
+            default -> 0;
+        };
+    }
+
+    // ----- Manual Space Marine ascension costs (city level >= 3) -----
+
+    public static int spaceMarineUpgradeIronCost(int cityLevel) {
+        return switch (cityLevel) {
+            case 4 -> 1500;
+            case 5 -> 3000;
+            case 1, 2 -> 0;
+            default -> 750;
+        };
+    }
+
+    public static int spaceMarineUpgradeScrapCost(int cityLevel) {
+        return switch (cityLevel) {
+            case 4 -> 900;
+            case 5 -> 1800;
+            case 1, 2 -> 0;
+            default -> 450;
+        };
+    }
+
+    public static int spaceMarineUpgradeCoalCost(int cityLevel) {
+        return switch (cityLevel) {
+            case 4 -> 400;
+            case 5 -> 800;
+            case 1, 2 -> 0;
+            default -> 200;
+        };
+    }
+
+    public static int spaceMarineUpgradeWarSupportCost(int cityLevel) {
+        return switch (cityLevel) {
+            case 4 -> 50;
+            case 5 -> 100;
+            case 1, 2 -> 0;
+            default -> 25;
+        };
+    }
+
+    // War Support cost to promote a Guardsman to a specialist.
+    public static int specialistWarSupportCost(int cityLevel) {
+        return switch (cityLevel) {
+            case 1 -> 5;
+            case 3 -> 14;
+            case 4 -> 24;
+            case 5 -> 40;
+            default -> 8;
+        };
+    }
+
+    // Cooldown (ticks) before reinforcements can be called again.
+    public static int reinforcementCooldownTicks(int cityLevel) {
+        return switch (cityLevel) {
+            case 2 -> 2200;
+            case 3 -> 2000;
+            case 4 -> 1800;
+            case 5 -> 1600;
+            default -> 2400;
+        };
+    }
 }

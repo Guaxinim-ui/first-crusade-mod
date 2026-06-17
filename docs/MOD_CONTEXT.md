@@ -611,9 +611,11 @@ ex.: armadura de Space Marine).
 - Portão funcional (Wall Gate); geração de vila imperial mais rica
 - Worldgen próprio; sistema de território; mapa estratégico
 - Veículos; naves/dropships; outras facções
-- 🔶 **Refatorar o `ImperialCommandCoreBlockEntity`** — INICIADO: tabelas por nível extraídas
-  para `ImperialCityLevelStats`. Continuar extraindo (custos de upgrade, recrutamento, estado
-  de recursos → `ImperialResourceStorage`).
+- 🔶 **Refatorar o `ImperialCommandCoreBlockEntity`** — EM ANDAMENTO: já extraídos para
+  `ImperialCityLevelStats` as tabelas por nível (capacidades, produção, yields, custos de
+  upgrade, custos/cooldown de reforço/fortify/especialista/Space Marine). Próximo: extrair o
+  estado de recursos (iron/coal/scrap/gold/emerald/crusadium + acessores) para um
+  `ImperialResourceStorage`.
 
 ### Documentos de design relacionados
 - `docs/DESIGN_W40K_AUTONOMY.md` — autonomia/IA das unidades imperiais e inimigas
