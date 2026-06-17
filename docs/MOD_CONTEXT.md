@@ -77,9 +77,10 @@ treina/organiza tropas, repara integridade, controla raids/reforços/comandos, G
 e limites de estruturas. Fica no centro; construções surgem ao redor em locais livres.
 
 > **Regra de arquitetura nº1:** NÃO colocar tudo aqui. Lógica pesada vai em *managers*.
-> ⚠️ **O Core está MUITO grande — ~3000 linhas** (de longe o maior arquivo do projeto; o
-> 2º maior tem ~630). É o candidato nº1 a refatoração: extrair estado de recursos e lógica
-> de raid/produção para managers/helpers dedicados.
+> ⚠️ **O Core ainda está MUITO grande — ~3170 linhas** (de longe o maior arquivo do projeto).
+> Refatoração EM ANDAMENTO: as tabelas por nível já saíram para `ImperialCityLevelStats`
+> (§14). Próximos alvos: custos de upgrade/recrutamento e o estado de recursos
+> (→ `ImperialResourceStorage`).
 
 ### Estado persistido (NBT)
 Dono (`ownerUUID`/`ownerName`), `baseName`, `cityType` (`ImperialCityType`), `cityLevel` (1–5),
@@ -543,7 +544,8 @@ ImperialBarracksManager, ImperialWorkforceManager, ImperialDefenseManager, OrkRa
 OrkCampManager, SpaceMarineUpgradeManager, ImperialCustodesManager, ImperialPrimarchManager,
 ImperialPatrolManager, ImperialCityMoraleManager, ThreatAssessmentManager,
 ImperialMilitaryReportManager, ImperialVillageScanner.
-**Outros:** ImperialSettlementType/Origin, ImperialCityType, OrkClan, ImperialResourceType,
+**Outros:** ImperialCityLevelStats (tabelas puras por nível, extraídas do Core),
+ImperialSettlementType/Origin, ImperialCityType, OrkClan, ImperialResourceType,
 GuardsmanRank, GuardsmanSpecialization, ImperiumChapter, GuardsmanArmorEvents, Config.
 
 ---
@@ -595,7 +597,9 @@ ex.: armadura de Space Marine).
 - Portão funcional (Wall Gate); geração de vila imperial mais rica
 - Worldgen próprio; sistema de território; mapa estratégico
 - Veículos; naves/dropships; outras facções
-- **Refatorar o `ImperialCommandCoreBlockEntity` (~3000 linhas)** em managers/helpers
+- 🔶 **Refatorar o `ImperialCommandCoreBlockEntity`** — INICIADO: tabelas por nível extraídas
+  para `ImperialCityLevelStats`. Continuar extraindo (custos de upgrade, recrutamento, estado
+  de recursos → `ImperialResourceStorage`).
 
 ### Documentos de design relacionados
 - `docs/DESIGN_W40K_AUTONOMY.md` — autonomia/IA das unidades imperiais e inimigas

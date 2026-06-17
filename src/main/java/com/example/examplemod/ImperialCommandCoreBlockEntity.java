@@ -337,11 +337,7 @@ public int getTradeDepotCapacity() {
 
 // Emerald obtained per Trader work cycle, scaling with city level.
 public int getTradeDepotEmeraldYield() {
-    return switch (this.cityLevel) {
-        case 4 -> 2;
-        case 5 -> 3;
-        default -> 1;
-    };
+    return ImperialCityLevelStats.tradeDepotEmeraldYield(this.cityLevel);
 }
 
 // Trades stored Gold for Emerald at a fixed rate. Returns the Emerald produced (0 if it can't).
@@ -371,34 +367,18 @@ public int tradeGoldForEmeraldAtDepot() {
 
 // Gold produced per Gold Miner work cycle. Kept low because Gold is a premium resource.
 public int getGoldMineYield() {
-    return switch (this.cityLevel) {
-        case 4 -> 2;
-        case 5 -> 3;
-        default -> 1;
-    };
+    return ImperialCityLevelStats.goldMineYield(this.cityLevel);
 }
 
 // Iron produced per Miner work cycle. Scales with city level so staffed mines can
 // replace the passive output that is phased out as the settlement grows.
 public int getMineIronYield() {
-    return switch (this.cityLevel) {
-        case 2 -> 2;
-        case 3 -> 3;
-        case 4 -> 5;
-        case 5 -> 8;
-        default -> 1;
-    };
+    return ImperialCityLevelStats.mineIronYield(this.cityLevel);
 }
 
 // Scrap Metal produced per Scrapper work cycle, scaling with city level.
 public int getScrapYardScrapYield() {
-    return switch (this.cityLevel) {
-        case 2 -> 2;
-        case 3 -> 3;
-        case 4 -> 4;
-        case 5 -> 6;
-        default -> 1;
-    };
+    return ImperialCityLevelStats.scrapYardScrapYield(this.cityLevel);
 }
 
 public int getPromethiumRefineryCapacity() {
@@ -407,13 +387,7 @@ public int getPromethiumRefineryCapacity() {
 
 // Coal produced per Stoker work cycle, scaling with city level.
 public int getRefineryCoalYield() {
-    return switch (this.cityLevel) {
-        case 2 -> 1;
-        case 3 -> 2;
-        case 4 -> 3;
-        case 5 -> 4;
-        default -> 1;
-    };
+    return ImperialCityLevelStats.refineryCoalYield(this.cityLevel);
 }
 
 public int receiveProducedResource(ImperialResourceType resourceType, int amount) {
@@ -897,25 +871,11 @@ private void trySeedOrkCamp(ServerLevel serverLevel) {
 }
 
 public int getDailyEmperorGeneProduction() {
-    return switch (this.cityLevel) {
-        case 1 -> 0;
-        case 2 -> 0;
-        case 3 -> 1;
-        case 4 -> 2;
-        case 5 -> 4;
-        default -> 0;
-    };
+    return ImperialCityLevelStats.dailyEmperorGeneProduction(this.cityLevel);
 }
 
 public int getEmperorGeneSeedCapacity() {
-    return switch (this.cityLevel) {
-        case 1 -> 0;
-        case 2 -> 0;
-        case 3 -> 5;
-        case 4 -> 12;
-        case 5 -> 30;
-        default -> 0;
-    };
+    return ImperialCityLevelStats.emperorGeneSeedCapacity(this.cityLevel);
 }
 
 
@@ -2708,58 +2668,23 @@ public int getRecruitedGuardsmen() {
 }
 
 public int getStorageCapacity() {
-    return switch (this.cityLevel) {
-        case 1 -> 500;
-        case 2 -> 1500;
-        case 3 -> 5000;
-        case 4 -> 15000;
-        case 5 -> 50000;
-        default -> 500;
-    };
+    return ImperialCityLevelStats.storageCapacity(this.cityLevel);
 }
 
 public int getMilitaryCapacity() {
-    return switch (this.cityLevel) {
-        case 1 -> 5;
-        case 2 -> 12;
-        case 3 -> 25;
-        case 4 -> 50;
-        case 5 -> 100;
-        default -> 5;
-    };
+    return ImperialCityLevelStats.militaryCapacity(this.cityLevel);
 }
 
 public int getDailyIronProduction() {
-    return switch (this.cityLevel) {
-        case 1 -> 5;
-        case 2 -> 25;
-        case 3 -> 100;
-        case 4 -> 400;
-        case 5 -> 1500;
-        default -> 5;
-    };
+    return ImperialCityLevelStats.dailyIronProduction(this.cityLevel);
 }
 
 public int getDailyScrapProduction() {
-    return switch (this.cityLevel) {
-        case 1 -> 3;
-        case 2 -> 15;
-        case 3 -> 60;
-        case 4 -> 240;
-        case 5 -> 900;
-        default -> 3;
-    };
+    return ImperialCityLevelStats.dailyScrapProduction(this.cityLevel);
 }
 
 public int getDailyCoalProduction() {
-    return switch (this.cityLevel) {
-        case 1 -> 2;
-        case 2 -> 10;
-        case 3 -> 40;
-        case 4 -> 160;
-        case 5 -> 600;
-        default -> 2;
-    };
+    return ImperialCityLevelStats.dailyCoalProduction(this.cityLevel);
 }
 
 public int getGuardsmanRecruitIronCost() {
