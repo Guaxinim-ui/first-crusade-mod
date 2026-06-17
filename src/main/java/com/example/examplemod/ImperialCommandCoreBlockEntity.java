@@ -1937,22 +1937,44 @@ private void buildCityStructure(ServerLevel serverLevel) {
         buildSimpleHouse(serverLevel, this.worldPosition.offset(-16, 0, 10), 7, 6, 4);
         buildSimpleHouse(serverLevel, this.worldPosition.offset(10, 0, -14), 7, 6, 4);
         buildSimpleHouse(serverLevel, this.worldPosition.offset(-16, 0, -14), 7, 6, 4);
+        // A grand gothic cathedral spire rises behind the Core as the city's crowning landmark.
+        buildCentralSpire(serverLevel, this.worldPosition.offset(-1, 0, -(radius / 2)), wallHeight + 14);
+    }
+}
+
+// A tall gothic spire: a 2x2 dark-stone shaft with banded buttresses, an overhanging
+// battlement, a tapering steeple and a gilded dome topped with a glowing finial.
+private void buildCentralSpire(ServerLevel serverLevel, BlockPos base, int height) {
+    buildTower(serverLevel, base, height);
+
+    // Extra arched windows up the shaft to read as a cathedral tower.
+    for (int y = 4; y < height - 2; y += 4) {
+        safePlace(serverLevel, base.offset(0, y, -1), Blocks.IRON_BARS.defaultBlockState());
+        safePlace(serverLevel, base.offset(1, y, -1), Blocks.IRON_BARS.defaultBlockState());
     }
 }
 
 private void buildFoundation(ServerLevel serverLevel, int radius) {
+    BlockState lightTile = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
+    BlockState darkTile = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
+
     for (int x = -radius; x <= radius; x++) {
         for (int z = -radius; z <= radius; z++) {
             BlockPos pos = this.worldPosition.offset(x, -1, z);
 
-            if (serverLevel.getBlockState(pos).isAir()) {
-                serverLevel.setBlock(pos, Blocks.STONE_BRICKS.defaultBlockState(), 3);
+            if (serverLevel.getBlockState(pos).isAir() || !serverLevel.getBlockState(pos).isCollisionShapeFullBlock(serverLevel, pos)) {
+                serverLevel.setBlock(pos, ((x + z) & 1) == 0 ? lightTile : darkTile, 3);
             }
         }
     }
 }
 
 private void buildOuterWall(ServerLevel serverLevel, int radius, int wallHeight) {
+    BlockState wall = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
+    BlockState pillar = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
+    BlockState crenel = Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState();
+    BlockState window = Blocks.IRON_BARS.defaultBlockState();
+
     for (int x = -radius; x <= radius; x++) {
         for (int z = -radius; z <= radius; z++) {
             boolean isWall = Math.abs(x) == radius || Math.abs(z) == radius;
@@ -1961,89 +1983,166 @@ private void buildOuterWall(ServerLevel serverLevel, int radius, int wallHeight)
                 continue;
             }
 
+            // Southern gate: an arched opening (clear below, wall arches over the top).
             boolean isGate = z == radius && x >= -2 && x <= 2;
 
-            if (isGate) {
-                continue;
+            // Buttress pillars every few blocks rise above the curtain wall.
+            boolean isPillar = (Math.abs(z) == radius && Math.floorMod(x, 5) == 0)
+                    || (Math.abs(x) == radius && Math.floorMod(z, 5) == 0);
+
+            int columnTop = isPillar ? wallHeight + 2 : wallHeight;
+
+            for (int y = 0; y < columnTop; y++) {
+                if (isGate && y < 5) {
+                    continue;
+                }
+
+                BlockState mat = isPillar ? pillar : wall;
+
+                // Tall narrow gothic windows between the buttresses.
+                if (!isPillar && !isGate && (y == wallHeight / 2 || y == wallHeight / 2 + 1)
+                        && (Math.floorMod(x, 5) == 2 || Math.floorMod(z, 5) == 2)) {
+                    mat = window;
+                }
+
+                safePlace(serverLevel, this.worldPosition.offset(x, y, z), mat);
             }
 
-            for (int y = 0; y < wallHeight; y++) {
-                BlockPos pos = this.worldPosition.offset(x, y, z);
-                safePlace(serverLevel, pos, Blocks.STONE_BRICKS.defaultBlockState());
+            if (isPillar) {
+                safePlace(serverLevel, this.worldPosition.offset(x, columnTop, z), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
+                safePlace(serverLevel, this.worldPosition.offset(x, columnTop + 1, z), Blocks.LANTERN.defaultBlockState());
+            } else if (!isGate && ((x + z) & 1) == 0) {
+                safePlace(serverLevel, this.worldPosition.offset(x, wallHeight, z), crenel);
             }
-
-            BlockPos top = this.worldPosition.offset(x, wallHeight, z);
-            safePlace(serverLevel, top, Blocks.STONE_BRICK_WALL.defaultBlockState());
         }
     }
 }
 
 private void buildCornerTowers(ServerLevel serverLevel, int radius, int wallHeight) {
-    buildTower(serverLevel, this.worldPosition.offset(radius, 0, radius), wallHeight + 3);
-    buildTower(serverLevel, this.worldPosition.offset(-radius, 0, radius), wallHeight + 3);
-    buildTower(serverLevel, this.worldPosition.offset(radius, 0, -radius), wallHeight + 3);
-    buildTower(serverLevel, this.worldPosition.offset(-radius, 0, -radius), wallHeight + 3);
+    int height = wallHeight + 8;
+    buildTower(serverLevel, this.worldPosition.offset(radius, 0, radius), height);
+    buildTower(serverLevel, this.worldPosition.offset(-radius, 0, radius), height);
+    buildTower(serverLevel, this.worldPosition.offset(radius, 0, -radius), height);
+    buildTower(serverLevel, this.worldPosition.offset(-radius, 0, -radius), height);
 }
 
+// A gothic Imperial spire: dark 2x2 shaft with banded buttresses and lit windows, an
+// overhanging battlement, a tapering steeple, and a gilded dome with a glowing finial.
 private void buildTower(ServerLevel serverLevel, BlockPos corner, int height) {
+    BlockState shaft = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
+    BlockState band = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
+
     for (int y = 0; y < height; y++) {
-        safePlace(serverLevel, corner.offset(0, y, 0), Blocks.STONE_BRICKS.defaultBlockState());
-        safePlace(serverLevel, corner.offset(1, y, 0), Blocks.STONE_BRICKS.defaultBlockState());
-        safePlace(serverLevel, corner.offset(0, y, 1), Blocks.STONE_BRICKS.defaultBlockState());
-        safePlace(serverLevel, corner.offset(1, y, 1), Blocks.STONE_BRICKS.defaultBlockState());
+        BlockState mat = (y % 5 == 4) ? band : shaft;
+        safePlace(serverLevel, corner.offset(0, y, 0), mat);
+        safePlace(serverLevel, corner.offset(1, y, 0), mat);
+        safePlace(serverLevel, corner.offset(0, y, 1), mat);
+        safePlace(serverLevel, corner.offset(1, y, 1), mat);
     }
 
     int topY = height;
 
+    // Overhanging battlement platform (4x4).
     for (int x = -1; x <= 2; x++) {
         for (int z = -1; z <= 2; z++) {
-            safePlace(serverLevel, corner.offset(x, topY, z), Blocks.STONE_BRICKS.defaultBlockState());
+            safePlace(serverLevel, corner.offset(x, topY, z), band);
         }
     }
 
-    safePlace(serverLevel, corner.offset(-1, topY + 1, -1), Blocks.STONE_BRICK_WALL.defaultBlockState());
-    safePlace(serverLevel, corner.offset(2, topY + 1, -1), Blocks.STONE_BRICK_WALL.defaultBlockState());
-    safePlace(serverLevel, corner.offset(-1, topY + 1, 2), Blocks.STONE_BRICK_WALL.defaultBlockState());
-    safePlace(serverLevel, corner.offset(2, topY + 1, 2), Blocks.STONE_BRICK_WALL.defaultBlockState());
+    // Crenellations around the platform edge.
+    for (int t = -1; t <= 2; t++) {
+        if ((t & 1) == 0) {
+            safePlace(serverLevel, corner.offset(t, topY + 1, -1), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
+            safePlace(serverLevel, corner.offset(t, topY + 1, 2), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
+            safePlace(serverLevel, corner.offset(-1, topY + 1, t), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
+            safePlace(serverLevel, corner.offset(2, topY + 1, t), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
+        }
+    }
+
+    // Tapering steeple above the platform.
+    int spireY = topY + 1;
+    for (int i = 0; i < 4; i++) {
+        BlockState m = (i % 2 == 0) ? band : shaft;
+        safePlace(serverLevel, corner.offset(0, spireY + i, 0), m);
+        safePlace(serverLevel, corner.offset(1, spireY + i, 0), m);
+        safePlace(serverLevel, corner.offset(0, spireY + i, 1), m);
+        safePlace(serverLevel, corner.offset(1, spireY + i, 1), m);
+    }
+
+    // Gilded dome and glowing finial.
+    int domeY = spireY + 4;
+    safePlace(serverLevel, corner.offset(0, domeY, 0), Blocks.GOLD_BLOCK.defaultBlockState());
+    safePlace(serverLevel, corner.offset(1, domeY, 0), Blocks.GOLD_BLOCK.defaultBlockState());
+    safePlace(serverLevel, corner.offset(0, domeY, 1), Blocks.GOLD_BLOCK.defaultBlockState());
+    safePlace(serverLevel, corner.offset(1, domeY, 1), Blocks.GOLD_BLOCK.defaultBlockState());
+    safePlace(serverLevel, corner.offset(0, domeY + 1, 0), Blocks.GOLD_BLOCK.defaultBlockState());
+    safePlace(serverLevel, corner.offset(0, domeY + 2, 0), Blocks.END_ROD.defaultBlockState());
+
+    // A lantern hung at the base of the steeple.
+    safePlace(serverLevel, corner.offset(0, spireY, -1), Blocks.LANTERN.defaultBlockState());
 }
 
 private void buildSimpleHouse(ServerLevel serverLevel, BlockPos start, int width, int depth, int height) {
+    BlockState wall = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
+    BlockState corner = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
+    BlockState window = Blocks.IRON_BARS.defaultBlockState();
+
     for (int x = 0; x < width; x++) {
         for (int z = 0; z < depth; z++) {
-            safePlace(serverLevel, start.offset(x, -1, z), Blocks.OAK_PLANKS.defaultBlockState());
+            safePlace(serverLevel, start.offset(x, -1, z), Blocks.COBBLED_DEEPSLATE.defaultBlockState());
 
             boolean border = x == 0 || z == 0 || x == width - 1 || z == depth - 1;
+            boolean isCorner = (x == 0 || x == width - 1) && (z == 0 || z == depth - 1);
 
             if (border) {
                 for (int y = 0; y < height; y++) {
                     boolean doorway = z == 0 && x == width / 2 && y <= 1;
+                    boolean windowSlot = !isCorner && (y == 1 || y == 2)
+                            && (x == width / 2 || z == depth / 2);
 
-                    if (!doorway) {
-                        safePlace(serverLevel, start.offset(x, y, z), Blocks.OAK_PLANKS.defaultBlockState());
+                    if (doorway) {
+                        continue;
                     }
+
+                    BlockState mat = isCorner ? corner : (windowSlot ? window : wall);
+                    safePlace(serverLevel, start.offset(x, y, z), mat);
                 }
             }
         }
     }
 
+    // Dark pitched-look roof rim + a gilded finial at the apex.
     for (int x = -1; x <= width; x++) {
         for (int z = -1; z <= depth; z++) {
-            safePlace(serverLevel, start.offset(x, height, z), Blocks.STONE_BRICKS.defaultBlockState());
+            safePlace(serverLevel, start.offset(x, height, z), Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState());
         }
     }
+
+    safePlace(serverLevel, start.offset(width / 2, height + 1, depth / 2), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
+    safePlace(serverLevel, start.offset(width / 2, height + 2, depth / 2), Blocks.GOLD_BLOCK.defaultBlockState());
 }
 
 private void buildCentralRoad(ServerLevel serverLevel, int radius) {
+    BlockState road = Blocks.POLISHED_BLACKSTONE.defaultBlockState();
+    BlockState inlay = Blocks.GILDED_BLACKSTONE.defaultBlockState();
+
     for (int z = -radius + 1; z <= radius - 1; z++) {
-        safePlace(serverLevel, this.worldPosition.offset(0, -1, z), Blocks.POLISHED_ANDESITE.defaultBlockState());
-        safePlace(serverLevel, this.worldPosition.offset(1, -1, z), Blocks.POLISHED_ANDESITE.defaultBlockState());
-        safePlace(serverLevel, this.worldPosition.offset(-1, -1, z), Blocks.POLISHED_ANDESITE.defaultBlockState());
+        forcePlaceFloor(serverLevel, this.worldPosition.offset(0, -1, z), inlay);
+        forcePlaceFloor(serverLevel, this.worldPosition.offset(1, -1, z), road);
+        forcePlaceFloor(serverLevel, this.worldPosition.offset(-1, -1, z), road);
     }
 
     for (int x = -radius + 1; x <= radius - 1; x++) {
-        safePlace(serverLevel, this.worldPosition.offset(x, -1, 0), Blocks.POLISHED_ANDESITE.defaultBlockState());
-        safePlace(serverLevel, this.worldPosition.offset(x, -1, 1), Blocks.POLISHED_ANDESITE.defaultBlockState());
-        safePlace(serverLevel, this.worldPosition.offset(x, -1, -1), Blocks.POLISHED_ANDESITE.defaultBlockState());
+        forcePlaceFloor(serverLevel, this.worldPosition.offset(x, -1, 0), inlay);
+        forcePlaceFloor(serverLevel, this.worldPosition.offset(x, -1, 1), road);
+        forcePlaceFloor(serverLevel, this.worldPosition.offset(x, -1, -1), road);
+    }
+}
+
+// Places a floor block, overwriting the plain foundation tiles (but never the Core itself).
+private void forcePlaceFloor(ServerLevel serverLevel, BlockPos pos, BlockState state) {
+    if (!pos.equals(this.worldPosition)) {
+        serverLevel.setBlock(pos, state, 3);
     }
 }
 

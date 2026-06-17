@@ -135,8 +135,13 @@ spawn/checagem de Ork Raid.
 | 3→4 | 2.500 | 1.500 | 750 | 18 |
 | 4→5 | 12.000 | 7.200 | 3.600 | 54 |
 
-Upgrade também constrói/expande a estrutura física (fundação, muralha, torres de canto,
-casas a partir do nv3, ruas no nv5) e reorganiza os Guardsmen em novos postos de guarda.
+Upgrade também constrói/expande a estrutura física e reorganiza os Guardsmen em novos postos.
+**Estilo gótico imperial 40K** (`buildCityStructure` e helpers): fundação de lajota escura
+(deepslate/blackstone xadrez), muralha de Deepslate Bricks com **contrafortes de Polished
+Blackstone** (lanternas no topo), janelas de Iron Bars e **portão em arco**; torres de canto
+altas (wallHeight+8) com battlement, flecha cônica e **domo de ouro + finial (End Rod)**;
+hab-blocks escuros com pináculo dourado; estrada de Polished Blackstone com inlay de Gilded
+Blackstone; no nv5 uma **flecha-catedral central** (`buildCentralSpire`).
 
 ### Rank inicial de recruta por nível
 RECRUIT → GUARDSMAN → VETERAN → SERGEANT → LIEUTENANT (níveis 1–5).
