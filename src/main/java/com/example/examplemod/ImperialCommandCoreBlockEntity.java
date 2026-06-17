@@ -697,6 +697,19 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
         player.displayClientMessage(Component.literal("City Scrap Metal: " + this.resources.getScrapMetal() + "/" + getStorageCapacity()), false);
     }
     
+    // Deposits whole compressed blocks (worth 9 units each) that fit in the remaining capacity.
+    private int depositCompressed(ItemStack stack, int freeSpace, java.util.function.IntUnaryOperator deposit) {
+        int blocksThatFit = Math.min(stack.getCount(), freeSpace / 9);
+
+        if (blocksThatFit <= 0) {
+            return 0;
+        }
+
+        int accepted = deposit.applyAsInt(blocksThatFit * 9);
+        stack.shrink(blocksThatFit);
+        return accepted;
+    }
+
     public void depositAllResources(Player player) {
     if (!isOwner(player)) {
         player.displayClientMessage(Component.literal("Only the owner can deposit resources into this city."), true);
@@ -715,6 +728,31 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
         ItemStack stack = player.getInventory().getItem(slot);
 
         if (stack.isEmpty()) {
+            continue;
+        }
+
+        // Compressed blocks count as 9 units each, so players can deposit in bulk much faster.
+        if (stack.is(Items.IRON_BLOCK)) {
+            foundResource = true;
+            totalIron += depositCompressed(stack, getStorageCapacity() - getIron(), this::addIron);
+            continue;
+        }
+
+        if (stack.is(Items.COAL_BLOCK)) {
+            foundResource = true;
+            totalCoal += depositCompressed(stack, getStorageCapacity() - getCoal(), this::addCoal);
+            continue;
+        }
+
+        if (stack.is(Items.GOLD_BLOCK)) {
+            foundResource = true;
+            totalGold += depositCompressed(stack, getStorageCapacity() - getGold(), this::addGold);
+            continue;
+        }
+
+        if (stack.is(Items.EMERALD_BLOCK)) {
+            foundResource = true;
+            totalEmerald += depositCompressed(stack, getStorageCapacity() - getEmerald(), this::addEmerald);
             continue;
         }
 

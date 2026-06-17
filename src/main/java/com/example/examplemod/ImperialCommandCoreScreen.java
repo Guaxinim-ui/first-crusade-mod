@@ -267,7 +267,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
                 "A raid is already active.");
 
         applyButton(this.depositButton, true,
-                "Deposit All Resources", "Moves Iron, Coal, Scrap, Gold, Emerald and Crusadium from your inventory into the city.",
+                "Deposit All Resources", "Moves Iron, Coal, Scrap, Gold, Emerald and Crusadium from your inventory into the city. Compressed blocks (Iron/Coal/Gold/Emerald) count as 9 each.",
                 null);
 
         applyWithdrawButton(this.withdrawIronButton, "Iron", this.menu.getIron());
