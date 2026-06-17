@@ -165,6 +165,22 @@ public enum GuardsmanRank {
         return GuardsmanRank.values()[nextOrdinal];
     }
 
+    // Returns the rank `steps` higher (or lower, if negative), clamped to the valid range.
+    public GuardsmanRank advance(int steps) {
+        GuardsmanRank[] values = GuardsmanRank.values();
+        int target = this.ordinal() + steps;
+
+        if (target < 0) {
+            target = 0;
+        }
+
+        if (target >= values.length) {
+            target = values.length - 1;
+        }
+
+        return values[target];
+    }
+
     public static GuardsmanRank fromName(String name) {
         for (GuardsmanRank rank : GuardsmanRank.values()) {
             if (rank.name().equals(name)) {

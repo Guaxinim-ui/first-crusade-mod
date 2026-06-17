@@ -76,9 +76,11 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
   (bucha), **Killa Kan** (máquina, tier 3+), **WAAAGH! Overlord** (`WaaaghOverlordData` SavedData
   global + `WaaaghOverlordManager`: cresce com a prosperidade imperial, tier 0-4 com anúncio global,
   escala todos os camps), e **warbands por clã** (Goffs/Bad Moons/Deathskulls/Evil Sunz/Snakebites).
-- [ ] **Fase C** — tipos de cidade implementados de fato com tropas-tema (Skitarii/Forge,
-  Cadian-Kasrkin/Fortress, Sisters/Shrine, Arbites-Enforcer/Hive). Hoje os tipos só variam
-  nome/produção/população — falta variar as tropas recrutadas.
+- [~] **Fase C** — tipos de cidade com tropas-tema. **Iniciado**: cada tipo agora dá um bônus de
+  rank aos recrutas (`ImperialCityType.getRecruitRankBonus`, aplicado em `getStartingGuardsmanRank`
+  via `GuardsmanRank.advance`) — Fortress +2 (Shock Trooper), Forge +1, Hive -1 (Hive Levy, mas 2x
+  pop), e nome temático por tipo (`getTroopName`). Faltando: tropas-entidade próprias (Skitarii,
+  Sisters, Arbites/Enforcer), estruturas por tipo, custo de recruta por tipo.
 - [ ] **Fase D** — overlords globais: território, geração de assentamentos no worldgen, despacho de
   líderes por nível de ameaça.
 - [ ] **Fase E** (maior risco) — mundo achatado + menor + dimensões-planeta substituindo Nether/End
@@ -110,6 +112,9 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-17: Fase C (início) — **identidade militar por tipo de cidade**: bônus de rank nos
+  recrutas (`ImperialCityType.recruitRankBonus` + `GuardsmanRank.advance`) e nome temático de tropa.
+  Fortress treina Shock Troopers (+2), Forge Forge Guards (+1), Hive Levies (-1, compensado por 2x pop).
 - 2026-06-17: Fase B COMPLETA — **Killa Kan** (andador/máquina Ork, 110 HP/16 dano/16 armor, peso
   de ameaça 20, entra na warband em WAAAGH! tier 3+). Placeholder humanoide até ter modelo próprio.
 - 2026-06-17: Fase B — **warbands por clã**: `OrkClan` ganhou composição (bonusBoyz/nobz/

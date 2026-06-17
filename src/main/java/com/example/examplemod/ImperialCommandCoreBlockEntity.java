@@ -2626,7 +2626,7 @@ private int getCityWallHeight() {
 }
 
 public GuardsmanRank getStartingGuardsmanRank() {
-    return switch (this.cityLevel) {
+    GuardsmanRank baseRank = switch (this.cityLevel) {
         case 1 -> GuardsmanRank.RECRUIT;
         case 2 -> GuardsmanRank.GUARDSMAN;
         case 3 -> GuardsmanRank.VETERAN;
@@ -2634,6 +2634,9 @@ public GuardsmanRank getStartingGuardsmanRank() {
         case 5 -> GuardsmanRank.LIEUTENANT;
         default -> GuardsmanRank.RECRUIT;
     };
+
+    // City type shapes its soldiery: Fortress trains harder, Hive levies en masse.
+    return baseRank.advance(getCityType().getRecruitRankBonus());
 }
 
 public void setOwner(Player player) {
