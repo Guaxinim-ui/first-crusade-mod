@@ -39,24 +39,33 @@ cidadãos trabalham em estruturas reais
     ↓ estruturas produzem recursos
 recursos → construir, treinar, evoluir
     ↓ cidade cresce
-inimigos atacam (Ork Raids)
+inimigos atacam (Ork Raids + Ork Camps que crescem WAAAGH!)
     ↓ jogador administra defesa, produção e tropas
 ```
 
 Sequência prática:
-1. Jogador coloca o **Imperial Command Core** e se torna o dono.
-2. O Core gera **Imperial Citizens** ao longo do tempo, até a capacidade.
-3. Recursos são depositados/produzidos (Iron, Coal, Scrap Metal).
-4. Constrói **postos de trabalho** (Mine, Scrap Yard, Forge) que empregam cidadãos.
-5. Treina cidadãos em **Guardsmen**, que defendem postos de guarda.
+1. Jogador coloca o **Imperial Command Core** e se torna o dono. A cidade nasce com um
+   **tipo aleatório** (`ImperialCityType`) que define nome, foco de produção e fator de população.
+2. O Core gera **Imperial Citizens** ao longo do tempo, até a capacidade (modulada por moral).
+3. Recursos são depositados/produzidos (Iron, Coal, Scrap Metal; +Gold/Emerald/Crusadium armazenáveis).
+4. Constrói **postos de trabalho** (Mine, Scrap Yard, Forge, Refinery, Barracks, Habitation)
+   que empregam cidadãos.
+5. Treina cidadãos em **Guardsmen** (via Barracks), que patrulham e defendem a cidade.
 6. **Faz upgrade da cidade** (1→5): expande estrutura física e melhora tudo.
-7. Defende-se de **Ork Raids**; vitórias dão recompensas e **War Support**.
+7. Defende-se de **Ork Raids** e de **war parties** de Ork Camps próximos; vitórias dão
+   recompensas e **War Support**.
 8. Cidade ≥ nv3: promove Guardsmen a **Space Marines** via **Emperor Gene Seed**.
+9. Endgame (cidade nv5 + Gene Seed + vitórias): surgem **Custodes** (guardam o Core) e o
+   **Primarch** (lidera saídas e governa passivamente).
 
 > **Direção de design importante:** a produção passiva atual do Core é **temporária**.
-> Já implementado o início da remoção: a produção passiva de Iron/Scrap escala para baixo
-> conforme minas/scrap yards **com trabalhador** assumem (piso de 20% — `PASSIVE_PRODUCTION_FLOOR`).
-> Coal e Gene Seed continuam passivos por ora. Ver `getEffectiveDailyIronProduction`/`...Scrap...`.
+> Já implementado o início da remoção: a produção passiva de Iron/Scrap/**Coal** escala para
+> baixo conforme minas/scrap yards/refinarias **com trabalhador** assumem (piso de 20% —
+> `PASSIVE_PRODUCTION_FLOOR`). Gene Seed continua passivo por ora. Ver
+> `getEffectiveDailyIronProduction`/`...Scrap...`/`...Coal...`.
+>
+> A produção diária final também é multiplicada pela **moral** (0.5×–1.25×) e pelo **foco do
+> tipo de cidade** (1.5× no recurso-foco). Ver §2.1, §6.1 e §17.
 
 ---
 
@@ -68,20 +77,28 @@ treina/organiza tropas, repara integridade, controla raids/reforços/comandos, G
 e limites de estruturas. Fica no centro; construções surgem ao redor em locais livres.
 
 > **Regra de arquitetura nº1:** NÃO colocar tudo aqui. Lógica pesada vai em *managers*.
-> (O Core já está grande — ~2300 linhas — e é candidato a refatoração.)
+> ⚠️ **O Core está MUITO grande — ~3000 linhas** (de longe o maior arquivo do projeto; o
+> 2º maior tem ~630). É o candidato nº1 a refatoração: extrair estado de recursos e lógica
+> de raid/produção para managers/helpers dedicados.
 
-### Estado persistido
-Dono (`ownerUUID`/`ownerName`), `baseName` ("Imperial Outpost"), `cityLevel` (1–5),
-`iron`/`coal`/`scrapMetal`, `recruitedGuardsmen`, `emperorGeneSeed`, estado de raid
-(`lastOrkRaidDay`, `orkRaidCount`, `activeOrkRaid`, `activeOrkRaidTicks`,
-`orkRaidVictories`, `cityIntegrity` 0–100, `raidPressureTicks`), `imperialWarSupport`,
-cooldowns (`reinforcementCooldownTicks`, `spaceMarinePromotionCooldownTicks`),
-`pendingSpaceMarineCandidateUUID`.
+### Estado persistido (NBT)
+Dono (`ownerUUID`/`ownerName`), `baseName`, `cityType` (`ImperialCityType`), `cityLevel` (1–5),
+`cityMorale` (0–100), recursos `iron`/`coal`/`scrapMetal`/`gold`/`emerald`/`crusadium`,
+`recruitedGuardsmen`, `emperorGeneSeed`, estado de raid (`lastOrkRaidDay`, `orkRaidCount`,
+`activeOrkRaid`, `activeOrkRaidTicks`, `orkRaidVictories`, `cityIntegrity` 0–100,
+`raidPressureTicks`), `imperialWarSupport`, cooldowns (`reinforcementCooldownTicks`,
+`spaceMarinePromotionCooldownTicks`, `primarchMourningCooldownTicks`),
+`pendingSpaceMarineCandidateUUID`, `selectedSpecialistOrdinal`, estado de Ork Camp
+(`orkCampSeeded`, `orkCampPos`).
 
 ### Tick (server)
-`serverTick` roda crescimento populacional todo tick; o resto a cada **200 ticks** (10s):
-produção diária, redução de cooldowns, promoção automática a Space Marine, spawn/checagem
-de Ork Raid.
+`serverTick` roda **a cada tick**: atribuição do tipo de cidade (se nulo) e crescimento
+populacional. O resto roda a cada **200 ticks** (10s), nesta ordem:
+moral (`ImperialCityMoraleManager.tickMorale`), patrulhas (`ImperialPatrolManager.tickPatrols`),
+gestão de mão de obra (`ImperialWorkforceManager.autoManageWorkforce`), produção diária,
+redução de cooldowns, promoção automática a Space Marine, Custodes (`tickCustodes`),
+mourning do Primarch, Primarch (`tickPrimarch`), seed de Ork Camp (`trySeedOrkCamp`),
+spawn/checagem de Ork Raid.
 
 ### Tabelas por nível de cidade (1 → 5) — VALORES ATUAIS DO CÓDIGO
 
@@ -89,7 +106,7 @@ de Ork Raid.
 |---------|-----|-----|-----|-----|-----|
 | Armazenamento | 500 | 1.500 | 5.000 | 15.000 | 50.000 |
 | Cap. militar (Guardsmen) | 5 | 12 | 25 | 50 | 100 |
-| Cap. populacional | 3 | 6 | 10 | 15 | 25 |
+| Cap. populacional (base) | 3 | 6 | 10 | 15 | 25 |
 | Iron/dia | 5 | 25 | 100 | 400 | 1.500 |
 | Scrap/dia | 3 | 15 | 60 | 240 | 900 |
 | Coal/dia | 2 | 10 | 40 | 160 | 600 |
@@ -100,6 +117,11 @@ de Ork Raid.
 | Cap. Imperial Mine | 1 | 2 | 3 | 4 | 5 (=nível) |
 | Cap. Scrap Yard | 1 | 2 | 3 | 4 | 5 (=nível) |
 | Cap. Imperial Forge | 1 | 1 | 2 | 2 | 3 ((nível+1)/2) |
+| Cap. Promethium Refinery | 1 | 2 | 3 | 4 | 5 (=nível) |
+| Cap. Barracks | 1 | 2 | 3 | 4 | 5 (=nível) |
+
+> A **capacidade populacional efetiva** é a base acima × `getPopulationFactor()` do tipo de
+> cidade (ex.: Hive 2.0×, Agri 1.4×, Fortress 0.8×). Crescimento só ocorre se moral ≥ 35.
 
 ### Custos de upgrade de cidade (nível atual → próximo)
 | De | Iron | Scrap | Coal | Crusadium Plate |
@@ -117,32 +139,43 @@ RECRUIT → GUARDSMAN → VETERAN → SERGEANT → LIEUTENANT (níveis 1–5).
 
 ### Recursos
 - Depósito manual: `depositIron/Coal/ScrapMetal` e `depositAllResources`.
-- Produção diária automática (`produceResourcesIfNewDay`, baseada em `getDayTime`).
-- `receiveProducedResource` recebe produção dos postos (Iron/Coal/Scrap; Gold/Emerald/
-  Crusadium são rejeitados por aqui — ganchos para o futuro).
+- Produção diária automática (`produceResourcesIfNewDay`, baseada em `getDayTime`), modulada
+  por moral e foco do tipo de cidade.
+- `receiveProducedResource` recebe produção dos postos (Iron/Coal/Scrap). Gold/Emerald/
+  Crusadium **têm armazenamento e exibição**, mas ainda sem cadeia de produção própria.
+- Consumo: `consumeEmperorGeneSeed`, `consumeCrusadium`,
+  `consumeResourcesForCrusadiumPlateProduction`.
 
 ---
 
-## 4. Interface do Core (GUI)
+## 2.1 / 4. Interface do Core (GUI)
 
-`ImperialCommandCoreMenu` (`imperial_command_core_menu`) + `ImperialCommandCoreScreen`.
-Só o dono abre. Ações via packet `ImperialCommandCoreActionPacket` (canal `firstcrusade:main`).
+`ImperialCommandCoreMenu` (`imperial_command_core_menu`, **46 data slots**) +
+`ImperialCommandCoreScreen` (400×344). Só o dono abre. Ações via packet
+`ImperialCommandCoreActionPacket` (canal `firstcrusade:main`).
 
 **Enum `ImperialCommandCoreAction` (atual):**
 `DEPOSIT_RESOURCES, BUILD_IMPERIAL_MINE, BUILD_SCRAP_YARD, BUILD_IMPERIAL_FORGE,
-RECRUIT_GUARDSMAN, UPGRADE_CITY, REPAIR_CORE, CALL_REINFORCEMENTS, RALLY_DEFENDERS,
+BUILD_PROMETHIUM_REFINERY, BUILD_BARRACKS, RECRUIT_GUARDSMAN, CYCLE_SPECIALIST,
+PROMOTE_SPECIALIST, UPGRADE_CITY, REPAIR_CORE, CALL_REINFORCEMENTS, RALLY_DEFENDERS,
 FORTIFY_DEFENDERS, FORCE_RAID_TEST`.
 
 `ImperialMilitaryReportManager` mostra relatório de status no chat.
 
-**A interface deve mostrar (alvo):** nível da cidade, integridade, cidadãos (total e
-desempregados), soldados, nº de minas/scrap yards/forges, recursos armazenados, produção,
-Gene Seed, raids, vitórias, cooldowns, status militar.
+**A interface JÁ mostra (implementado):** tipo de cidade, nível, integridade (colorida),
+moral (com rótulo: Jubilant/Content/Uneasy/Discontent/Rebellious), cidadãos (total/cap) e
+desempregados, soldados, contagem e capacidade de Minas/Scrap Yards/Forges/Refinarias/Barracks
+**com trabalhadores por cargo** (Miners/Scrappers/Smiths/Stokers/Training), recursos
+(Iron/Scrap/Coal/Gold/Emerald/Crusadium /cap), especialista selecionado, Gene Seed +produção/dia,
+status de Space Marine, **nível de ameaça** (colorido), status de raid + segundos, raids/vitórias,
+cooldown de reforços.
+
+**Tooltips/custos:** cada botão tem tooltip com título + custo, fica **desabilitado com motivo
+em vermelho** quando não pode ser usado (`applyButton`/`getRecruitBlockReason`/etc.).
 
 **Melhorias futuras da interface:**
-- Tooltips mostrando custo · botões bloqueados com motivo
 - Abas separadas: economia / população / guerra
-- Contagem de trabalhadores por cargo · visual mais organizado
+- Texturas/arte própria (hoje é desenhada com `fill`/`drawString`, sem PNG de fundo)
 
 ---
 
@@ -155,7 +188,13 @@ Futuramente vira Recruit/Guardsman/especialista.
 **Campos importantes:** `commandCorePos`, `workSitePos`, `job`, `citizenAgeTicks`, `workTicks`.
 
 **Manager:** `ImperialPopulationManager` — gera cidadãos a cada **1200 ticks** (60s) se
-abaixo da capacidade; conta cidadãos/desempregados (raio 96); treina cidadão em Guardsman.
+abaixo da capacidade **e** moral permitir (≥35); conta cidadãos/desempregados (raio 96);
+expõe `getCitizenCapacity` (base × fator do tipo de cidade); treina cidadão em Guardsman.
+
+**Gestão automática:** `ImperialWorkforceManager.autoManageWorkforce` (a cada 200 ticks)
+libera trabalhadores cujo posto sumiu e atribui cidadãos ociosos a postos vagos próximos
+(Mine→MINER, Scrap Yard→SCRAPPER, Forge→SMITH, Refinery→STOKER). É o que faz a cidade se
+auto-organizar sem microgerência.
 
 ### Empregos (`ImperialCitizenJob`)
 `UNEMPLOYED, MINER, SCRAPPER, SMITH, STOKER, FARMER, BUILDER, RECRUIT`
@@ -171,7 +210,8 @@ Padrão de toda estrutura importante: **Block + BlockEntity + Manager** + regist
 `ExampleMod` + blockstate json + block model json + item model json + entrada no en_us.json.
 
 Fluxo: botão na UI → packet → Core valida custo/limite → Manager acha local livre →
-constrói → designa cidadão desempregado → cidadão anda até lá → produz.
+constrói → designa cidadão desempregado → cidadão anda até lá → produz. (Reabastecimento de
+postos vagos é feito pelo `ImperialWorkforceManager`.)
 
 ### Imperial Mine (`ImperialWorkSiteManager`)
 Custo: **20 Iron, 10 Scrap, 5 Coal**. Cap. = nível. Emprega `MINER` → produz Iron.
@@ -198,7 +238,12 @@ Custo: **25 Iron, 15 Scrap, 5 Coal**. Cap. = nível. **Não** tem trabalhador fi
 barrel, crafting table, grindstone, fletching table, cantos de polished andesite.
 Ao concluir, chama `commandCore.completeRecruitTraining(...)` → vira Guardsman.
 
-### Produção escalada por nível (yield por ciclo)
+### Imperial Habitation (`ImperialHabitationBlock` + `ImperialHabitationBlockEntity`)
+Bloco de moradia. **Não emprega ninguém**; cada Habitation hospeda **3 cidadãos**
+(`CITIZENS_PER_HABITATION`) e é o principal fator positivo de **moral** (ver §6.2).
+Construível/colocável (tem item próprio). Raio de scan da moral: 96.
+
+### 6.1 Produção escalada por nível (yield por ciclo)
 Cada ciclo de trabalho rende `getMineIronYield`/`getScrapYardScrapYield`/`getRefineryCoalYield`,
 escalando com o nível da cidade (não mais fixo em 1):
 | Estrutura | Nv1 | Nv2 | Nv3 | Nv4 | Nv5 |
@@ -210,6 +255,29 @@ escalando com o nível da cidade (não mais fixo em 1):
 A produção passiva de Iron/Scrap/**Coal** recua conforme as estruturas correspondentes com
 trabalhador assumem (piso 20%, `getEffectiveDaily...Production`).
 
+### 6.2 Tipos de cidade (`ImperialCityType`)
+Atribuído **aleatoriamente** ao colocar o Core. Define nome, **foco de produção** (1.5× num
+recurso) e **fator de população**. Semente para o roster completo em
+`docs/DESIGN_WORLD_CITIES_FACTIONS.md`.
+
+| Tipo | Nome exibido | Foco (×1.5) | Fator pop. |
+|------|--------------|-------------|------------|
+| CIVILISED | Civilised World City | — | 1.0 |
+| HIVE | Hive City | Scrap | 2.0 |
+| FORGE | Forge City | Scrap | 1.2 |
+| FORTRESS | Fortress City | Iron | 0.8 |
+| AGRI | Agri City | Coal | 1.4 |
+| MINING | Mining City | Iron | 1.1 |
+
+### 6.3 Moral civil (`ImperialCityMoraleManager`)
+Valor 0–100 (default 50) que **eased** (±2/tick lento) em direção a um alvo computado de:
+habitação (bem alojado +20; sem-teto até −30), segurança (integridade do Core ±10, raid ativa
+−15, vitórias até +5), aglomeração (no cap −10; ≤metade do cap +5) e **presença do Primarch (+15)**.
+- **Multiplicador de produção:** 0.5× (moral 0) → 1.0× (50) → 1.25× (100).
+- **Crescimento populacional** estagna abaixo de **35** (`allowsGrowth`).
+- Rótulos: Jubilant (≥80) / Content (≥60) / Uneasy (≥40) / Discontent (≥20) / Rebellious.
+- Comida (Farm) é um fator **planejado** (ainda não entra na conta).
+
 ---
 
 ## 7. Recursos do mod
@@ -220,12 +288,14 @@ trabalhador assumem (piso 20%, `getEffectiveDaily...Production`).
 | Coal | ✅ ativo | Combustível: produção, forjas, indústria. Produzido pela Promethium Refinery |
 | Scrap Metal | ✅ ativo | Reparos, tech improvisada, upgrades, militar, equipamentos |
 | Crusadium Plate | ✅ ativo | Upgrades, reparo do Core, armaduras, estruturas avançadas |
-| Emperor Gene Seed | ✅ ativo | Transformar Guardsmen em Space Marines |
+| Emperor Gene Seed | ✅ ativo | Space Marines, Custodes (10) e Primarch (15) |
 | Imperial War Support | ✅ ativo | Reforços, comandos militares, suporte imperial |
-| Crusadium (ingot) | item existe | Material avançado: armaduras, tech, equipamentos (sem cadeia de uso ainda) |
-| Gold | 🔜 planejado | Upgrades avançados, itens do jogador, veículos |
-| Emerald | 🔜 planejado | Comércio com a capital, suprimentos, reforços externos |
+| Crusadium | ✅ armazenável | Custo do Primarch (32); item ingot existe; sem cadeia de produção própria ainda |
+| Gold | ✅ armazenável | Exibido na GUI; ainda sem fonte/uso (Gold Mine planejada) |
+| Emerald | ✅ armazenável | Exibido na GUI; ainda sem fonte/uso (Emerald Trade Depot planejado) |
 | Ork Teeth | item existe | Drop de Orks; "moeda" temática (uso a definir) |
+
+`ImperialResourceType`: `IRON, COAL, SCRAP, GOLD, EMERALD, CRUSADIUM`.
 
 ---
 
@@ -247,8 +317,12 @@ trabalhador assumem (piso 20%, `getEffectiveDaily...Production`).
 - **Guardsman** (`GuardsmanEntity`) — soldado base; usa Lasgun, defende, ataca à distância
   e corpo a corpo. IA: `GuardsmanGuardPostGoal`, `GuardsmanKnifeAttackGoal`,
   `GuardsmanLasgunAttackGoal`, `FirstCrusadeHurtByTargetGoal`, `FirstCrusadeNearestEnemyTargetGoal`.
+  Em paz, patrulha o perímetro (ver §8.3).
 - **Space Marine** (`SpaceMarineEntity`) — entidade separada, promovida de Guardsman via Gene Seed.
+- **Adeptus Custodes** (`CustodesEntity`) — guarda de elite do Core; só "ganho", nunca recrutado (§8.4).
+- **Primarch** (`PrimarchEntity`) — unidade única e demigod; lidera saídas e governa (§8.5).
 - **Orks** (`OrkBoyEntity`, `OrkNobEntity`) — inimigos das raids; Nob é a versão forte.
+- **Warboss** (`WarbossEntity`) — chefe Ork que surge de um Ork Camp após várias war parties (§9).
 - **Lasgun** (`LasgunItem` + `LasgunShotEntity` + `LasgunShotRenderer`) — usa Power Cell, projétil próprio.
 
 ### Space Marines (`SpaceMarineUpgradeManager`) — requer cidade ≥ nv3
@@ -260,18 +334,19 @@ trabalhador assumem (piso 20%, `getEffectiveDaily...Production`).
   | 3 | 750 | 450 | 200 | 25 |
   | 4 | 1.500 | 900 | 400 | 50 |
   | 5 | 3.000 | 1.800 | 800 | 100 |
+- `countSpaceMarines` é usado como pré-requisito para Custodes.
 
-### Progressão militar
-Tropas vêm da população. O botão **Recruit** agora designa o cidadão desempregado mais
-próximo como **RECRUIT** num Barracks disponível (não cria Guardsman instantâneo). O Barracks
-treina por 1200 ticks → `completeRecruitTraining` cria o Guardsman (com chapter aleatório e
-rank inicial da cidade). Capacidade militar conta `recruitedGuardsmen + recrutas em treino`.
+### 8.1 Progressão militar
+Tropas vêm da população. O botão **Recruit** designa o cidadão desempregado mais próximo
+como **RECRUIT** num Barracks disponível (não cria Guardsman instantâneo). O Barracks treina
+por 1200 ticks → `completeRecruitTraining` cria o Guardsman (com chapter aleatório e rank
+inicial da cidade). Capacidade militar conta `recruitedGuardsmen + recrutas em treino`.
 ```text
-Citizen → Recruit (treina no Barracks) → Guardsman → [rank-up por mérito] → ... → Space Marine
+Citizen → Recruit (treina no Barracks) → Guardsman → [rank-up por mérito] → ... → Space Marine → Custodes
                                               ↘ [Promote Specialist] → Especialista
 ```
 
-### Especialistas (`GuardsmanSpecialization`) — IMPLEMENTADO
+### 8.2 Especialistas (`GuardsmanSpecialization`) — IMPLEMENTADO
 Especialização é um **campo no GuardsmanEntity** (igual rank/chapter): modifica stats em
 `applyRankStats`/`getLasgunDamageWithBonuses`, aparece no nome (`{tag}`) e é salvo em NBT.
 Bônus por tipo (vida / dano / armadura / lasgun / vel.):
@@ -291,24 +366,35 @@ sem especialização mais próximo. Requer cidade **nível ≥ 2** e custa Iron/
 (escala por nível). Métodos no Core: `cycleSelectedSpecialist`, `promoteSpecialist`,
 `engineerRepair`.
 
+### 8.3 Patrulhas (`ImperialPatrolManager`)
+Em paz, Guardsmen não ficam parados: circulam por um anel de **8 waypoints** ao redor da
+cidade (raio por nível: 5/9/13/19/27), com rotação derivada do tempo do mundo (sem estado por
+entidade). **Durante raid ativa o manager se desliga** e o combate/ordens do Core assumem.
+A retinue do Primarch é excluída das patrulhas.
+
+### 8.4 Adeptus Custodes (`ImperialCustodesManager`)
+Nunca recrutado, só conquistado. Surge quando: cidade **nv5**, **≥3 Space Marines** já em
+campo, e Gene Seed ≥ **10** (custo por Custodes). Máximo **2** por cidade. Guardam o Core e
+não saem do perímetro interno. (`CustodesEntity` se vincula ao Core via `assignToCommandCore`.)
+
+### 8.5 Primarch (`ImperialPrimarchManager`)
+Unidade única e mais cara do jogo. Ascensão requer: cidade **nv5**, **≥5 vitórias** de raid,
+Gene Seed ≥ **15** e Crusadium ≥ **32**, e sem cooldown de luto. Enquanto vivo:
+- repara o Core passivamente (`engineerRepair(1)`/tick lento);
+- **reúne uma retinue** dos 6 Guardsmen mais próximos (raio 32) que o seguem por 300 ticks
+  e atacam o alvo dele (saem das patrulhas);
+- quando a cidade está segura (sem raid e ameaça < Alert), **marcha sobre o Ork Camp** para
+  destruí-lo na fonte;
+- presença dá **+15 de moral** à cidade.
+
+Se morrer: `onPrimarchDeath` aplica **luto** (cooldown 24000 ticks ≈ 20 min antes de outro
+surgir) e **−25 de moral**.
+
 ---
 
-## 9. Facções (`FirstCrusadeFaction` / `FirstCrusadeFactionManager`)
-Facções: `IMPERIUM, ORKS, HOSTILE, PLAYER, NEUTRAL`.
+## 9. Inimigos: Ork Raids, Ork Camps, Clãs
 
-Regras planejadas:
-- Imperium ataca Orks e Hostiles
-- Orks atacam Imperium e Player
-- Hostiles atacam Imperium e Player
-- Neutrals não atacam
-
-Objetivo: evitar aliados se atacando, padronizar combate, Orks focam defensores e player,
-tropas imperiais miram inimigos corretos. (`ImperiumChapter` dá "chapter" aos Guardsmen.)
-
----
-
-## 10. Ork Raids (`OrkRaidManager` + lógica no Core)
-
+### 9.1 Ork Raids (`OrkRaidManager` + lógica no Core)
 - **Disparo:** após `currentDay ≥ 1`, cooldown por nível (4,3,3,2,2 dias), chance por nível
   (20%, 28%, 36%, 45%, 55%). Só dispara com Guardsmen ou cidade ≥ nv2.
 - **Composição:** Ork Boys (base 3,5,8,12,18 + min(orkRaidCount,10)); Ork Nobs (base
@@ -320,6 +406,58 @@ tropas imperiais miram inimigos corretos. (`ImperiumChapter` dá "chapter" aos G
 - **Derrota** (Integrity = 0): perde metade dos recursos, penalidade de War Support,
   integridade volta a 25.
 - **Timeout:** raid se dispersa após 12000 ticks. `forceOrkRaid` força para teste.
+- `notifyNearbyPlayers` manda avisos de raid/eventos no chat.
+
+### 9.2 Ork Camps (`OrkCampManager` + `OrkCampBlockEntity`) — IMPLEMENTADO
+- **Seed:** quando a cidade chega ao **nv2**, o Core planta **um** camp (`trySeedOrkCamp`,
+  flag `orkCampSeeded`) a 64–96 blocos, com um **clã aleatório**; guarda `orkCampPos`.
+  Estrutura tosca: anel de cerca + coarse dirt.
+- **Camp vivo (a cada 200 ticks):** mantém uma **guarnição de 4 Boyz** (respawna se morrem)
+  e acumula **WAAAGH! +8/ciclo**. Ao atingir **100**, lança uma **war party de 4 Ork Boys**
+  que marcham sobre o Core e zera o WAAAGH!.
+- **Warboss:** após **3 war parties**, surge **1 Warboss** do camp (uma vez), com os modifs
+  do clã, marchando contra a cidade.
+- **Objetivo do jogador:** destruir o bloco do camp silencia a ameaça na fonte (alvo natural
+  de saída — o Primarch faz isso sozinho quando a cidade está segura). `isCampStillThere`.
+
+### 9.3 Clãs Ork (`OrkClan`)
+Cada camp pertence a um clã que modula vida/dano/velocidade dos seus Orks (e do Warboss):
+| Clã | Vida | Dano | Vel | Tema |
+|-----|------|------|-----|------|
+| GOFFS | 1.35 | 1.25 | 1.0 | melee brutal, resistente |
+| BAD_MOONS | 1.1 | 1.45 | 1.0 | ricos, mais dakka/dano |
+| DEATHSKULLS | 1.0 | 1.0 | 1.0 | saqueadores (tema scrap) |
+| EVIL_SUNZ | 0.9 | 1.1 | 1.35 | speed freaks |
+| SNAKEBITES | 1.45 | 1.0 | 0.95 | primitivos, muito resistentes |
+
+### 9.4 Nível de ameaça (`ThreatAssessmentManager`)
+Score = soma do peso de cada inimigo do Imperium num raio (default 96): **Ork Nob = 6**,
+**Ork Boy = 3**, hostil genérico = 2. Níveis (0–4) e nomes:
+| Score | Nível | Nome |
+|-------|-------|------|
+| ≤0 | 0 | Calm |
+| <10 | 1 | Vigilant |
+| <25 | 2 | Alert |
+| <50 | 3 | Siege |
+| ≥50 | 4 | Critical |
+
+O Core expõe `getLiveThreatScore`/`getLiveThreatLevel`; a GUI mostra colorido. A ameaça é o
+gatilho estratégico (ex.: Primarch só sai em saída se ameaça < Alert).
+
+---
+
+## 10. Facções (`FirstCrusadeFaction` / `FirstCrusadeFactionManager`)
+Facções: `IMPERIUM, ORKS, HOSTILE, PLAYER, NEUTRAL`.
+
+Regras:
+- Imperium ataca Orks e Hostiles
+- Orks atacam Imperium e Player
+- Hostiles atacam Imperium e Player
+- Neutrals não atacam
+
+Objetivo: evitar aliados se atacando, padronizar combate, Orks focam defensores e player,
+tropas imperiais miram inimigos corretos. `FirstCrusadeFactionManager.canAttack` é o gate de
+alvo. `ImperiumChapter` dá "chapter" aos Guardsmen/Space Marines.
 
 ### Ações defensivas (`ImperialDefenseManager`) — durante raid ativa
 - **Call Reinforcements** — spawna Guardsmen (1–6/nível) com rank escalado; cooldown 2400→1600.
@@ -328,34 +466,23 @@ tropas imperiais miram inimigos corretos. (`ImperiumChapter` dá "chapter" aos G
 - **Fortify Defenders** — buff; custa War Support (5,10,18,30,45/nível).
 - **Repair Core** (`repairCity`) — 1 Crusadium Plate → +20/18/15/12/10 integridade.
 
-### Nível de ameaça
-Score = nível×2 + min(raids,10) + (5 se raid ativa) − min(vitórias,8). Nomes:
-Low / Rising / Dangerous / Critical / WAAAGH!.
-
 ---
 
 ## 11. Sistemas/estruturas PLANEJADOS (ainda não no código)
 
-### Civilização própria
-Substituir vilas vanilla: sem vilas comuns → Command Core gera cidade imperial → cidadãos
-vivem e trabalham → cidade cresce organicamente.
-
-### Estruturas planejadas
-`Habitation, Farm, Mine, Gold Mine, Emerald Trade Depot, Scrap Yard, Forge, Barracks,
-Medicae Station, Armory, Vehicle Factory, Landing Pad, Wall Gate, Defense Tower, Command Relay`.
+### Estruturas planejadas (faltam)
+`Farm, Gold Mine, Emerald Trade Depot, Medicae Station, Armory, Vehicle Factory, Landing Pad,
+Wall Gate, Defense Tower, Command Relay`.
+→ Já implementados: Mine, Scrap Yard, Forge, Promethium Refinery, Barracks, **Habitation**.
 
 ### Muralhas e vila
-Core no centro → cidade cresce ao redor → muralha + torres + portões → cidadãos trabalham
-dentro/ao redor → raids atacam. Muralha construída automática/semi-auto pelo Core, possivelmente
-via cargo `BUILDER`.
+O upgrade já constrói fundação/muralha/torres/casas/ruas. Falta **portão funcional (Wall Gate)**
+e geração de vila imperial mais rica. Possível uso do cargo `BUILDER`.
 
 ### Geração de mundo (adaptada ao mod)
 Menos cavernas, terreno mais plano, morros leves, menos mineração manual, mais espaço para
-cidades, geração de acampamentos Orks, ruínas e pontos estratégicos.
-
-### Ork Camps
-Acampamento com tendas, barricadas, sucata, spawns/eventos, chefe local, recursos roubados;
-alvo para o jogador atacar; possível origem das raids.
+cidades, geração de ruínas e pontos estratégicos. (Ork Camps já são plantados dinamicamente
+pelo Core, mas não há worldgen passivo ainda.)
 
 ### Veículos e naves (fase tardia — não cedo)
 Vehicle Factory → produz veículo → Engineer/Guardsman opera → NPC dirige/pilota.
@@ -367,20 +494,29 @@ de fast travel. Desafios: controles, física, pathfinding, IA dirigindo, colisã
 
 ## 12. Inventário atual (código)
 
-**Itens:** crusadium_ingot, crusadium_plate, ork_teeth, scrap_metal, lasgun_power_cell,
-lasgun, guardsman_combat_knife, guardsman_med_kit, guardsman_command_baton, guardsman_helmet,
-guardsman_chestplate, guardsman_leggings, guardsman_boots (+ spawn eggs).
+**Itens (materiais/combate):** crusadium_ingot, crusadium_plate, ork_teeth, scrap_metal,
+lasgun_power_cell, lasgun, guardsman_combat_knife, guardsman_med_kit, guardsman_command_baton.
+**Armadura Guardsman:** guardsman_helmet/chestplate/leggings/boots.
+**Armadura Space Marine:** space_marine_helmet/chestplate/leggings/boots (power armor; texturas
+de camada ainda placeholder).
+**Spawn eggs:** imperial_citizen, guardsman, space_marine, custodes, primarch, ork_boy,
+ork_nob, warboss.
 Aba criativa: `first_crusade_tab` (ícone: Command Core).
 
 **Blocos:** imperial_command_core, imperial_mine, imperial_scrap_yard, imperial_forge,
-imperial_promethium_refinery, imperial_barracks.
+imperial_promethium_refinery, imperial_barracks, imperial_habitation, ork_camp.
 
-**Entidades:** imperial_citizen, guardsman, space_marine, ork_boy, ork_nob, lasgun_shot.
+**Entidades:** imperial_citizen, guardsman, space_marine, custodes, primarch, ork_boy,
+ork_nob, warboss, lasgun_shot.
 
-**Managers (atuais/planejados):** ImperialPopulationManager, ImperialWorkSiteManager,
-ImperialScrapYardManager, ImperialForgeManager, ImperialDefenseManager, OrkRaidManager,
-SpaceMarineUpgradeManager. Outros: ImperialVillageScanner, ImperialSettlementType/Origin,
-ImperialResourceType (IRON, COAL, SCRAP, GOLD, EMERALD, CRUSADIUM), GuardsmanArmorEvents, Config.
+**Managers (atuais):** ImperialPopulationManager, ImperialWorkSiteManager,
+ImperialScrapYardManager, ImperialForgeManager, ImperialPromethiumRefineryManager,
+ImperialBarracksManager, ImperialWorkforceManager, ImperialDefenseManager, OrkRaidManager,
+OrkCampManager, SpaceMarineUpgradeManager, ImperialCustodesManager, ImperialPrimarchManager,
+ImperialPatrolManager, ImperialCityMoraleManager, ThreatAssessmentManager,
+ImperialMilitaryReportManager, ImperialVillageScanner.
+**Outros:** ImperialSettlementType/Origin, ImperialCityType, OrkClan, ImperialResourceType,
+GuardsmanRank, GuardsmanSpecialization, ImperiumChapter, GuardsmanArmorEvents, Config.
 
 ---
 
@@ -398,30 +534,41 @@ src/main/resources/assets/firstcrusade/lang/en_us.json
 ```
 **ERRADO (evitar):** `src/main/resources/assets/assets/firstcrusade/` (assets duplicado).
 
-Pendente provável: lang `pt_br`, texturas/modelos próprios (alguns ainda placeholder).
+Pendente provável: lang `pt_br`, texturas/modelos próprios (alguns ainda placeholder,
+ex.: armadura de Space Marine).
 
 ---
 
 ## 14. Roadmap
 
 ### Curto prazo
-- ✅ Mostrar Mine/Scrap/Forge na interface + contagem de trabalhadores por cargo (Miners/Scrappers/Smiths)
+- ✅ Mostrar Mine/Scrap/Forge/Refinery/Barracks na interface + trabalhadores por cargo
 - ✅ Tooltips/custos nos botões + motivo de bloqueio quando inativos
-- ✅ Produção passiva do Core começa a ser removida conforme estruturas com trabalhador assumem
+- ✅ Produção passiva do Core recua conforme estruturas com trabalhador assumem
 - ✅ Custo de War Support dos reforços passa a ser cobrado
-- Garantir que Mine, Scrap Yard e Forge funcionam de fato (testar em jogo)
-- Melhorar a busca de local livre
+- ✅ Gestão automática de mão de obra (`ImperialWorkforceManager`)
+- Garantir em jogo que todo o fluxo funciona (build → cidadão → recurso → defesa)
+- Melhorar a busca de local livre para estruturas
 
 ### Médio prazo
 - ✅ Fonte de Coal (Promethium Refinery) + produção dos trabalhadores escala por nível
 - ✅ Imperial Barracks + Recruit como processo real (Citizen → Recruit → Guardsman)
-- ✅ Especialistas (Sniper, Heavy Gunner, Melee Trooper, Medic, Engineer, Officer) via Promote Specialist
-- Estruturas: Habitation, Farm, Gold Mine, Emerald Trade Depot (dar uso a Gold/Emerald e FARMER/BUILDER)
+- ✅ Especialistas (Sniper, Heavy Gunner, Melee Trooper, Medic, Engineer, Officer)
+- ✅ Habitation + sistema de moral
+- ✅ Tipos de cidade (foco de produção + fator de população)
+- ✅ Ork Camps vivos (WAAAGH!, war parties, Warboss) + clãs Ork
+- ✅ Custodes e Primarch (endgame)
+- Dar **fonte e uso** a Gold/Emerald (Gold Mine, Emerald Trade Depot) e a FARMER/BUILDER (Farm)
 
 ### Longo prazo
-- Sistema de muralhas com portão; geração de vila imperial completa
-- Acampamentos Orks no mundo; sistema de território; mapa estratégico
+- Portão funcional (Wall Gate); geração de vila imperial mais rica
+- Worldgen próprio; sistema de território; mapa estratégico
 - Veículos; naves/dropships; outras facções
+- **Refatorar o `ImperialCommandCoreBlockEntity` (~3000 linhas)** em managers/helpers
+
+### Documentos de design relacionados
+- `docs/DESIGN_W40K_AUTONOMY.md` — autonomia/IA das unidades imperiais e inimigas
+- `docs/DESIGN_WORLD_CITIES_FACTIONS.md` — roster completo de tipos de cidade e clãs/facções
 
 ---
 
@@ -464,4 +611,5 @@ não usar `this`; usar o parâmetro `blockEntity`.
 
 ---
 
-*Última atualização: 2026-06-16 — mescla de planejamento + estado do código.*
+*Última atualização: 2026-06-17 — sincronizado com o estado real do código (Custodes,
+Primarch, Warboss, Ork Camps/Clãs, moral, tipos de cidade, ameaça, patrulhas, workforce).*
