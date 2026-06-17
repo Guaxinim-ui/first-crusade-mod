@@ -93,6 +93,17 @@ private static int networkPacketId = 0;
                         .strength(3.5F)
                         .requiresCorrectToolForDrops()
                         .sound(SoundType.STONE)));
+public static final RegistryObject<Block> IMPERIAL_GOLD_MINE =
+        BLOCKS.register("imperial_gold_mine",
+                () -> new ImperialGoldMineBlock(BlockBehaviour.Properties.of()
+                        .strength(3.5F)
+                        .requiresCorrectToolForDrops()
+                        .sound(SoundType.STONE)));
+
+public static final RegistryObject<Item> IMPERIAL_GOLD_MINE_ITEM =
+        ITEMS.register("imperial_gold_mine",
+                () -> new BlockItem(IMPERIAL_GOLD_MINE.get(), new Item.Properties()));
+
 public static final RegistryObject<Block> IMPERIAL_SCRAP_YARD =
         BLOCKS.register("imperial_scrap_yard",
                 () -> new ImperialScrapYardBlock(BlockBehaviour.Properties.of()
@@ -154,6 +165,10 @@ public static final RegistryObject<Item> IMPERIAL_MINE_ITEM =
         BLOCK_ENTITY_TYPES.register("imperial_mine",
                 () -> BlockEntityType.Builder.of(ImperialMineBlockEntity::new, IMPERIAL_MINE.get()).build(null));
         
+        public static final RegistryObject<BlockEntityType<ImperialGoldMineBlockEntity>> IMPERIAL_GOLD_MINE_BLOCK_ENTITY =
+        BLOCK_ENTITY_TYPES.register("imperial_gold_mine",
+                () -> BlockEntityType.Builder.of(ImperialGoldMineBlockEntity::new, IMPERIAL_GOLD_MINE.get()).build(null));
+
         public static final RegistryObject<BlockEntityType<ImperialScrapYardBlockEntity>> IMPERIAL_SCRAP_YARD_BLOCK_ENTITY =
         BLOCK_ENTITY_TYPES.register("imperial_scrap_yard",
                 () -> BlockEntityType.Builder.of(ImperialScrapYardBlockEntity::new, IMPERIAL_SCRAP_YARD.get()).build(null));
@@ -535,6 +550,7 @@ public static final RegistryObject<Item> PRIMARCH_SPAWN_EGG = ITEMS.register("pr
                         output.accept(SCRAP_METAL.get());
                         output.accept(IMPERIAL_CITIZEN_SPAWN_EGG.get());
                         output.accept(IMPERIAL_MINE_ITEM.get());
+                        output.accept(IMPERIAL_GOLD_MINE_ITEM.get());
 
                         output.accept(LASGUN_POWER_CELL.get());
                         output.accept(LASGUN.get());

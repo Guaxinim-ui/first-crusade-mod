@@ -11,7 +11,7 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 
 public class ImperialCommandCoreMenu extends AbstractContainerMenu {
-    private static final int DATA_COUNT = 46;
+    private static final int DATA_COUNT = 49;
 
     private final ContainerData data;
     private final BlockPos commandCorePos;
@@ -85,6 +85,9 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
                     case 43 -> commandCore.getCityMorale();
                     case 44 -> commandCore.getCityTypeOrdinal();
                     case 45 -> commandCore.getLiveThreatScore();
+                    case 46 -> getGoldMineCount(commandCore);
+                    case 47 -> commandCore.getGoldMineCapacity();
+                    case 48 -> getCitizenJobCount(commandCore, ImperialCitizenJob.GOLD_MINER);
                     default -> 0;
                 };
             }
@@ -122,6 +125,14 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
         }
 
         return ImperialWorkSiteManager.countImperialMines(serverLevel, commandCore, 128);
+    }
+
+    private int getGoldMineCount(ImperialCommandCoreBlockEntity commandCore) {
+        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
+            return 0;
+        }
+
+        return ImperialGoldMineManager.countGoldMines(serverLevel, commandCore, 128);
     }
 
     private int getScrapYardCount(ImperialCommandCoreBlockEntity commandCore) {
@@ -367,5 +378,17 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
 
     public int getThreatScore() {
         return this.data.get(45);
+    }
+
+    public int getGoldMineCount() {
+        return this.data.get(46);
+    }
+
+    public int getGoldMineCapacity() {
+        return this.data.get(47);
+    }
+
+    public int getGoldMinerCount() {
+        return this.data.get(48);
     }
 }

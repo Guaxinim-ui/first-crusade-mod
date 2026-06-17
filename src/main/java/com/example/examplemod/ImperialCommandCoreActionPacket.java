@@ -79,6 +79,8 @@ public class ImperialCommandCoreActionPacket {
 
             case BUILD_IMPERIAL_MINE -> commandCore.tryBuildImperialMine(player);
 
+            case BUILD_GOLD_MINE -> commandCore.tryBuildImperialGoldMine(player);
+
             case BUILD_SCRAP_YARD -> commandCore.tryBuildScrapYard(player);
 
             case BUILD_IMPERIAL_FORGE -> commandCore.tryBuildImperialForge(player);

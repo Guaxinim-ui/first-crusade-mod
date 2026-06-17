@@ -115,6 +115,7 @@ spawn/checagem de Ork Raid.
 | Raio da estrutura | 4 | 8 | 12 | 18 | 26 |
 | Altura da muralha | 1 | 3 | 5 | 7 | 9 |
 | Cap. Imperial Mine | 1 | 2 | 3 | 4 | 5 (=nível) |
+| Cap. Gold Mine | — | 1 | 1 | 2 | 2 (≥nv2) |
 | Cap. Scrap Yard | 1 | 2 | 3 | 4 | 5 (=nível) |
 | Cap. Imperial Forge | 1 | 1 | 2 | 2 | 3 ((nível+1)/2) |
 | Cap. Promethium Refinery | 1 | 2 | 3 | 4 | 5 (=nível) |
@@ -155,7 +156,7 @@ RECRUIT → GUARDSMAN → VETERAN → SERGEANT → LIEUTENANT (níveis 1–5).
 `ImperialCommandCoreActionPacket` (canal `firstcrusade:main`).
 
 **Enum `ImperialCommandCoreAction` (atual):**
-`DEPOSIT_RESOURCES, BUILD_IMPERIAL_MINE, BUILD_SCRAP_YARD, BUILD_IMPERIAL_FORGE,
+`DEPOSIT_RESOURCES, BUILD_IMPERIAL_MINE, BUILD_GOLD_MINE, BUILD_SCRAP_YARD, BUILD_IMPERIAL_FORGE,
 BUILD_PROMETHIUM_REFINERY, BUILD_BARRACKS, RECRUIT_GUARDSMAN, CYCLE_SPECIALIST,
 PROMOTE_SPECIALIST, UPGRADE_CITY, REPAIR_CORE, CALL_REINFORCEMENTS, RALLY_DEFENDERS,
 FORTIFY_DEFENDERS, FORCE_RAID_TEST`.
@@ -197,7 +198,8 @@ libera trabalhadores cujo posto sumiu e atribui cidadãos ociosos a postos vagos
 auto-organizar sem microgerência.
 
 ### Empregos (`ImperialCitizenJob`)
-`UNEMPLOYED, MINER, SCRAPPER, SMITH, STOKER, FARMER, BUILDER, RECRUIT`
+`UNEMPLOYED, MINER, GOLD_MINER, SCRAPPER, SMITH, STOKER, FARMER, BUILDER, RECRUIT`
+→ GOLD_MINER trabalha na Imperial Gold Mine (produz Gold).
 → FARMER e BUILDER existem no enum mas **ainda não têm posto/lógica**.
 → STOKER trabalha na Promethium Refinery (produz Coal).
 → RECRUIT treina num Barracks e vira Guardsman ao completar o treino.
@@ -215,6 +217,11 @@ postos vagos é feito pelo `ImperialWorkforceManager`.)
 
 ### Imperial Mine (`ImperialWorkSiteManager`)
 Custo: **20 Iron, 10 Scrap, 5 Coal**. Cap. = nível. Emprega `MINER` → produz Iron.
+
+### Imperial Gold Mine (`ImperialGoldMineManager` + `ImperialGoldMineBlockEntity`)
+Custo: **40 Iron, 25 Scrap, 15 Coal**. **Requer cidade ≥ nv2.** Cap. = `max(1, nível/2)`
+(nv2–3 → 1; nv4–5 → 2). Emprega `GOLD_MINER` → produz **Gold** (premium, ciclo de **800 ticks**,
+yield 1/1/1/2/3 por nível). Estrutura: variante da Mine com acentos de bloco de ouro.
 
 ### Imperial Scrap Yard (`ImperialScrapYardManager`)
 Custo: **15 Iron, 5 Coal**. Cap. = nível. Emprega `SCRAPPER` → produz Scrap Metal.
@@ -291,7 +298,7 @@ habitação (bem alojado +20; sem-teto até −30), segurança (integridade do C
 | Emperor Gene Seed | ✅ ativo | Space Marines, Custodes (10) e Primarch (15) |
 | Imperial War Support | ✅ ativo | Reforços, comandos militares, suporte imperial |
 | Crusadium | ✅ armazenável | Custo do Primarch (32); item ingot existe; sem cadeia de produção própria ainda |
-| Gold | ✅ armazenável | Exibido na GUI; ainda sem fonte/uso (Gold Mine planejada) |
+| Gold | ✅ ativo | Produzido pela Imperial Gold Mine (GOLD_MINER). Uso final (upgrades/itens) ainda a definir |
 | Emerald | ✅ armazenável | Exibido na GUI; ainda sem fonte/uso (Emerald Trade Depot planejado) |
 | Ork Teeth | item existe | Drop de Orks; "moeda" temática (uso a definir) |
 
@@ -503,13 +510,13 @@ de camada ainda placeholder).
 ork_nob, warboss.
 Aba criativa: `first_crusade_tab` (ícone: Command Core).
 
-**Blocos:** imperial_command_core, imperial_mine, imperial_scrap_yard, imperial_forge,
-imperial_promethium_refinery, imperial_barracks, imperial_habitation, ork_camp.
+**Blocos:** imperial_command_core, imperial_mine, imperial_gold_mine, imperial_scrap_yard,
+imperial_forge, imperial_promethium_refinery, imperial_barracks, imperial_habitation, ork_camp.
 
 **Entidades:** imperial_citizen, guardsman, space_marine, custodes, primarch, ork_boy,
 ork_nob, warboss, lasgun_shot.
 
-**Managers (atuais):** ImperialPopulationManager, ImperialWorkSiteManager,
+**Managers (atuais):** ImperialPopulationManager, ImperialWorkSiteManager, ImperialGoldMineManager,
 ImperialScrapYardManager, ImperialForgeManager, ImperialPromethiumRefineryManager,
 ImperialBarracksManager, ImperialWorkforceManager, ImperialDefenseManager, OrkRaidManager,
 OrkCampManager, SpaceMarineUpgradeManager, ImperialCustodesManager, ImperialPrimarchManager,
@@ -558,7 +565,8 @@ ex.: armadura de Space Marine).
 - ✅ Tipos de cidade (foco de produção + fator de população)
 - ✅ Ork Camps vivos (WAAAGH!, war parties, Warboss) + clãs Ork
 - ✅ Custodes e Primarch (endgame)
-- Dar **fonte e uso** a Gold/Emerald (Gold Mine, Emerald Trade Depot) e a FARMER/BUILDER (Farm)
+- ✅ Fonte de Gold (Imperial Gold Mine, GOLD_MINER)
+- Dar **uso final** a Gold; fonte+uso de Emerald (Emerald Trade Depot); Farm para FARMER/BUILDER
 
 ### Longo prazo
 - Portão funcional (Wall Gate); geração de vila imperial mais rica

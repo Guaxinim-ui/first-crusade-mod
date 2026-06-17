@@ -3,6 +3,7 @@ package com.example.examplemod;
 public enum ImperialCommandCoreAction {
     DEPOSIT_RESOURCES,
     BUILD_IMPERIAL_MINE,
+    BUILD_GOLD_MINE,
     BUILD_SCRAP_YARD,
     BUILD_IMPERIAL_FORGE,
     BUILD_PROMETHIUM_REFINERY,

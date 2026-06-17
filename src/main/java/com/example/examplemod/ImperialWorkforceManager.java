@@ -110,6 +110,11 @@ public class ImperialWorkforceManager {
                     && mine.isAssignedToCommandCore(corePos) ? ImperialCitizenJob.MINER : null;
         }
 
+        if (state.is(ExampleMod.IMPERIAL_GOLD_MINE.get())) {
+            return serverLevel.getBlockEntity(pos) instanceof ImperialGoldMineBlockEntity goldMine
+                    && goldMine.isAssignedToCommandCore(corePos) ? ImperialCitizenJob.GOLD_MINER : null;
+        }
+
         if (state.is(ExampleMod.IMPERIAL_SCRAP_YARD.get())) {
             return serverLevel.getBlockEntity(pos) instanceof ImperialScrapYardBlockEntity scrapYard
                     && scrapYard.isAssignedToCommandCore(corePos) ? ImperialCitizenJob.SCRAPPER : null;
@@ -138,6 +143,7 @@ public class ImperialWorkforceManager {
 
     private static boolean isWorkSiteJob(ImperialCitizenJob job) {
         return job == ImperialCitizenJob.MINER
+                || job == ImperialCitizenJob.GOLD_MINER
                 || job == ImperialCitizenJob.SCRAPPER
                 || job == ImperialCitizenJob.SMITH
                 || job == ImperialCitizenJob.STOKER;

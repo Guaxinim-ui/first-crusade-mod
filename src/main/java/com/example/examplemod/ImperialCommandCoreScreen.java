@@ -10,6 +10,7 @@ import net.minecraft.world.entity.player.Inventory;
 public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialCommandCoreMenu> {
     private Button depositButton;
     private Button buildMineButton;
+    private Button buildGoldMineButton;
     private Button buildScrapYardButton;
     private Button buildForgeButton;
     private Button buildRefineryButton;
@@ -28,7 +29,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         super(menu, playerInventory, title);
 
         this.imageWidth = 400;
-        this.imageHeight = 344;
+        this.imageHeight = 360;
     }
 
     @Override
@@ -47,6 +48,9 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
         this.buildMineButton = addActionButton(buttonX, buttonY + gap * row++, buttonWidth, buttonHeight,
                 "Build Mine", ImperialCommandCoreAction.BUILD_IMPERIAL_MINE);
+
+        this.buildGoldMineButton = addActionButton(buttonX, buttonY + gap * row++, buttonWidth, buttonHeight,
+                "Build Gold Mine", ImperialCommandCoreAction.BUILD_GOLD_MINE);
 
         this.buildScrapYardButton = addActionButton(buttonX, buttonY + gap * row++, buttonWidth, buttonHeight,
                 "Build Scrap", ImperialCommandCoreAction.BUILD_SCRAP_YARD);
@@ -122,6 +126,14 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
                 "Build Imperial Mine",
                 "Cost: 20 Iron, 10 Scrap, 5 Coal. Assigns a Miner who produces Iron.",
                 "Mine capacity reached. Upgrade the city to build more."
+        );
+
+        applyButton(
+                this.buildGoldMineButton,
+                this.menu.getCityLevel() >= 2 && this.menu.getGoldMineCount() < this.menu.getGoldMineCapacity(),
+                "Build Gold Mine",
+                "Cost: 40 Iron, 25 Scrap, 15 Coal. Assigns a Gold Miner who produces Gold (slowly).",
+                getGoldMineBlockReason()
         );
 
         applyButton(
@@ -251,6 +263,14 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         button.setTooltip(Tooltip.create(Component.literal(text.toString())));
     }
 
+    private String getGoldMineBlockReason() {
+        if (this.menu.getCityLevel() < 2) {
+            return "Requires an Imperial settlement of Level 2 or higher.";
+        }
+
+        return "Gold Mine capacity reached. Upgrade the city to build more.";
+    }
+
     private boolean hasRecruitCapacity() {
         return this.menu.getRecruitedGuardsmen() < this.menu.getMilitaryCapacity();
     }
@@ -343,11 +363,11 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         guiGraphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, 0xEE0B0B0B);
         guiGraphics.fill(x, y, x + this.imageWidth, y + 22, 0xEE3A2A12);
 
-        guiGraphics.fill(x + 8, y + 30, x + 248, y + 158, 0xAA202020);
-        guiGraphics.fill(x + 8, y + 164, x + 248, y + 216, 0xAA202020);
-        guiGraphics.fill(x + 8, y + 222, x + 248, y + 334, 0xAA202020);
+        guiGraphics.fill(x + 8, y + 30, x + 248, y + 170, 0xAA202020);
+        guiGraphics.fill(x + 8, y + 176, x + 248, y + 228, 0xAA202020);
+        guiGraphics.fill(x + 8, y + 234, x + 248, y + 346, 0xAA202020);
 
-        guiGraphics.fill(x + 253, y + 30, x + 392, y + 334, 0xAA202020);
+        guiGraphics.fill(x + 253, y + 30, x + 392, y + 352, 0xAA202020);
     }
 
     @Override
@@ -373,6 +393,8 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         y += 11;
         drawLine(guiGraphics, "Mines: " + this.menu.getMineCount() + "/" + this.menu.getMineCapacity() + "  (Miners: " + this.menu.getMinerCount() + ")", 12, y, 0xFFFFDD77);
         y += 11;
+        drawLine(guiGraphics, "Gold Mines: " + this.menu.getGoldMineCount() + "/" + this.menu.getGoldMineCapacity() + "  (Gold Miners: " + this.menu.getGoldMinerCount() + ")", 12, y, 0xFFFFE08A);
+        y += 11;
         drawLine(guiGraphics, "Scrap Yards: " + this.menu.getScrapYardCount() + "/" + this.menu.getScrapYardCapacity() + "  (Scrappers: " + this.menu.getScrapperCount() + ")", 12, y, 0xFFFFDD77);
         y += 11;
         drawLine(guiGraphics, "Forges: " + this.menu.getForgeCount() + "/" + this.menu.getForgeCapacity() + "  (Smiths: " + this.menu.getSmithCount() + ")", 12, y, 0xFFFFDD77);
@@ -381,7 +403,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         y += 11;
         drawLine(guiGraphics, "Barracks: " + this.menu.getBarracksCount() + "/" + this.menu.getBarracksCapacity() + "  (Training: " + this.menu.getRecruitsInTraining() + ")", 12, y, 0xFFFFDD77);
 
-        y = 168;
+        y = 180;
         drawLine(guiGraphics, "Resources", 12, y, 0xFFFFD27D);
         int cap = this.menu.getStorageCapacity();
         int col2 = 130;
@@ -395,7 +417,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         drawLine(guiGraphics, "Coal: " + this.menu.getCoal() + "/" + cap, 12, y, 0xFFD8D8D8);
         drawLine(guiGraphics, "Crusadium: " + this.menu.getCrusadium() + "/" + cap, col2, y, 0xFFB0C4DE);
 
-        y = 226;
+        y = 238;
         drawLine(guiGraphics, "Production", 12, y, 0xFFFFD27D);
         y += 13;
         drawLine(guiGraphics, "Specialist (selected): " + this.menu.getSelectedSpecialization().getDisplayName(), 12, y, 0xFF9AD0FF);

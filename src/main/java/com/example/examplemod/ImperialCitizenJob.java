@@ -3,6 +3,7 @@ package com.example.examplemod;
 public enum ImperialCitizenJob {
     UNEMPLOYED("Unemployed"),
     MINER("Miner"),
+    GOLD_MINER("Gold Miner"),
     SCRAPPER("Scrapper"),
     SMITH("Smith"),
     STOKER("Stoker"),

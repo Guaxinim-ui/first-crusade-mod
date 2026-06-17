@@ -143,6 +143,84 @@ public int getImperialMineCapacity() {
     return Math.max(1, this.cityLevel);
 }
 
+// Gold mining unlocks at city level 2 and stays scarce: capacity grows slowly with the city.
+public void tryBuildImperialGoldMine(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    if (this.cityLevel < 2) {
+        player.displayClientMessage(Component.literal(
+                "Gold Mines require an Imperial settlement of Level 2 or higher."
+        ), true);
+        return;
+    }
+
+    int currentGoldMines = ImperialGoldMineManager.countGoldMines(serverLevel, this, 128);
+
+    if (currentGoldMines >= getGoldMineCapacity()) {
+        player.displayClientMessage(Component.literal(
+                "Gold Mine capacity reached. Upgrade the city to build more gold mines."
+        ), true);
+        return;
+    }
+
+    int ironCost = 40;
+    int scrapCost = 25;
+    int coalCost = 15;
+
+    if (this.iron < ironCost || this.scrapMetal < scrapCost || this.coal < coalCost) {
+        player.displayClientMessage(Component.literal(
+                "Not enough city resources. Need: "
+                        + ironCost + " Iron, "
+                        + scrapCost + " Scrap, "
+                        + coalCost + " Coal."
+        ), true);
+        return;
+    }
+
+    boolean built = ImperialGoldMineManager.buildImperialGoldMine(serverLevel, this, player);
+
+    if (!built) {
+        return;
+    }
+
+    this.iron -= ironCost;
+    this.scrapMetal -= scrapCost;
+    this.coal -= coalCost;
+
+    setChanged();
+
+    player.displayClientMessage(Component.literal(
+            "City Resources: "
+                    + this.iron + " Iron, "
+                    + this.scrapMetal + " Scrap, "
+                    + this.coal + " Coal."
+    ), false);
+}
+
+public int getGoldMineCapacity() {
+    if (this.cityLevel < 2) {
+        return 0;
+    }
+
+    return Math.max(1, this.cityLevel / 2);
+}
+
+// Gold produced per Gold Miner work cycle. Kept low because Gold is a premium resource.
+public int getGoldMineYield() {
+    return switch (this.cityLevel) {
+        case 4 -> 2;
+        case 5 -> 3;
+        default -> 1;
+    };
+}
+
 // Iron produced per Miner work cycle. Scales with city level so staffed mines can
 // replace the passive output that is phased out as the settlement grows.
 public int getMineIronYield() {
