@@ -439,6 +439,7 @@ blockEntity.processAutomaticSpaceMarinePromotion(serverLevel);
 ImperialCustodesManager.tickCustodes(serverLevel, blockEntity);
 blockEntity.reducePrimarchMourningCooldown();
 ImperialPrimarchManager.tickPrimarch(serverLevel, blockEntity);
+WaaaghOverlordManager.contributeFromCity(serverLevel, blockEntity);
 blockEntity.trySeedOrkCamp(serverLevel);
 blockEntity.trySpawnOrkRaid(serverLevel);
 blockEntity.checkActiveOrkRaid(serverLevel);

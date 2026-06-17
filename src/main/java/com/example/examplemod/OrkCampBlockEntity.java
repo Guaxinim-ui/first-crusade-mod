@@ -84,7 +84,9 @@ public class OrkCampBlockEntity extends BlockEntity {
     }
 
     private void buildWaaagh(ServerLevel serverLevel, BlockPos pos) {
-        this.waaagh += WAAAGH_PER_CYCLE;
+        // The global WAAAGH! tier makes every camp gather momentum faster.
+        int tier = WaaaghOverlordManager.getTier(serverLevel);
+        this.waaagh += WAAAGH_PER_CYCLE + tier * 3;
         setChanged();
 
         if (this.waaagh >= WAAAGH_THRESHOLD) {
@@ -99,8 +101,11 @@ public class OrkCampBlockEntity extends BlockEntity {
             return;
         }
 
-        // Core of the column: Ork Boyz.
-        for (int i = 0; i < WAR_PARTY_SIZE; i++) {
+        int tier = WaaaghOverlordManager.getTier(serverLevel);
+
+        // Core of the column: Ork Boyz. A bigger global WAAAGH! sends bigger columns.
+        int boyz = WAR_PARTY_SIZE + tier;
+        for (int i = 0; i < boyz; i++) {
             dispatchMarcher(serverLevel, pos, ExampleMod.ORK_BOY.get().create(serverLevel));
         }
 
@@ -108,8 +113,9 @@ public class OrkCampBlockEntity extends BlockEntity {
         dispatchMarcher(serverLevel, pos, ExampleMod.GRETCHIN.get().create(serverLevel));
         dispatchMarcher(serverLevel, pos, ExampleMod.GRETCHIN.get().create(serverLevel));
 
-        // A grown WAAAGH! puts a Meganob at the head of the column.
-        if (this.warbossSpawned) {
+        // A grown WAAAGH! (camp Warboss risen, or global tier 2+) fields Meganobz at the head.
+        int meganobz = (this.warbossSpawned ? 1 : 0) + Math.max(0, tier - 1);
+        for (int i = 0; i < meganobz; i++) {
             dispatchMarcher(serverLevel, pos, ExampleMod.MEGANOB.get().create(serverLevel));
         }
 
