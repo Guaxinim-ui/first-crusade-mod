@@ -611,11 +611,11 @@ ex.: armadura de Space Marine).
 - Portão funcional (Wall Gate); geração de vila imperial mais rica
 - Worldgen próprio; sistema de território; mapa estratégico
 - Veículos; naves/dropships; outras facções
-- 🔶 **Refatorar o `ImperialCommandCoreBlockEntity`** — EM ANDAMENTO: já extraídos para
+- 🔶 **Refatorar o `ImperialCommandCoreBlockEntity`** — EM ANDAMENTO: extraídos para
   `ImperialCityLevelStats` as tabelas por nível (capacidades, produção, yields, custos de
-  upgrade, custos/cooldown de reforço/fortify/especialista/Space Marine). Próximo: extrair o
-  estado de recursos (iron/coal/scrap/gold/emerald/crusadium + acessores) para um
-  `ImperialResourceStorage`.
+  upgrade/reforço/fortify/especialista/Space Marine) e para `ImperialResourceStorage` o estado
+  dos 6 recursos (iron/coal/scrap/gold/emerald/crusadium) com a lógica de capacidade/add/spend/
+  save/load (chaves NBT preservadas). O Core delega. Próximo: extrair lógica de raid/defesa.
 
 ### Documentos de design relacionados
 - `docs/DESIGN_W40K_AUTONOMY.md` — autonomia/IA das unidades imperiais e inimigas

@@ -41,14 +41,9 @@ public class ImperialCommandCoreBlockEntity extends BlockEntity {
 
     private int cityLevel = 1;
 
-    private int iron = 0;
-    private int coal = 0;
-    private int scrapMetal = 0;
-
-    // Advanced resources. Previously produced amounts were silently discarded; now stored.
-    private int gold = 0;
-    private int emerald = 0;
-    private int crusadium = 0;
+    // The city's six stockpiled resources (Iron, Coal, Scrap, Gold, Emerald, Crusadium) and their
+    // capacity-aware fill/spend logic live in a dedicated storage; capacity scales with city level.
+    private final ImperialResourceStorage resources = new ImperialResourceStorage(this::getStorageCapacity);
 
     // Civilian morale (0-100). Eased toward a target each slow tick by ImperialCityMoraleManager.
     private int cityMorale = ImperialCityMoraleManager.DEFAULT_MORALE;
@@ -110,7 +105,7 @@ public void tryBuildImperialMine(Player player) {
     int scrapCost = 10;
     int coalCost = 5;
 
-    if (this.iron < ironCost || this.scrapMetal < scrapCost || this.coal < coalCost) {
+    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
         player.displayClientMessage(Component.literal(
                 "Not enough city resources. Need: "
                         + ironCost + " Iron, "
@@ -126,17 +121,15 @@ public void tryBuildImperialMine(Player player) {
         return;
     }
 
-    this.iron -= ironCost;
-    this.scrapMetal -= scrapCost;
-    this.coal -= coalCost;
+    this.resources.spend(ironCost, scrapCost, coalCost);
 
     setChanged();
 
     player.displayClientMessage(Component.literal(
             "City Resources: "
-                    + this.iron + " Iron, "
-                    + this.scrapMetal + " Scrap, "
-                    + this.coal + " Coal."
+                    + this.resources.getIron() + " Iron, "
+                    + this.resources.getScrapMetal() + " Scrap, "
+                    + this.resources.getCoal() + " Coal."
     ), false);
 }
 
@@ -175,7 +168,7 @@ public void tryBuildImperialGoldMine(Player player) {
     int scrapCost = 25;
     int coalCost = 15;
 
-    if (this.iron < ironCost || this.scrapMetal < scrapCost || this.coal < coalCost) {
+    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
         player.displayClientMessage(Component.literal(
                 "Not enough city resources. Need: "
                         + ironCost + " Iron, "
@@ -191,17 +184,15 @@ public void tryBuildImperialGoldMine(Player player) {
         return;
     }
 
-    this.iron -= ironCost;
-    this.scrapMetal -= scrapCost;
-    this.coal -= coalCost;
+    this.resources.spend(ironCost, scrapCost, coalCost);
 
     setChanged();
 
     player.displayClientMessage(Component.literal(
             "City Resources: "
-                    + this.iron + " Iron, "
-                    + this.scrapMetal + " Scrap, "
-                    + this.coal + " Coal."
+                    + this.resources.getIron() + " Iron, "
+                    + this.resources.getScrapMetal() + " Scrap, "
+                    + this.resources.getCoal() + " Coal."
     ), false);
 }
 
@@ -236,7 +227,7 @@ public void tryBuildImperialFarm(Player player) {
     int ironCost = 15;
     int scrapCost = 5;
 
-    if (this.iron < ironCost || this.scrapMetal < scrapCost) {
+    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost) {
         player.displayClientMessage(Component.literal(
                 "Not enough city resources. Need: "
                         + ironCost + " Iron, "
@@ -251,15 +242,14 @@ public void tryBuildImperialFarm(Player player) {
         return;
     }
 
-    this.iron -= ironCost;
-    this.scrapMetal -= scrapCost;
+    this.resources.spend(ironCost, scrapCost, 0);
 
     setChanged();
 
     player.displayClientMessage(Component.literal(
             "City Resources: "
-                    + this.iron + " Iron, "
-                    + this.scrapMetal + " Scrap."
+                    + this.resources.getIron() + " Iron, "
+                    + this.resources.getScrapMetal() + " Scrap."
     ), false);
 }
 
@@ -298,7 +288,7 @@ public void tryBuildEmeraldTradeDepot(Player player) {
     int scrapCost = 15;
     int coalCost = 10;
 
-    if (this.iron < ironCost || this.scrapMetal < scrapCost || this.coal < coalCost) {
+    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
         player.displayClientMessage(Component.literal(
                 "Not enough city resources. Need: "
                         + ironCost + " Iron, "
@@ -314,17 +304,15 @@ public void tryBuildEmeraldTradeDepot(Player player) {
         return;
     }
 
-    this.iron -= ironCost;
-    this.scrapMetal -= scrapCost;
-    this.coal -= coalCost;
+    this.resources.spend(ironCost, scrapCost, coalCost);
 
     setChanged();
 
     player.displayClientMessage(Component.literal(
             "City Resources: "
-                    + this.iron + " Iron, "
-                    + this.scrapMetal + " Scrap, "
-                    + this.coal + " Coal."
+                    + this.resources.getIron() + " Iron, "
+                    + this.resources.getScrapMetal() + " Scrap, "
+                    + this.resources.getCoal() + " Coal."
     ), false);
 }
 
@@ -343,25 +331,11 @@ public int getTradeDepotEmeraldYield() {
 
 // Trades stored Gold for Emerald at a fixed rate. Returns the Emerald produced (0 if it can't).
 public int tradeGoldForEmeraldAtDepot() {
-    int goldPerEmerald = 4;
-    int emeraldYield = getTradeDepotEmeraldYield();
+    int produced = this.resources.tradeGoldForEmerald(getTradeDepotEmeraldYield(), 4);
 
-    int freeSpace = Math.max(0, getStorageCapacity() - this.emerald);
-    int produced = Math.min(emeraldYield, freeSpace);
-
-    if (produced <= 0) {
-        return 0;
+    if (produced > 0) {
+        setChanged();
     }
-
-    int goldCost = produced * goldPerEmerald;
-
-    if (this.gold < goldCost) {
-        return 0;
-    }
-
-    this.gold -= goldCost;
-    this.emerald += produced;
-    setChanged();
 
     return produced;
 }
@@ -392,49 +366,7 @@ public int getRefineryCoalYield() {
 }
 
 public int receiveProducedResource(ImperialResourceType resourceType, int amount) {
-    if (amount <= 0) {
-        return 0;
-    }
-
-    int accepted = 0;
-
-    switch (resourceType) {
-        case IRON -> {
-            int freeSpace = Math.max(0, getStorageCapacity() - this.iron);
-            accepted = Math.min(amount, freeSpace);
-            this.iron += accepted;
-        }
-
-        case COAL -> {
-            int freeSpace = Math.max(0, getStorageCapacity() - this.coal);
-            accepted = Math.min(amount, freeSpace);
-            this.coal += accepted;
-        }
-
-        case SCRAP -> {
-            int freeSpace = Math.max(0, getStorageCapacity() - this.scrapMetal);
-            accepted = Math.min(amount, freeSpace);
-            this.scrapMetal += accepted;
-        }
-
-        case GOLD -> {
-            int freeSpace = Math.max(0, getStorageCapacity() - this.gold);
-            accepted = Math.min(amount, freeSpace);
-            this.gold += accepted;
-        }
-
-        case EMERALD -> {
-            int freeSpace = Math.max(0, getStorageCapacity() - this.emerald);
-            accepted = Math.min(amount, freeSpace);
-            this.emerald += accepted;
-        }
-
-        case CRUSADIUM -> {
-            int freeSpace = Math.max(0, getStorageCapacity() - this.crusadium);
-            accepted = Math.min(amount, freeSpace);
-            this.crusadium += accepted;
-        }
-    }
+    int accepted = this.resources.add(resourceType, amount);
 
     if (accepted > 0) {
         setChanged();
@@ -588,7 +520,7 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
         setChanged();
 
         player.displayClientMessage(Component.literal("Deposited " + acceptedAmount + " Iron."), false);
-        player.displayClientMessage(Component.literal("City Iron: " + this.iron + "/" + getStorageCapacity()), false);
+        player.displayClientMessage(Component.literal("City Iron: " + this.resources.getIron() + "/" + getStorageCapacity()), false);
     }
 
     public void depositCoal(Player player, ItemStack itemStack) {
@@ -608,7 +540,7 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
         setChanged();
 
         player.displayClientMessage(Component.literal("Deposited " + acceptedAmount + " Coal."), false);
-        player.displayClientMessage(Component.literal("City Coal: " + this.coal + "/" + getStorageCapacity()), false);
+        player.displayClientMessage(Component.literal("City Coal: " + this.resources.getCoal() + "/" + getStorageCapacity()), false);
     }
 
     public void depositScrapMetal(Player player, ItemStack itemStack) {
@@ -628,7 +560,7 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
         setChanged();
 
         player.displayClientMessage(Component.literal("Deposited " + acceptedAmount + " Scrap Metal."), false);
-        player.displayClientMessage(Component.literal("City Scrap Metal: " + this.scrapMetal + "/" + getStorageCapacity()), false);
+        player.displayClientMessage(Component.literal("City Scrap Metal: " + this.resources.getScrapMetal() + "/" + getStorageCapacity()), false);
     }
     
     public void depositAllResources(Player player) {
@@ -743,8 +675,8 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
     ), false);
 
     player.displayClientMessage(Component.literal(
-            "City Storage: " + this.iron + " Iron, " + this.coal + " Coal, " + this.scrapMetal + " Scrap, "
-                    + this.gold + " Gold, " + this.emerald + " Emerald, " + this.crusadium + " Crusadium."
+            "City Storage: " + this.resources.getIron() + " Iron, " + this.resources.getCoal() + " Coal, " + this.resources.getScrapMetal() + " Scrap, "
+                    + this.resources.getGold() + " Gold, " + this.resources.getEmerald() + " Emerald, " + this.resources.getCrusadium() + " Crusadium."
     ), false);
 }
 
@@ -755,14 +687,7 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
             return;
         }
 
-        int available = switch (type) {
-            case IRON -> this.iron;
-            case COAL -> this.coal;
-            case SCRAP -> this.scrapMetal;
-            case GOLD -> this.gold;
-            case EMERALD -> this.emerald;
-            case CRUSADIUM -> this.crusadium;
-        };
+        int available = this.resources.get(type);
 
         int amount = Math.min(available, requested);
 
@@ -780,14 +705,7 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
             case CRUSADIUM -> ExampleMod.CRUSADIUM_INGOT.get();
         };
 
-        switch (type) {
-            case IRON -> this.iron -= amount;
-            case COAL -> this.coal -= amount;
-            case SCRAP -> this.scrapMetal -= amount;
-            case GOLD -> this.gold -= amount;
-            case EMERALD -> this.emerald -= amount;
-            case CRUSADIUM -> this.crusadium -= amount;
-        }
+        this.resources.remove(type, amount);
 
         ItemStack stack = new ItemStack(item, amount);
 
@@ -804,39 +722,27 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
     }
 
     private int addIron(int amount) {
-        int acceptedAmount = getAcceptedAmount(this.iron, amount);
-        this.iron += acceptedAmount;
-        return acceptedAmount;
+        return this.resources.addIron(amount);
     }
 
     private int addCoal(int amount) {
-        int acceptedAmount = getAcceptedAmount(this.coal, amount);
-        this.coal += acceptedAmount;
-        return acceptedAmount;
+        return this.resources.addCoal(amount);
     }
 
     private int addScrapMetal(int amount) {
-        int acceptedAmount = getAcceptedAmount(this.scrapMetal, amount);
-        this.scrapMetal += acceptedAmount;
-        return acceptedAmount;
+        return this.resources.addScrapMetal(amount);
     }
 
     private int addGold(int amount) {
-        int acceptedAmount = getAcceptedAmount(this.gold, amount);
-        this.gold += acceptedAmount;
-        return acceptedAmount;
+        return this.resources.addGold(amount);
     }
 
     private int addEmerald(int amount) {
-        int acceptedAmount = getAcceptedAmount(this.emerald, amount);
-        this.emerald += acceptedAmount;
-        return acceptedAmount;
+        return this.resources.addEmerald(amount);
     }
 
     private int addCrusadium(int amount) {
-        int acceptedAmount = getAcceptedAmount(this.crusadium, amount);
-        this.crusadium += acceptedAmount;
-        return acceptedAmount;
+        return this.resources.addCrusadium(amount);
     }
 
 private int addEmperorGeneSeed(int amount) {
@@ -871,13 +777,13 @@ public boolean consumeEmperorGeneSeed(int amount) {
 }
 
 public boolean consumeCrusadium(int amount) {
-    if (amount <= 0 || this.crusadium < amount) {
-        return false;
+    boolean consumed = this.resources.consumeCrusadium(amount);
+
+    if (consumed) {
+        setChanged();
     }
 
-    this.crusadium -= amount;
-    setChanged();
-    return true;
+    return consumed;
 }
 
 public int getPrimarchMourningCooldownTicks() {
@@ -935,19 +841,6 @@ public int getEmperorGeneSeedCapacity() {
 }
 
 
-    private int getAcceptedAmount(int currentAmount, int requestedAmount) {
-        if (requestedAmount <= 0) {
-            return 0;
-        }
-
-        int freeSpace = getStorageCapacity() - currentAmount;
-
-        if (freeSpace <= 0) {
-            return 0;
-        }
-
-        return Math.min(requestedAmount, freeSpace);
-    }
 
 public void tryRecruitGuardsman(Player player) {
     if (!isOwner(player)) {
@@ -1083,7 +976,7 @@ public void promoteSpecialist(Player player) {
     int scrapCost = getSpecialistScrapCost();
     int warSupportCost = getSpecialistWarSupportCost();
 
-    if (this.iron < ironCost || this.scrapMetal < scrapCost) {
+    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost) {
         player.displayClientMessage(Component.literal("Not enough city resources. Need: " + ironCost + " Iron, " + scrapCost + " Scrap."), true);
         return;
     }
@@ -1104,8 +997,7 @@ public void promoteSpecialist(Player player) {
 
     target.setSpecialization(spec, true);
 
-    this.iron -= ironCost;
-    this.scrapMetal -= scrapCost;
+    this.resources.spend(ironCost, scrapCost, 0);
     this.imperialWarSupport -= warSupportCost;
 
     setChanged();
@@ -1574,18 +1466,18 @@ public void upgradeNearestGuardsmanToSpaceMarine(Player player, ItemStack cataly
     int coalCost = getSpaceMarineUpgradeCoalCost();
     int warSupportCost = getSpaceMarineUpgradeWarSupportCost();
 
-    if (this.iron < ironCost) {
-        player.displayClientMessage(Component.literal("Missing Iron for Space Marine upgrade: " + (ironCost - this.iron)), true);
+    if (this.resources.getIron() < ironCost) {
+        player.displayClientMessage(Component.literal("Missing Iron for Space Marine upgrade: " + (ironCost - this.resources.getIron())), true);
         return;
     }
 
-    if (this.scrapMetal < scrapCost) {
-        player.displayClientMessage(Component.literal("Missing Scrap Metal for Space Marine upgrade: " + (scrapCost - this.scrapMetal)), true);
+    if (this.resources.getScrapMetal() < scrapCost) {
+        player.displayClientMessage(Component.literal("Missing Scrap Metal for Space Marine upgrade: " + (scrapCost - this.resources.getScrapMetal())), true);
         return;
     }
 
-    if (this.coal < coalCost) {
-        player.displayClientMessage(Component.literal("Missing Coal for Space Marine upgrade: " + (coalCost - this.coal)), true);
+    if (this.resources.getCoal() < coalCost) {
+        player.displayClientMessage(Component.literal("Missing Coal for Space Marine upgrade: " + (coalCost - this.resources.getCoal())), true);
         return;
     }
 
@@ -1609,9 +1501,7 @@ public void upgradeNearestGuardsmanToSpaceMarine(Player player, ItemStack cataly
         return;
     }
 
-    this.iron -= ironCost;
-    this.scrapMetal -= scrapCost;
-    this.coal -= coalCost;
+    this.resources.spend(ironCost, scrapCost, coalCost);
     this.imperialWarSupport -= warSupportCost;
 
     catalystStack.shrink(1);
@@ -1769,18 +1659,18 @@ private int getSpaceMarinePromotionCooldownTicks() {
     int coalCost = getUpgradeCoalCost();
     int plateCost = getUpgradePlateCost();
 
-    if (this.iron < ironCost) {
-        player.displayClientMessage(Component.literal("Missing Iron: " + (ironCost - this.iron)), true);
+    if (this.resources.getIron() < ironCost) {
+        player.displayClientMessage(Component.literal("Missing Iron: " + (ironCost - this.resources.getIron())), true);
         return;
     }
 
-    if (this.scrapMetal < scrapCost) {
-        player.displayClientMessage(Component.literal("Missing Scrap Metal: " + (scrapCost - this.scrapMetal)), true);
+    if (this.resources.getScrapMetal() < scrapCost) {
+        player.displayClientMessage(Component.literal("Missing Scrap Metal: " + (scrapCost - this.resources.getScrapMetal())), true);
         return;
     }
 
-    if (this.coal < coalCost) {
-        player.displayClientMessage(Component.literal("Missing Coal: " + (coalCost - this.coal)), true);
+    if (this.resources.getCoal() < coalCost) {
+        player.displayClientMessage(Component.literal("Missing Coal: " + (coalCost - this.resources.getCoal())), true);
         return;
     }
 
@@ -1789,9 +1679,7 @@ private int getSpaceMarinePromotionCooldownTicks() {
         return;
     }
 
-    this.iron -= ironCost;
-    this.scrapMetal -= scrapCost;
-    this.coal -= coalCost;
+    this.resources.spend(ironCost, scrapCost, coalCost);
     plateStack.shrink(plateCost);
 
     this.cityLevel++;
@@ -2133,13 +2021,13 @@ private void finishOrkRaidDefeat(ServerLevel serverLevel) {
     this.activeOrkRaidTicks = 0;
     this.raidPressureTicks = 0;
 
-    int lostIron = this.iron / 2;
-    int lostScrap = this.scrapMetal / 2;
-    int lostCoal = this.coal / 2;
+    int lostIron = this.resources.getIron() / 2;
+    int lostScrap = this.resources.getScrapMetal() / 2;
+    int lostCoal = this.resources.getCoal() / 2;
 
-    this.iron -= lostIron;
-    this.scrapMetal -= lostScrap;
-    this.coal -= lostCoal;
+    this.resources.remove(ImperialResourceType.IRON, lostIron);
+    this.resources.remove(ImperialResourceType.SCRAP, lostScrap);
+    this.resources.remove(ImperialResourceType.COAL, lostCoal);
 
     this.imperialWarSupport = Math.max(0, this.imperialWarSupport - getRaidDefeatWarSupportPenalty());
     this.cityIntegrity = 25;
@@ -2583,27 +2471,27 @@ public int getCityLevel() {
 }
 
 public int getIron() {
-    return this.iron;
+    return this.resources.getIron();
 }
 
 public int getCoal() {
-    return this.coal;
+    return this.resources.getCoal();
 }
 
 public int getScrapMetal() {
-    return this.scrapMetal;
+    return this.resources.getScrapMetal();
 }
 
 public int getGold() {
-    return this.gold;
+    return this.resources.getGold();
 }
 
 public int getEmerald() {
-    return this.emerald;
+    return this.resources.getEmerald();
 }
 
 public int getCrusadium() {
-    return this.crusadium;
+    return this.resources.getCrusadium();
 }
 
 public int getCityMorale() {
@@ -2753,13 +2641,7 @@ protected void saveAdditional(CompoundTag tag) {
 
     tag.putInt("CityLevel", this.cityLevel);
 
-    tag.putInt("Iron", this.iron);
-    tag.putInt("Coal", this.coal);
-    tag.putInt("ScrapMetal", this.scrapMetal);
-
-    tag.putInt("Gold", this.gold);
-    tag.putInt("Emerald", this.emerald);
-    tag.putInt("Crusadium", this.crusadium);
+    this.resources.save(tag);
 
     tag.putInt("CityMorale", this.cityMorale);
     tag.putInt("PrimarchMourningCooldownTicks", this.primarchMourningCooldownTicks);
@@ -2827,13 +2709,7 @@ public void load(CompoundTag tag) {
         this.cityLevel = MAX_CITY_LEVEL;
     }
 
-    this.iron = Math.min(tag.getInt("Iron"), getStorageCapacity());
-    this.coal = Math.min(tag.getInt("Coal"), getStorageCapacity());
-    this.scrapMetal = Math.min(tag.getInt("ScrapMetal"), getStorageCapacity());
-
-    this.gold = Math.min(tag.getInt("Gold"), getStorageCapacity());
-    this.emerald = Math.min(tag.getInt("Emerald"), getStorageCapacity());
-    this.crusadium = Math.min(tag.getInt("Crusadium"), getStorageCapacity());
+    this.resources.load(tag);
 
     this.cityMorale = tag.contains("CityMorale")
             ? ImperialCityMoraleManager.clamp(tag.getInt("CityMorale"))
@@ -2939,7 +2815,7 @@ public void tryBuildScrapYard(Player player) {
     int ironCost = 15;
     int coalCost = 5;
 
-    if (this.iron < ironCost || this.coal < coalCost) {
+    if (this.resources.getIron() < ironCost || this.resources.getCoal() < coalCost) {
         player.displayClientMessage(Component.literal(
                 "Not enough city resources. Need: "
                         + ironCost + " Iron, "
@@ -2954,16 +2830,15 @@ public void tryBuildScrapYard(Player player) {
         return;
     }
 
-    this.iron -= ironCost;
-    this.coal -= coalCost;
+    this.resources.spend(ironCost, 0, coalCost);
 
     setChanged();
 
     player.displayClientMessage(Component.literal(
             "City Resources: "
-                    + this.iron + " Iron, "
-                    + this.scrapMetal + " Scrap, "
-                    + this.coal + " Coal."
+                    + this.resources.getIron() + " Iron, "
+                    + this.resources.getScrapMetal() + " Scrap, "
+                    + this.resources.getCoal() + " Coal."
     ), false);
 }
 
@@ -2993,7 +2868,7 @@ public void tryBuildPromethiumRefinery(Player player) {
     int ironCost = 18;
     int scrapCost = 8;
 
-    if (this.iron < ironCost || this.scrapMetal < scrapCost) {
+    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost) {
         player.displayClientMessage(Component.literal(
                 "Not enough city resources. Need: "
                         + ironCost + " Iron, "
@@ -3008,16 +2883,15 @@ public void tryBuildPromethiumRefinery(Player player) {
         return;
     }
 
-    this.iron -= ironCost;
-    this.scrapMetal -= scrapCost;
+    this.resources.spend(ironCost, scrapCost, 0);
 
     setChanged();
 
     player.displayClientMessage(Component.literal(
             "City Resources: "
-                    + this.iron + " Iron, "
-                    + this.scrapMetal + " Scrap, "
-                    + this.coal + " Coal."
+                    + this.resources.getIron() + " Iron, "
+                    + this.resources.getScrapMetal() + " Scrap, "
+                    + this.resources.getCoal() + " Coal."
     ), false);
 }
 
@@ -3048,7 +2922,7 @@ public void tryBuildBarracks(Player player) {
     int scrapCost = 15;
     int coalCost = 5;
 
-    if (this.iron < ironCost || this.scrapMetal < scrapCost || this.coal < coalCost) {
+    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
         player.displayClientMessage(Component.literal(
                 "Not enough city resources. Need: "
                         + ironCost + " Iron, "
@@ -3064,17 +2938,15 @@ public void tryBuildBarracks(Player player) {
         return;
     }
 
-    this.iron -= ironCost;
-    this.scrapMetal -= scrapCost;
-    this.coal -= coalCost;
+    this.resources.spend(ironCost, scrapCost, coalCost);
 
     setChanged();
 
     player.displayClientMessage(Component.literal(
             "City Resources: "
-                    + this.iron + " Iron, "
-                    + this.scrapMetal + " Scrap, "
-                    + this.coal + " Coal."
+                    + this.resources.getIron() + " Iron, "
+                    + this.resources.getScrapMetal() + " Scrap, "
+                    + this.resources.getCoal() + " Coal."
     ), false);
 }
 
@@ -3101,7 +2973,7 @@ public void tryBuildImperialForge(Player player) {
     int scrapCost = 20;
     int coalCost = 10;
 
-    if (this.iron < ironCost || this.scrapMetal < scrapCost || this.coal < coalCost) {
+    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
         player.displayClientMessage(Component.literal(
                 "Not enough city resources. Need: "
                         + ironCost + " Iron, "
@@ -3117,17 +2989,15 @@ public void tryBuildImperialForge(Player player) {
         return;
     }
 
-    this.iron -= ironCost;
-    this.scrapMetal -= scrapCost;
-    this.coal -= coalCost;
+    this.resources.spend(ironCost, scrapCost, coalCost);
 
     setChanged();
 
     player.displayClientMessage(Component.literal(
             "City Resources: "
-                    + this.iron + " Iron, "
-                    + this.scrapMetal + " Scrap, "
-                    + this.coal + " Coal."
+                    + this.resources.getIron() + " Iron, "
+                    + this.resources.getScrapMetal() + " Scrap, "
+                    + this.resources.getCoal() + " Coal."
     ), false);
 }
 
@@ -3136,13 +3006,11 @@ public int getImperialForgeCapacity() {
 }
 
 public boolean consumeResourcesForCrusadiumPlateProduction(int ironCost, int scrapCost, int coalCost) {
-    if (this.iron < ironCost || this.scrapMetal < scrapCost || this.coal < coalCost) {
+    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
         return false;
     }
 
-    this.iron -= ironCost;
-    this.scrapMetal -= scrapCost;
-    this.coal -= coalCost;
+    this.resources.spend(ironCost, scrapCost, coalCost);
 
     setChanged();
     return true;
