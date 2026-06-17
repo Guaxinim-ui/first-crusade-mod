@@ -61,6 +61,29 @@ public class ImperialCommandCoreBlockEntity extends BlockEntity {
     private long lastProductionDay = -1;
     private int tickCounter = 0;
 
+    // Cached counts for the Core GUI, refreshed a few times per second by recomputeMenuStats
+    // instead of being recomputed (via block/entity scans) on every tick the menu polls them.
+    private static final int STATS_SCAN_RADIUS = 64;
+    private int statMineCount;
+    private int statGoldMineCount;
+    private int statScrapYardCount;
+    private int statForgeCount;
+    private int statRefineryCount;
+    private int statFarmCount;
+    private int statTradeDepotCount;
+    private int statBarracksCount;
+    private int statCitizenCount;
+    private int statUnemployedCount;
+    private int statMinerCount;
+    private int statGoldMinerCount;
+    private int statScrapperCount;
+    private int statSmithCount;
+    private int statStokerCount;
+    private int statFarmerCount;
+    private int statTraderCount;
+    private int statRecruitCount;
+    private int statThreatScore;
+
  private long lastOrkRaidDay = -1;
  private int orkRaidCount = 0;
 private boolean activeOrkRaid = false;
@@ -390,6 +413,13 @@ public int receiveProducedResource(ImperialResourceType resourceType, int amount
 
         ImperialPopulationManager.tickCitizenGrowth(serverLevel, blockEntity);
 
+        // Refresh the (expensive) structure/citizen/threat counts only a few times per second
+        // instead of every tick. The Core GUI reads these cached values, so opening it no longer
+        // forces a full block/entity scan on every server tick (which caused multi-second freezes).
+        if (serverLevel.getGameTime() % 40L == 0L) {
+            blockEntity.recomputeMenuStats(serverLevel);
+        }
+
         blockEntity.tickCounter++;
 
         if (blockEntity.tickCounter < 200) {
@@ -410,6 +440,108 @@ ImperialPrimarchManager.tickPrimarch(serverLevel, blockEntity);
 blockEntity.trySeedOrkCamp(serverLevel);
 blockEntity.trySpawnOrkRaid(serverLevel);
 blockEntity.checkActiveOrkRaid(serverLevel);
+    }
+
+    // Recomputes the cached counts read by the Core GUI. Called a few times per second from
+    // serverTick, so the menu never triggers these block/entity scans on its own polling.
+    private void recomputeMenuStats(ServerLevel serverLevel) {
+        this.statMineCount = ImperialWorkSiteManager.countImperialMines(serverLevel, this, STATS_SCAN_RADIUS);
+        this.statGoldMineCount = ImperialGoldMineManager.countGoldMines(serverLevel, this, STATS_SCAN_RADIUS);
+        this.statScrapYardCount = ImperialScrapYardManager.countScrapYards(serverLevel, this, STATS_SCAN_RADIUS);
+        this.statForgeCount = ImperialForgeManager.countForges(serverLevel, this, STATS_SCAN_RADIUS);
+        this.statRefineryCount = ImperialPromethiumRefineryManager.countRefineries(serverLevel, this, STATS_SCAN_RADIUS);
+        this.statFarmCount = ImperialFarmManager.countFarms(serverLevel, this, STATS_SCAN_RADIUS);
+        this.statTradeDepotCount = ImperialEmeraldTradeDepotManager.countTradeDepots(serverLevel, this, STATS_SCAN_RADIUS);
+        this.statBarracksCount = ImperialBarracksManager.countBarracks(serverLevel, this, STATS_SCAN_RADIUS);
+
+        this.statCitizenCount = ImperialPopulationManager.countAssignedCitizens(serverLevel, this);
+        this.statUnemployedCount = ImperialPopulationManager.countUnemployedCitizens(serverLevel, this);
+        this.statMinerCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.MINER);
+        this.statGoldMinerCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.GOLD_MINER);
+        this.statScrapperCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.SCRAPPER);
+        this.statSmithCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.SMITH);
+        this.statStokerCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.STOKER);
+        this.statFarmerCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.FARMER);
+        this.statTraderCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.TRADER);
+        this.statRecruitCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.RECRUIT);
+
+        this.statThreatScore = getLiveThreatScore();
+    }
+
+    public int getCachedMineCount() {
+        return this.statMineCount;
+    }
+
+    public int getCachedGoldMineCount() {
+        return this.statGoldMineCount;
+    }
+
+    public int getCachedScrapYardCount() {
+        return this.statScrapYardCount;
+    }
+
+    public int getCachedForgeCount() {
+        return this.statForgeCount;
+    }
+
+    public int getCachedRefineryCount() {
+        return this.statRefineryCount;
+    }
+
+    public int getCachedFarmCount() {
+        return this.statFarmCount;
+    }
+
+    public int getCachedTradeDepotCount() {
+        return this.statTradeDepotCount;
+    }
+
+    public int getCachedBarracksCount() {
+        return this.statBarracksCount;
+    }
+
+    public int getCachedCitizenCount() {
+        return this.statCitizenCount;
+    }
+
+    public int getCachedUnemployedCount() {
+        return this.statUnemployedCount;
+    }
+
+    public int getCachedMinerCount() {
+        return this.statMinerCount;
+    }
+
+    public int getCachedGoldMinerCount() {
+        return this.statGoldMinerCount;
+    }
+
+    public int getCachedScrapperCount() {
+        return this.statScrapperCount;
+    }
+
+    public int getCachedSmithCount() {
+        return this.statSmithCount;
+    }
+
+    public int getCachedStokerCount() {
+        return this.statStokerCount;
+    }
+
+    public int getCachedFarmerCount() {
+        return this.statFarmerCount;
+    }
+
+    public int getCachedTraderCount() {
+        return this.statTraderCount;
+    }
+
+    public int getCachedRecruitCount() {
+        return this.statRecruitCount;
+    }
+
+    public int getCachedThreatScore() {
+        return this.statThreatScore;
     }
 
     private void produceResourcesIfNewDay(Level level) {

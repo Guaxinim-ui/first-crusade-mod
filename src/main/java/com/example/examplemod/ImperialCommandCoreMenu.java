@@ -2,7 +2,6 @@ package com.example.examplemod;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -61,39 +60,39 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
                     case 19 -> commandCore.getSpaceMarinePromotionCooldownSeconds();
                     case 20 -> commandCore.hasPendingSpaceMarineCandidate() ? 1 : 0;
                     case 21 -> commandCore.getActiveOrkRaidSeconds();
-                    case 22 -> getCitizenCount(commandCore);
-                    case 23 -> getUnemployedCitizenCount(commandCore);
-                    case 24 -> getMineCount(commandCore);
+                    case 22 -> commandCore.getCachedCitizenCount();
+                    case 23 -> commandCore.getCachedUnemployedCount();
+                    case 24 -> commandCore.getCachedMineCount();
                     case 25 -> commandCore.getImperialMineCapacity();
-                    case 26 -> getScrapYardCount(commandCore);
+                    case 26 -> commandCore.getCachedScrapYardCount();
                     case 27 -> commandCore.getScrapYardCapacity();
-                    case 28 -> getForgeCount(commandCore);
+                    case 28 -> commandCore.getCachedForgeCount();
                     case 29 -> commandCore.getImperialForgeCapacity();
-                    case 30 -> getCitizenJobCount(commandCore, ImperialCitizenJob.MINER);
-                    case 31 -> getCitizenJobCount(commandCore, ImperialCitizenJob.SCRAPPER);
-                    case 32 -> getCitizenJobCount(commandCore, ImperialCitizenJob.SMITH);
-                    case 33 -> getRefineryCount(commandCore);
+                    case 30 -> commandCore.getCachedMinerCount();
+                    case 31 -> commandCore.getCachedScrapperCount();
+                    case 32 -> commandCore.getCachedSmithCount();
+                    case 33 -> commandCore.getCachedRefineryCount();
                     case 34 -> commandCore.getPromethiumRefineryCapacity();
-                    case 35 -> getCitizenJobCount(commandCore, ImperialCitizenJob.STOKER);
-                    case 36 -> getBarracksCount(commandCore);
+                    case 35 -> commandCore.getCachedStokerCount();
+                    case 36 -> commandCore.getCachedBarracksCount();
                     case 37 -> commandCore.getBarracksCapacity();
-                    case 38 -> getCitizenJobCount(commandCore, ImperialCitizenJob.RECRUIT);
+                    case 38 -> commandCore.getCachedRecruitCount();
                     case 39 -> commandCore.getSelectedSpecialistOrdinal();
                     case 40 -> commandCore.getGold();
                     case 41 -> commandCore.getEmerald();
                     case 42 -> commandCore.getCrusadium();
                     case 43 -> commandCore.getCityMorale();
                     case 44 -> commandCore.getCityTypeOrdinal();
-                    case 45 -> commandCore.getLiveThreatScore();
-                    case 46 -> getGoldMineCount(commandCore);
+                    case 45 -> commandCore.getCachedThreatScore();
+                    case 46 -> commandCore.getCachedGoldMineCount();
                     case 47 -> commandCore.getGoldMineCapacity();
-                    case 48 -> getCitizenJobCount(commandCore, ImperialCitizenJob.GOLD_MINER);
-                    case 49 -> getFarmCount(commandCore);
+                    case 48 -> commandCore.getCachedGoldMinerCount();
+                    case 49 -> commandCore.getCachedFarmCount();
                     case 50 -> commandCore.getFarmCapacity();
-                    case 51 -> getCitizenJobCount(commandCore, ImperialCitizenJob.FARMER);
-                    case 52 -> getTradeDepotCount(commandCore);
+                    case 51 -> commandCore.getCachedFarmerCount();
+                    case 52 -> commandCore.getCachedTradeDepotCount();
                     case 53 -> commandCore.getTradeDepotCapacity();
-                    case 54 -> getCitizenJobCount(commandCore, ImperialCitizenJob.TRADER);
+                    case 54 -> commandCore.getCachedTraderCount();
                     default -> 0;
                 };
             }
@@ -107,94 +106,6 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
                 return DATA_COUNT;
             }
         };
-    }
-
-    private int getCitizenCount(ImperialCommandCoreBlockEntity commandCore) {
-        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
-            return 0;
-        }
-
-        return ImperialPopulationManager.countAssignedCitizens(serverLevel, commandCore);
-    }
-
-    private int getUnemployedCitizenCount(ImperialCommandCoreBlockEntity commandCore) {
-        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
-            return 0;
-        }
-
-        return ImperialPopulationManager.countUnemployedCitizens(serverLevel, commandCore);
-    }
-
-    private int getMineCount(ImperialCommandCoreBlockEntity commandCore) {
-        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
-            return 0;
-        }
-
-        return ImperialWorkSiteManager.countImperialMines(serverLevel, commandCore, 128);
-    }
-
-    private int getGoldMineCount(ImperialCommandCoreBlockEntity commandCore) {
-        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
-            return 0;
-        }
-
-        return ImperialGoldMineManager.countGoldMines(serverLevel, commandCore, 128);
-    }
-
-    private int getTradeDepotCount(ImperialCommandCoreBlockEntity commandCore) {
-        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
-            return 0;
-        }
-
-        return ImperialEmeraldTradeDepotManager.countTradeDepots(serverLevel, commandCore, 128);
-    }
-
-    private int getFarmCount(ImperialCommandCoreBlockEntity commandCore) {
-        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
-            return 0;
-        }
-
-        return ImperialFarmManager.countFarms(serverLevel, commandCore, 128);
-    }
-
-    private int getScrapYardCount(ImperialCommandCoreBlockEntity commandCore) {
-        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
-            return 0;
-        }
-
-        return ImperialScrapYardManager.countScrapYards(serverLevel, commandCore, 128);
-    }
-
-    private int getForgeCount(ImperialCommandCoreBlockEntity commandCore) {
-        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
-            return 0;
-        }
-
-        return ImperialForgeManager.countForges(serverLevel, commandCore, 128);
-    }
-
-    private int getRefineryCount(ImperialCommandCoreBlockEntity commandCore) {
-        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
-            return 0;
-        }
-
-        return ImperialPromethiumRefineryManager.countRefineries(serverLevel, commandCore, 128);
-    }
-
-    private int getBarracksCount(ImperialCommandCoreBlockEntity commandCore) {
-        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
-            return 0;
-        }
-
-        return ImperialBarracksManager.countBarracks(serverLevel, commandCore, 128);
-    }
-
-    private int getCitizenJobCount(ImperialCommandCoreBlockEntity commandCore, ImperialCitizenJob job) {
-        if (!(commandCore.getLevel() instanceof ServerLevel serverLevel)) {
-            return 0;
-        }
-
-        return ImperialPopulationManager.countCitizensWithJob(serverLevel, commandCore, job);
     }
 
     @Override
