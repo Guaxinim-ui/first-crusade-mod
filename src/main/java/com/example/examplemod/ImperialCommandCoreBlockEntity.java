@@ -1171,10 +1171,12 @@ public boolean completeRecruitTraining(ServerLevel serverLevel, ImperialCitizenE
 
     // City types with a dedicated themed troop field it instead of a Guardsman: Forge cities
     // (Adeptus Mechanicus) field Skitarii Rangers, Fortress cities (Militarum Tempestus) field
-    // Kasrkin. Every other type fields a Guardsman with the city's rank/chapter/regiment.
+    // Kasrkin, Hive cities (Adeptus Arbites) field melee Enforcers. Every other type fields a
+    // Guardsman with the city's rank/chapter/regiment.
     boolean spawned = switch (getCityType()) {
         case FORGE -> spawnTrainedSkitariiRanger(serverLevel, recruit);
         case FORTRESS -> spawnTrainedKasrkin(serverLevel, recruit);
+        case HIVE -> spawnTrainedEnforcer(serverLevel, recruit);
         default -> spawnTrainedGuardsman(serverLevel, recruit);
     };
 
@@ -1202,6 +1204,7 @@ private String getFieldedUnitName() {
     return switch (getCityType()) {
         case FORGE -> "Skitarii Ranger";
         case FORTRESS -> "Kasrkin";
+        case HIVE -> "Enforcer";
         default -> getCityType().getTroopName();
     };
 }
@@ -1270,6 +1273,28 @@ private boolean spawnTrainedKasrkin(ServerLevel serverLevel, ImperialCitizenEnti
     kasrkin.assignToCommandCore(this.worldPosition);
 
     serverLevel.addFreshEntity(kasrkin);
+
+    return true;
+}
+
+private boolean spawnTrainedEnforcer(ServerLevel serverLevel, ImperialCitizenEntity recruit) {
+    EnforcerEntity enforcer = ExampleMod.ENFORCER.get().create(serverLevel);
+
+    if (enforcer == null) {
+        return false;
+    }
+
+    enforcer.moveTo(
+            recruit.getX(),
+            recruit.getY(),
+            recruit.getZ(),
+            recruit.getYRot(),
+            recruit.getXRot()
+    );
+
+    enforcer.assignToCommandCore(this.worldPosition);
+
+    serverLevel.addFreshEntity(enforcer);
 
     return true;
 }
@@ -1549,9 +1574,9 @@ public boolean engineerRepair(int amount) {
             index++;
         }
 
-        // Themed troops (Skitarii Rangers in Forge cities, Kasrkin in Fortress cities) count toward
-        // the military tally too, but they hold no fixed guard post — they patrol freely — so we
-        // only recount them here.
+        // Themed troops (Skitarii Rangers in Forge cities, Kasrkin in Fortress cities, Enforcers in
+        // Hive cities) count toward the military tally too, but they hold no fixed guard post — they
+        // patrol freely — so we only recount them here.
         List<SkitariiRangerEntity> skitarii = serverLevel.getEntitiesOfClass(
                 SkitariiRangerEntity.class,
                 searchBox,
@@ -1564,7 +1589,13 @@ public boolean engineerRepair(int amount) {
                 trooper -> trooper.isAssignedToCommandCore(this.worldPosition)
         );
 
-        this.recruitedGuardsmen = guardsmen.size() + skitarii.size() + kasrkin.size();
+        List<EnforcerEntity> enforcers = serverLevel.getEntitiesOfClass(
+                EnforcerEntity.class,
+                searchBox,
+                trooper -> trooper.isAssignedToCommandCore(this.worldPosition)
+        );
+
+        this.recruitedGuardsmen = guardsmen.size() + skitarii.size() + kasrkin.size() + enforcers.size();
         setChanged();
     }
 

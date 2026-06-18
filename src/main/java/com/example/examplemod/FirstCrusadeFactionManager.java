@@ -34,6 +34,10 @@ public class FirstCrusadeFactionManager {
             return FirstCrusadeFaction.IMPERIUM;
         }
 
+        if (entity instanceof EnforcerEntity) {
+            return FirstCrusadeFaction.IMPERIUM;
+        }
+
         if (entity instanceof OrkBoyEntity) {
             return FirstCrusadeFaction.ORKS;
         }

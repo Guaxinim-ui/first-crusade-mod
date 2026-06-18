@@ -56,7 +56,8 @@ Space Marine (estágio Neophyte que amadurece), Custodes (guarda dourada do Core
 (gigante, aura de liderança, governa a cidade, luto), **Roboute Guilliman** (Primarca nomeado,
 modelo/renderer próprios), **Skitarii Ranger** (tropa-tema da Forge City, atirador standalone com
 Lasgun, **recrutado pela Forge City**), **Kasrkin** (tropa-tema elite da Fortress City, Militarum
-Tempestus, hotshot lasgun, **recrutado pela Fortress City**).
+Tempestus, hotshot lasgun, **recrutado pela Fortress City**), **Enforcer** (tropa-tema melee da Hive
+City, Adeptus Arbites, shock maul/command baton, **recrutado pela Hive City** — 1º melee standalone).
 
 **Unidades Ork:** Ork Boy, Ork Nob, **Warboss** (líder, espelho do Primarca; surge do camp após 3
 warbands e marcha sobre a cidade).
@@ -94,7 +95,11 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
   conta Skitarii. (6) **Kasrkin** — 2ª tropa-entidade própria (Fortress/Militarum Tempestus),
   elite standalone com hotshot Lasgun (44 HP, 13 armor, dano 8); `completeRecruitTraining` agora é
   um switch por tipo (FORGE→Skitarii, FORTRESS→Kasrkin, default→Guardsman) e a recontagem do upgrade
-  conta os três. **Próximo**: mais tropas (Sisters/Shrine, Arbites/Enforcer/Hive) e estruturas por tipo.
+  conta os três. (7) **Enforcer** — 3ª tropa-entidade própria (Hive/Adeptus Arbites) e **1ª melee**:
+  brawler standalone com shock maul (`MeleeAttackGoal`, 30 HP, dano 7, rápido). Hive City recruta
+  Enforcer; switch e recontagem cobrem 4 tipos (Guardsman + Skitarii + Kasrkin + Enforcer).
+  **Tipos com tropa-tema:** Forge, Fortress, Hive. **Faltam tipos:** Civilised/Agri/Mining (ainda
+  Guardsman). **Próximo**: Sisters (precisa criar Shrine City como ImperialCityType) e estruturas por tipo.
 - [ ] **Fase D** — overlords globais: território, geração de assentamentos no worldgen, despacho de
   líderes por nível de ameaça.
 - [ ] **Fase E** (maior risco) — mundo achatado + menor + dimensões-planeta substituindo Nether/End
@@ -126,6 +131,14 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: Fase C — **Enforcer: 3ª tropa-entidade própria (Hive City / Adeptus Arbites) e 1ª de
+  melee**. `EnforcerEntity` standalone (extends PathfinderMob, sem RangedAttackMob): brawler com
+  shock maul (`GUARDSMAN_COMMAND_BATON` na mão), usa vanilla `MeleeAttackGoal` + target goals de
+  facção (30 HP, dano 7, armor 8, rápido 0.33). Combina com a Hive (barata e numerosa, 2x pop).
+  Registro completo (EntityType + spawn egg + atributos + renderer `EnforcerRenderer` + textura
+  placeholder = guardsman.png + faction IMPERIUM + lang). Hive City recruta Enforcer:
+  `completeRecruitTraining`/`getFieldedUnitName` agora cobrem FORGE/FORTRESS/HIVE e a recontagem do
+  upgrade soma os 4 tipos de tropa. Build offline OK.
 - 2026-06-18: Fase C — **Kasrkin: 2ª tropa-entidade própria (Fortress City / Militarum Tempestus)**.
   Entidade standalone elite (`KasrkinEntity`, espelha o Skitarii): atirador pesado (44 HP, 13 armor,
   hotshot lasgun dano 8 com knockback) que usa `RangedAttackGoal` + target goals de facção. Registrado
