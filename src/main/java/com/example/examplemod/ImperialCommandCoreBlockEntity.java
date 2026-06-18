@@ -1274,20 +1274,22 @@ private static EntityType<? extends AbstractImperialTroopEntity> getThemedTroopT
 
 private boolean spawnThemedTroop(ServerLevel serverLevel, ImperialCitizenEntity recruit,
                                  EntityType<? extends AbstractImperialTroopEntity> type) {
+    return spawnThemedTroopAt(serverLevel, type,
+            recruit.getX(), recruit.getY(), recruit.getZ(), recruit.getYRot(), recruit.getXRot());
+}
+
+// Spawns a themed troop bound to this Core at the given position. Themed troops free-roam (no fixed
+// guard post), so unlike a Guardsman they need no guard-post/chapter setup. Used by recruitment and
+// by reinforcements.
+private boolean spawnThemedTroopAt(ServerLevel serverLevel, EntityType<? extends AbstractImperialTroopEntity> type,
+                                   double x, double y, double z, float yRot, float xRot) {
     AbstractImperialTroopEntity troop = type.create(serverLevel);
 
     if (troop == null) {
         return false;
     }
 
-    troop.moveTo(
-            recruit.getX(),
-            recruit.getY(),
-            recruit.getZ(),
-            recruit.getYRot(),
-            recruit.getXRot()
-    );
-
+    troop.moveTo(x, y, z, yRot, xRot);
     troop.assignToCommandCore(this.worldPosition);
 
     serverLevel.addFreshEntity(troop);
@@ -1649,35 +1651,50 @@ public void callImperialReinforcements(Player player) {
 
     int spawned = 0;
 
-    for (int i = 0; i < actualReinforcements; i++) {
-        GuardsmanEntity guardsman = ExampleMod.GUARDSMAN.get().create(serverLevel);
+    // Reinforcements field the city's themed troop when it has one (Forge→Skitarii, etc.), matching
+    // the recruitment path; only baseline Guardsman cities get the full guard-post/chapter setup.
+    EntityType<? extends AbstractImperialTroopEntity> themedType = getThemedTroopType(getCityType());
 
-        if (guardsman == null) {
-            continue;
+    for (int i = 0; i < actualReinforcements; i++) {
+        BlockPos spawnPos = findSpawnPosition(serverLevel);
+        boolean deployed;
+
+        if (themedType != null) {
+            deployed = spawnThemedTroopAt(serverLevel, themedType,
+                    spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, player.getYRot(), 0.0F);
+        } else {
+            GuardsmanEntity guardsman = ExampleMod.GUARDSMAN.get().create(serverLevel);
+
+            if (guardsman == null) {
+                continue;
+            }
+
+            BlockPos guardPostPos = findGuardPostPosition(this.recruitedGuardsmen);
+
+            prepareGuardPost(serverLevel, guardPostPos);
+
+            guardsman.moveTo(
+                    spawnPos.getX() + 0.5D,
+                    spawnPos.getY(),
+                    spawnPos.getZ() + 0.5D,
+                    player.getYRot(),
+                    0.0F
+            );
+
+            guardsman.assignToCommandCore(this.worldPosition);
+            guardsman.assignGuardPost(guardPostPos);
+            guardsman.assignRandomChapter();
+            guardsman.initializeFromCity(getReinforcementRank(), getCityType());
+
+            serverLevel.addFreshEntity(guardsman);
+
+            deployed = true;
         }
 
-        BlockPos spawnPos = findSpawnPosition(serverLevel);
-        BlockPos guardPostPos = findGuardPostPosition(this.recruitedGuardsmen);
-
-        prepareGuardPost(serverLevel, guardPostPos);
-
-        guardsman.moveTo(
-                spawnPos.getX() + 0.5D,
-                spawnPos.getY(),
-                spawnPos.getZ() + 0.5D,
-                player.getYRot(),
-                0.0F
-        );
-
-        guardsman.assignToCommandCore(this.worldPosition);
-        guardsman.assignGuardPost(guardPostPos);
-        guardsman.assignRandomChapter();
-        guardsman.initializeFromCity(getReinforcementRank(), getCityType());
-
-        serverLevel.addFreshEntity(guardsman);
-
-        this.recruitedGuardsmen++;
-        spawned++;
+        if (deployed) {
+            this.recruitedGuardsmen++;
+            spawned++;
+        }
     }
 
     if (spawned <= 0) {

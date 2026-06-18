@@ -155,6 +155,13 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: Fase C — **reforços respeitam a tropa-tema da cidade**. O botão Call Reinforcements
+  criava sempre Guardsman; agora ramifica por `getThemedTroopType(getCityType())` (Forge→Skitarii,
+  Fortress→Kasrkin, Hive→Enforcer, Mining→Mine Guard, Agri→Agri Militia, Shrine→Sister of Battle;
+  Civilised/Penal→Guardsman com guard post/chapter). Helper `spawnThemedTroop` generalizado para
+  `spawnThemedTroopAt(type, x,y,z, yRot,xRot)`, reusado por recrutamento e reforço. Tropas-tema
+  free-roam (sem guard post). **Nota:** `ImperialPopulationManager.trainNearestCitizenAsGuardsman`
+  é **código morto** (sem chamador; recruta vai pelo Barracks) — não convertido. Build offline OK.
 - 2026-06-18: **Localização pt_br** — criado `assets/firstcrusade/lang/pt_br.json` espelhando o en_us
   (65 chaves). Termos genéricos traduzidos (blocos, peças de armadura, "Spawn Egg" → "Ovo de Invocação
   de…", Scrap→Sucata, etc.); nomes próprios de WH40K mantidos (Lasgun, Guardsman, Space Marine,
