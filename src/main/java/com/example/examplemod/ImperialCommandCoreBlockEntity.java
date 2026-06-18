@@ -416,7 +416,7 @@ public int receiveProducedResource(ImperialResourceType resourceType, int amount
         }
 
         if (blockEntity.cityType == null) {
-            blockEntity.assignCityType(serverLevel.random);
+            blockEntity.assignCityType(serverLevel);
         }
 
         ImperialPopulationManager.tickCitizenGrowth(serverLevel, blockEntity);
@@ -2863,8 +2863,8 @@ public int getLiveThreatLevel() {
     return ThreatAssessmentManager.threatLevel(getLiveThreatScore());
 }
 
-private void assignCityType(net.minecraft.util.RandomSource random) {
-    this.cityType = ImperialCityType.random(random);
+private void assignCityType(ServerLevel serverLevel) {
+    this.cityType = pickCityTypeForBiome(serverLevel, this.worldPosition, serverLevel.random);
 
     // Only rename a still-default outpost so player-claimed names are kept.
     if (this.baseName == null || this.baseName.isEmpty() || this.baseName.equals("Imperial Outpost")) {
@@ -2872,6 +2872,49 @@ private void assignCityType(net.minecraft.util.RandomSource random) {
     }
 
     setChanged();
+}
+
+// The settlement's type is biased by the biome it is founded in, so placement feels intentional
+// (a desert breeds a Mining city, a jungle a Death World, plains an Agri city, ...). Biomes with no
+// clear theme fall back to a random type, which keeps Hive/Forge/Shrine/Civilised in rotation.
+private static ImperialCityType pickCityTypeForBiome(ServerLevel serverLevel, BlockPos pos, net.minecraft.util.RandomSource random) {
+    String biome = serverLevel.getBiome(pos)
+            .unwrapKey()
+            .map(key -> key.location().getPath())
+            .orElse("");
+
+    if (contains(biome, "desert", "badlands", "mesa", "mountain", "peak", "slope", "hill", "stony", "windswept")) {
+        return ImperialCityType.MINING;
+    }
+
+    if (contains(biome, "jungle", "bamboo")) {
+        return ImperialCityType.DEATH_WORLD;
+    }
+
+    if (contains(biome, "swamp", "mangrove")) {
+        return ImperialCityType.PENAL;
+    }
+
+    if (contains(biome, "snowy", "frozen", "ice", "taiga", "grove")) {
+        return ImperialCityType.FORTRESS;
+    }
+
+    if (contains(biome, "plains", "meadow", "savanna", "sunflower")) {
+        return ImperialCityType.AGRI;
+    }
+
+    // Forest/ocean/other: no strong theme -> keep variety with a random type.
+    return ImperialCityType.random(random);
+}
+
+private static boolean contains(String value, String... needles) {
+    for (String needle : needles) {
+        if (value.contains(needle)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 public String getOwnerName() {

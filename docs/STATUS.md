@@ -159,6 +159,12 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: Fase C — **tipo de cidade enviesado pelo bioma** (antes 100% aleatório). `assignCityType`
+  agora recebe o `ServerLevel` e usa `pickCityTypeForBiome` (casa o path do id do bioma): deserto/
+  badlands/montanha→Mining, selva/bamboo→Death World, pântano/mangue→Penal, neve/gelo/taiga→Fortress,
+  planície/savana/meadow→Agri; biomas sem tema claro (floresta/oceano/…) caem no aleatório (mantém
+  Hive/Forge/Shrine/Civilised em rotação). Sem deps de biome-tags (robusto entre versões do Forge).
+  Build offline OK.
 - 2026-06-18: Fase C — **tropas-tema patrulham a cidade** (antes só Guardsmen patrulhavam; tropas-tema
   ficavam vagando perto do spawn). Adicionado guard post à base `AbstractImperialTroopEntity` (campo +
   `assignGuardPost`/`getGuardPostPos` + NBT) e goal genérico `ImperialTroopGuardPostGoal`;
