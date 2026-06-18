@@ -116,6 +116,11 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-17: Fase C — **regimento aplicado em todos os caminhos de recruta**: treino manual
+  (`ImperialPopulationManager.trainNearestCitizenAsGuardsman`) e reforços (Core) antes criavam
+  Guardsman sem chapter/rank/regimento; agora todos chamam `initializeFromCity(rank, cityType)` +
+  `assignRandomChapter`, e a mensagem usa o nome temático da tropa. (`populationFactor` já estava
+  ligado em `getCitizenCapacity`.)
 - 2026-06-17: Fase C — **regimentos de combate por tipo de cidade**: `ImperialCityType` ganhou
   modificadores de hp/armor/dano/lasgun/velocidade; Guardsman tem campo `cityType` (NBT) que soma
   esses bônus em `applyRankStats`/`getLasgunDamageWithBonuses` e exibe o nome do regimento. Core

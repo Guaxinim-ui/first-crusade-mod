@@ -1545,7 +1545,7 @@ public void callImperialReinforcements(Player player) {
         guardsman.assignToCommandCore(this.worldPosition);
         guardsman.assignGuardPost(guardPostPos);
         guardsman.assignRandomChapter();
-        guardsman.initializeFromCity(getReinforcementRank());
+        guardsman.initializeFromCity(getReinforcementRank(), getCityType());
 
         serverLevel.addFreshEntity(guardsman);
 

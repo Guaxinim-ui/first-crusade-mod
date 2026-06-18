@@ -87,13 +87,16 @@ public class ImperialPopulationManager {
                 citizen.getXRot()
         );
 
+        // Same identity as auto-recruits: random chapter + city rank/regiment (Fase C).
         guardsman.assignToCommandCore(commandCore.getBlockPos());
-        guardsman.setCustomName(Component.literal("Imperial Guardsman"));
+        guardsman.assignRandomChapter();
+        guardsman.initializeFromCity(commandCore.getStartingGuardsmanRank(), commandCore.getCityType());
 
         citizen.discard();
         serverLevel.addFreshEntity(guardsman);
 
-        player.displayClientMessage(Component.literal("Imperial Citizen trained into Guardsman."), false);
+        player.displayClientMessage(Component.literal(
+                commandCore.getCityType().getTroopName() + " trained from Imperial Citizen."), false);
         return true;
     }
 
