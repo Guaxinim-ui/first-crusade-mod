@@ -155,6 +155,11 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: **Localização pt_br** — criado `assets/firstcrusade/lang/pt_br.json` espelhando o en_us
+  (65 chaves). Termos genéricos traduzidos (blocos, peças de armadura, "Spawn Egg" → "Ovo de Invocação
+  de…", Scrap→Sucata, etc.); nomes próprios de WH40K mantidos (Lasgun, Guardsman, Space Marine,
+  Skitarii, Kasrkin, Ork*, Gretchin, Killa Kan, Crusadium, Guilliman). Ambos os langs validados e com
+  a mesma contagem de chaves. Build OK.
 - 2026-06-18: Fase C — **8º tipo de cidade: Penal Colony** (`ImperialCityType.PENAL`): regimento
   descartável (pop 1.5×, -1 rank, hp/armor fracos mas +1 dano, barato 2 Ferro, levemente mais rápido),
   fielda **Guardsman baseline** (como Civilised). Só 1 linha no enum (data-driven; nenhum switch sobre
