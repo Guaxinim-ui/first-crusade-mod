@@ -9,13 +9,13 @@ import net.minecraft.util.RandomSource;
  * {@code docs/DESIGN_WORLD_CITIES_FACTIONS.md}; more types and deeper effects come later.
  */
 public enum ImperialCityType {
-    //        name                    focus                       pop    rank  troopName
-    CIVILISED("Civilised World City", null, 1.0D, 0, "Guardsman"),
-    HIVE("Hive City", ImperialResourceType.SCRAP, 2.0D, -1, "Hive Levy"),
-    FORGE("Forge City", ImperialResourceType.SCRAP, 1.2D, 1, "Forge Guard"),
-    FORTRESS("Fortress City", ImperialResourceType.IRON, 0.8D, 2, "Shock Trooper"),
-    AGRI("Agri City", ImperialResourceType.COAL, 1.4D, 0, "Agri Militia"),
-    MINING("Mining City", ImperialResourceType.IRON, 1.1D, 0, "Mine Guard");
+    //        name                    focus                       pop    rank  troopName         hp    armor  dmg   lasgun speed
+    CIVILISED("Civilised World City", null, 1.0D, 0, "Guardsman", 0.0D, 0.0D, 0.0D, 0.0D, 0.0D),
+    HIVE("Hive City", ImperialResourceType.SCRAP, 2.0D, -1, "Hive Levy", -2.0D, -1.0D, 0.0D, -0.5D, 0.0D),
+    FORGE("Forge City", ImperialResourceType.SCRAP, 1.2D, 1, "Forge Guard", 1.0D, 3.0D, 0.0D, 0.75D, -0.005D),
+    FORTRESS("Fortress City", ImperialResourceType.IRON, 0.8D, 2, "Shock Trooper", 4.0D, 3.0D, 1.0D, 0.0D, -0.01D),
+    AGRI("Agri City", ImperialResourceType.COAL, 1.4D, 0, "Agri Militia", 1.0D, 0.0D, 0.0D, 0.0D, 0.015D),
+    MINING("Mining City", ImperialResourceType.IRON, 1.1D, 0, "Mine Guard", 3.0D, 1.0D, 1.0D, 0.0D, 0.0D);
 
     private static final double FOCUS_BONUS = 1.5D;
 
@@ -25,13 +25,26 @@ public enum ImperialCityType {
     private final int recruitRankBonus;
     private final String troopName;
 
+    // Combat identity of this city's regiment, layered on top of rank/chapter (see GuardsmanEntity).
+    private final double maxHealthBonus;
+    private final double armorBonus;
+    private final double attackDamageBonus;
+    private final double lasgunDamageBonus;
+    private final double movementSpeedBonus;
+
     ImperialCityType(String displayName, ImperialResourceType productionFocus, double populationFactor,
-                     int recruitRankBonus, String troopName) {
+                     int recruitRankBonus, String troopName, double maxHealthBonus, double armorBonus,
+                     double attackDamageBonus, double lasgunDamageBonus, double movementSpeedBonus) {
         this.displayName = displayName;
         this.productionFocus = productionFocus;
         this.populationFactor = populationFactor;
         this.recruitRankBonus = recruitRankBonus;
         this.troopName = troopName;
+        this.maxHealthBonus = maxHealthBonus;
+        this.armorBonus = armorBonus;
+        this.attackDamageBonus = attackDamageBonus;
+        this.lasgunDamageBonus = lasgunDamageBonus;
+        this.movementSpeedBonus = movementSpeedBonus;
     }
 
     public String getDisplayName() {
@@ -50,6 +63,26 @@ public enum ImperialCityType {
     // Thematic name for this city's basic soldiers (Hive Levy, Shock Trooper, ...).
     public String getTroopName() {
         return this.troopName;
+    }
+
+    public double getMaxHealthBonus() {
+        return this.maxHealthBonus;
+    }
+
+    public double getArmorBonus() {
+        return this.armorBonus;
+    }
+
+    public double getAttackDamageBonus() {
+        return this.attackDamageBonus;
+    }
+
+    public double getLasgunDamageBonus() {
+        return this.lasgunDamageBonus;
+    }
+
+    public double getMovementSpeedBonus() {
+        return this.movementSpeedBonus;
     }
 
     // Multiplies a resource's daily production if it is this city's focus.

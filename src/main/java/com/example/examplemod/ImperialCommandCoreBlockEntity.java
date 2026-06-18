@@ -1160,7 +1160,7 @@ public boolean completeRecruitTraining(ServerLevel serverLevel, ImperialCitizenE
 
     guardsman.assignToCommandCore(this.worldPosition);
     guardsman.assignRandomChapter();
-    guardsman.initializeFromCity(getStartingGuardsmanRank());
+    guardsman.initializeFromCity(getStartingGuardsmanRank(), getCityType());
 
     recruit.discard();
     serverLevel.addFreshEntity(guardsman);

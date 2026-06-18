@@ -76,11 +76,15 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
   (bucha), **Killa Kan** (máquina, tier 3+), **WAAAGH! Overlord** (`WaaaghOverlordData` SavedData
   global + `WaaaghOverlordManager`: cresce com a prosperidade imperial, tier 0-4 com anúncio global,
   escala todos os camps), e **warbands por clã** (Goffs/Bad Moons/Deathskulls/Evil Sunz/Snakebites).
-- [~] **Fase C** — tipos de cidade com tropas-tema. **Iniciado**: cada tipo agora dá um bônus de
-  rank aos recrutas (`ImperialCityType.getRecruitRankBonus`, aplicado em `getStartingGuardsmanRank`
-  via `GuardsmanRank.advance`) — Fortress +2 (Shock Trooper), Forge +1, Hive -1 (Hive Levy, mas 2x
-  pop), e nome temático por tipo (`getTroopName`). Faltando: tropas-entidade próprias (Skitarii,
-  Sisters, Arbites/Enforcer), estruturas por tipo, custo de recruta por tipo.
+- [~] **Fase C** — tipos de cidade com tropas-tema. **Em andamento**: (1) bônus de rank por tipo
+  (`ImperialCityType.getRecruitRankBonus` em `getStartingGuardsmanRank` via `GuardsmanRank.advance`) —
+  Fortress +2 (Shock Trooper), Forge +1, Hive -1 (Hive Levy, mas 2x pop); nome temático
+  (`getTroopName`). (2) **Regimento de combate por tipo**: cada `ImperialCityType` traz modificadores
+  reais de hp/armor/dano/lasgun/velocidade (espelhando `ImperiumChapter`), aplicados no Guardsman
+  via campo `cityType` (NBT "CityType") em `applyRankStats`/`getLasgunDamageWithBonuses`, e o nome
+  mostra o regimento. Recruta marcado no Core (`initializeFromCity(rank, cityType)`). Fortress tanky,
+  Forge bem-equipado, Mining durão, Agri ágil, Hive fraco-mas-numeroso. Faltando: tropas-entidade
+  próprias (Skitarii, Sisters, Arbites/Enforcer), estruturas por tipo, custo de recruta por tipo.
 - [ ] **Fase D** — overlords globais: território, geração de assentamentos no worldgen, despacho de
   líderes por nível de ameaça.
 - [ ] **Fase E** (maior risco) — mundo achatado + menor + dimensões-planeta substituindo Nether/End
@@ -112,6 +116,11 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-17: Fase C — **regimentos de combate por tipo de cidade**: `ImperialCityType` ganhou
+  modificadores de hp/armor/dano/lasgun/velocidade; Guardsman tem campo `cityType` (NBT) que soma
+  esses bônus em `applyRankStats`/`getLasgunDamageWithBonuses` e exibe o nome do regimento. Core
+  recruta com `initializeFromCity(rank, cityType)`. Fortress tanky / Forge equipado / Mining durão /
+  Agri ágil / Hive fraco mas 2x pop. Tropas de tipos diferentes agora lutam de fato diferente.
 - 2026-06-17: Fase C (início) — **identidade militar por tipo de cidade**: bônus de rank nos
   recrutas (`ImperialCityType.recruitRankBonus` + `GuardsmanRank.advance`) e nome temático de tropa.
   Fortress treina Shock Troopers (+2), Forge Forge Guards (+1), Hive Levies (-1, compensado por 2x pop).

@@ -37,6 +37,7 @@ public class GuardsmanEntity extends PathfinderMob {
     private GuardsmanRank guardsmanRank = GuardsmanRank.RECRUIT;
     private ImperiumChapter chapter = ImperiumChapter.IMPERIAL_STANDARD;
     private GuardsmanSpecialization specialization = GuardsmanSpecialization.NONE;
+    private ImperialCityType cityType = ImperialCityType.CIVILISED;
 
     private boolean chapterAssigned = false;
 
@@ -187,16 +188,33 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
     }
 
     public void initializeFromCity(GuardsmanRank startingRank) {
+        initializeFromCity(startingRank, this.cityType);
+    }
+
+    public void initializeFromCity(GuardsmanRank startingRank, ImperialCityType cityType) {
         if (startingRank == null) {
             startingRank = GuardsmanRank.RECRUIT;
         }
 
         this.guardsmanRank = startingRank;
+        this.cityType = cityType == null ? ImperialCityType.CIVILISED : cityType;
         this.merit = Math.max(this.merit, startingRank.getRequiredMerit());
 
         this.applyRankStats(true);
         this.updateEquipmentByRank();
         this.updateRankName();
+    }
+
+    public void setCityType(ImperialCityType cityType, boolean healToFull) {
+        this.cityType = cityType == null ? ImperialCityType.CIVILISED : cityType;
+
+        this.applyRankStats(healToFull);
+        this.updateEquipmentByRank();
+        this.updateRankName();
+    }
+
+    public ImperialCityType getCityType() {
+        return this.cityType;
     }
 
     public void assignRandomChapter() {
@@ -260,19 +278,19 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
         AttributeInstance movementSpeedAttribute = this.getAttribute(Attributes.MOVEMENT_SPEED);
 
         if (maxHealthAttribute != null) {
-            maxHealthAttribute.setBaseValue(this.guardsmanRank.getMaxHealth() + this.chapter.getMaxHealthBonus() + this.specialization.getMaxHealthBonus());
+            maxHealthAttribute.setBaseValue(Math.max(1.0D, this.guardsmanRank.getMaxHealth() + this.chapter.getMaxHealthBonus() + this.specialization.getMaxHealthBonus() + this.cityType.getMaxHealthBonus()));
         }
 
         if (attackDamageAttribute != null) {
-            attackDamageAttribute.setBaseValue(Math.max(0.0D, this.guardsmanRank.getAttackDamage() + this.chapter.getAttackDamageBonus() + this.specialization.getAttackDamageBonus()));
+            attackDamageAttribute.setBaseValue(Math.max(0.0D, this.guardsmanRank.getAttackDamage() + this.chapter.getAttackDamageBonus() + this.specialization.getAttackDamageBonus() + this.cityType.getAttackDamageBonus()));
         }
 
         if (armorAttribute != null) {
-            armorAttribute.setBaseValue(Math.max(0.0D, this.guardsmanRank.getArmor() + this.chapter.getArmorBonus() + this.specialization.getArmorBonus()));
+            armorAttribute.setBaseValue(Math.max(0.0D, this.guardsmanRank.getArmor() + this.chapter.getArmorBonus() + this.specialization.getArmorBonus() + this.cityType.getArmorBonus()));
         }
 
         if (movementSpeedAttribute != null) {
-            movementSpeedAttribute.setBaseValue(Math.max(0.1D, 0.28D + this.chapter.getMovementSpeedBonus() + this.specialization.getMovementSpeedBonus()));
+            movementSpeedAttribute.setBaseValue(Math.max(0.1D, 0.28D + this.chapter.getMovementSpeedBonus() + this.specialization.getMovementSpeedBonus() + this.cityType.getMovementSpeedBonus()));
         }
 
         if (healToFull || this.getHealth() > this.getMaxHealth()) {
@@ -307,8 +325,12 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
     private void updateRankName() {
         String specTag = this.specialization.isSpecialist() ? " {" + this.specialization.getShortTag() + "}" : "";
 
+        // Show the city regiment name unless it is the same as the plain rank (e.g. Civilised "Guardsman").
+        String troopName = this.cityType.getTroopName();
+        String regimentTag = troopName.equals(this.guardsmanRank.getDisplayName()) ? "" : troopName + " ";
+
         this.setCustomName(Component.literal(
-                "[" + this.chapter.getShortName() + "] " + this.guardsmanRank.getDisplayName() + specTag + " [" + this.merit + "M]"
+                "[" + this.chapter.getShortName() + "] " + regimentTag + this.guardsmanRank.getDisplayName() + specTag + " [" + this.merit + "M]"
         ));
 
         this.setCustomNameVisible(true);
@@ -359,7 +381,7 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
     }
 
     public double getLasgunDamageWithBonuses() {
-        return Math.max(1.0D, this.guardsmanRank.getLasgunDamage() + this.chapter.getLasgunDamageBonus() + this.specialization.getLasgunDamageBonus());
+        return Math.max(1.0D, this.guardsmanRank.getLasgunDamage() + this.chapter.getLasgunDamageBonus() + this.specialization.getLasgunDamageBonus() + this.cityType.getLasgunDamageBonus());
     }
 
     public void performLasgunAttack(LivingEntity target) {
@@ -455,6 +477,7 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
         tag.putString("GuardsmanRank", this.guardsmanRank.name());
         tag.putString("ImperiumChapter", this.chapter.name());
         tag.putString("Specialization", this.specialization.name());
+        tag.putString("CityType", this.cityType.name());
         tag.putBoolean("ChapterAssigned", this.chapterAssigned);
 
         tag.putInt("Merit", this.merit);
@@ -484,6 +507,7 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
         this.guardsmanRank = GuardsmanRank.fromName(tag.getString("GuardsmanRank"));
         this.chapter = ImperiumChapter.fromName(tag.getString("ImperiumChapter"));
         this.specialization = GuardsmanSpecialization.fromName(tag.getString("Specialization"));
+        this.cityType = ImperialCityType.fromName(tag.getString("CityType"));
         this.chapterAssigned = tag.getBoolean("ChapterAssigned");
 
         this.merit = tag.getInt("Merit");
