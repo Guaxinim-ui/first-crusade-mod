@@ -41,11 +41,13 @@ P=/c/Users/hrlup/Documents/first-crusade-mod
 "$G" -p "$P" runClient --console=plain               # abre o jogo (background)
 ```
 
-**Instalar/testar o jar:** o jar sai em `build/libs/firstcrusade-0.1.0.jar`. A única pasta de mods no
-sistema é `run/mods` (do projeto). ⚠️ Se o dono jogar via `runClient` (dev), o mod carrega das classes
-compiladas — **manter o jar do próprio mod em `run/mods` causa crash de "mod duplicado"**; nesse caso
-remover de lá. Não foi localizada instância separada do Minecraft (CurseForge/Prism/etc.); se o dono
-usar uma, perguntar o caminho.
+**Como o dono testa (IMPORTANTE):** ele joga via **`runClient`** (ambiente dev, mapeamento `official`/
+nomeado). Nesse fluxo o mod é carregado **das classes compiladas** — basta `compileJava`/`build` e
+depois `runClient`. **NUNCA** colocar o jar do próprio mod em `run/mods`: o jar de `build/libs` é
+**reobfuscado (nomes SRG, ex. `f_279569_`)** e no dev isso gera `NoSuchFieldError` no `<clinit>` do
+`ExampleMod` (já aconteceu — crash 2026-06-18_10.59). `run/mods` é só para **outros** mods.
+O jar reobf (`build/libs/firstcrusade-0.1.0.jar`) só serve para uma instância de **produção** real
+(CurseForge/Prism/etc.) — nenhuma foi localizada no sistema.
 
 Jar: `build/libs/firstcrusade-0.1.0.jar`. Warnings de `ResourceLocation` deprecado e LF→CRLF são
 normais. Sempre compilar após mudanças; rodar `build` antes de pedir teste.
@@ -156,8 +158,11 @@ entidades novas como Skitarii/Sisters).
 - 2026-06-18: Fase C — **8º tipo de cidade: Penal Colony** (`ImperialCityType.PENAL`): regimento
   descartável (pop 1.5×, -1 rank, hp/armor fracos mas +1 dano, barato 2 Ferro, levemente mais rápido),
   fielda **Guardsman baseline** (como Civilised). Só 1 linha no enum (data-driven; nenhum switch sobre
-  cityType é exaustivo sem default). Build/jar OK. Jar copiado para `run/mods` (ver §2 sobre o caveat
-  do runClient).
+  cityType é exaustivo sem default). Build/jar OK.
+- 2026-06-18: **Corrigido crash de carregamento** (`NoSuchFieldError: f_279569_` no `ExampleMod.<clinit>`):
+  o jar reobf (SRG) tinha sido copiado para `run/mods`, mas o dono joga via `runClient` (dev/nomeado) —
+  SRG não existe lá. Solução: **jar removido de `run/mods`**; no dev o mod carrega das classes
+  compiladas. Ver §2 (regra: nunca pôr o jar do próprio mod em `run/mods`).
 - 2026-06-18: **Performance (dono relatou travadas)** — o Core recalculava ~19 scans de bloco/entidade
   a cada 40 ticks **por cidade, mesmo sem ninguém olhando**. Dois cortes: (1) `recomputeMenuStats` só
   roda enquanto o menu está **aberto** (`openMenuCount`, incrementado em `ImperialCommandCoreMenu`
