@@ -499,6 +499,16 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
     public static final RegistryObject<Item> AGRI_MILITIA_SPAWN_EGG = ITEMS.register("agri_militia_spawn_egg",
             () -> new ForgeSpawnEggItem(AGRI_MILITIA, 0x5A6B2A, 0x9AAE4A, new Item.Properties()));
 
+    public static final RegistryObject<EntityType<SisterOfBattleEntity>> SISTER_OF_BATTLE =
+            ENTITY_TYPES.register("sister_of_battle",
+                    () -> EntityType.Builder.of(SisterOfBattleEntity::new, MobCategory.CREATURE)
+                            .sized(0.6F, 1.95F)
+                            .clientTrackingRange(8)
+                            .build(MODID + ":sister_of_battle"));
+
+    public static final RegistryObject<Item> SISTER_OF_BATTLE_SPAWN_EGG = ITEMS.register("sister_of_battle_spawn_egg",
+            () -> new ForgeSpawnEggItem(SISTER_OF_BATTLE, 0x111114, 0xC02028, new Item.Properties()));
+
     public static final RegistryObject<EntityType<KillaKanEntity>> KILLA_KAN =
             ENTITY_TYPES.register("killa_kan",
                     () -> EntityType.Builder.of(KillaKanEntity::new, MobCategory.MONSTER)
@@ -711,6 +721,7 @@ output.accept(KASRKIN_SPAWN_EGG.get());
 output.accept(ENFORCER_SPAWN_EGG.get());
 output.accept(MINE_GUARD_SPAWN_EGG.get());
 output.accept(AGRI_MILITIA_SPAWN_EGG.get());
+output.accept(SISTER_OF_BATTLE_SPAWN_EGG.get());
                     })
                     .build());
 
@@ -762,6 +773,7 @@ private void registerAttributes(EntityAttributeCreationEvent event) {
     event.put(ENFORCER.get(), EnforcerEntity.createAttributes().build());
     event.put(MINE_GUARD.get(), MineGuardEntity.createAttributes().build());
     event.put(AGRI_MILITIA.get(), AgriMilitiaEntity.createAttributes().build());
+    event.put(SISTER_OF_BATTLE.get(), SisterOfBattleEntity.createAttributes().build());
 }
 
 @SubscribeEvent
@@ -805,6 +817,7 @@ public static void onClientSetup(FMLClientSetupEvent event) {
         event.registerEntityRenderer(ENFORCER.get(), EnforcerRenderer::new);
         event.registerEntityRenderer(MINE_GUARD.get(), MineGuardRenderer::new);
         event.registerEntityRenderer(AGRI_MILITIA.get(), AgriMilitiaRenderer::new);
+        event.registerEntityRenderer(SISTER_OF_BATTLE.get(), SisterOfBattleRenderer::new);
     }
 }
 }

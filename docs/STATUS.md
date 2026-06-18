@@ -59,8 +59,10 @@ Lasgun, **recrutado pela Forge City**), **Kasrkin** (tropa-tema elite da Fortres
 Tempestus, hotshot lasgun, **recrutado pela Fortress City**), **Enforcer** (tropa-tema melee da Hive
 City, Adeptus Arbites, shock maul/command baton, **recrutado pela Hive City** — 1º melee standalone),
 **Mine Guard** (tropa-tema melee tanky da Mining City, bruiser lento), **Agri Militia** (tropa-tema
-atiradora leve/ágil da Agri City). Todas estendem `AbstractImperialTroopEntity`. **Todos os 6 tipos
-de cidade já têm tropa-tema** (Civilised usa Guardsman baseline).
+atiradora leve/ágil da Agri City), **Sister of Battle** (tropa-tema atiradora zelota da **nova Shrine
+City**, Adepta Sororitas). Todas estendem `AbstractImperialTroopEntity`. **Tipos de cidade: 7**
+(CIVILISED, HIVE, FORGE, FORTRESS, AGRI, MINING, **SHRINE**); todos têm tropa-tema menos Civilised
+(Guardsman baseline).
 
 **Unidades Ork:** Ork Boy, Ork Nob, **Warboss** (líder, espelho do Primarca; surge do camp após 3
 warbands e marcha sobre a cidade).
@@ -105,8 +107,10 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
   **todos os 6 tipos de cidade já têm tropa-tema** (Civilised = Guardsman baseline). O dispatch do
   Core virou genérico (`getThemedTroopType(cityType) -> EntityType` + `spawnThemedTroop`); faction e
   recontagem do upgrade usam a base `AbstractImperialTroopEntity` (1 check/1 query, futuras tropas
-  entram sem mexer aqui). **Próximo**: Sisters (precisa criar Shrine City como ImperialCityType),
-  estruturas por tipo, ou tropa-tema também em reforços/treino manual.
+  entram sem mexer aqui). (9) **Shrine City (7º tipo) + Sister of Battle**: novo `ImperialCityType.SHRINE`
+  (foco nenhum, pop 1.3, +1 rank, regimento fé +hp/+armor/+dano) que recruta `SisterOfBattleEntity`
+  (atiradora zelota, 40 HP, armor 11, tiro 7 com knockback). **Próximo**: estruturas por tipo de cidade,
+  tropa-tema também em reforços/treino manual, ou mais tipos de cidade (Death World, Penal, Feudal...).
 - [ ] **Fase D** — overlords globais: território, geração de assentamentos no worldgen, despacho de
   líderes por nível de ameaça.
 - [ ] **Fase E** (maior risco) — mundo achatado + menor + dimensões-planeta substituindo Nether/End
@@ -138,6 +142,14 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: Fase C — **Shrine City (7º tipo de cidade) + Sister of Battle**. Novo valor de enum
+  `ImperialCityType.SHRINE` ("Shrine City", sem foco de recurso, pop 1.3, +1 rank, regimento de fé
+  +2hp/+2armor/+1dano, recruta custa 6 Ferro) — entra automaticamente no spawn aleatório
+  (`ImperialCityType.random`). Recruta `SisterOfBattleEntity` (Adepta Sororitas): atiradora zelota
+  bem-armada (40 HP, armor 11, tiro 7 com knockback), sobre `AbstractImperialTroopEntity`. Registro
+  completo (entity type + spawn egg + atributos + renderer + textura placeholder + lang) e wiring no
+  Core (`getThemedTroopType`/`getFieldedUnitName`). Verificado que nenhum switch sobre cityType é
+  exaustivo sem default. Build offline OK.
 - 2026-06-18: Fase C — **Mine Guard (Mining) + Agri Militia (Agri): todos os 6 tipos de cidade com
   tropa-tema**. `MineGuardEntity` (melee bruiser lento/tanky, 42 HP, dano 8, armor 12, knockback
   resist) e `AgriMilitiaEntity` (skirmisher ranged leve/rápido, 24 HP, lasgun fraco, speed 0.36),

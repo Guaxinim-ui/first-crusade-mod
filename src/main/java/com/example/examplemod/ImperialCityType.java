@@ -15,7 +15,8 @@ public enum ImperialCityType {
     FORGE("Forge City", ImperialResourceType.SCRAP, 1.2D, 1, "Forge Guard", 1.0D, 3.0D, 0.0D, 0.75D, -0.005D, 6),
     FORTRESS("Fortress City", ImperialResourceType.IRON, 0.8D, 2, "Shock Trooper", 4.0D, 3.0D, 1.0D, 0.0D, -0.01D, 8),
     AGRI("Agri City", ImperialResourceType.COAL, 1.4D, 0, "Agri Militia", 1.0D, 0.0D, 0.0D, 0.0D, 0.015D, 3),
-    MINING("Mining City", ImperialResourceType.IRON, 1.1D, 0, "Mine Guard", 3.0D, 1.0D, 1.0D, 0.0D, 0.0D, 4);
+    MINING("Mining City", ImperialResourceType.IRON, 1.1D, 0, "Mine Guard", 3.0D, 1.0D, 1.0D, 0.0D, 0.0D, 4),
+    SHRINE("Shrine City", null, 1.3D, 1, "Battle Sister", 2.0D, 2.0D, 1.0D, 0.0D, 0.0D, 6);
 
     private static final double FOCUS_BONUS = 1.5D;
 

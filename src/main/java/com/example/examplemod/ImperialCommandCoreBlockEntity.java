@@ -1204,6 +1204,7 @@ private String getFieldedUnitName() {
         case FORGE -> "Skitarii Ranger";
         case FORTRESS -> "Kasrkin";
         case HIVE -> "Enforcer";
+        case SHRINE -> "Sister of Battle";
         default -> getCityType().getTroopName();
     };
 }
@@ -1241,6 +1242,7 @@ private static EntityType<? extends AbstractImperialTroopEntity> getThemedTroopT
         case HIVE -> ExampleMod.ENFORCER.get();             // Adeptus Arbites (melee)
         case MINING -> ExampleMod.MINE_GUARD.get();         // Industrial Enforcers (melee bruiser)
         case AGRI -> ExampleMod.AGRI_MILITIA.get();         // rural PDF (light skirmisher)
+        case SHRINE -> ExampleMod.SISTER_OF_BATTLE.get();   // Adepta Sororitas (ranged zealot)
         default -> null;                                    // CIVILISED: baseline Guardsman
     };
 }
