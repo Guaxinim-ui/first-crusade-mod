@@ -1169,6 +1169,34 @@ public boolean completeRecruitTraining(ServerLevel serverLevel, ImperialCitizenE
         return false;
     }
 
+    // Forge cities (Adeptus Mechanicus) field Skitarii Rangers; every other type fields a
+    // Guardsman with the city's rank/chapter/regiment.
+    boolean spawned = getCityType() == ImperialCityType.FORGE
+            ? spawnTrainedSkitariiRanger(serverLevel, recruit)
+            : spawnTrainedGuardsman(serverLevel, recruit);
+
+    if (!spawned) {
+        return false;
+    }
+
+    recruit.discard();
+
+    this.recruitedGuardsmen++;
+    setChanged();
+
+    String unitName = getCityType() == ImperialCityType.FORGE ? "Skitarii Ranger" : getCityType().getTroopName();
+
+    OrkRaidManager.notifyNearbyPlayers(
+            serverLevel,
+            this.worldPosition,
+            "A Recruit completed training and joined the city's " + unitName + "s. Soldiers: "
+                    + this.recruitedGuardsmen + "/" + getMilitaryCapacity()
+    );
+
+    return true;
+}
+
+private boolean spawnTrainedGuardsman(ServerLevel serverLevel, ImperialCitizenEntity recruit) {
     GuardsmanEntity guardsman = ExampleMod.GUARDSMAN.get().create(serverLevel);
 
     if (guardsman == null) {
@@ -1187,17 +1215,29 @@ public boolean completeRecruitTraining(ServerLevel serverLevel, ImperialCitizenE
     guardsman.assignRandomChapter();
     guardsman.initializeFromCity(getStartingGuardsmanRank(), getCityType());
 
-    recruit.discard();
     serverLevel.addFreshEntity(guardsman);
 
-    this.recruitedGuardsmen++;
-    setChanged();
+    return true;
+}
 
-    OrkRaidManager.notifyNearbyPlayers(
-            serverLevel,
-            this.worldPosition,
-            "A Recruit completed training and joined the Guardsmen. Soldiers: " + this.recruitedGuardsmen + "/" + getMilitaryCapacity()
+private boolean spawnTrainedSkitariiRanger(ServerLevel serverLevel, ImperialCitizenEntity recruit) {
+    SkitariiRangerEntity skitarii = ExampleMod.SKITARII_RANGER.get().create(serverLevel);
+
+    if (skitarii == null) {
+        return false;
+    }
+
+    skitarii.moveTo(
+            recruit.getX(),
+            recruit.getY(),
+            recruit.getZ(),
+            recruit.getYRot(),
+            recruit.getXRot()
     );
+
+    skitarii.assignToCommandCore(this.worldPosition);
+
+    serverLevel.addFreshEntity(skitarii);
 
     return true;
 }
@@ -1477,7 +1517,15 @@ public boolean engineerRepair(int amount) {
             index++;
         }
 
-        this.recruitedGuardsmen = guardsmen.size();
+        // Skitarii Rangers (Forge cities) count toward the military tally too, but they hold no
+        // fixed guard post — they patrol freely — so we only recount them here.
+        List<SkitariiRangerEntity> skitarii = serverLevel.getEntitiesOfClass(
+                SkitariiRangerEntity.class,
+                searchBox,
+                ranger -> ranger.isAssignedToCommandCore(this.worldPosition)
+        );
+
+        this.recruitedGuardsmen = guardsmen.size() + skitarii.size();
         setChanged();
     }
 

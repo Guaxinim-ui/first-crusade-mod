@@ -87,8 +87,10 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
   Forge bem-equipado, Mining durão, Agri ágil, Hive fraco-mas-numeroso. (3) **Custo de recruta por
   tipo** em Ferro (`recruitIronCost`, cobrado em `tryPayRecruitCost`): Hive 2 … Fortress 8.
   (4) **Skitarii Ranger** — 1ª tropa-entidade própria (Forge/Mechanicus), standalone com Lasgun,
-  registrada e testável por spawn egg. **Falta wirar**: Forge City recrutar Skitarii em vez de
-  Guardsman; depois mais tropas (Sisters, Arbites/Enforcer) e estruturas por tipo.
+  registrada e testável por spawn egg. (5) **Forge City recruta Skitarii**: `completeRecruitTraining`
+  ramifica por `getCityType()==FORGE` → cria `SkitariiRangerEntity` (helpers `spawnTrainedSkitariiRanger`/
+  `spawnTrainedGuardsman`); o tally `recruitedGuardsmen` (e `reorganizeExistingGuardsmen` no upgrade)
+  conta Skitarii. **Próximo**: mais tropas (Sisters, Arbites/Enforcer) e estruturas por tipo.
 - [ ] **Fase D** — overlords globais: território, geração de assentamentos no worldgen, despacho de
   líderes por nível de ameaça.
 - [ ] **Fase E** (maior risco) — mundo achatado + menor + dimensões-planeta substituindo Nether/End
@@ -120,6 +122,13 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: Fase C — **Forge City recruta Skitarii Ranger** (antes a entidade existia mas
+  nenhuma cidade a produzia). `ImperialCommandCoreBlockEntity.completeRecruitTraining` agora ramifica:
+  Forge → `SkitariiRangerEntity`, demais tipos → Guardsman (extraídos os helpers
+  `spawnTrainedSkitariiRanger`/`spawnTrainedGuardsman`). O Skitarii entra no tally militar
+  (`recruitedGuardsmen`): conta na recontagem do upgrade (`reorganizeExistingGuardsmen`) e decrementa
+  na morte (já chamava `onAssignedGuardsmanDeath`). Mensagem de fim de treino cita o nome da tropa.
+  Build offline OK. **Reforços/treino manual ainda criam Guardsman** (Skitarii não tem guard post).
 - 2026-06-17: Fase C — **primeira tropa-entidade própria: Skitarii Ranger** (tropa-tema da Forge
   City / Adeptus Mechanicus). Entidade **standalone** (`SkitariiRangerEntity` extends PathfinderMob
   implements RangedAttackMob) — atirador resistente (34 HP, 10 armor) que dispara o mesmo
