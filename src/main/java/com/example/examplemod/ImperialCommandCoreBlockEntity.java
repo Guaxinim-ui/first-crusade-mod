@@ -164,8 +164,15 @@ public void tryBuildImperialMine(Player player) {
     ), false);
 }
 
+// Each focus city type runs one extra of its signature work site (Mining→Mine, Fortress→Barracks,
+// Hive→Scrap Yard, Forge→Forge, Agri→Farm), so a city's type shapes its economy/defence, not just
+// its troops. Types with no production focus (Civilised/Shrine/Penal/Death World/Feudal) get no bonus.
+private int specialtyBonus(ImperialCityType specialtyType) {
+    return getCityType() == specialtyType ? 1 : 0;
+}
+
 public int getImperialMineCapacity() {
-    return Math.max(1, this.cityLevel);
+    return Math.max(1, this.cityLevel) + specialtyBonus(ImperialCityType.MINING);
 }
 
 // Gold mining unlocks at city level 2 and stays scarce: capacity grows slowly with the city.
@@ -285,7 +292,7 @@ public void tryBuildImperialFarm(Player player) {
 }
 
 public int getFarmCapacity() {
-    return Math.max(1, this.cityLevel);
+    return Math.max(1, this.cityLevel) + specialtyBonus(ImperialCityType.AGRI);
 }
 
 // Trade Depots unlock at city level 3 and trade Gold for Emerald with the capital.
@@ -3301,7 +3308,7 @@ public void tryBuildScrapYard(Player player) {
 }
 
 public int getScrapYardCapacity() {
-    return Math.max(1, this.cityLevel);
+    return Math.max(1, this.cityLevel) + specialtyBonus(ImperialCityType.HIVE);
 }
 
 public void tryBuildPromethiumRefinery(Player player) {
@@ -3354,7 +3361,7 @@ public void tryBuildPromethiumRefinery(Player player) {
 }
 
 public int getBarracksCapacity() {
-    return Math.max(1, this.cityLevel);
+    return Math.max(1, this.cityLevel) + specialtyBonus(ImperialCityType.FORTRESS);
 }
 
 public void tryBuildBarracks(Player player) {
@@ -3460,7 +3467,7 @@ public void tryBuildImperialForge(Player player) {
 }
 
 public int getImperialForgeCapacity() {
-    return Math.max(1, (this.cityLevel + 1) / 2);
+    return Math.max(1, (this.cityLevel + 1) / 2) + specialtyBonus(ImperialCityType.FORGE);
 }
 
 public boolean consumeResourcesForCrusadiumPlateProduction(int ironCost, int scrapCost, int coalCost) {
