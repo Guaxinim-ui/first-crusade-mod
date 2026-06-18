@@ -131,6 +131,12 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: Refatoração — **classe base `AbstractImperialTroopEntity`** para as tropas-tema
+  standalone (Skitarii/Kasrkin/Enforcer). Extraído o que era idêntico nas três: vínculo ao Command
+  Core (`assignToCommandCore`/`isAssignedToCommandCore`), gating de facção (`canAttack`/`setTarget`),
+  `removeWhenFarAway`, NBT do Core e `die`→`onAssignedGuardsmanDeath`. Subclasses guardam só atributos,
+  goals, arma e nome (e `performRangedAttack` nas atiradoras). Comportamento idêntico; ~300 linhas de
+  duplicação a menos. Facilita as próximas tropas-tema. Build offline OK.
 - 2026-06-18: Fase C — **Enforcer: 3ª tropa-entidade própria (Hive City / Adeptus Arbites) e 1ª de
   melee**. `EnforcerEntity` standalone (extends PathfinderMob, sem RangedAttackMob): brawler com
   shock maul (`GUARDSMAN_COMMAND_BATON` na mão), usa vanilla `MeleeAttackGoal` + target goals de
