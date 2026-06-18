@@ -449,6 +449,16 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
     public static final RegistryObject<Item> GRETCHIN_SPAWN_EGG = ITEMS.register("gretchin_spawn_egg",
             () -> new ForgeSpawnEggItem(GRETCHIN, 0x3A7A1F, 0x9A7A30, new Item.Properties()));
 
+    public static final RegistryObject<EntityType<SkitariiRangerEntity>> SKITARII_RANGER =
+            ENTITY_TYPES.register("skitarii_ranger",
+                    () -> EntityType.Builder.of(SkitariiRangerEntity::new, MobCategory.CREATURE)
+                            .sized(0.6F, 1.95F)
+                            .clientTrackingRange(8)
+                            .build(MODID + ":skitarii_ranger"));
+
+    public static final RegistryObject<Item> SKITARII_RANGER_SPAWN_EGG = ITEMS.register("skitarii_ranger_spawn_egg",
+            () -> new ForgeSpawnEggItem(SKITARII_RANGER, 0x6B6B6B, 0x8A1F1F, new Item.Properties()));
+
     public static final RegistryObject<EntityType<KillaKanEntity>> KILLA_KAN =
             ENTITY_TYPES.register("killa_kan",
                     () -> EntityType.Builder.of(KillaKanEntity::new, MobCategory.MONSTER)
@@ -656,6 +666,7 @@ output.accept(WARBOSS_SPAWN_EGG.get());
 output.accept(MEGANOB_SPAWN_EGG.get());
 output.accept(GRETCHIN_SPAWN_EGG.get());
 output.accept(KILLA_KAN_SPAWN_EGG.get());
+output.accept(SKITARII_RANGER_SPAWN_EGG.get());
                     })
                     .build());
 
@@ -702,6 +713,7 @@ private void registerAttributes(EntityAttributeCreationEvent event) {
     event.put(MEGANOB.get(), MeganobEntity.createAttributes().build());
     event.put(GRETCHIN.get(), GretchinEntity.createAttributes().build());
     event.put(KILLA_KAN.get(), KillaKanEntity.createAttributes().build());
+    event.put(SKITARII_RANGER.get(), SkitariiRangerEntity.createAttributes().build());
 }
 
 @SubscribeEvent
@@ -740,6 +752,7 @@ public static void onClientSetup(FMLClientSetupEvent event) {
         event.registerEntityRenderer(GRETCHIN.get(), GretchinRenderer::new);
         event.registerEntityRenderer(KILLA_KAN.get(), KillaKanRenderer::new);
         event.registerEntityRenderer(ROBOUTE_GUILLIMAN.get(), RobouteGuillimanRenderer::new);
+        event.registerEntityRenderer(SKITARII_RANGER.get(), SkitariiRangerRenderer::new);
     }
 }
 }

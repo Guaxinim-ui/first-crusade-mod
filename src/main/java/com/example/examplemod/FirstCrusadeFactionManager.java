@@ -26,6 +26,10 @@ public class FirstCrusadeFactionManager {
             return FirstCrusadeFaction.IMPERIUM;
         }
 
+        if (entity instanceof SkitariiRangerEntity) {
+            return FirstCrusadeFaction.IMPERIUM;
+        }
+
         if (entity instanceof OrkBoyEntity) {
             return FirstCrusadeFaction.ORKS;
         }
