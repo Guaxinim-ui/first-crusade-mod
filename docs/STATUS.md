@@ -57,7 +57,10 @@ Space Marine (estágio Neophyte que amadurece), Custodes (guarda dourada do Core
 modelo/renderer próprios), **Skitarii Ranger** (tropa-tema da Forge City, atirador standalone com
 Lasgun, **recrutado pela Forge City**), **Kasrkin** (tropa-tema elite da Fortress City, Militarum
 Tempestus, hotshot lasgun, **recrutado pela Fortress City**), **Enforcer** (tropa-tema melee da Hive
-City, Adeptus Arbites, shock maul/command baton, **recrutado pela Hive City** — 1º melee standalone).
+City, Adeptus Arbites, shock maul/command baton, **recrutado pela Hive City** — 1º melee standalone),
+**Mine Guard** (tropa-tema melee tanky da Mining City, bruiser lento), **Agri Militia** (tropa-tema
+atiradora leve/ágil da Agri City). Todas estendem `AbstractImperialTroopEntity`. **Todos os 6 tipos
+de cidade já têm tropa-tema** (Civilised usa Guardsman baseline).
 
 **Unidades Ork:** Ork Boy, Ork Nob, **Warboss** (líder, espelho do Primarca; surge do camp após 3
 warbands e marcha sobre a cidade).
@@ -98,8 +101,12 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
   conta os três. (7) **Enforcer** — 3ª tropa-entidade própria (Hive/Adeptus Arbites) e **1ª melee**:
   brawler standalone com shock maul (`MeleeAttackGoal`, 30 HP, dano 7, rápido). Hive City recruta
   Enforcer; switch e recontagem cobrem 4 tipos (Guardsman + Skitarii + Kasrkin + Enforcer).
-  **Tipos com tropa-tema:** Forge, Fortress, Hive. **Faltam tipos:** Civilised/Agri/Mining (ainda
-  Guardsman). **Próximo**: Sisters (precisa criar Shrine City como ImperialCityType) e estruturas por tipo.
+  (8) **Mine Guard** (Mining, bruiser melee tanky) e **Agri Militia** (Agri, skirmisher ranged leve):
+  **todos os 6 tipos de cidade já têm tropa-tema** (Civilised = Guardsman baseline). O dispatch do
+  Core virou genérico (`getThemedTroopType(cityType) -> EntityType` + `spawnThemedTroop`); faction e
+  recontagem do upgrade usam a base `AbstractImperialTroopEntity` (1 check/1 query, futuras tropas
+  entram sem mexer aqui). **Próximo**: Sisters (precisa criar Shrine City como ImperialCityType),
+  estruturas por tipo, ou tropa-tema também em reforços/treino manual.
 - [ ] **Fase D** — overlords globais: território, geração de assentamentos no worldgen, despacho de
   líderes por nível de ameaça.
 - [ ] **Fase E** (maior risco) — mundo achatado + menor + dimensões-planeta substituindo Nether/End
@@ -131,6 +138,15 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: Fase C — **Mine Guard (Mining) + Agri Militia (Agri): todos os 6 tipos de cidade com
+  tropa-tema**. `MineGuardEntity` (melee bruiser lento/tanky, 42 HP, dano 8, armor 12, knockback
+  resist) e `AgriMilitiaEntity` (skirmisher ranged leve/rápido, 24 HP, lasgun fraco, speed 0.36),
+  ambas sobre `AbstractImperialTroopEntity`. Registro completo (entity type + spawn egg + atributos +
+  renderer + textura placeholder + lang). **Generalização** aproveitando a base: o dispatch de recruta
+  virou `getThemedTroopType(cityType)->EntityType` + `spawnThemedTroop(...)` (substituiu os helpers
+  por-tropa); `FirstCrusadeFactionManager` gateia todas as tropas-tema por `instanceof
+  AbstractImperialTroopEntity`; a recontagem do upgrade conta as tropas-tema numa única query da base.
+  Adicionar tropa nova agora é ~1 entidade + 1 renderer + registros + 1 linha no switch. Build offline OK.
 - 2026-06-18: Refatoração — **classe base `AbstractImperialTroopEntity`** para as tropas-tema
   standalone (Skitarii/Kasrkin/Enforcer). Extraído o que era idêntico nas três: vínculo ao Command
   Core (`assignToCommandCore`/`isAssignedToCommandCore`), gating de facção (`canAttack`/`setTarget`),

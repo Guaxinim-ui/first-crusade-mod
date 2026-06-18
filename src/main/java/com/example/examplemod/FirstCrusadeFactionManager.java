@@ -26,15 +26,9 @@ public class FirstCrusadeFactionManager {
             return FirstCrusadeFaction.IMPERIUM;
         }
 
-        if (entity instanceof SkitariiRangerEntity) {
-            return FirstCrusadeFaction.IMPERIUM;
-        }
-
-        if (entity instanceof KasrkinEntity) {
-            return FirstCrusadeFaction.IMPERIUM;
-        }
-
-        if (entity instanceof EnforcerEntity) {
+        // All standalone themed city troops (Skitarii Ranger, Kasrkin, Enforcer, Mine Guard,
+        // Agri Militia, ...) share this base and belong to the Imperium.
+        if (entity instanceof AbstractImperialTroopEntity) {
             return FirstCrusadeFaction.IMPERIUM;
         }
 

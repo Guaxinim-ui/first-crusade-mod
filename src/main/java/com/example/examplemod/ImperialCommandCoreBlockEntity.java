@@ -1,5 +1,7 @@
 package com.example.examplemod;
 
+import javax.annotation.Nullable;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.MenuProvider;
@@ -1169,16 +1171,13 @@ public boolean completeRecruitTraining(ServerLevel serverLevel, ImperialCitizenE
         return false;
     }
 
-    // City types with a dedicated themed troop field it instead of a Guardsman: Forge cities
-    // (Adeptus Mechanicus) field Skitarii Rangers, Fortress cities (Militarum Tempestus) field
-    // Kasrkin, Hive cities (Adeptus Arbites) field melee Enforcers. Every other type fields a
-    // Guardsman with the city's rank/chapter/regiment.
-    boolean spawned = switch (getCityType()) {
-        case FORGE -> spawnTrainedSkitariiRanger(serverLevel, recruit);
-        case FORTRESS -> spawnTrainedKasrkin(serverLevel, recruit);
-        case HIVE -> spawnTrainedEnforcer(serverLevel, recruit);
-        default -> spawnTrainedGuardsman(serverLevel, recruit);
-    };
+    // City types with a dedicated themed troop field it instead of a Guardsman (see
+    // getThemedTroopType); the rest field a Guardsman with the city's rank/chapter/regiment.
+    EntityType<? extends AbstractImperialTroopEntity> themedType = getThemedTroopType(getCityType());
+
+    boolean spawned = themedType != null
+            ? spawnThemedTroop(serverLevel, recruit, themedType)
+            : spawnTrainedGuardsman(serverLevel, recruit);
 
     if (!spawned) {
         return false;
@@ -1233,36 +1232,28 @@ private boolean spawnTrainedGuardsman(ServerLevel serverLevel, ImperialCitizenEn
     return true;
 }
 
-private boolean spawnTrainedSkitariiRanger(ServerLevel serverLevel, ImperialCitizenEntity recruit) {
-    SkitariiRangerEntity skitarii = ExampleMod.SKITARII_RANGER.get().create(serverLevel);
-
-    if (skitarii == null) {
-        return false;
-    }
-
-    skitarii.moveTo(
-            recruit.getX(),
-            recruit.getY(),
-            recruit.getZ(),
-            recruit.getYRot(),
-            recruit.getXRot()
-    );
-
-    skitarii.assignToCommandCore(this.worldPosition);
-
-    serverLevel.addFreshEntity(skitarii);
-
-    return true;
+// The standalone themed troop a city type fields, or null if it fields the baseline Guardsman.
+@Nullable
+private static EntityType<? extends AbstractImperialTroopEntity> getThemedTroopType(ImperialCityType cityType) {
+    return switch (cityType) {
+        case FORGE -> ExampleMod.SKITARII_RANGER.get();     // Adeptus Mechanicus
+        case FORTRESS -> ExampleMod.KASRKIN.get();          // Militarum Tempestus
+        case HIVE -> ExampleMod.ENFORCER.get();             // Adeptus Arbites (melee)
+        case MINING -> ExampleMod.MINE_GUARD.get();         // Industrial Enforcers (melee bruiser)
+        case AGRI -> ExampleMod.AGRI_MILITIA.get();         // rural PDF (light skirmisher)
+        default -> null;                                    // CIVILISED: baseline Guardsman
+    };
 }
 
-private boolean spawnTrainedKasrkin(ServerLevel serverLevel, ImperialCitizenEntity recruit) {
-    KasrkinEntity kasrkin = ExampleMod.KASRKIN.get().create(serverLevel);
+private boolean spawnThemedTroop(ServerLevel serverLevel, ImperialCitizenEntity recruit,
+                                 EntityType<? extends AbstractImperialTroopEntity> type) {
+    AbstractImperialTroopEntity troop = type.create(serverLevel);
 
-    if (kasrkin == null) {
+    if (troop == null) {
         return false;
     }
 
-    kasrkin.moveTo(
+    troop.moveTo(
             recruit.getX(),
             recruit.getY(),
             recruit.getZ(),
@@ -1270,31 +1261,9 @@ private boolean spawnTrainedKasrkin(ServerLevel serverLevel, ImperialCitizenEnti
             recruit.getXRot()
     );
 
-    kasrkin.assignToCommandCore(this.worldPosition);
+    troop.assignToCommandCore(this.worldPosition);
 
-    serverLevel.addFreshEntity(kasrkin);
-
-    return true;
-}
-
-private boolean spawnTrainedEnforcer(ServerLevel serverLevel, ImperialCitizenEntity recruit) {
-    EnforcerEntity enforcer = ExampleMod.ENFORCER.get().create(serverLevel);
-
-    if (enforcer == null) {
-        return false;
-    }
-
-    enforcer.moveTo(
-            recruit.getX(),
-            recruit.getY(),
-            recruit.getZ(),
-            recruit.getYRot(),
-            recruit.getXRot()
-    );
-
-    enforcer.assignToCommandCore(this.worldPosition);
-
-    serverLevel.addFreshEntity(enforcer);
+    serverLevel.addFreshEntity(troop);
 
     return true;
 }
@@ -1574,28 +1543,16 @@ public boolean engineerRepair(int amount) {
             index++;
         }
 
-        // Themed troops (Skitarii Rangers in Forge cities, Kasrkin in Fortress cities, Enforcers in
-        // Hive cities) count toward the military tally too, but they hold no fixed guard post — they
-        // patrol freely — so we only recount them here.
-        List<SkitariiRangerEntity> skitarii = serverLevel.getEntitiesOfClass(
-                SkitariiRangerEntity.class,
+        // Themed troops (Skitarii, Kasrkin, Enforcer, Mine Guard, Agri Militia, ...) share a base
+        // class and count toward the military tally too, but they hold no fixed guard post — they
+        // patrol freely — so we only recount them here, in a single sweep.
+        List<AbstractImperialTroopEntity> themedTroops = serverLevel.getEntitiesOfClass(
+                AbstractImperialTroopEntity.class,
                 searchBox,
-                ranger -> ranger.isAssignedToCommandCore(this.worldPosition)
+                troop -> troop.isAssignedToCommandCore(this.worldPosition)
         );
 
-        List<KasrkinEntity> kasrkin = serverLevel.getEntitiesOfClass(
-                KasrkinEntity.class,
-                searchBox,
-                trooper -> trooper.isAssignedToCommandCore(this.worldPosition)
-        );
-
-        List<EnforcerEntity> enforcers = serverLevel.getEntitiesOfClass(
-                EnforcerEntity.class,
-                searchBox,
-                trooper -> trooper.isAssignedToCommandCore(this.worldPosition)
-        );
-
-        this.recruitedGuardsmen = guardsmen.size() + skitarii.size() + kasrkin.size() + enforcers.size();
+        this.recruitedGuardsmen = guardsmen.size() + themedTroops.size();
         setChanged();
     }
 

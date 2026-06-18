@@ -479,6 +479,26 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
     public static final RegistryObject<Item> ENFORCER_SPAWN_EGG = ITEMS.register("enforcer_spawn_egg",
             () -> new ForgeSpawnEggItem(ENFORCER, 0x1C1C22, 0xB02020, new Item.Properties()));
 
+    public static final RegistryObject<EntityType<MineGuardEntity>> MINE_GUARD =
+            ENTITY_TYPES.register("mine_guard",
+                    () -> EntityType.Builder.of(MineGuardEntity::new, MobCategory.CREATURE)
+                            .sized(0.6F, 1.95F)
+                            .clientTrackingRange(8)
+                            .build(MODID + ":mine_guard"));
+
+    public static final RegistryObject<Item> MINE_GUARD_SPAWN_EGG = ITEMS.register("mine_guard_spawn_egg",
+            () -> new ForgeSpawnEggItem(MINE_GUARD, 0x4A4036, 0xD8A024, new Item.Properties()));
+
+    public static final RegistryObject<EntityType<AgriMilitiaEntity>> AGRI_MILITIA =
+            ENTITY_TYPES.register("agri_militia",
+                    () -> EntityType.Builder.of(AgriMilitiaEntity::new, MobCategory.CREATURE)
+                            .sized(0.6F, 1.95F)
+                            .clientTrackingRange(8)
+                            .build(MODID + ":agri_militia"));
+
+    public static final RegistryObject<Item> AGRI_MILITIA_SPAWN_EGG = ITEMS.register("agri_militia_spawn_egg",
+            () -> new ForgeSpawnEggItem(AGRI_MILITIA, 0x5A6B2A, 0x9AAE4A, new Item.Properties()));
+
     public static final RegistryObject<EntityType<KillaKanEntity>> KILLA_KAN =
             ENTITY_TYPES.register("killa_kan",
                     () -> EntityType.Builder.of(KillaKanEntity::new, MobCategory.MONSTER)
@@ -689,6 +709,8 @@ output.accept(KILLA_KAN_SPAWN_EGG.get());
 output.accept(SKITARII_RANGER_SPAWN_EGG.get());
 output.accept(KASRKIN_SPAWN_EGG.get());
 output.accept(ENFORCER_SPAWN_EGG.get());
+output.accept(MINE_GUARD_SPAWN_EGG.get());
+output.accept(AGRI_MILITIA_SPAWN_EGG.get());
                     })
                     .build());
 
@@ -738,6 +760,8 @@ private void registerAttributes(EntityAttributeCreationEvent event) {
     event.put(SKITARII_RANGER.get(), SkitariiRangerEntity.createAttributes().build());
     event.put(KASRKIN.get(), KasrkinEntity.createAttributes().build());
     event.put(ENFORCER.get(), EnforcerEntity.createAttributes().build());
+    event.put(MINE_GUARD.get(), MineGuardEntity.createAttributes().build());
+    event.put(AGRI_MILITIA.get(), AgriMilitiaEntity.createAttributes().build());
 }
 
 @SubscribeEvent
@@ -779,6 +803,8 @@ public static void onClientSetup(FMLClientSetupEvent event) {
         event.registerEntityRenderer(SKITARII_RANGER.get(), SkitariiRangerRenderer::new);
         event.registerEntityRenderer(KASRKIN.get(), KasrkinRenderer::new);
         event.registerEntityRenderer(ENFORCER.get(), EnforcerRenderer::new);
+        event.registerEntityRenderer(MINE_GUARD.get(), MineGuardRenderer::new);
+        event.registerEntityRenderer(AGRI_MILITIA.get(), AgriMilitiaRenderer::new);
     }
 }
 }
