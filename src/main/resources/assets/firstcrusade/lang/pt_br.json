@@ -36,6 +36,7 @@
   "item.firstcrusade.sister_of_battle_spawn_egg": "Ovo de Invocação de Irmã de Batalha",
   "item.firstcrusade.penal_legionnaire_spawn_egg": "Ovo de Invocação de Legionário Penal",
   "item.firstcrusade.jungle_fighter_spawn_egg": "Ovo de Invocação de Combatente da Selva",
+  "item.firstcrusade.feudal_knight_spawn_egg": "Ovo de Invocação de Cavaleiro Feudal",
   "item.firstcrusade.roboute_guilliman_spawn_egg": "Ovo de Invocação de Roboute Guilliman",
   "block.firstcrusade.imperial_command_core": "Núcleo de Comando Imperial",
   "block.firstcrusade.imperial_mine": "Mina Imperial",
@@ -67,5 +68,6 @@
   "entity.firstcrusade.agri_militia": "Milícia Agrícola",
   "entity.firstcrusade.sister_of_battle": "Irmã de Batalha",
   "entity.firstcrusade.penal_legionnaire": "Legionário Penal",
-  "entity.firstcrusade.jungle_fighter": "Combatente da Selva"
+  "entity.firstcrusade.jungle_fighter": "Combatente da Selva",
+  "entity.firstcrusade.feudal_knight": "Cavaleiro Feudal"
 }

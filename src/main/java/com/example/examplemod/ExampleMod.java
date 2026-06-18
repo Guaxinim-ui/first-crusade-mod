@@ -529,6 +529,16 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
     public static final RegistryObject<Item> JUNGLE_FIGHTER_SPAWN_EGG = ITEMS.register("jungle_fighter_spawn_egg",
             () -> new ForgeSpawnEggItem(JUNGLE_FIGHTER, 0x3A5A2A, 0x6E4A22, new Item.Properties()));
 
+    public static final RegistryObject<EntityType<FeudalKnightEntity>> FEUDAL_KNIGHT =
+            ENTITY_TYPES.register("feudal_knight",
+                    () -> EntityType.Builder.of(FeudalKnightEntity::new, MobCategory.CREATURE)
+                            .sized(0.6F, 1.95F)
+                            .clientTrackingRange(8)
+                            .build(MODID + ":feudal_knight"));
+
+    public static final RegistryObject<Item> FEUDAL_KNIGHT_SPAWN_EGG = ITEMS.register("feudal_knight_spawn_egg",
+            () -> new ForgeSpawnEggItem(FEUDAL_KNIGHT, 0x6E6E78, 0x8A2A2A, new Item.Properties()));
+
     public static final RegistryObject<EntityType<KillaKanEntity>> KILLA_KAN =
             ENTITY_TYPES.register("killa_kan",
                     () -> EntityType.Builder.of(KillaKanEntity::new, MobCategory.MONSTER)
@@ -744,6 +754,7 @@ output.accept(AGRI_MILITIA_SPAWN_EGG.get());
 output.accept(SISTER_OF_BATTLE_SPAWN_EGG.get());
 output.accept(PENAL_LEGIONNAIRE_SPAWN_EGG.get());
 output.accept(JUNGLE_FIGHTER_SPAWN_EGG.get());
+output.accept(FEUDAL_KNIGHT_SPAWN_EGG.get());
                     })
                     .build());
 
@@ -798,6 +809,7 @@ private void registerAttributes(EntityAttributeCreationEvent event) {
     event.put(SISTER_OF_BATTLE.get(), SisterOfBattleEntity.createAttributes().build());
     event.put(PENAL_LEGIONNAIRE.get(), PenalLegionnaireEntity.createAttributes().build());
     event.put(JUNGLE_FIGHTER.get(), JungleFighterEntity.createAttributes().build());
+    event.put(FEUDAL_KNIGHT.get(), FeudalKnightEntity.createAttributes().build());
 }
 
 @SubscribeEvent
@@ -844,6 +856,7 @@ public static void onClientSetup(FMLClientSetupEvent event) {
         event.registerEntityRenderer(SISTER_OF_BATTLE.get(), SisterOfBattleRenderer::new);
         event.registerEntityRenderer(PENAL_LEGIONNAIRE.get(), PenalLegionnaireRenderer::new);
         event.registerEntityRenderer(JUNGLE_FIGHTER.get(), JungleFighterRenderer::new);
+        event.registerEntityRenderer(FEUDAL_KNIGHT.get(), FeudalKnightRenderer::new);
     }
 }
 }

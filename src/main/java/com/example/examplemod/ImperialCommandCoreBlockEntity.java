@@ -1270,6 +1270,7 @@ private static EntityType<? extends AbstractImperialTroopEntity> getThemedTroopT
         case SHRINE -> ExampleMod.SISTER_OF_BATTLE.get();   // Adepta Sororitas (ranged zealot)
         case PENAL -> ExampleMod.PENAL_LEGIONNAIRE.get();   // Penal Legion (fast fragile melee swarm)
         case DEATH_WORLD -> ExampleMod.JUNGLE_FIGHTER.get(); // Catachan-style veteran skirmisher
+        case FEUDAL -> ExampleMod.FEUDAL_KNIGHT.get();      // armoured melee shield wall
         default -> null;                                    // CIVILISED: baseline Guardsman
     };
 }

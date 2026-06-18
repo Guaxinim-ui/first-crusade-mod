@@ -73,10 +73,10 @@ City, Adeptus Arbites, shock maul/command baton, **recrutado pela Hive City** �
 **Mine Guard** (tropa-tema melee tanky da Mining City, bruiser lento), **Agri Militia** (tropa-tema
 atiradora leve/ágil da Agri City), **Sister of Battle** (tropa-tema atiradora zelota da **nova Shrine
 City**, Adepta Sororitas). Todas estendem `AbstractImperialTroopEntity`. **Tipos de cidade: 7**
-(CIVILISED, HIVE, FORGE, FORTRESS, AGRI, MINING, **SHRINE**, **PENAL**, **DEATH_WORLD**). **Só
-Civilised usa Guardsman baseline**; os outros 8 têm tropa-tema própria: Forge→Skitarii,
+(CIVILISED, HIVE, FORGE, FORTRESS, AGRI, MINING, **SHRINE**, **PENAL**, **DEATH_WORLD**, **FEUDAL**).
+**Só Civilised usa Guardsman baseline**; os outros 9 têm tropa-tema própria: Forge→Skitarii,
 Fortress→Kasrkin, Hive→Enforcer, Mining→Mine Guard, Agri→Agri Militia, Shrine→Sister of Battle,
-Penal→Penal Legionnaire, Death World→Jungle Fighter.
+Penal→Penal Legionnaire, Death World→Jungle Fighter, Feudal→Feudal Knight.
 
 > **Texturas:** todas as tropas-tema usam placeholder = cópia de `guardsman.png`. O dono fará a arte
 > de cada uma; ao criar tropa nova, só copiar guardsman.png como placeholder (não gerar recolor).
@@ -159,6 +159,11 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: Fase C — **10º tipo de cidade: Feudal World + Feudal Knight**. `ImperialCityType.FEUDAL`
+  (pop 1.1, regimento blindado +hp/+armor, lasgun -1 primitivo) recruta `FeudalKnightEntity`: muralha
+  de melee (armor 16 + knockback resist 0.8, lento, dano 7) — nicho "shield wall" distinto do Mine
+  Guard (tanque de vida). Fica no pool aleatório (não consome bioma). Registro + lang en/pt + wiring.
+  Build OK; langs 71 chaves.
 - 2026-06-18: Fase C — **tipo de cidade enviesado pelo bioma** (antes 100% aleatório). `assignCityType`
   agora recebe o `ServerLevel` e usa `pickCityTypeForBiome` (casa o path do id do bioma): deserto/
   badlands/montanha→Mining, selva/bamboo→Death World, pântano/mangue→Penal, neve/gelo/taiga→Fortress,

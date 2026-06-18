@@ -18,7 +18,8 @@ public enum ImperialCityType {
     MINING("Mining City", ImperialResourceType.IRON, 1.1D, 0, "Mine Guard", 3.0D, 1.0D, 1.0D, 0.0D, 0.0D, 4),
     SHRINE("Shrine City", null, 1.3D, 1, "Battle Sister", 2.0D, 2.0D, 1.0D, 0.0D, 0.0D, 6),
     PENAL("Penal Colony", null, 1.5D, -1, "Penal Legionnaire", -2.0D, -2.0D, 1.0D, -0.5D, 0.01D, 2),
-    DEATH_WORLD("Death World Settlement", null, 0.9D, 1, "Jungle Fighter", 2.0D, 1.0D, 2.0D, 0.5D, 0.02D, 5);
+    DEATH_WORLD("Death World Settlement", null, 0.9D, 1, "Jungle Fighter", 2.0D, 1.0D, 2.0D, 0.5D, 0.02D, 5),
+    FEUDAL("Feudal World", null, 1.1D, 0, "Feudal Knight", 3.0D, 4.0D, 1.0D, -1.0D, -0.01D, 5);
 
     private static final double FOCUS_BONUS = 1.5D;
 
