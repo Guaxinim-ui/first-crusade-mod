@@ -8,7 +8,7 @@
 > mudanças grandes, **verifique o estado real** com `git log --oneline -8`, `git status` e um
 > `Glob` em `src/main/java/com/example/examplemod/*.java` — não confie só neste arquivo.
 
-Última atualização: **2026-06-17** · branch `main` · remoto `github.com/Guaxinim-ui/first-crusade-mod`
+Última atualização: **2026-06-18** · branch `main` · remoto `github.com/Guaxinim-ui/first-crusade-mod`
 
 ---
 
@@ -27,15 +27,25 @@ Documentos de design (referência):
 
 ## 2. Build & teste (rede bloqueada no ambiente do agente)
 
-O wrapper `./gradlew` falha (sem rede). Use o Gradle 8.8 em cache, com `-p` na raiz e `--offline`,
-e `dangerouslyDisableSandbox: true`:
+O wrapper `./gradlew` falha (sem rede). Use o Gradle 8.8 em cache, com `-p` apontando para a **raiz
+do projeto** (`/c/Users/hrlup/Documents/first-crusade-mod`) e `--offline`, com `dangerouslyDisableSandbox: true`.
+⚠️ O projeto **NÃO** está mais em `/d/forge-mdk` (drive D: indisponível) — é autocontido aqui (tem
+build.gradle/gradlew/settings.gradle). O hash do dir do Gradle em cache pode variar; descubra com
+`ls -d ~/.gradle/wrapper/dists/gradle-8.8-bin/*/gradle-8.8/bin/gradle`.
 
 ```
-G=~/.gradle/wrapper/dists/gradle-8.8-bin/8szhhswteo6aqkq0cvol8b0hg/gradle-8.8/bin/gradle
-"$G" -p /d/forge-1.20.1-47.4.10-mdk compileJava --console=plain --offline   # ~1 min
-"$G" -p /d/forge-1.20.1-47.4.10-mdk build --console=plain --offline         # gera o jar
-"$G" -p /d/forge-1.20.1-47.4.10-mdk runClient --console=plain               # abre o jogo (background)
+G=/c/Users/hrlup/.gradle/wrapper/dists/gradle-8.8-bin/dl7vupf4psengwqhwktix4v1/gradle-8.8/bin/gradle
+P=/c/Users/hrlup/Documents/first-crusade-mod
+"$G" -p "$P" compileJava --console=plain --offline   # ~10s a 1 min
+"$G" -p "$P" build --console=plain --offline         # gera o jar
+"$G" -p "$P" runClient --console=plain               # abre o jogo (background)
 ```
+
+**Instalar/testar o jar:** o jar sai em `build/libs/firstcrusade-0.1.0.jar`. A única pasta de mods no
+sistema é `run/mods` (do projeto). ⚠️ Se o dono jogar via `runClient` (dev), o mod carrega das classes
+compiladas — **manter o jar do próprio mod em `run/mods` causa crash de "mod duplicado"**; nesse caso
+remover de lá. Não foi localizada instância separada do Minecraft (CurseForge/Prism/etc.); se o dono
+usar uma, perguntar o caminho.
 
 Jar: `build/libs/firstcrusade-0.1.0.jar`. Warnings de `ResourceLocation` deprecado e LF→CRLF são
 normais. Sempre compilar após mudanças; rodar `build` antes de pedir teste.
@@ -61,8 +71,9 @@ City, Adeptus Arbites, shock maul/command baton, **recrutado pela Hive City** �
 **Mine Guard** (tropa-tema melee tanky da Mining City, bruiser lento), **Agri Militia** (tropa-tema
 atiradora leve/ágil da Agri City), **Sister of Battle** (tropa-tema atiradora zelota da **nova Shrine
 City**, Adepta Sororitas). Todas estendem `AbstractImperialTroopEntity`. **Tipos de cidade: 7**
-(CIVILISED, HIVE, FORGE, FORTRESS, AGRI, MINING, **SHRINE**); todos têm tropa-tema menos Civilised
-(Guardsman baseline).
+(CIVILISED, HIVE, FORGE, FORTRESS, AGRI, MINING, **SHRINE**, **PENAL**); têm tropa-tema própria:
+Forge/Fortress/Hive/Mining/Agri/Shrine. **Civilised e Penal usam Guardsman baseline** (Penal =
+regimento descartável: numeroso 1.5×, -1 rank, fraco mas barato).
 
 **Unidades Ork:** Ork Boy, Ork Nob, **Warboss** (líder, espelho do Primarca; surge do camp após 3
 warbands e marcha sobre a cidade).
@@ -142,6 +153,11 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: Fase C — **8º tipo de cidade: Penal Colony** (`ImperialCityType.PENAL`): regimento
+  descartável (pop 1.5×, -1 rank, hp/armor fracos mas +1 dano, barato 2 Ferro, levemente mais rápido),
+  fielda **Guardsman baseline** (como Civilised). Só 1 linha no enum (data-driven; nenhum switch sobre
+  cityType é exaustivo sem default). Build/jar OK. Jar copiado para `run/mods` (ver §2 sobre o caveat
+  do runClient).
 - 2026-06-18: **Performance (dono relatou travadas)** — o Core recalculava ~19 scans de bloco/entidade
   a cada 40 ticks **por cidade, mesmo sem ninguém olhando**. Dois cortes: (1) `recomputeMenuStats` só
   roda enquanto o menu está **aberto** (`openMenuCount`, incrementado em `ImperialCommandCoreMenu`
