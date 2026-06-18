@@ -1169,11 +1169,14 @@ public boolean completeRecruitTraining(ServerLevel serverLevel, ImperialCitizenE
         return false;
     }
 
-    // Forge cities (Adeptus Mechanicus) field Skitarii Rangers; every other type fields a
-    // Guardsman with the city's rank/chapter/regiment.
-    boolean spawned = getCityType() == ImperialCityType.FORGE
-            ? spawnTrainedSkitariiRanger(serverLevel, recruit)
-            : spawnTrainedGuardsman(serverLevel, recruit);
+    // City types with a dedicated themed troop field it instead of a Guardsman: Forge cities
+    // (Adeptus Mechanicus) field Skitarii Rangers, Fortress cities (Militarum Tempestus) field
+    // Kasrkin. Every other type fields a Guardsman with the city's rank/chapter/regiment.
+    boolean spawned = switch (getCityType()) {
+        case FORGE -> spawnTrainedSkitariiRanger(serverLevel, recruit);
+        case FORTRESS -> spawnTrainedKasrkin(serverLevel, recruit);
+        default -> spawnTrainedGuardsman(serverLevel, recruit);
+    };
 
     if (!spawned) {
         return false;
@@ -1184,16 +1187,23 @@ public boolean completeRecruitTraining(ServerLevel serverLevel, ImperialCitizenE
     this.recruitedGuardsmen++;
     setChanged();
 
-    String unitName = getCityType() == ImperialCityType.FORGE ? "Skitarii Ranger" : getCityType().getTroopName();
-
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "A Recruit completed training and joined the city's " + unitName + "s. Soldiers: "
+            "A Recruit completed training and joined the city's " + getFieldedUnitName() + "s. Soldiers: "
                     + this.recruitedGuardsmen + "/" + getMilitaryCapacity()
     );
 
     return true;
+}
+
+// Display name of the basic troop this city actually fields (themed entity or Guardsman regiment).
+private String getFieldedUnitName() {
+    return switch (getCityType()) {
+        case FORGE -> "Skitarii Ranger";
+        case FORTRESS -> "Kasrkin";
+        default -> getCityType().getTroopName();
+    };
 }
 
 private boolean spawnTrainedGuardsman(ServerLevel serverLevel, ImperialCitizenEntity recruit) {
@@ -1238,6 +1248,28 @@ private boolean spawnTrainedSkitariiRanger(ServerLevel serverLevel, ImperialCiti
     skitarii.assignToCommandCore(this.worldPosition);
 
     serverLevel.addFreshEntity(skitarii);
+
+    return true;
+}
+
+private boolean spawnTrainedKasrkin(ServerLevel serverLevel, ImperialCitizenEntity recruit) {
+    KasrkinEntity kasrkin = ExampleMod.KASRKIN.get().create(serverLevel);
+
+    if (kasrkin == null) {
+        return false;
+    }
+
+    kasrkin.moveTo(
+            recruit.getX(),
+            recruit.getY(),
+            recruit.getZ(),
+            recruit.getYRot(),
+            recruit.getXRot()
+    );
+
+    kasrkin.assignToCommandCore(this.worldPosition);
+
+    serverLevel.addFreshEntity(kasrkin);
 
     return true;
 }
@@ -1517,15 +1549,22 @@ public boolean engineerRepair(int amount) {
             index++;
         }
 
-        // Skitarii Rangers (Forge cities) count toward the military tally too, but they hold no
-        // fixed guard post — they patrol freely — so we only recount them here.
+        // Themed troops (Skitarii Rangers in Forge cities, Kasrkin in Fortress cities) count toward
+        // the military tally too, but they hold no fixed guard post — they patrol freely — so we
+        // only recount them here.
         List<SkitariiRangerEntity> skitarii = serverLevel.getEntitiesOfClass(
                 SkitariiRangerEntity.class,
                 searchBox,
                 ranger -> ranger.isAssignedToCommandCore(this.worldPosition)
         );
 
-        this.recruitedGuardsmen = guardsmen.size() + skitarii.size();
+        List<KasrkinEntity> kasrkin = serverLevel.getEntitiesOfClass(
+                KasrkinEntity.class,
+                searchBox,
+                trooper -> trooper.isAssignedToCommandCore(this.worldPosition)
+        );
+
+        this.recruitedGuardsmen = guardsmen.size() + skitarii.size() + kasrkin.size();
         setChanged();
     }
 

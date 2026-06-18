@@ -55,7 +55,8 @@ withdraw por recurso (`ImperialCommandCoreScreen` + `...Menu` + `...Action`/`...
 Space Marine (estágio Neophyte que amadurece), Custodes (guarda dourada do Core), Primarch
 (gigante, aura de liderança, governa a cidade, luto), **Roboute Guilliman** (Primarca nomeado,
 modelo/renderer próprios), **Skitarii Ranger** (tropa-tema da Forge City, atirador standalone com
-Lasgun — ainda só via spawn egg, não recrutado por cidade).
+Lasgun, **recrutado pela Forge City**), **Kasrkin** (tropa-tema elite da Fortress City, Militarum
+Tempestus, hotshot lasgun, **recrutado pela Fortress City**).
 
 **Unidades Ork:** Ork Boy, Ork Nob, **Warboss** (líder, espelho do Primarca; surge do camp após 3
 warbands e marcha sobre a cidade).
@@ -90,7 +91,10 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
   registrada e testável por spawn egg. (5) **Forge City recruta Skitarii**: `completeRecruitTraining`
   ramifica por `getCityType()==FORGE` → cria `SkitariiRangerEntity` (helpers `spawnTrainedSkitariiRanger`/
   `spawnTrainedGuardsman`); o tally `recruitedGuardsmen` (e `reorganizeExistingGuardsmen` no upgrade)
-  conta Skitarii. **Próximo**: mais tropas (Sisters, Arbites/Enforcer) e estruturas por tipo.
+  conta Skitarii. (6) **Kasrkin** — 2ª tropa-entidade própria (Fortress/Militarum Tempestus),
+  elite standalone com hotshot Lasgun (44 HP, 13 armor, dano 8); `completeRecruitTraining` agora é
+  um switch por tipo (FORGE→Skitarii, FORTRESS→Kasrkin, default→Guardsman) e a recontagem do upgrade
+  conta os três. **Próximo**: mais tropas (Sisters/Shrine, Arbites/Enforcer/Hive) e estruturas por tipo.
 - [ ] **Fase D** — overlords globais: território, geração de assentamentos no worldgen, despacho de
   líderes por nível de ameaça.
 - [ ] **Fase E** (maior risco) — mundo achatado + menor + dimensões-planeta substituindo Nether/End
@@ -122,6 +126,14 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: Fase C — **Kasrkin: 2ª tropa-entidade própria (Fortress City / Militarum Tempestus)**.
+  Entidade standalone elite (`KasrkinEntity`, espelha o Skitarii): atirador pesado (44 HP, 13 armor,
+  hotshot lasgun dano 8 com knockback) que usa `RangedAttackGoal` + target goals de facção. Registrado
+  por completo (EntityType + spawn egg + atributos + renderer `KasrkinRenderer` + textura placeholder =
+  cópia de guardsman.png + faction IMPERIUM + lang). Fortress City passa a **recrutar Kasrkin** no fim
+  do treino: `completeRecruitTraining` virou switch (FORGE→Skitarii, FORTRESS→Kasrkin, default→Guardsman),
+  com helpers `spawnTrainedKasrkin`/`getFieldedUnitName`; a recontagem do upgrade conta os três tipos.
+  Build offline OK.
 - 2026-06-18: Fase C — **Forge City recruta Skitarii Ranger** (antes a entidade existia mas
   nenhuma cidade a produzia). `ImperialCommandCoreBlockEntity.completeRecruitTraining` agora ramifica:
   Forge → `SkitariiRangerEntity`, demais tipos → Guardsman (extraídos os helpers
