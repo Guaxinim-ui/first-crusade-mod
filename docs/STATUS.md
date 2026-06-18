@@ -73,9 +73,13 @@ City, Adeptus Arbites, shock maul/command baton, **recrutado pela Hive City** �
 **Mine Guard** (tropa-tema melee tanky da Mining City, bruiser lento), **Agri Militia** (tropa-tema
 atiradora leve/ágil da Agri City), **Sister of Battle** (tropa-tema atiradora zelota da **nova Shrine
 City**, Adepta Sororitas). Todas estendem `AbstractImperialTroopEntity`. **Tipos de cidade: 7**
-(CIVILISED, HIVE, FORGE, FORTRESS, AGRI, MINING, **SHRINE**, **PENAL**). **Só Civilised usa Guardsman
-baseline**; os outros 7 têm tropa-tema própria: Forge→Skitarii, Fortress→Kasrkin, Hive→Enforcer,
-Mining→Mine Guard, Agri→Agri Militia, Shrine→Sister of Battle, Penal→Penal Legionnaire.
+(CIVILISED, HIVE, FORGE, FORTRESS, AGRI, MINING, **SHRINE**, **PENAL**, **DEATH_WORLD**). **Só
+Civilised usa Guardsman baseline**; os outros 8 têm tropa-tema própria: Forge→Skitarii,
+Fortress→Kasrkin, Hive→Enforcer, Mining→Mine Guard, Agri→Agri Militia, Shrine→Sister of Battle,
+Penal→Penal Legionnaire, Death World→Jungle Fighter.
+
+> **Texturas:** todas as tropas-tema usam placeholder = cópia de `guardsman.png`. O dono fará a arte
+> de cada uma; ao criar tropa nova, só copiar guardsman.png como placeholder (não gerar recolor).
 
 **Unidades Ork:** Ork Boy, Ork Nob, **Warboss** (líder, espelho do Primarca; surge do camp após 3
 warbands e marcha sobre a cidade).
@@ -155,6 +159,11 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: Fase C — **9º tipo de cidade: Death World + Jungle Fighter**. `ImperialCityType.DEATH_WORLD`
+  (veteranos: pop baixa 0.9, +1 rank, regimento ágil +hp/+dano/+lasgun/+speed, custo 5 Ferro) recruta
+  `JungleFighterEntity` (skirmisher ranged ágil de elite, 34 HP, dano à distância 6.5, rápido 0.34 —
+  nicho hit-and-run, distinto do Kasrkin pesado e da Agri frágil). Registro + lang en/pt + wiring.
+  Build OK; langs 69 chaves. (Dono assumiu as texturas; tropas usam placeholder guardsman.png.)
 - 2026-06-18: Fase C — **Penal Legionnaire (tropa-tema da Penal Colony)**. `PenalLegionnaireEntity`
   (melee charger rápido e frágil: 22 HP, armor 2, dano 6, speed 0.37, faca de combate) — glass-cannon
   que combina com a Penal (numerosa/descartável); contrasta Enforcer (equilibrado) e Mine Guard (tanky).
