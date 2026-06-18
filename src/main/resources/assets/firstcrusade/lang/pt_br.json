@@ -34,6 +34,7 @@
   "item.firstcrusade.mine_guard_spawn_egg": "Ovo de Invocação de Guarda da Mina",
   "item.firstcrusade.agri_militia_spawn_egg": "Ovo de Invocação de Milícia Agrícola",
   "item.firstcrusade.sister_of_battle_spawn_egg": "Ovo de Invocação de Irmã de Batalha",
+  "item.firstcrusade.penal_legionnaire_spawn_egg": "Ovo de Invocação de Legionário Penal",
   "item.firstcrusade.roboute_guilliman_spawn_egg": "Ovo de Invocação de Roboute Guilliman",
   "block.firstcrusade.imperial_command_core": "Núcleo de Comando Imperial",
   "block.firstcrusade.imperial_mine": "Mina Imperial",
@@ -63,5 +64,6 @@
   "entity.firstcrusade.enforcer": "Enforcer",
   "entity.firstcrusade.mine_guard": "Guarda da Mina",
   "entity.firstcrusade.agri_militia": "Milícia Agrícola",
-  "entity.firstcrusade.sister_of_battle": "Irmã de Batalha"
+  "entity.firstcrusade.sister_of_battle": "Irmã de Batalha",
+  "entity.firstcrusade.penal_legionnaire": "Legionário Penal"
 }

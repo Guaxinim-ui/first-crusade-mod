@@ -1268,6 +1268,7 @@ private static EntityType<? extends AbstractImperialTroopEntity> getThemedTroopT
         case MINING -> ExampleMod.MINE_GUARD.get();         // Industrial Enforcers (melee bruiser)
         case AGRI -> ExampleMod.AGRI_MILITIA.get();         // rural PDF (light skirmisher)
         case SHRINE -> ExampleMod.SISTER_OF_BATTLE.get();   // Adepta Sororitas (ranged zealot)
+        case PENAL -> ExampleMod.PENAL_LEGIONNAIRE.get();   // Penal Legion (fast fragile melee swarm)
         default -> null;                                    // CIVILISED: baseline Guardsman
     };
 }

@@ -73,9 +73,9 @@ City, Adeptus Arbites, shock maul/command baton, **recrutado pela Hive City** �
 **Mine Guard** (tropa-tema melee tanky da Mining City, bruiser lento), **Agri Militia** (tropa-tema
 atiradora leve/ágil da Agri City), **Sister of Battle** (tropa-tema atiradora zelota da **nova Shrine
 City**, Adepta Sororitas). Todas estendem `AbstractImperialTroopEntity`. **Tipos de cidade: 7**
-(CIVILISED, HIVE, FORGE, FORTRESS, AGRI, MINING, **SHRINE**, **PENAL**); têm tropa-tema própria:
-Forge/Fortress/Hive/Mining/Agri/Shrine. **Civilised e Penal usam Guardsman baseline** (Penal =
-regimento descartável: numeroso 1.5×, -1 rank, fraco mas barato).
+(CIVILISED, HIVE, FORGE, FORTRESS, AGRI, MINING, **SHRINE**, **PENAL**). **Só Civilised usa Guardsman
+baseline**; os outros 7 têm tropa-tema própria: Forge→Skitarii, Fortress→Kasrkin, Hive→Enforcer,
+Mining→Mine Guard, Agri→Agri Militia, Shrine→Sister of Battle, Penal→Penal Legionnaire.
 
 **Unidades Ork:** Ork Boy, Ork Nob, **Warboss** (líder, espelho do Primarca; surge do camp após 3
 warbands e marcha sobre a cidade).
@@ -155,6 +155,12 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: Fase C — **Penal Legionnaire (tropa-tema da Penal Colony)**. `PenalLegionnaireEntity`
+  (melee charger rápido e frágil: 22 HP, armor 2, dano 6, speed 0.37, faca de combate) — glass-cannon
+  que combina com a Penal (numerosa/descartável); contrasta Enforcer (equilibrado) e Mine Guard (tanky).
+  Registro completo + lang en/pt + wiring (`getThemedTroopType` PENAL→Penal Legionnaire; nome já vinha
+  do troopName). Agora **só Civilised usa Guardsman baseline**; os outros 7 tipos têm entidade própria.
+  Build OK; langs validados (67 chaves cada).
 - 2026-06-18: Fase C — **reforços respeitam a tropa-tema da cidade**. O botão Call Reinforcements
   criava sempre Guardsman; agora ramifica por `getThemedTroopType(getCityType())` (Forge→Skitarii,
   Fortress→Kasrkin, Hive→Enforcer, Mining→Mine Guard, Agri→Agri Militia, Shrine→Sister of Battle;
