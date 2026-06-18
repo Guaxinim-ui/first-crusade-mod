@@ -1090,6 +1090,24 @@ public int getEmperorGeneSeedCapacity() {
 
 
 
+// Spends the city type's Iron recruit cost; returns false (without spending) if the stockpile
+// is short. Cheap for Hive levies, expensive for Fortress shock troops.
+public boolean tryPayRecruitCost() {
+    int cost = getCityType().getRecruitIronCost();
+
+    if (cost <= 0) {
+        return true;
+    }
+
+    if (this.resources.get(ImperialResourceType.IRON) < cost) {
+        return false;
+    }
+
+    this.resources.remove(ImperialResourceType.IRON, cost);
+    setChanged();
+    return true;
+}
+
 public void tryRecruitGuardsman(Player player) {
     if (!isOwner(player)) {
         player.displayClientMessage(Component.literal("Only the owner can train soldiers in this city."), true);
@@ -1125,6 +1143,13 @@ public void tryRecruitGuardsman(Player player) {
 
     if (recruit == null) {
         player.displayClientMessage(Component.literal("No trainable Imperial Citizen found near the Command Core."), true);
+        return;
+    }
+
+    if (!tryPayRecruitCost()) {
+        player.displayClientMessage(Component.literal(
+                "Not enough Iron to train a " + getCityType().getTroopName()
+                        + " (needs " + getCityType().getRecruitIronCost() + " Iron)."), true);
         return;
     }
 

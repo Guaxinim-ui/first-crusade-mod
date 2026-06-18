@@ -83,8 +83,9 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
   reais de hp/armor/dano/lasgun/velocidade (espelhando `ImperiumChapter`), aplicados no Guardsman
   via campo `cityType` (NBT "CityType") em `applyRankStats`/`getLasgunDamageWithBonuses`, e o nome
   mostra o regimento. Recruta marcado no Core (`initializeFromCity(rank, cityType)`). Fortress tanky,
-  Forge bem-equipado, Mining durão, Agri ágil, Hive fraco-mas-numeroso. Faltando: tropas-entidade
-  próprias (Skitarii, Sisters, Arbites/Enforcer), estruturas por tipo, custo de recruta por tipo.
+  Forge bem-equipado, Mining durão, Agri ágil, Hive fraco-mas-numeroso. (3) **Custo de recruta por
+  tipo** em Ferro (`recruitIronCost`, cobrado em `tryPayRecruitCost`): Hive 2 … Fortress 8.
+  Faltando: tropas-entidade próprias (Skitarii, Sisters, Arbites/Enforcer), estruturas por tipo.
 - [ ] **Fase D** — overlords globais: território, geração de assentamentos no worldgen, despacho de
   líderes por nível de ameaça.
 - [ ] **Fase E** (maior risco) — mundo achatado + menor + dimensões-planeta substituindo Nether/End
@@ -116,6 +117,10 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-17: Fase C — **custo de recruta por tipo de cidade**: treinar um soldado agora consome
+  Ferro (`ImperialCityType.recruitIronCost`), cobrado em `ImperialCommandCoreBlockEntity.tryPayRecruitCost`
+  no início do treino (Barracks e treino manual). Hive 2, Agri 3, Civilised/Mining 4, Forge 6,
+  Fortress 8 — levas baratas vs elite cara. Sem Ferro, o treino é recusado com aviso citando o custo.
 - 2026-06-17: Fase C — **regimento aplicado em todos os caminhos de recruta**: treino manual
   (`ImperialPopulationManager.trainNearestCitizenAsGuardsman`) e reforços (Core) antes criavam
   Guardsman sem chapter/rank/regimento; agora todos chamam `initializeFromCity(rank, cityType)` +

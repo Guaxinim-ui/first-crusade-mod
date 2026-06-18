@@ -9,13 +9,13 @@ import net.minecraft.util.RandomSource;
  * {@code docs/DESIGN_WORLD_CITIES_FACTIONS.md}; more types and deeper effects come later.
  */
 public enum ImperialCityType {
-    //        name                    focus                       pop    rank  troopName         hp    armor  dmg   lasgun speed
-    CIVILISED("Civilised World City", null, 1.0D, 0, "Guardsman", 0.0D, 0.0D, 0.0D, 0.0D, 0.0D),
-    HIVE("Hive City", ImperialResourceType.SCRAP, 2.0D, -1, "Hive Levy", -2.0D, -1.0D, 0.0D, -0.5D, 0.0D),
-    FORGE("Forge City", ImperialResourceType.SCRAP, 1.2D, 1, "Forge Guard", 1.0D, 3.0D, 0.0D, 0.75D, -0.005D),
-    FORTRESS("Fortress City", ImperialResourceType.IRON, 0.8D, 2, "Shock Trooper", 4.0D, 3.0D, 1.0D, 0.0D, -0.01D),
-    AGRI("Agri City", ImperialResourceType.COAL, 1.4D, 0, "Agri Militia", 1.0D, 0.0D, 0.0D, 0.0D, 0.015D),
-    MINING("Mining City", ImperialResourceType.IRON, 1.1D, 0, "Mine Guard", 3.0D, 1.0D, 1.0D, 0.0D, 0.0D);
+    //        name                    focus                       pop    rank  troopName         hp    armor  dmg   lasgun speed   iron
+    CIVILISED("Civilised World City", null, 1.0D, 0, "Guardsman", 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 4),
+    HIVE("Hive City", ImperialResourceType.SCRAP, 2.0D, -1, "Hive Levy", -2.0D, -1.0D, 0.0D, -0.5D, 0.0D, 2),
+    FORGE("Forge City", ImperialResourceType.SCRAP, 1.2D, 1, "Forge Guard", 1.0D, 3.0D, 0.0D, 0.75D, -0.005D, 6),
+    FORTRESS("Fortress City", ImperialResourceType.IRON, 0.8D, 2, "Shock Trooper", 4.0D, 3.0D, 1.0D, 0.0D, -0.01D, 8),
+    AGRI("Agri City", ImperialResourceType.COAL, 1.4D, 0, "Agri Militia", 1.0D, 0.0D, 0.0D, 0.0D, 0.015D, 3),
+    MINING("Mining City", ImperialResourceType.IRON, 1.1D, 0, "Mine Guard", 3.0D, 1.0D, 1.0D, 0.0D, 0.0D, 4);
 
     private static final double FOCUS_BONUS = 1.5D;
 
@@ -32,9 +32,13 @@ public enum ImperialCityType {
     private final double lasgunDamageBonus;
     private final double movementSpeedBonus;
 
+    // Iron paid to train one soldier: cheap levies (Hive) vs expensive elites (Fortress).
+    private final int recruitIronCost;
+
     ImperialCityType(String displayName, ImperialResourceType productionFocus, double populationFactor,
                      int recruitRankBonus, String troopName, double maxHealthBonus, double armorBonus,
-                     double attackDamageBonus, double lasgunDamageBonus, double movementSpeedBonus) {
+                     double attackDamageBonus, double lasgunDamageBonus, double movementSpeedBonus,
+                     int recruitIronCost) {
         this.displayName = displayName;
         this.productionFocus = productionFocus;
         this.populationFactor = populationFactor;
@@ -45,6 +49,7 @@ public enum ImperialCityType {
         this.attackDamageBonus = attackDamageBonus;
         this.lasgunDamageBonus = lasgunDamageBonus;
         this.movementSpeedBonus = movementSpeedBonus;
+        this.recruitIronCost = recruitIronCost;
     }
 
     public String getDisplayName() {
@@ -83,6 +88,11 @@ public enum ImperialCityType {
 
     public double getMovementSpeedBonus() {
         return this.movementSpeedBonus;
+    }
+
+    // Iron cost to train one of this city's soldiers.
+    public int getRecruitIronCost() {
+        return this.recruitIronCost;
     }
 
     // Multiplies a resource's daily production if it is this city's focus.

@@ -72,6 +72,13 @@ public class ImperialPopulationManager {
             return false;
         }
 
+        if (!commandCore.tryPayRecruitCost()) {
+            player.displayClientMessage(Component.literal(
+                    "Not enough Iron to train a " + commandCore.getCityType().getTroopName()
+                            + " (needs " + commandCore.getCityType().getRecruitIronCost() + " Iron)."), true);
+            return false;
+        }
+
         GuardsmanEntity guardsman = ExampleMod.GUARDSMAN.get().create(serverLevel);
 
         if (guardsman == null) {
