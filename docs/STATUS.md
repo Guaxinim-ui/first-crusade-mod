@@ -142,6 +142,13 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: **Performance (dono relatou travadas)** — o Core recalculava ~19 scans de bloco/entidade
+  a cada 40 ticks **por cidade, mesmo sem ninguém olhando**. Dois cortes: (1) `recomputeMenuStats` só
+  roda enquanto o menu está **aberto** (`openMenuCount`, incrementado em `ImperialCommandCoreMenu`
+  ctor server / decrementado em `removed`; recompute imediato ao abrir). Sem espectadores → **zero
+  scans**. (2) Os ~10 scans de cidadãos (assigned + unemployed + 8× job) viraram **1 scan** via
+  `ImperialPopulationManager.censusAssignedCitizens` (`CitizenCensus`, tabulação por job em uma
+  passagem). Comportamento da GUI idêntico. Build/jar OK.
 - 2026-06-18: Fase C — **Shrine City (7º tipo de cidade) + Sister of Battle**. Novo valor de enum
   `ImperialCityType.SHRINE` ("Shrine City", sem foco de recurso, pop 1.3, +1 rank, regimento de fé
   +2hp/+2armor/+1dano, recruta custa 6 Ferro) — entra automaticamente no spawn aleatório

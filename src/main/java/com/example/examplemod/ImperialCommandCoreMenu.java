@@ -14,11 +14,15 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
 
     private final ContainerData data;
     private final BlockPos commandCorePos;
+    // Server-side Core reference (null on the client) used to track when this menu is open, so the
+    // Core only refreshes its expensive cached stats while someone is actually viewing it.
+    private final ImperialCommandCoreBlockEntity commandCore;
 
     public ImperialCommandCoreMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
         super(ExampleMod.IMPERIAL_COMMAND_CORE_MENU.get(), containerId);
 
         this.commandCorePos = extraData.readBlockPos();
+        this.commandCore = null;
         this.data = new SimpleContainerData(DATA_COUNT);
 
         addDataSlots(this.data);
@@ -28,9 +32,12 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
         super(ExampleMod.IMPERIAL_COMMAND_CORE_MENU.get(), containerId);
 
         this.commandCorePos = commandCore.getBlockPos();
+        this.commandCore = commandCore;
         this.data = createServerData(commandCore);
 
         addDataSlots(this.data);
+
+        commandCore.onMenuOpened();
     }
 
     private ContainerData createServerData(ImperialCommandCoreBlockEntity commandCore) {
@@ -112,6 +119,16 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player player) {
         return true;
+    }
+
+    @Override
+    public void removed(Player player) {
+        super.removed(player);
+
+        // Server side only: let the Core know this viewer is gone so it can stop refreshing stats.
+        if (this.commandCore != null) {
+            this.commandCore.onMenuClosed();
+        }
     }
 
     @Override

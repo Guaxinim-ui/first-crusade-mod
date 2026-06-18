@@ -88,6 +88,10 @@ public class ImperialCommandCoreBlockEntity extends BlockEntity {
     private int statRecruitCount;
     private int statThreatScore;
 
+    // How many players currently have this Core's GUI open. Transient (not saved): the cached menu
+    // stats above are only refreshed while this is > 0. See onMenuOpened/onMenuClosed.
+    private int openMenuCount;
+
  private long lastOrkRaidDay = -1;
  private int orkRaidCount = 0;
 private boolean activeOrkRaid = false;
@@ -417,10 +421,11 @@ public int receiveProducedResource(ImperialResourceType resourceType, int amount
 
         ImperialPopulationManager.tickCitizenGrowth(serverLevel, blockEntity);
 
-        // Refresh the (expensive) structure/citizen/threat counts only a few times per second
-        // instead of every tick. The Core GUI reads these cached values, so opening it no longer
-        // forces a full block/entity scan on every server tick (which caused multi-second freezes).
-        if (serverLevel.getGameTime() % 40L == 0L) {
+        // The (expensive) structure/citizen/threat counts are only read by the Core GUI, so we
+        // refresh them at most a few times per second AND only while a player actually has the menu
+        // open. When nobody is viewing the Core it does no scans at all (it used to scan ~19 times
+        // every 40 ticks per city even with no viewers, which caused stutter as cities multiplied).
+        if (blockEntity.openMenuCount > 0 && serverLevel.getGameTime() % 40L == 0L) {
             blockEntity.recomputeMenuStats(serverLevel);
         }
 
@@ -447,8 +452,26 @@ blockEntity.trySpawnOrkRaid(serverLevel);
 blockEntity.checkActiveOrkRaid(serverLevel);
     }
 
+    // Called by ImperialCommandCoreMenu when a player opens the GUI. Refreshes once immediately so
+    // the viewer sees current data, then serverTick keeps it fresh while the menu stays open.
+    public void onMenuOpened() {
+        this.openMenuCount++;
+
+        if (this.level instanceof ServerLevel serverLevel) {
+            recomputeMenuStats(serverLevel);
+        }
+    }
+
+    // Called by ImperialCommandCoreMenu when a player closes the GUI.
+    public void onMenuClosed() {
+        if (this.openMenuCount > 0) {
+            this.openMenuCount--;
+        }
+    }
+
     // Recomputes the cached counts read by the Core GUI. Called a few times per second from
-    // serverTick, so the menu never triggers these block/entity scans on its own polling.
+    // serverTick while the menu is open, so the menu never triggers these block/entity scans on
+    // its own polling.
     private void recomputeMenuStats(ServerLevel serverLevel) {
         this.statMineCount = ImperialWorkSiteManager.countImperialMines(serverLevel, this, STATS_SCAN_RADIUS);
         this.statGoldMineCount = ImperialGoldMineManager.countGoldMines(serverLevel, this, STATS_SCAN_RADIUS);
@@ -459,16 +482,18 @@ blockEntity.checkActiveOrkRaid(serverLevel);
         this.statTradeDepotCount = ImperialEmeraldTradeDepotManager.countTradeDepots(serverLevel, this, STATS_SCAN_RADIUS);
         this.statBarracksCount = ImperialBarracksManager.countBarracks(serverLevel, this, STATS_SCAN_RADIUS);
 
-        this.statCitizenCount = ImperialPopulationManager.countAssignedCitizens(serverLevel, this);
-        this.statUnemployedCount = ImperialPopulationManager.countUnemployedCitizens(serverLevel, this);
-        this.statMinerCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.MINER);
-        this.statGoldMinerCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.GOLD_MINER);
-        this.statScrapperCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.SCRAPPER);
-        this.statSmithCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.SMITH);
-        this.statStokerCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.STOKER);
-        this.statFarmerCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.FARMER);
-        this.statTraderCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.TRADER);
-        this.statRecruitCount = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.RECRUIT);
+        // One citizen scan tallies the total, the unemployed and every job at once.
+        ImperialPopulationManager.CitizenCensus census = ImperialPopulationManager.censusAssignedCitizens(serverLevel, this);
+        this.statCitizenCount = census.assigned();
+        this.statUnemployedCount = census.unemployed();
+        this.statMinerCount = census.withJob(ImperialCitizenJob.MINER);
+        this.statGoldMinerCount = census.withJob(ImperialCitizenJob.GOLD_MINER);
+        this.statScrapperCount = census.withJob(ImperialCitizenJob.SCRAPPER);
+        this.statSmithCount = census.withJob(ImperialCitizenJob.SMITH);
+        this.statStokerCount = census.withJob(ImperialCitizenJob.STOKER);
+        this.statFarmerCount = census.withJob(ImperialCitizenJob.FARMER);
+        this.statTraderCount = census.withJob(ImperialCitizenJob.TRADER);
+        this.statRecruitCount = census.withJob(ImperialCitizenJob.RECRUIT);
 
         this.statThreatScore = getLiveThreatScore();
     }

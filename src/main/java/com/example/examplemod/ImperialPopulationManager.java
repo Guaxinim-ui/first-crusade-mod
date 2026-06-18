@@ -147,6 +147,57 @@ public class ImperialPopulationManager {
         return citizens.size();
     }
 
+    /**
+     * Single-pass tally of a city's assigned citizens: total, unemployed and a per-job breakdown.
+     * Replaces ~10 separate {@code getEntitiesOfClass} scans (one per job + assigned + unemployed)
+     * with one, which matters because the Core refreshes these stats a few times per second.
+     */
+    public static CitizenCensus censusAssignedCitizens(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore) {
+        BlockPos corePos = commandCore.getBlockPos();
+
+        List<ImperialCitizenEntity> citizens = serverLevel.getEntitiesOfClass(
+                ImperialCitizenEntity.class,
+                createSearchBox(corePos, 96),
+                citizen -> citizen.isAlive() && citizen.isAssignedToCommandCore(corePos)
+        );
+
+        CitizenCensus census = new CitizenCensus();
+        census.assigned = citizens.size();
+
+        for (ImperialCitizenEntity citizen : citizens) {
+            if (citizen.isUnemployed()) {
+                census.unemployed++;
+            }
+
+            ImperialCitizenJob job = citizen.getJob();
+
+            if (job != null) {
+                census.perJob[job.ordinal()]++;
+            }
+        }
+
+        return census;
+    }
+
+    /** Result of {@link #censusAssignedCitizens}: counts gathered in a single citizen scan. */
+    public static final class CitizenCensus {
+        private final int[] perJob = new int[ImperialCitizenJob.values().length];
+        private int assigned;
+        private int unemployed;
+
+        public int assigned() {
+            return this.assigned;
+        }
+
+        public int unemployed() {
+            return this.unemployed;
+        }
+
+        public int withJob(ImperialCitizenJob job) {
+            return this.perJob[job.ordinal()];
+        }
+    }
+
     public static int getCitizenCapacity(ImperialCommandCoreBlockEntity commandCore) {
         int base = switch (commandCore.getCityLevel()) {
             case 1 -> 3;
