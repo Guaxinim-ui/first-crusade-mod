@@ -45,20 +45,35 @@ public final class ImperialPatrolManager {
                         && !ImperialPrimarchManager.isInRetinue(guardsman, gameTime)
         );
 
-        if (guardsmen.isEmpty()) {
+        // Themed city troops (Skitarii, Kasrkin, Enforcer, ...) patrol the same way as Guardsmen.
+        List<AbstractImperialTroopEntity> themedTroops = serverLevel.getEntitiesOfClass(
+                AbstractImperialTroopEntity.class,
+                searchBox(corePos, GUARD_SEARCH_RADIUS),
+                troop -> troop.isAlive()
+                        && troop.isAssignedToCommandCore(corePos)
+                        && troop.getTarget() == null
+                        && !ImperialPrimarchManager.isInRetinue(troop, gameTime)
+        );
+
+        if (guardsmen.isEmpty() && themedTroops.isEmpty()) {
             return;
         }
 
         BlockPos[] waypoints = computeWaypoints(serverLevel, corePos, patrolRadius(core.getCityLevel()));
         int rotationOffset = (int) ((serverLevel.getGameTime() / PATROL_CYCLE_TICKS) % WAYPOINT_COUNT);
 
+        // Reassigning the same post is harmless: the guard post goal only moves a unit when it has
+        // actually strayed from the assigned point.
         for (GuardsmanEntity guardsman : guardsmen) {
             int stableIndex = Math.floorMod(guardsman.getId(), WAYPOINT_COUNT);
             int waypointIndex = Math.floorMod(stableIndex + rotationOffset, WAYPOINT_COUNT);
-
-            // Reassigning the same post is harmless: the guard post goal only moves the
-            // Guardsman when he is actually away from the assigned point.
             guardsman.assignGuardPost(waypoints[waypointIndex]);
+        }
+
+        for (AbstractImperialTroopEntity troop : themedTroops) {
+            int stableIndex = Math.floorMod(troop.getId(), WAYPOINT_COUNT);
+            int waypointIndex = Math.floorMod(stableIndex + rotationOffset, WAYPOINT_COUNT);
+            troop.assignGuardPost(waypoints[waypointIndex]);
         }
     }
 

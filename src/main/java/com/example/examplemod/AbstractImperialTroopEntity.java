@@ -7,25 +7,53 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 /**
  * Shared base for the Imperium's standalone themed city troops (Skitarii Ranger, Kasrkin, Enforcer,
- * ...). Holds the parts every one of them shares: the bind to an Imperial Command Core, faction-gated
- * targeting, persistence, NBT for the bound Core, and the death bookkeeping that frees a slot in the
- * city's military tally.
+ * Mine Guard, Agri Militia, Sister of Battle, Penal Legionnaire, Jungle Fighter, ...). Holds what
+ * every one of them shares: the bind to an Imperial Command Core, faction-gated targeting,
+ * persistence, NBT (Core + guard post), the death bookkeeping that frees a slot in the city's
+ * military tally, and the common AI goals (idle/look/stroll, target selection and a guard-post goal
+ * so the patrol manager can circulate them around the city like Guardsmen).
  *
- * Subclasses add their own attributes, goals, weapon and name — and the rank/chapter machinery is
- * deliberately left to the Guardsman, not these themed troops.
+ * Subclasses only add their attributes, weapon, name and their single attack goal (via
+ * {@link #registerCombatGoals()}). The rank/chapter machinery is deliberately left to the Guardsman.
  */
 public abstract class AbstractImperialTroopEntity extends PathfinderMob {
     private BlockPos commandCorePos;
+    private BlockPos guardPostPos;
 
     protected AbstractImperialTroopEntity(EntityType<? extends AbstractImperialTroopEntity> entityType, Level level) {
         super(entityType, level);
         this.setPersistenceRequired();
     }
+
+    @Override
+    protected void registerGoals() {
+        this.goalSelector.addGoal(0, new FloatGoal(this));
+
+        // Combat (priority 2) is added by the subclass.
+        registerCombatGoals();
+
+        // Return to the assigned patrol post when idle, then idle behaviours.
+        this.goalSelector.addGoal(3, new ImperialTroopGuardPostGoal(this, 1.0D, 3.0D));
+        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(8, new RandomStrollGoal(this, 0.8D));
+
+        this.targetSelector.addGoal(1, new FirstCrusadeHurtByTargetGoal(this));
+        this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
+    }
+
+    /** Subclasses add their single attack goal here, at priority 2 (ranged or melee). */
+    protected abstract void registerCombatGoals();
 
     public void assignToCommandCore(BlockPos commandCorePos) {
         this.commandCorePos = commandCorePos;
@@ -38,6 +66,15 @@ public abstract class AbstractImperialTroopEntity extends PathfinderMob {
 
     public boolean isAssignedToCommandCore(BlockPos pos) {
         return this.commandCorePos != null && this.commandCorePos.equals(pos);
+    }
+
+    public void assignGuardPost(BlockPos guardPostPos) {
+        this.guardPostPos = guardPostPos;
+    }
+
+    @Nullable
+    public BlockPos getGuardPostPos() {
+        return this.guardPostPos;
     }
 
     @Override
@@ -89,6 +126,15 @@ public abstract class AbstractImperialTroopEntity extends PathfinderMob {
         } else {
             tag.putBoolean("HasCommandCore", false);
         }
+
+        if (this.guardPostPos != null) {
+            tag.putBoolean("HasGuardPost", true);
+            tag.putInt("GuardPostX", this.guardPostPos.getX());
+            tag.putInt("GuardPostY", this.guardPostPos.getY());
+            tag.putInt("GuardPostZ", this.guardPostPos.getZ());
+        } else {
+            tag.putBoolean("HasGuardPost", false);
+        }
     }
 
     @Override
@@ -100,6 +146,14 @@ public abstract class AbstractImperialTroopEntity extends PathfinderMob {
                     tag.getInt("CommandCoreX"),
                     tag.getInt("CommandCoreY"),
                     tag.getInt("CommandCoreZ")
+            );
+        }
+
+        if (tag.getBoolean("HasGuardPost")) {
+            this.guardPostPos = new BlockPos(
+                    tag.getInt("GuardPostX"),
+                    tag.getInt("GuardPostY"),
+                    tag.getInt("GuardPostZ")
             );
         }
     }

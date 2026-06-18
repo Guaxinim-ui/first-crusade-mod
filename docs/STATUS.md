@@ -159,6 +159,14 @@ entidades novas como Skitarii/Sisters).
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: Fase C — **tropas-tema patrulham a cidade** (antes só Guardsmen patrulhavam; tropas-tema
+  ficavam vagando perto do spawn). Adicionado guard post à base `AbstractImperialTroopEntity` (campo +
+  `assignGuardPost`/`getGuardPostPos` + NBT) e goal genérico `ImperialTroopGuardPostGoal`;
+  `ImperialPatrolManager` agora atribui waypoints às tropas-tema também (mesma lógica/anel/rotação,
+  exclui retinue do Primarca). **Refatoração junto:** os goals comuns (Float/LookAt/LookAround/Stroll +
+  target goals + guard post) subiram para a base em `registerGoals()`; cada subclasse agora só
+  implementa `registerCombatGoals()` com seu único goal de ataque — removeu a duplicação que as 8
+  tropas repetiam. Build offline OK.
 - 2026-06-18: Fase C — **9º tipo de cidade: Death World + Jungle Fighter**. `ImperialCityType.DEATH_WORLD`
   (veteranos: pop baixa 0.9, +1 rank, regimento ágil +hp/+dano/+lasgun/+speed, custo 5 Ferro) recruta
   `JungleFighterEntity` (skirmisher ranged ágil de elite, 34 HP, dano à distância 6.5, rápido 0.34 —
