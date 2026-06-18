@@ -72,11 +72,16 @@ Tempestus, hotshot lasgun, **recrutado pela Fortress City**), **Enforcer** (trop
 City, Adeptus Arbites, shock maul/command baton, **recrutado pela Hive City** — 1º melee standalone),
 **Mine Guard** (tropa-tema melee tanky da Mining City, bruiser lento), **Agri Militia** (tropa-tema
 atiradora leve/ágil da Agri City), **Sister of Battle** (tropa-tema atiradora zelota da **nova Shrine
-City**, Adepta Sororitas). Todas estendem `AbstractImperialTroopEntity`. **Tipos de cidade: 7**
+City**, Adepta Sororitas). Todas estendem `AbstractImperialTroopEntity` (vínculo ao Core, faction,
+NBT, morte, guard post e goals comuns; subclasse só tem `registerCombatGoals()`). **Tipos de cidade: 10**
 (CIVILISED, HIVE, FORGE, FORTRESS, AGRI, MINING, **SHRINE**, **PENAL**, **DEATH_WORLD**, **FEUDAL**).
 **Só Civilised usa Guardsman baseline**; os outros 9 têm tropa-tema própria: Forge→Skitarii,
 Fortress→Kasrkin, Hive→Enforcer, Mining→Mine Guard, Agri→Agri Militia, Shrine→Sister of Battle,
-Penal→Penal Legionnaire, Death World→Jungle Fighter, Feudal→Feudal Knight.
+Penal→Penal Legionnaire, Death World→Jungle Fighter, Feudal→Feudal Knight. As tropas-tema
+**recrutam, reforçam (`callImperialReinforcements`) e patrulham** (via `ImperialPatrolManager`) como
+os Guardsmen. O tipo é **enviesado pelo bioma** ao fundar (`pickCityTypeForBiome`) e dá **+1 capacidade
+na estrutura-tema** (`specialtyBonus`: Mining→Mina, Fortress→Barracks, Hive→Scrap Yard, Forge→Forja,
+Agri→Farm).
 
 > **Texturas:** todas as tropas-tema usam placeholder = cópia de `guardsman.png`. O dono fará a arte
 > de cada uma; ao criar tropa nova, só copiar guardsman.png como placeholder (não gerar recolor).
@@ -101,42 +106,35 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
   (bucha), **Killa Kan** (máquina, tier 3+), **WAAAGH! Overlord** (`WaaaghOverlordData` SavedData
   global + `WaaaghOverlordManager`: cresce com a prosperidade imperial, tier 0-4 com anúncio global,
   escala todos os camps), e **warbands por clã** (Goffs/Bad Moons/Deathskulls/Evil Sunz/Snakebites).
-- [~] **Fase C** — tipos de cidade com tropas-tema. **Em andamento**: (1) bônus de rank por tipo
-  (`ImperialCityType.getRecruitRankBonus` em `getStartingGuardsmanRank` via `GuardsmanRank.advance`) —
-  Fortress +2 (Shock Trooper), Forge +1, Hive -1 (Hive Levy, mas 2x pop); nome temático
-  (`getTroopName`). (2) **Regimento de combate por tipo**: cada `ImperialCityType` traz modificadores
-  reais de hp/armor/dano/lasgun/velocidade (espelhando `ImperiumChapter`), aplicados no Guardsman
-  via campo `cityType` (NBT "CityType") em `applyRankStats`/`getLasgunDamageWithBonuses`, e o nome
-  mostra o regimento. Recruta marcado no Core (`initializeFromCity(rank, cityType)`). Fortress tanky,
-  Forge bem-equipado, Mining durão, Agri ágil, Hive fraco-mas-numeroso. (3) **Custo de recruta por
-  tipo** em Ferro (`recruitIronCost`, cobrado em `tryPayRecruitCost`): Hive 2 … Fortress 8.
-  (4) **Skitarii Ranger** — 1ª tropa-entidade própria (Forge/Mechanicus), standalone com Lasgun,
-  registrada e testável por spawn egg. (5) **Forge City recruta Skitarii**: `completeRecruitTraining`
-  ramifica por `getCityType()==FORGE` → cria `SkitariiRangerEntity` (helpers `spawnTrainedSkitariiRanger`/
-  `spawnTrainedGuardsman`); o tally `recruitedGuardsmen` (e `reorganizeExistingGuardsmen` no upgrade)
-  conta Skitarii. (6) **Kasrkin** — 2ª tropa-entidade própria (Fortress/Militarum Tempestus),
-  elite standalone com hotshot Lasgun (44 HP, 13 armor, dano 8); `completeRecruitTraining` agora é
-  um switch por tipo (FORGE→Skitarii, FORTRESS→Kasrkin, default→Guardsman) e a recontagem do upgrade
-  conta os três. (7) **Enforcer** — 3ª tropa-entidade própria (Hive/Adeptus Arbites) e **1ª melee**:
-  brawler standalone com shock maul (`MeleeAttackGoal`, 30 HP, dano 7, rápido). Hive City recruta
-  Enforcer; switch e recontagem cobrem 4 tipos (Guardsman + Skitarii + Kasrkin + Enforcer).
-  (8) **Mine Guard** (Mining, bruiser melee tanky) e **Agri Militia** (Agri, skirmisher ranged leve):
-  **todos os 6 tipos de cidade já têm tropa-tema** (Civilised = Guardsman baseline). O dispatch do
-  Core virou genérico (`getThemedTroopType(cityType) -> EntityType` + `spawnThemedTroop`); faction e
-  recontagem do upgrade usam a base `AbstractImperialTroopEntity` (1 check/1 query, futuras tropas
-  entram sem mexer aqui). (9) **Shrine City (7º tipo) + Sister of Battle**: novo `ImperialCityType.SHRINE`
-  (foco nenhum, pop 1.3, +1 rank, regimento fé +hp/+armor/+dano) que recruta `SisterOfBattleEntity`
-  (atiradora zelota, 40 HP, armor 11, tiro 7 com knockback). **Próximo**: estruturas por tipo de cidade,
-  tropa-tema também em reforços/treino manual, ou mais tipos de cidade (Death World, Penal, Feudal...).
+- [x] **Fase C — essencialmente COMPLETA** (detalhes no changelog §7). Resumo: **10 tipos de cidade**,
+  9 com **tropa-tema standalone própria** (sobre `AbstractImperialTroopEntity`) que recruta/reforça/
+  patrulha; regimento de combate + custo de recruta + bônus de rank por tipo (no Guardsman);
+  tipo enviesado pelo **bioma**; **+1 capacidade na estrutura-tema** por tipo de foco. Falta de Fase C
+  (opcional, menor valor): estruturas realmente distintas por tipo (não só capacidade), e GUI mostrar
+  a identidade do tipo/tropa.
 - [ ] **Fase D** — overlords globais: território, geração de assentamentos no worldgen, despacho de
   líderes por nível de ameaça.
 - [ ] **Fase E** (maior risco) — mundo achatado + menor + dimensões-planeta substituindo Nether/End
   + viagem planetária (via Spaceport).
 - [ ] **Transversal** — conteúdo (armas/armaduras/recursos por facção) para não ficar entediante.
 
-**Foco atual recomendado:** Fase C — fazer cada tipo de cidade recrutar tropas-tema próprias
-(começar reusando GuardsmanEntity com ranks/equipamentos distintos por tipo antes de criar
-entidades novas como Skitarii/Sisters).
+### >>> PRÓXIMO PASSO (retomar aqui após o /clear) <<<
+O dono testou em jogo e **está tudo OK** até o commit `1db7d1f`. Fase C está madura. Escolher UM:
+
+1. **(Recomendado) GUI em chaves de lang** — hoje os textos da interface do Core (botões/custos/
+   mensagens) são `Component.literal("...")` em código, então o `pt_br.json` **não** traduz a GUI.
+   Migrar para `Component.translatable("...")` + adicionar as chaves em en_us/pt_br. Arquivos:
+   `ImperialCommandCoreScreen.java` (botões/labels) e mensagens em `ImperialCommandCoreBlockEntity`.
+   É grande e diffuso — fazer por abas/aos poucos, compilando a cada bloco. Alto valor pro dono BR.
+2. **Fase D — Overlords/worldgen** (item de roadmap grande): começar pelo mais bounded — geração de
+   assentamentos no worldgen (structure feature) OU um `WorldFactionOverlordManager` que despacha
+   líder quando uma cidade atinge ameaça nível 4. Alto risco técnico (worldgen). Fazer slice por slice.
+3. **Conteúdo transversal** — armas novas (bolter/chainsword) reusando `LasgunItem`/`LasgunShotEntity`
+   como molde; bounded e visível.
+
+**Regras ao continuar:** reusar o padrão de tropa-tema (entidade + renderer + placeholder guardsman.png
++ registro em ExampleMod + faction via base + lang en/pt + 1 linha em `getThemedTroopType`/enum).
+Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 5. Convenções de arquitetura (seguir)
 
