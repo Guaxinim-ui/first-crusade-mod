@@ -237,5 +237,22 @@
   "msg.firstcrusade.build.scrap_yard_cap": "Capacidade de Ferros-Velhos atingida. Evolua a cidade para construir mais Ferros-Velhos.",
   "msg.firstcrusade.build.refinery_cap": "Capacidade de Refinarias de Prometium atingida. Evolua a cidade para construir mais refinarias.",
   "msg.firstcrusade.build.barracks_cap": "Capacidade de Quartéis atingida. Evolua a cidade para construir mais quartéis.",
-  "msg.firstcrusade.build.forge_cap": "Capacidade de Forjas Imperiais atingida. Evolua a cidade para construir mais forjas."
+  "msg.firstcrusade.build.forge_cap": "Capacidade de Forjas Imperiais atingida. Evolua a cidade para construir mais forjas.",
+  "msg.firstcrusade.deposit.not_owner": "Só o dono pode depositar recursos nesta cidade.",
+  "msg.firstcrusade.deposit.full": "O armazém de %s está cheio.",
+  "msg.firstcrusade.deposit.done": "Depositado %s %s.",
+  "msg.firstcrusade.deposit.city": "Cidade %s: %s/%s",
+  "msg.firstcrusade.deposit.all_full": "O armazenamento da cidade está cheio. Nenhum recurso foi depositado.",
+  "msg.firstcrusade.deposit.all_none": "Nenhum recurso da cidade depositável encontrado no seu inventário.",
+  "msg.firstcrusade.deposit.all_done": "Depositado: %s Ferro, %s Carvão, %s Sucata, %s Ouro, %s Esmeralda, %s Crusadium.",
+  "msg.firstcrusade.withdraw.not_owner": "Só o dono pode retirar recursos desta cidade.",
+  "msg.firstcrusade.withdraw.done": "Retirado %s %s da cidade.",
+  "msg.firstcrusade.recruit.not_owner": "Só o dono pode treinar soldados nesta cidade.",
+  "msg.firstcrusade.recruit.military_cap": "Capacidade militar atingida. Evolua a cidade para treinar mais soldados.",
+  "msg.firstcrusade.recruit.need_barracks": "Você precisa de um Quartel Imperial para treinar soldados.",
+  "msg.firstcrusade.recruit.barracks_busy": "Todos os Quartéis estão treinando recrutas no momento.",
+  "msg.firstcrusade.recruit.no_citizen": "Nenhum Cidadão Imperial treinável encontrado perto do Núcleo de Comando.",
+  "msg.firstcrusade.recruit.need_iron": "Ferro insuficiente para treinar um %s (precisa de %s Ferro).",
+  "msg.firstcrusade.recruit.assigned": "Cidadão Imperial designado para treinar como Recruta.",
+  "msg.firstcrusade.recruit.in_training": "Recrutas treinando: %s. Soldados: %s/%s"
 }

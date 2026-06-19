@@ -624,62 +624,62 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
 
     public void depositIron(Player player, ItemStack itemStack) {
         if (!isOwner(player)) {
-            player.displayClientMessage(Component.literal("Only the owner can deposit resources into this city."), true);
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.not_owner"), true);
             return;
         }
 
         int acceptedAmount = addIron(itemStack.getCount());
 
         if (acceptedAmount <= 0) {
-            player.displayClientMessage(Component.literal("Iron warehouse is full."), true);
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.full", Component.translatable("gui.firstcrusade.res.iron")), true);
             return;
         }
 
         itemStack.shrink(acceptedAmount);
         setChanged();
 
-        player.displayClientMessage(Component.literal("Deposited " + acceptedAmount + " Iron."), false);
-        player.displayClientMessage(Component.literal("City Iron: " + this.resources.getIron() + "/" + getStorageCapacity()), false);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.done", acceptedAmount, Component.translatable("gui.firstcrusade.res.iron")), false);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.city", Component.translatable("gui.firstcrusade.res.iron"), this.resources.getIron(), getStorageCapacity()), false);
     }
 
     public void depositCoal(Player player, ItemStack itemStack) {
         if (!isOwner(player)) {
-            player.displayClientMessage(Component.literal("Only the owner can deposit resources into this city."), true);
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.not_owner"), true);
             return;
         }
 
         int acceptedAmount = addCoal(itemStack.getCount());
 
         if (acceptedAmount <= 0) {
-            player.displayClientMessage(Component.literal("Coal warehouse is full."), true);
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.full", Component.translatable("gui.firstcrusade.res.coal")), true);
             return;
         }
 
         itemStack.shrink(acceptedAmount);
         setChanged();
 
-        player.displayClientMessage(Component.literal("Deposited " + acceptedAmount + " Coal."), false);
-        player.displayClientMessage(Component.literal("City Coal: " + this.resources.getCoal() + "/" + getStorageCapacity()), false);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.done", acceptedAmount, Component.translatable("gui.firstcrusade.res.coal")), false);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.city", Component.translatable("gui.firstcrusade.res.coal"), this.resources.getCoal(), getStorageCapacity()), false);
     }
 
     public void depositScrapMetal(Player player, ItemStack itemStack) {
         if (!isOwner(player)) {
-            player.displayClientMessage(Component.literal("Only the owner can deposit resources into this city."), true);
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.not_owner"), true);
             return;
         }
 
         int acceptedAmount = addScrapMetal(itemStack.getCount());
 
         if (acceptedAmount <= 0) {
-            player.displayClientMessage(Component.literal("Scrap Metal warehouse is full."), true);
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.full", Component.translatable("gui.firstcrusade.res.scrap")), true);
             return;
         }
 
         itemStack.shrink(acceptedAmount);
         setChanged();
 
-        player.displayClientMessage(Component.literal("Deposited " + acceptedAmount + " Scrap Metal."), false);
-        player.displayClientMessage(Component.literal("City Scrap Metal: " + this.resources.getScrapMetal() + "/" + getStorageCapacity()), false);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.done", acceptedAmount, Component.translatable("gui.firstcrusade.res.scrap")), false);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.city", Component.translatable("gui.firstcrusade.res.scrap"), this.resources.getScrapMetal(), getStorageCapacity()), false);
     }
     
     // Deposits whole compressed blocks (worth 9 units each) that fit in the remaining capacity.
@@ -697,7 +697,7 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
 
     public void depositAllResources(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can deposit resources into this city."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.not_owner"), true);
         return;
     }
 
@@ -815,9 +815,9 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
     if (totalIron <= 0 && totalCoal <= 0 && totalScrap <= 0
             && totalGold <= 0 && totalEmerald <= 0 && totalCrusadium <= 0) {
         if (foundResource) {
-            player.displayClientMessage(Component.literal("City storage is full. No resources were deposited."), true);
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.all_full"), true);
         } else {
-            player.displayClientMessage(Component.literal("No depositable city resources found in your inventory."), true);
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.all_none"), true);
         }
 
         return;
@@ -826,10 +826,8 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
     player.getInventory().setChanged();
     setChanged();
 
-    player.displayClientMessage(Component.literal(
-            "Deposited: " + totalIron + " Iron, " + totalCoal + " Coal, " + totalScrap + " Scrap, "
-                    + totalGold + " Gold, " + totalEmerald + " Emerald, " + totalCrusadium + " Crusadium."
-    ), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.all_done",
+            totalIron, totalCoal, totalScrap, totalGold, totalEmerald, totalCrusadium), false);
 
     player.displayClientMessage(Component.literal(
             "City Storage: " + this.resources.getIron() + " Iron, " + this.resources.getCoal() + " Coal, " + this.resources.getScrapMetal() + " Scrap, "
@@ -840,7 +838,7 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
     // Withdraws stored resources back into the owner's inventory as items (for crafting, etc.).
     public void withdrawResource(Player player, ImperialResourceType type, int requested) {
         if (!isOwner(player)) {
-            player.displayClientMessage(Component.literal("Only the owner can withdraw resources from this city."), true);
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.withdraw.not_owner"), true);
             return;
         }
 
@@ -849,7 +847,7 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
         int amount = Math.min(available, requested);
 
         if (amount <= 0) {
-            player.displayClientMessage(Component.literal("No " + type.getDisplayName() + " stored to withdraw."), true);
+            player.displayClientMessage(Component.translatable("gui.firstcrusade.reason.withdraw_empty", type.getDisplayName()), true);
             return;
         }
 
@@ -873,9 +871,7 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
         player.getInventory().setChanged();
         setChanged();
 
-        player.displayClientMessage(Component.literal(
-                "Withdrew " + amount + " " + type.getDisplayName() + " from the city."
-        ), false);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.withdraw.done", amount, type.getDisplayName()), false);
     }
 
     private int addIron(int amount) {
@@ -981,14 +977,14 @@ public void consumeFood(int amount) {
 // Withdraws stored Food into the owner's inventory as Wheat.
 public void withdrawFood(Player player, int requested) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can withdraw resources from this city."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.withdraw.not_owner"), true);
         return;
     }
 
     int amount = Math.min(this.food, requested);
 
     if (amount <= 0) {
-        player.displayClientMessage(Component.literal("No Food stored to withdraw."), true);
+        player.displayClientMessage(Component.translatable("gui.firstcrusade.reason.withdraw_empty", Component.translatable("gui.firstcrusade.res.food")), true);
         return;
     }
 
@@ -1003,9 +999,7 @@ public void withdrawFood(Player player, int requested) {
     player.getInventory().setChanged();
     setChanged();
 
-    player.displayClientMessage(Component.literal(
-            "Withdrew " + amount + " Food (Wheat) from the city."
-    ), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.withdraw.done", amount, Component.translatable("gui.firstcrusade.res.food")), false);
 }
 
 public boolean consumeCrusadium(int amount) {
@@ -1094,7 +1088,7 @@ public boolean tryPayRecruitCost() {
 
 public void tryRecruitGuardsman(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can train soldiers in this city."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.recruit.not_owner"), true);
         return;
     }
 
@@ -1105,7 +1099,7 @@ public void tryRecruitGuardsman(Player player) {
     int recruitsInTraining = ImperialPopulationManager.countCitizensWithJob(serverLevel, this, ImperialCitizenJob.RECRUIT);
 
     if (this.recruitedGuardsmen + recruitsInTraining >= getMilitaryCapacity()) {
-        player.displayClientMessage(Component.literal("Military capacity reached. Upgrade the city to train more soldiers."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.recruit.military_cap"), true);
         return;
     }
 
@@ -1115,9 +1109,9 @@ public void tryRecruitGuardsman(Player player) {
         int barracksCount = ImperialBarracksManager.countBarracks(serverLevel, this, 128);
 
         if (barracksCount <= 0) {
-            player.displayClientMessage(Component.literal("You need an Imperial Barracks to train soldiers."), true);
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.recruit.need_barracks"), true);
         } else {
-            player.displayClientMessage(Component.literal("All Barracks are currently training recruits."), true);
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.recruit.barracks_busy"), true);
         }
 
         return;
@@ -1126,14 +1120,13 @@ public void tryRecruitGuardsman(Player player) {
     ImperialCitizenEntity recruit = ImperialPopulationManager.findNearestTrainableCitizen(serverLevel, this, player);
 
     if (recruit == null) {
-        player.displayClientMessage(Component.literal("No trainable Imperial Citizen found near the Command Core."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.recruit.no_citizen"), true);
         return;
     }
 
     if (!tryPayRecruitCost()) {
-        player.displayClientMessage(Component.literal(
-                "Not enough Iron to train a " + getCityType().getTroopName()
-                        + " (needs " + getCityType().getRecruitIronCost() + " Iron)."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.recruit.need_iron",
+                getCityType().getTroopName(), getCityType().getRecruitIronCost()), true);
         return;
     }
 
@@ -1142,10 +1135,9 @@ public void tryRecruitGuardsman(Player player) {
 
     setChanged();
 
-    player.displayClientMessage(Component.literal("Imperial Citizen assigned to training as Recruit."), false);
-    player.displayClientMessage(Component.literal(
-            "Recruits in training: " + (recruitsInTraining + 1) + ". Soldiers: " + this.recruitedGuardsmen + "/" + getMilitaryCapacity()
-    ), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.recruit.assigned"), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.recruit.in_training",
+            recruitsInTraining + 1, this.recruitedGuardsmen, getMilitaryCapacity()), false);
 }
 
 public boolean completeRecruitTraining(ServerLevel serverLevel, ImperialCitizenEntity recruit) {

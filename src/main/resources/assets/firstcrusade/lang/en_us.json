@@ -237,5 +237,22 @@
   "msg.firstcrusade.build.scrap_yard_cap": "Scrap Yard capacity reached. Upgrade the city to build more Scrap Yards.",
   "msg.firstcrusade.build.refinery_cap": "Promethium Refinery capacity reached. Upgrade the city to build more refineries.",
   "msg.firstcrusade.build.barracks_cap": "Barracks capacity reached. Upgrade the city to build more barracks.",
-  "msg.firstcrusade.build.forge_cap": "Imperial Forge capacity reached. Upgrade the city to build more forges."
+  "msg.firstcrusade.build.forge_cap": "Imperial Forge capacity reached. Upgrade the city to build more forges.",
+  "msg.firstcrusade.deposit.not_owner": "Only the owner can deposit resources into this city.",
+  "msg.firstcrusade.deposit.full": "%s warehouse is full.",
+  "msg.firstcrusade.deposit.done": "Deposited %s %s.",
+  "msg.firstcrusade.deposit.city": "City %s: %s/%s",
+  "msg.firstcrusade.deposit.all_full": "City storage is full. No resources were deposited.",
+  "msg.firstcrusade.deposit.all_none": "No depositable city resources found in your inventory.",
+  "msg.firstcrusade.deposit.all_done": "Deposited: %s Iron, %s Coal, %s Scrap, %s Gold, %s Emerald, %s Crusadium.",
+  "msg.firstcrusade.withdraw.not_owner": "Only the owner can withdraw resources from this city.",
+  "msg.firstcrusade.withdraw.done": "Withdrew %s %s from the city.",
+  "msg.firstcrusade.recruit.not_owner": "Only the owner can train soldiers in this city.",
+  "msg.firstcrusade.recruit.military_cap": "Military capacity reached. Upgrade the city to train more soldiers.",
+  "msg.firstcrusade.recruit.need_barracks": "You need an Imperial Barracks to train soldiers.",
+  "msg.firstcrusade.recruit.barracks_busy": "All Barracks are currently training recruits.",
+  "msg.firstcrusade.recruit.no_citizen": "No trainable Imperial Citizen found near the Command Core.",
+  "msg.firstcrusade.recruit.need_iron": "Not enough Iron to train a %s (needs %s Iron).",
+  "msg.firstcrusade.recruit.assigned": "Imperial Citizen assigned to training as Recruit.",
+  "msg.firstcrusade.recruit.in_training": "Recruits in training: %s. Soldiers: %s/%s"
 }

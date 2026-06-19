@@ -158,6 +158,14 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-19: **GUI em chaves de lang — fatia 4c (recrutar + depósito/retirada)**. Migrados para
+  `Component.translatable`: depósito por recurso (Iron/Coal/Scrap: não-dono/cheio/depositado/City),
+  `depositAllResources` (cheio/vazio/resumo), `withdrawResource` + `withdrawFood` (não-dono/vazio/
+  retirado, reusando `gui.firstcrusade.res.*` e `reason.withdraw_empty`), e `tryRecruitGuardsman`
+  (não-dono/cap/quartel/cidadão/custo/atribuído/em-treino). Chaves `msg.firstcrusade.deposit.*` /
+  `.withdraw.*` / `.recruit.*` em en_us+pt_br (**256 cada**). `Component.literal` no block entity:
+  **69 → 39**. Falta: reforço/rally/fortify, Space Marine, especialista, raid, alguns avisos soltos.
+
 - 2026-06-19: **GUI em chaves de lang — fatia 4b (mensagens de construção)**. Os 8 fluxos de build
   (mina/mina de ouro/fazenda/depósito/ferro-velho/refinaria/quartel/forja) migrados para
   `Component.translatable`. Chaves **compartilhadas** reduziram a duplicação: `build.not_owner`
