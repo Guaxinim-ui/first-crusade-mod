@@ -829,10 +829,9 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
     player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.all_done",
             totalIron, totalCoal, totalScrap, totalGold, totalEmerald, totalCrusadium), false);
 
-    player.displayClientMessage(Component.literal(
-            "City Storage: " + this.resources.getIron() + " Iron, " + this.resources.getCoal() + " Coal, " + this.resources.getScrapMetal() + " Scrap, "
-                    + this.resources.getGold() + " Gold, " + this.resources.getEmerald() + " Emerald, " + this.resources.getCrusadium() + " Crusadium."
-    ), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.deposit.all_storage",
+            this.resources.getIron(), this.resources.getCoal(), this.resources.getScrapMetal(),
+            this.resources.getGold(), this.resources.getEmerald(), this.resources.getCrusadium()), false);
 }
 
     // Withdraws stored resources back into the owner's inventory as items (for crafting, etc.).
@@ -1266,7 +1265,7 @@ public int getSelectedSpecialistOrdinal() {
 
 public void cycleSelectedSpecialist(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can change the specialist selection."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.spec.cycle_not_owner"), true);
         return;
     }
 
@@ -1274,17 +1273,17 @@ public void cycleSelectedSpecialist(Player player) {
     this.selectedSpecialistOrdinal = next.ordinal();
     setChanged();
 
-    player.displayClientMessage(Component.literal("Selected specialist: " + next.getDisplayName() + "."), true);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.spec.selected", next.getDisplayName()), true);
 }
 
 public void promoteSpecialist(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can promote specialists."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.spec.promote_not_owner"), true);
         return;
     }
 
     if (this.cityLevel < 2) {
-        player.displayClientMessage(Component.literal("Specialist promotions require an Imperial settlement of Level 2 or higher."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.spec.req_level_2"), true);
         return;
     }
 
@@ -1297,19 +1296,19 @@ public void promoteSpecialist(Player player) {
     int warSupportCost = getSpecialistWarSupportCost();
 
     if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost) {
-        player.displayClientMessage(Component.literal("Not enough city resources. Need: " + ironCost + " Iron, " + scrapCost + " Scrap."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_2_is", ironCost, scrapCost), true);
         return;
     }
 
     if (this.imperialWarSupport < warSupportCost) {
-        player.displayClientMessage(Component.literal("Not enough Imperial War Support. Need: " + warSupportCost + "."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.spec.need_warsupport", warSupportCost), true);
         return;
     }
 
     GuardsmanEntity target = findNearestSpecializableGuardsman(serverLevel, player);
 
     if (target == null) {
-        player.displayClientMessage(Component.literal("No non-specialist Guardsman found near the Command Core."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.spec.no_guardsman"), true);
         return;
     }
 
@@ -1322,10 +1321,8 @@ public void promoteSpecialist(Player player) {
 
     setChanged();
 
-    player.displayClientMessage(Component.literal("Guardsman promoted to " + spec.getDisplayName() + "."), false);
-    player.displayClientMessage(Component.literal(
-            "Cost: " + ironCost + " Iron, " + scrapCost + " Scrap, " + warSupportCost + " War Support."
-    ), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.spec.promoted", spec.getDisplayName()), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.spec.cost", ironCost, scrapCost, warSupportCost), false);
 }
 
 private int getSpecialistIronCost() {
@@ -1560,31 +1557,31 @@ public boolean engineerRepair(int amount) {
 
 public void callImperialReinforcements(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can call Imperial reinforcements."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.reinf.not_owner"), true);
         return;
     }
 
     if (!this.activeOrkRaid) {
-        player.displayClientMessage(Component.literal("Imperial reinforcements can only be called during an active Ork raid."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.reinf.only_raid"), true);
         return;
     }
 
     if (this.reinforcementCooldownTicks > 0) {
-        player.displayClientMessage(Component.literal("Reinforcements are still on cooldown: " + (this.reinforcementCooldownTicks / 20) + " seconds."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.reinf.cooldown", this.reinforcementCooldownTicks / 20), true);
         return;
     }
 
     if (this.recruitedGuardsmen >= getMilitaryCapacity()) {
-        player.displayClientMessage(Component.literal("Military capacity reached. Cannot call more reinforcements."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.reinf.military_cap"), true);
         return;
     }
 
     int warSupportCost = getReinforcementWarSupportCost();
 
     if (this.imperialWarSupport < warSupportCost) {
-        player.displayClientMessage(Component.literal("Not enough Imperial War Support to call reinforcements."), true);
-        player.displayClientMessage(Component.literal("Required: " + warSupportCost + " War Support."), false);
-        player.displayClientMessage(Component.literal("Current: " + this.imperialWarSupport + " War Support."), false);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.reinf.no_warsupport"), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.warsupport.required", warSupportCost), false);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.warsupport.current", this.imperialWarSupport), false);
         return;
     }
 
@@ -1597,7 +1594,7 @@ public void callImperialReinforcements(Player player) {
     int actualReinforcements = Math.min(requestedReinforcements, availableSlots);
 
     if (actualReinforcements <= 0) {
-        player.displayClientMessage(Component.literal("No military capacity available for reinforcements."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.reinf.no_capacity"), true);
         return;
     }
 
@@ -1650,7 +1647,7 @@ public void callImperialReinforcements(Player player) {
     }
 
     if (spawned <= 0) {
-        player.displayClientMessage(Component.literal("Failed to deploy Imperial reinforcements."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.reinf.failed"), true);
         return;
     }
 
@@ -1703,12 +1700,12 @@ private GuardsmanRank getReinforcementRank() {
 }
 public void rallyDefenders(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can rally city defenders."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.rally.not_owner"), true);
         return;
     }
 
     if (!this.activeOrkRaid) {
-        player.displayClientMessage(Component.literal("Defender rally can only be used during an active Ork raid."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.rally.only_raid"), true);
         return;
     }
 
@@ -1719,7 +1716,7 @@ public void rallyDefenders(Player player) {
     int affected = ImperialDefenseManager.rallyDefenders(serverLevel, this);
 
     if (affected <= 0) {
-        player.displayClientMessage(Component.literal("No assigned Guardsmen found near this Core."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.defense.no_guardsmen"), true);
         return;
     }
 
@@ -1740,21 +1737,21 @@ public void rallyDefenders(Player player) {
 
 public void fortifyDefenders(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can fortify city defenders."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.fortify.not_owner"), true);
         return;
     }
 
     if (!this.activeOrkRaid) {
-        player.displayClientMessage(Component.literal("Defender fortification can only be used during an active Ork raid."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.fortify.only_raid"), true);
         return;
     }
 
     int warSupportCost = getFortifyDefendersWarSupportCost();
 
     if (this.imperialWarSupport < warSupportCost) {
-        player.displayClientMessage(Component.literal("Not enough Imperial War Support to fortify defenders."), true);
-        player.displayClientMessage(Component.literal("Required: " + warSupportCost + " War Support."), false);
-        player.displayClientMessage(Component.literal("Current: " + this.imperialWarSupport + " War Support."), false);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.fortify.no_warsupport"), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.warsupport.required", warSupportCost), false);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.warsupport.current", this.imperialWarSupport), false);
         return;
     }
 
@@ -1765,7 +1762,7 @@ public void fortifyDefenders(Player player) {
     int affected = ImperialDefenseManager.fortifyDefenders(serverLevel, this);
 
     if (affected <= 0) {
-        player.displayClientMessage(Component.literal("No assigned Guardsmen found near this Core."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.defense.no_guardsmen"), true);
         return;
     }
 
@@ -1792,12 +1789,12 @@ private int getFortifyDefendersWarSupportCost() {
 
 public void upgradeNearestGuardsmanToSpaceMarine(Player player, ItemStack catalystStack) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can upgrade Guardsmen into Space Marines."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.sm.not_owner"), true);
         return;
     }
 
     if (this.cityLevel < 3) {
-        player.displayClientMessage(Component.literal("Space Marine upgrades require an Imperial settlement of Level 3 or higher."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.sm.req_level_3"), true);
         return;
     }
 
@@ -1811,22 +1808,22 @@ public void upgradeNearestGuardsmanToSpaceMarine(Player player, ItemStack cataly
     int warSupportCost = getSpaceMarineUpgradeWarSupportCost();
 
     if (this.resources.getIron() < ironCost) {
-        player.displayClientMessage(Component.literal("Missing Iron for Space Marine upgrade: " + (ironCost - this.resources.getIron())), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.sm.missing_iron", ironCost - this.resources.getIron()), true);
         return;
     }
 
     if (this.resources.getScrapMetal() < scrapCost) {
-        player.displayClientMessage(Component.literal("Missing Scrap Metal for Space Marine upgrade: " + (scrapCost - this.resources.getScrapMetal())), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.sm.missing_scrap", scrapCost - this.resources.getScrapMetal()), true);
         return;
     }
 
     if (this.resources.getCoal() < coalCost) {
-        player.displayClientMessage(Component.literal("Missing Coal for Space Marine upgrade: " + (coalCost - this.resources.getCoal())), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.sm.missing_coal", coalCost - this.resources.getCoal()), true);
         return;
     }
 
     if (this.imperialWarSupport < warSupportCost) {
-        player.displayClientMessage(Component.literal("Missing Imperial War Support for Space Marine upgrade: " + (warSupportCost - this.imperialWarSupport)), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.sm.missing_warsupport", warSupportCost - this.imperialWarSupport), true);
         return;
     }
 
@@ -1841,7 +1838,7 @@ public void upgradeNearestGuardsmanToSpaceMarine(Player player, ItemStack cataly
     );
 
     if (targetGuardsman == null) {
-        player.displayClientMessage(Component.literal("No upgradeable Guardsman found near this Core."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.sm.no_guardsman"), true);
         return;
     }
 
@@ -1854,8 +1851,8 @@ public void upgradeNearestGuardsmanToSpaceMarine(Player player, ItemStack cataly
 
     setChanged();
 
-    player.displayClientMessage(Component.literal("Space Marine upgrade completed."), false);
-    player.displayClientMessage(Component.literal("Cost: " + ironCost + " Iron, " + scrapCost + " Scrap, " + coalCost + " Coal, " + warSupportCost + " War Support, 1 Netherite Ingot."), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.sm.done"), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.sm.cost", ironCost, scrapCost, coalCost, warSupportCost), false);
 }
 
 private int getSpaceMarineUpgradeIronCost() {
@@ -2323,7 +2320,7 @@ private void trySpawnOrkRaid(ServerLevel serverLevel) {
 
 public void forceOrkRaid(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can force an Ork raid test."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.raid.not_owner"), true);
         return;
     }
 
@@ -2763,7 +2760,7 @@ public void openCommandInterface(Player player) {
     }
 
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can access the Imperial Command Core interface."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.interface.not_owner"), true);
         return;
     }
 

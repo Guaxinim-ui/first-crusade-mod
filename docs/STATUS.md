@@ -121,12 +121,11 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
 ### >>> PRÓXIMO PASSO (retomar aqui após o /clear) <<<
 O dono testou em jogo e **está tudo OK** até o commit `1db7d1f`. Fase C está madura. Escolher UM:
 
-1. **(Recomendado) GUI em chaves de lang** — **fatias 1, 2 e 3 FEITAS**: rótulos estáticos (abas/
-   botões/cabeçalhos/título), painel de status esquerdo, e tooltips dos botões. **GUI do Core
-   100% traduzível.** **Falta só:** (c) mensagens `Component.literal` no `ImperialCommandCoreBlockEntity`
-   (feedback de chat: "Only the owner can…", custos recusados, etc.) e, opcional, traduzir as strings
-   que ainda vêm de outras classes como `%s` (nome de especialista em `GuardsmanSpecialization`,
-   nome do nível de ameaça em `ThreatAssessmentManager`, rótulo de moral em `ImperialCityMoraleManager`).
+1. **GUI em chaves de lang — CONCLUÍDA para o Núcleo** (fatias 1–4). Tela e mensagens do Core 100%
+   traduzíveis (en/pt, 291 chaves sincronizadas). Restam só pendências menores/opcionais: notificações
+   broadcast que recebem String (mudar assinatura p/ Component), strings cross-class passadas como `%s`
+   (especialista/ameaça/moral/tropa), e `Component.literal` em **outros** arquivos (Ork Camp, etc.).
+   Próximo foco sugerido: **Fase D** (overlords/worldgen) OU **conteúdo transversal** (arma nova).
 2. **Fase D — Overlords/worldgen** (item de roadmap grande): começar pelo mais bounded — geração de
    assentamentos no worldgen (structure feature) OU um `WorldFactionOverlordManager` que despacha
    líder quando uma cidade atinge ameaça nível 4. Alto risco técnico (worldgen). Fazer slice por slice.
@@ -157,6 +156,16 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 - Mensagens de commit em pt-BR, terminar com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
 ## 7. Changelog (mais recente no topo)
+
+- 2026-06-19: **GUI em chaves de lang — fatia 4d (FECHA o block entity)**. Migrados os fluxos
+  restantes (especialista, reforço, rally, fortify, Space Marine, raid, interface) e o resumo de
+  depósito. **`Component.literal` no `ImperialCommandCoreBlockEntity`: 121 → 0.** Chaves
+  `msg.firstcrusade.spec/reinf/rally/fortify/sm/raid/interface/warsupport/defense.*` em en_us+pt_br
+  (**291 cada, em sincronia**). **A GUI e as mensagens do Núcleo estão 100% traduzíveis.**
+  Pendências menores de i18n (fora do Core/opcionais): (a) notificações broadcast em `OrkRaidManager.
+  notifyNearbyPlayers` / `ImperialDefenseManager.notifyDefenseCommand` recebem **String** (exigem
+  mudar a assinatura p/ Component); (b) strings cross-class passadas como `%s` (especialista, ameaça,
+  moral, nome de tropa); (c) `Component.literal` em OUTROS arquivos (Ork Camp, outras telas/itens).
 
 - 2026-06-19: **GUI em chaves de lang — fatia 4c (recrutar + depósito/retirada)**. Migrados para
   `Component.translatable`: depósito por recurso (Iron/Coal/Scrap: não-dono/cheio/depositado/City),
