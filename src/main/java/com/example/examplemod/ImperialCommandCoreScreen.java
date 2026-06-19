@@ -14,7 +14,13 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
     private static final int TAB_DEFENSE = 3;
     private static final int TAB_RESOURCES = 4;
 
-    private static final String[] TAB_NAMES = {"City", "Build", "Military", "Defense", "Resources"};
+    private static final String[] TAB_KEYS = {
+            "gui.firstcrusade.tab.city",
+            "gui.firstcrusade.tab.build",
+            "gui.firstcrusade.tab.military",
+            "gui.firstcrusade.tab.defense",
+            "gui.firstcrusade.tab.resources"
+    };
 
     private int activeTab = TAB_CITY;
 
@@ -106,13 +112,13 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         int tabY = this.topPos + 20;
         int tabWidth = 59;
 
-        for (int i = 0; i < TAB_NAMES.length; i++) {
+        for (int i = 0; i < TAB_KEYS.length; i++) {
             int index = i;
             int tabX = this.leftPos + 8 + i * 61;
 
             Button tab = this.addRenderableWidget(
                     Button.builder(
-                            Component.literal(TAB_NAMES[i]),
+                            Component.translatable(TAB_KEYS[i]),
                             button -> {
                                 this.activeTab = index;
                                 this.rebuildWidgets();
@@ -134,53 +140,53 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
     }
 
     private void initCityTab() {
-        this.upgradeButton = addActionButton(buttonX(), buttonY(0), 148, 18, "Upgrade City", ImperialCommandCoreAction.UPGRADE_CITY);
+        this.upgradeButton = addActionButton(buttonX(), buttonY(0), 148, 18, "gui.firstcrusade.button.upgrade_city", ImperialCommandCoreAction.UPGRADE_CITY);
     }
 
     private void initBuildTab() {
         int row = 0;
-        this.buildMineButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Build Mine", ImperialCommandCoreAction.BUILD_IMPERIAL_MINE);
-        this.buildGoldMineButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Build Gold Mine", ImperialCommandCoreAction.BUILD_GOLD_MINE);
-        this.buildScrapYardButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Build Scrap", ImperialCommandCoreAction.BUILD_SCRAP_YARD);
-        this.buildForgeButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Build Forge", ImperialCommandCoreAction.BUILD_IMPERIAL_FORGE);
-        this.buildRefineryButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Build Refinery", ImperialCommandCoreAction.BUILD_PROMETHIUM_REFINERY);
-        this.buildFarmButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Build Farm", ImperialCommandCoreAction.BUILD_FARM);
-        this.buildTradeDepotButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Build Trade Depot", ImperialCommandCoreAction.BUILD_EMERALD_TRADE_DEPOT);
-        this.buildBarracksButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Build Barracks", ImperialCommandCoreAction.BUILD_BARRACKS);
+        this.buildMineButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_mine", ImperialCommandCoreAction.BUILD_IMPERIAL_MINE);
+        this.buildGoldMineButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_gold_mine", ImperialCommandCoreAction.BUILD_GOLD_MINE);
+        this.buildScrapYardButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_scrap", ImperialCommandCoreAction.BUILD_SCRAP_YARD);
+        this.buildForgeButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_forge", ImperialCommandCoreAction.BUILD_IMPERIAL_FORGE);
+        this.buildRefineryButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_refinery", ImperialCommandCoreAction.BUILD_PROMETHIUM_REFINERY);
+        this.buildFarmButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_farm", ImperialCommandCoreAction.BUILD_FARM);
+        this.buildTradeDepotButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_trade_depot", ImperialCommandCoreAction.BUILD_EMERALD_TRADE_DEPOT);
+        this.buildBarracksButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_barracks", ImperialCommandCoreAction.BUILD_BARRACKS);
     }
 
     private void initMilitaryTab() {
         int row = 0;
-        this.recruitButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Recruit", ImperialCommandCoreAction.RECRUIT_GUARDSMAN);
-        this.cycleSpecialistButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Cycle Specialist", ImperialCommandCoreAction.CYCLE_SPECIALIST);
-        this.promoteSpecialistButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Promote Specialist", ImperialCommandCoreAction.PROMOTE_SPECIALIST);
+        this.recruitButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.recruit", ImperialCommandCoreAction.RECRUIT_GUARDSMAN);
+        this.cycleSpecialistButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.cycle_specialist", ImperialCommandCoreAction.CYCLE_SPECIALIST);
+        this.promoteSpecialistButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.promote_specialist", ImperialCommandCoreAction.PROMOTE_SPECIALIST);
     }
 
     private void initDefenseTab() {
         int row = 0;
-        this.repairButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Repair Core", ImperialCommandCoreAction.REPAIR_CORE);
-        this.reinforcementButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Reinforcements", ImperialCommandCoreAction.CALL_REINFORCEMENTS);
-        this.rallyButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Rally", ImperialCommandCoreAction.RALLY_DEFENDERS);
-        this.fortifyButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Fortify", ImperialCommandCoreAction.FORTIFY_DEFENDERS);
-        this.forceRaidButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Force Raid", ImperialCommandCoreAction.FORCE_RAID_TEST);
+        this.repairButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.repair_core", ImperialCommandCoreAction.REPAIR_CORE);
+        this.reinforcementButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.reinforcements", ImperialCommandCoreAction.CALL_REINFORCEMENTS);
+        this.rallyButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.rally", ImperialCommandCoreAction.RALLY_DEFENDERS);
+        this.fortifyButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.fortify", ImperialCommandCoreAction.FORTIFY_DEFENDERS);
+        this.forceRaidButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.force_raid", ImperialCommandCoreAction.FORCE_RAID_TEST);
     }
 
     private void initResourcesTab() {
         int row = 0;
-        this.depositButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Deposit All", ImperialCommandCoreAction.DEPOSIT_RESOURCES);
-        this.withdrawIronButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Withdraw Iron", ImperialCommandCoreAction.WITHDRAW_IRON);
-        this.withdrawCoalButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Withdraw Coal", ImperialCommandCoreAction.WITHDRAW_COAL);
-        this.withdrawScrapButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Withdraw Scrap", ImperialCommandCoreAction.WITHDRAW_SCRAP);
-        this.withdrawGoldButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Withdraw Gold", ImperialCommandCoreAction.WITHDRAW_GOLD);
-        this.withdrawEmeraldButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Withdraw Emerald", ImperialCommandCoreAction.WITHDRAW_EMERALD);
-        this.withdrawCrusadiumButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Withdraw Crusadium", ImperialCommandCoreAction.WITHDRAW_CRUSADIUM);
-        this.withdrawFoodButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "Withdraw Food", ImperialCommandCoreAction.WITHDRAW_FOOD);
+        this.depositButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.deposit_all", ImperialCommandCoreAction.DEPOSIT_RESOURCES);
+        this.withdrawIronButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.withdraw_iron", ImperialCommandCoreAction.WITHDRAW_IRON);
+        this.withdrawCoalButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.withdraw_coal", ImperialCommandCoreAction.WITHDRAW_COAL);
+        this.withdrawScrapButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.withdraw_scrap", ImperialCommandCoreAction.WITHDRAW_SCRAP);
+        this.withdrawGoldButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.withdraw_gold", ImperialCommandCoreAction.WITHDRAW_GOLD);
+        this.withdrawEmeraldButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.withdraw_emerald", ImperialCommandCoreAction.WITHDRAW_EMERALD);
+        this.withdrawCrusadiumButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.withdraw_crusadium", ImperialCommandCoreAction.WITHDRAW_CRUSADIUM);
+        this.withdrawFoodButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.withdraw_food", ImperialCommandCoreAction.WITHDRAW_FOOD);
     }
 
-    private Button addActionButton(int x, int y, int width, int height, String text, ImperialCommandCoreAction action) {
+    private Button addActionButton(int x, int y, int width, int height, String langKey, ImperialCommandCoreAction action) {
         return this.addRenderableWidget(
                 Button.builder(
-                        Component.literal(text),
+                        Component.translatable(langKey),
                         button -> ExampleMod.NETWORK_CHANNEL.sendToServer(
                                 new ImperialCommandCoreActionPacket(this.menu.getCommandCorePos(), action)
                         )
@@ -415,7 +421,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        drawLine(guiGraphics, "Imperial Command Core", 8, 5, 0xFFD6B85A);
+        drawHeader(guiGraphics, "block.firstcrusade.imperial_command_core", 8, 5, 0xFFD6B85A);
 
         switch (this.activeTab) {
             case TAB_BUILD -> renderBuildInfo(guiGraphics);
@@ -449,7 +455,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
     private void renderBuildInfo(GuiGraphics guiGraphics) {
         int y = 46;
-        drawLine(guiGraphics, "Structures", 12, y, 0xFFFFD27D);
+        drawHeader(guiGraphics, "gui.firstcrusade.section.structures", 12, y, 0xFFFFD27D);
         y += 13;
         drawLine(guiGraphics, "Mines: " + this.menu.getMineCount() + "/" + this.menu.getMineCapacity() + " (" + this.menu.getMinerCount() + ")", 12, y, 0xFFFFDD77);
         y += 11;
@@ -470,7 +476,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
     private void renderMilitaryInfo(GuiGraphics guiGraphics) {
         int y = 46;
-        drawLine(guiGraphics, "Military", 12, y, 0xFFFFD27D);
+        drawHeader(guiGraphics, "gui.firstcrusade.section.military", 12, y, 0xFFFFD27D);
         y += 13;
         drawLine(guiGraphics, "Soldiers: " + this.menu.getRecruitedGuardsmen() + "/" + this.menu.getMilitaryCapacity(), 12, y, 0xFFBBD7FF);
         y += 11;
@@ -485,7 +491,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
     private void renderDefenseInfo(GuiGraphics guiGraphics) {
         int y = 46;
-        drawLine(guiGraphics, "Defense", 12, y, 0xFFFFD27D);
+        drawHeader(guiGraphics, "gui.firstcrusade.section.defense", 12, y, 0xFFFFD27D);
         y += 13;
         drawLine(guiGraphics, "Integrity: " + this.menu.getCityIntegrity() + "/100", 12, y, getIntegrityColor());
         y += 11;
@@ -501,7 +507,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
     private void renderResourcesInfo(GuiGraphics guiGraphics) {
         int y = 46;
         int cap = this.menu.getStorageCapacity();
-        drawLine(guiGraphics, "Resources", 12, y, 0xFFFFD27D);
+        drawHeader(guiGraphics, "gui.firstcrusade.section.resources", 12, y, 0xFFFFD27D);
         y += 13;
         drawLine(guiGraphics, "Iron: " + this.menu.getIron() + "/" + cap, 12, y, 0xFFD8D8D8);
         y += 11;
@@ -520,6 +526,14 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
     private void drawLine(GuiGraphics guiGraphics, String text, int x, int y, int color) {
         guiGraphics.drawString(this.font, text, x, y, color, false);
+    }
+
+    private void drawLine(GuiGraphics guiGraphics, Component text, int x, int y, int color) {
+        guiGraphics.drawString(this.font, text, x, y, color, false);
+    }
+
+    private void drawHeader(GuiGraphics guiGraphics, String langKey, int x, int y, int color) {
+        drawLine(guiGraphics, Component.translatable(langKey), x, y, color);
     }
 
     private String getCitizenCapacityText() {

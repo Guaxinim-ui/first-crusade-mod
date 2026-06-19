@@ -121,11 +121,12 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
 ### >>> PRÓXIMO PASSO (retomar aqui após o /clear) <<<
 O dono testou em jogo e **está tudo OK** até o commit `1db7d1f`. Fase C está madura. Escolher UM:
 
-1. **(Recomendado) GUI em chaves de lang** — hoje os textos da interface do Core (botões/custos/
-   mensagens) são `Component.literal("...")` em código, então o `pt_br.json` **não** traduz a GUI.
-   Migrar para `Component.translatable("...")` + adicionar as chaves em en_us/pt_br. Arquivos:
-   `ImperialCommandCoreScreen.java` (botões/labels) e mensagens em `ImperialCommandCoreBlockEntity`.
-   É grande e diffuso — fazer por abas/aos poucos, compilando a cada bloco. Alto valor pro dono BR.
+1. **(Recomendado) GUI em chaves de lang** — **fatia 1 FEITA** (rótulos estáticos: abas, botões,
+   cabeçalhos, título — ver changelog). **Faltam:** (a) tooltips dos botões em `applyButton`
+   (title/cost/reason — strings longas, viram chaves com `%s` para custos/números); (b) linhas
+   dinâmicas do painel esquerdo (`renderCityInfo`/`renderBuildInfo`/… — `Level: `, `Soldiers: `,
+   `Iron: `, etc., precisam de `Component.translatable(key, valor)`); (c) mensagens
+   `Component.literal` em `ImperialCommandCoreBlockEntity`. Fazer por aba/bloco, compilando a cada um.
 2. **Fase D — Overlords/worldgen** (item de roadmap grande): começar pelo mais bounded — geração de
    assentamentos no worldgen (structure feature) OU um `WorldFactionOverlordManager` que despacha
    líder quando uma cidade atinge ameaça nível 4. Alto risco técnico (worldgen). Fazer slice por slice.
@@ -156,6 +157,15 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 - Mensagens de commit em pt-BR, terminar com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
 ## 7. Changelog (mais recente no topo)
+
+- 2026-06-19: **GUI em chaves de lang — fatia 1 (rótulos estáticos)**. Migrados para
+  `Component.translatable` na `ImperialCommandCoreScreen`: nomes das **abas**, textos de **todos os
+  botões** (City/Build/Military/Defense/Resources), **cabeçalhos de seção** e o **título** da tela.
+  Chaves `gui.firstcrusade.tab.*` / `.button.*` / `.section.*` em en_us **e** pt_br (mesma contagem).
+  `addActionButton` agora recebe a chave; novo overload `drawLine(Component)` + helper `drawHeader`.
+  **Faltam (fatias seguintes):** tooltips dos botões (`applyButton` title/cost/reason — strings longas)
+  e as linhas dinâmicas do painel esquerdo (`Level: `, `Soldiers: `, etc.) que precisam de `%s`.
+  Build offline OK; ambos os langs validados.
 
 - 2026-06-18: Arte — **novo modelo 3D do Lasgun** (Blockbench) em `models/item/lasgun.json`
   (antes era sprite 2D `item/handheld`). Aponta para `firstcrusade:item/lasgun` e ganhou bloco
