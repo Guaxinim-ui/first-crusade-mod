@@ -268,6 +268,9 @@ public static final RegistryObject<BlockEntityType<OrkCampBlockEntity>> ORK_CAMP
     public static final RegistryObject<Item> LASGUN = ITEMS.register("lasgun",
             () -> new LasgunItem(new Item.Properties().stacksTo(1).durability(500)));
 
+    public static final RegistryObject<Item> BOLTER = ITEMS.register("bolter",
+            () -> new BolterItem(new Item.Properties().stacksTo(1).durability(768)));
+
     public static final Tier GUARDSMAN_MELEE_TIER = new Tier() {
         @Override
         public int getUses() {
@@ -721,6 +724,7 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
 
                         output.accept(LASGUN_POWER_CELL.get());
                         output.accept(LASGUN.get());
+                        output.accept(BOLTER.get());
                         output.accept(GUARDSMAN_COMBAT_KNIFE.get());
                         output.accept(GUARDSMAN_MED_KIT.get());
                         output.accept(GUARDSMAN_COMMAND_BATON.get());

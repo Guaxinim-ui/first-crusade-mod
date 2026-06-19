@@ -157,6 +157,14 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-19: **Conteúdo — nova arma: Bolter** (Adeptus Astartes). `BolterItem` reusa o molde do
+  `LasgunItem`/`LasgunShotEntity`: tiro forte (12 dano, knockback 1), **sem munição** (Space Marine
+  autossuficiente), mais lento (cooldown 24t) e menos preciso, gastando durabilidade própria (768).
+  Registro completo: item + creative tab + modelo `item/handheld` + textura placeholder (cópia de
+  `guardsman_combat_knife.png`) + lang en/pt (`item.firstcrusade.bolter`). Bônus i18n: a mensagem
+  do `LasgunItem` ("No charged…") virou `Component.translatable` (`msg.firstcrusade.lasgun.no_charge`).
+  Build/jar OK; langs 293 chaves cada. (Dono fará a arte definitiva do bolter.)
+
 - 2026-06-19: **GUI em chaves de lang — fatia 4d (FECHA o block entity)**. Migrados os fluxos
   restantes (especialista, reforço, rally, fortify, Space Marine, raid, interface) e o resumo de
   depósito. **`Component.literal` no `ImperialCommandCoreBlockEntity`: 121 → 0.** Chaves

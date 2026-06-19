@@ -6,6 +6,7 @@
   "item.firstcrusade.scrap_metal": "Sucata",
   "item.firstcrusade.lasgun_power_cell": "Célula de Energia de Lasgun",
   "item.firstcrusade.lasgun": "Lasgun",
+  "item.firstcrusade.bolter": "Bolter",
   "item.firstcrusade.guardsman_combat_knife": "Faca de Combate do Guardsman",
   "item.firstcrusade.guardsman_med_kit": "Kit Médico do Guardsman",
   "item.firstcrusade.guardsman_command_baton": "Bastão de Comando do Guardsman",
@@ -289,5 +290,6 @@
   "msg.firstcrusade.sm.done": "Promoção a Space Marine concluída.",
   "msg.firstcrusade.sm.cost": "Custo: %s Ferro, %s Sucata, %s Carvão, %s Apoio de Guerra, 1 Lingote de Netherite.",
   "msg.firstcrusade.raid.not_owner": "Só o dono pode forçar um teste de ataque Ork.",
-  "msg.firstcrusade.interface.not_owner": "Só o dono pode acessar a interface do Núcleo de Comando Imperial."
+  "msg.firstcrusade.interface.not_owner": "Só o dono pode acessar a interface do Núcleo de Comando Imperial.",
+  "msg.firstcrusade.lasgun.no_charge": "Nenhuma Célula de Energia de Lasgun carregada disponível."
 }

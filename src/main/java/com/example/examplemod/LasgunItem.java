@@ -23,7 +23,7 @@ public class LasgunItem extends Item {
 
         if (!isCreative && !consumePowerCellCharge(player)) {
             if (!level.isClientSide) {
-                player.displayClientMessage(Component.literal("No charged Lasgun Power Cell available."), true);
+                player.displayClientMessage(Component.translatable("msg.firstcrusade.lasgun.no_charge"), true);
             }
 
             return InteractionResultHolder.fail(lasgun);
