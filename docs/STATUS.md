@@ -157,6 +157,12 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-18: Arte — **novo modelo 3D do Lasgun** (Blockbench) em `models/item/lasgun.json`
+  (antes era sprite 2D `item/handheld`). Aponta para `firstcrusade:item/lasgun` e ganhou bloco
+  `display` (mão/GUI/chão). ⚠️ O modelo foi pintado para uma textura **32×32**; a `lasgun.png`
+  atual é 16×16 e plana, então as faces ficam embaralhadas até o dono enviar/instalar o PNG 32×32
+  que acompanha o modelo. `texture_size` já está [32,32]. Display é um chute inicial — ajustar no
+  Blockbench se a pose na mão ficar torta.
 - 2026-06-18: Fase C (estruturas por tipo — 1º slice) — **bônus de capacidade na estrutura-tema**.
   Cada tipo de foco roda +1 da sua estrutura assinatura: Mining→Mina, Fortress→Barracks, Hive→Scrap
   Yard, Forge→Forja, Agri→Farm (helper `specialtyBonus` nos getters de capacidade). Tipos sem foco de
