@@ -121,12 +121,12 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
 ### >>> PRÓXIMO PASSO (retomar aqui após o /clear) <<<
 O dono testou em jogo e **está tudo OK** até o commit `1db7d1f`. Fase C está madura. Escolher UM:
 
-1. **(Recomendado) GUI em chaves de lang** — **fatia 1 FEITA** (rótulos estáticos: abas, botões,
-   cabeçalhos, título — ver changelog). **Faltam:** (a) tooltips dos botões em `applyButton`
-   (title/cost/reason — strings longas, viram chaves com `%s` para custos/números); (b) linhas
-   dinâmicas do painel esquerdo (`renderCityInfo`/`renderBuildInfo`/… — `Level: `, `Soldiers: `,
-   `Iron: `, etc., precisam de `Component.translatable(key, valor)`); (c) mensagens
-   `Component.literal` em `ImperialCommandCoreBlockEntity`. Fazer por aba/bloco, compilando a cada um.
+1. **(Recomendado) GUI em chaves de lang** — **fatias 1, 2 e 3 FEITAS**: rótulos estáticos (abas/
+   botões/cabeçalhos/título), painel de status esquerdo, e tooltips dos botões. **GUI do Core
+   100% traduzível.** **Falta só:** (c) mensagens `Component.literal` no `ImperialCommandCoreBlockEntity`
+   (feedback de chat: "Only the owner can…", custos recusados, etc.) e, opcional, traduzir as strings
+   que ainda vêm de outras classes como `%s` (nome de especialista em `GuardsmanSpecialization`,
+   nome do nível de ameaça em `ThreatAssessmentManager`, rótulo de moral em `ImperialCityMoraleManager`).
 2. **Fase D — Overlords/worldgen** (item de roadmap grande): começar pelo mais bounded — geração de
    assentamentos no worldgen (structure feature) OU um `WorldFactionOverlordManager` que despacha
    líder quando uma cidade atinge ameaça nível 4. Alto risco técnico (worldgen). Fazer slice por slice.
@@ -157,6 +157,16 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 - Mensagens de commit em pt-BR, terminar com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
 ## 7. Changelog (mais recente no topo)
+
+- 2026-06-19: **GUI em chaves de lang — fatia 3 (tooltips dos botões)**. `applyButton` agora recebe
+  `Component` (título/descrição/motivo) em vez de String; motivo de bloqueio em vermelho via
+  `ChatFormatting.RED`. Todos os tooltips (Build/Military/Defense/Resources/City) e os helpers de
+  motivo (`getRecruitBlockReason`/`getGoldMineBlockReason`/`getTradeDepotBlockReason`/
+  `getReinforcementBlockReason`/`getUpgradeCostText`) viraram `Component.translatable` com `%s` para
+  custos/contadores. Chaves `gui.firstcrusade.tip.*` / `.reason.*` / `.res.*` em en_us+pt_br
+  (**206 chaves cada, em sincronia**). **GUI do Core 100% traduzível**, exceto strings vindas de
+  outras classes (nome de especialista, nome do nível de ameaça, rótulo de moral), passadas como `%s`.
+  **Falta:** mensagens `Component.literal` no `ImperialCommandCoreBlockEntity` (chat/feedback). Build OK.
 
 - 2026-06-19: **GUI em chaves de lang — fatia 2 (painel de status esquerdo)**. Todas as linhas dos
   painéis City/Build/Military/Defense/Resources viraram `Component.translatable(chave, valores)` com

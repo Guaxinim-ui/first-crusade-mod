@@ -1,10 +1,13 @@
 package com.example.examplemod;
 
+import javax.annotation.Nullable;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Inventory;
 
 public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialCommandCoreMenu> {
@@ -202,116 +205,122 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
     private void updateButtonStates() {
         applyButton(this.upgradeButton, this.menu.getCityLevel() < 5,
-                "Upgrade City", getUpgradeCostText(), "The city is already at the maximum level.");
+                Component.translatable("gui.firstcrusade.tip.upgrade.title"), getUpgradeCostText(),
+                Component.translatable("gui.firstcrusade.reason.max_level"));
 
         applyButton(this.buildMineButton, this.menu.getMineCount() < this.menu.getMineCapacity(),
-                "Build Imperial Mine", "Cost: 20 Iron, 10 Scrap, 5 Coal. Assigns a Miner who produces Iron.",
-                "Mine capacity reached. Upgrade the city to build more.");
+                Component.translatable("gui.firstcrusade.tip.mine.title"), Component.translatable("gui.firstcrusade.tip.mine.desc"),
+                Component.translatable("gui.firstcrusade.reason.mine_cap"));
 
         applyButton(this.buildGoldMineButton,
                 this.menu.getCityLevel() >= 2 && this.menu.getGoldMineCount() < this.menu.getGoldMineCapacity(),
-                "Build Gold Mine", "Cost: 40 Iron, 25 Scrap, 15 Coal. Assigns a Gold Miner who produces Gold (slowly).",
+                Component.translatable("gui.firstcrusade.tip.gold_mine.title"), Component.translatable("gui.firstcrusade.tip.gold_mine.desc"),
                 getGoldMineBlockReason());
 
         applyButton(this.buildScrapYardButton, this.menu.getScrapYardCount() < this.menu.getScrapYardCapacity(),
-                "Build Scrap Yard", "Cost: 15 Iron, 5 Coal. Assigns a Scrapper who produces Scrap Metal.",
-                "Scrap Yard capacity reached. Upgrade the city to build more.");
+                Component.translatable("gui.firstcrusade.tip.scrap_yard.title"), Component.translatable("gui.firstcrusade.tip.scrap_yard.desc"),
+                Component.translatable("gui.firstcrusade.reason.scrap_yard_cap"));
 
         applyButton(this.buildForgeButton, this.menu.getForgeCount() < this.menu.getForgeCapacity(),
-                "Build Imperial Forge", "Cost: 30 Iron, 20 Scrap, 10 Coal. Assigns a Smith who forges Crusadium Plate (4 Iron, 3 Scrap, 2 Coal each).",
-                "Forge capacity reached. Upgrade the city to build more.");
+                Component.translatable("gui.firstcrusade.tip.forge.title"), Component.translatable("gui.firstcrusade.tip.forge.desc"),
+                Component.translatable("gui.firstcrusade.reason.forge_cap"));
 
         applyButton(this.buildRefineryButton, this.menu.getRefineryCount() < this.menu.getRefineryCapacity(),
-                "Build Promethium Refinery", "Cost: 18 Iron, 8 Scrap. Assigns a Stoker who produces Coal.",
-                "Refinery capacity reached. Upgrade the city to build more.");
+                Component.translatable("gui.firstcrusade.tip.refinery.title"), Component.translatable("gui.firstcrusade.tip.refinery.desc"),
+                Component.translatable("gui.firstcrusade.reason.refinery_cap"));
 
         applyButton(this.buildFarmButton, this.menu.getFarmCount() < this.menu.getFarmCapacity(),
-                "Build Imperial Farm", "Cost: 15 Iron, 5 Scrap. Assigns a Farmer; staffed farms feed the city (morale + growth).",
-                "Farm capacity reached. Upgrade the city to build more.");
+                Component.translatable("gui.firstcrusade.tip.farm.title"), Component.translatable("gui.firstcrusade.tip.farm.desc"),
+                Component.translatable("gui.firstcrusade.reason.farm_cap"));
 
         applyButton(this.buildTradeDepotButton,
                 this.menu.getCityLevel() >= 3 && this.menu.getTradeDepotCount() < this.menu.getTradeDepotCapacity(),
-                "Build Emerald Trade Depot", "Cost: 30 Iron, 15 Scrap, 10 Coal. Assigns a Trader who trades Gold for Emerald (4 Gold each).",
+                Component.translatable("gui.firstcrusade.tip.trade_depot.title"), Component.translatable("gui.firstcrusade.tip.trade_depot.desc"),
                 getTradeDepotBlockReason());
 
         applyButton(this.buildBarracksButton, this.menu.getBarracksCount() < this.menu.getBarracksCapacity(),
-                "Build Imperial Barracks", "Cost: 25 Iron, 15 Scrap, 5 Coal. Trains Recruits into Guardsmen.",
-                "Barracks capacity reached. Upgrade the city to build more.");
+                Component.translatable("gui.firstcrusade.tip.barracks.title"), Component.translatable("gui.firstcrusade.tip.barracks.desc"),
+                Component.translatable("gui.firstcrusade.reason.barracks_cap"));
 
         applyButton(this.recruitButton, canTrainRecruit(),
-                "Recruit", "Assigns the nearest unemployed Citizen as a Recruit to train at a Barracks into a Guardsman.",
+                Component.translatable("gui.firstcrusade.tip.recruit.title"), Component.translatable("gui.firstcrusade.tip.recruit.desc"),
                 getRecruitBlockReason());
 
         applyButton(this.cycleSpecialistButton, true,
-                "Cycle Specialist", "Selects the specialist type for Promote Specialist. Selected: " + this.menu.getSelectedSpecialization().getDisplayName() + ".",
+                Component.translatable("gui.firstcrusade.tip.cycle_specialist.title"),
+                Component.translatable("gui.firstcrusade.tip.cycle_specialist.desc", this.menu.getSelectedSpecialization().getDisplayName()),
                 null);
 
         applyButton(this.promoteSpecialistButton, this.menu.getCityLevel() >= 2,
-                "Promote Specialist: " + this.menu.getSelectedSpecialization().getDisplayName(),
-                "Promotes the nearest Guardsman to the selected specialist role. Costs Iron, Scrap and War Support.",
-                "Requires an Imperial settlement of Level 2 or higher.");
+                Component.translatable("gui.firstcrusade.tip.promote_specialist.title", this.menu.getSelectedSpecialization().getDisplayName()),
+                Component.translatable("gui.firstcrusade.tip.promote_specialist.desc"),
+                Component.translatable("gui.firstcrusade.reason.req_level_2"));
 
         applyButton(this.repairButton, this.menu.getCityIntegrity() < 100,
-                "Repair Core", "Cost: 1 Crusadium Plate. Restores Core integrity.",
-                "Core integrity is already full.");
+                Component.translatable("gui.firstcrusade.tip.repair.title"), Component.translatable("gui.firstcrusade.tip.repair.desc"),
+                Component.translatable("gui.firstcrusade.reason.repair_full"));
 
         applyButton(this.reinforcementButton,
                 this.menu.hasActiveRaid() && this.menu.getReinforcementCooldownSeconds() <= 0 && hasRecruitCapacity(),
-                "Call Reinforcements", "Cost: " + reinforcementWarSupportCost() + " War Support. Deploys emergency Guardsmen during a raid.",
+                Component.translatable("gui.firstcrusade.tip.reinforcements.title"),
+                Component.translatable("gui.firstcrusade.tip.reinforcements.desc", reinforcementWarSupportCost()),
                 getReinforcementBlockReason());
 
         applyButton(this.rallyButton, this.menu.hasActiveRaid(),
-                "Rally Defenders", "Repositions assigned Guardsmen back to defend the Core.",
-                "Only usable during an active Ork raid.");
+                Component.translatable("gui.firstcrusade.tip.rally.title"), Component.translatable("gui.firstcrusade.tip.rally.desc"),
+                Component.translatable("gui.firstcrusade.reason.only_during_raid"));
 
         applyButton(this.fortifyButton, this.menu.hasActiveRaid(),
-                "Fortify Defenders", "Cost: " + fortifyWarSupportCost() + " War Support. Buffs assigned defenders.",
-                "Only usable during an active Ork raid.");
+                Component.translatable("gui.firstcrusade.tip.fortify.title"),
+                Component.translatable("gui.firstcrusade.tip.fortify.desc", fortifyWarSupportCost()),
+                Component.translatable("gui.firstcrusade.reason.only_during_raid"));
 
         applyButton(this.forceRaidButton, !this.menu.hasActiveRaid(),
-                "Force Raid (Test)", "Immediately triggers an Ork raid for testing.",
-                "A raid is already active.");
+                Component.translatable("gui.firstcrusade.tip.force_raid.title"), Component.translatable("gui.firstcrusade.tip.force_raid.desc"),
+                Component.translatable("gui.firstcrusade.reason.raid_active"));
 
         applyButton(this.depositButton, true,
-                "Deposit All Resources", "Moves Iron, Coal, Scrap, Gold, Emerald and Crusadium from your inventory into the city. Compressed blocks (Iron/Coal/Gold/Emerald) count as 9 each.",
+                Component.translatable("gui.firstcrusade.tip.deposit.title"), Component.translatable("gui.firstcrusade.tip.deposit.desc"),
                 null);
 
-        applyWithdrawButton(this.withdrawIronButton, "Iron", this.menu.getIron());
-        applyWithdrawButton(this.withdrawCoalButton, "Coal", this.menu.getCoal());
-        applyWithdrawButton(this.withdrawScrapButton, "Scrap Metal", this.menu.getScrapMetal());
-        applyWithdrawButton(this.withdrawGoldButton, "Gold", this.menu.getGold());
-        applyWithdrawButton(this.withdrawEmeraldButton, "Emerald", this.menu.getEmerald());
-        applyWithdrawButton(this.withdrawCrusadiumButton, "Crusadium", this.menu.getCrusadium());
-        applyWithdrawButton(this.withdrawFoodButton, "Food (Wheat)", this.menu.getFood());
+        applyWithdrawButton(this.withdrawIronButton, "gui.firstcrusade.res.iron", this.menu.getIron());
+        applyWithdrawButton(this.withdrawCoalButton, "gui.firstcrusade.res.coal", this.menu.getCoal());
+        applyWithdrawButton(this.withdrawScrapButton, "gui.firstcrusade.res.scrap", this.menu.getScrapMetal());
+        applyWithdrawButton(this.withdrawGoldButton, "gui.firstcrusade.res.gold", this.menu.getGold());
+        applyWithdrawButton(this.withdrawEmeraldButton, "gui.firstcrusade.res.emerald", this.menu.getEmerald());
+        applyWithdrawButton(this.withdrawCrusadiumButton, "gui.firstcrusade.res.crusadium", this.menu.getCrusadium());
+        applyWithdrawButton(this.withdrawFoodButton, "gui.firstcrusade.res.food", this.menu.getFood());
     }
 
-    private void applyButton(Button button, boolean active, String title, String cost, String reason) {
+    private void applyButton(Button button, boolean active, Component title, @Nullable Component desc, @Nullable Component reason) {
         if (button == null) {
             return;
         }
 
         button.active = active;
 
-        StringBuilder text = new StringBuilder(title);
+        MutableComponent text = Component.empty().append(title);
 
-        if (cost != null && !cost.isEmpty()) {
-            text.append("\n").append(cost);
+        if (desc != null) {
+            text.append("\n").append(desc);
         }
 
-        if (!active && reason != null && !reason.isEmpty()) {
-            text.append("\n§c").append(reason);
+        if (!active && reason != null) {
+            text.append(Component.literal("\n").append(reason).withStyle(ChatFormatting.RED));
         }
 
-        button.setTooltip(Tooltip.create(Component.literal(text.toString())));
+        button.setTooltip(Tooltip.create(text));
     }
 
-    private void applyWithdrawButton(Button button, String resourceName, int stored) {
+    private void applyWithdrawButton(Button button, String resourceKey, int stored) {
+        Component resourceName = Component.translatable(resourceKey);
+
         applyButton(
                 button,
                 stored > 0,
-                "Withdraw " + resourceName,
-                "Takes up to 64 " + resourceName + " into your inventory. Stored: " + stored + ".",
-                "No " + resourceName + " stored to withdraw."
+                Component.translatable("gui.firstcrusade.tip.withdraw.title", resourceName),
+                Component.translatable("gui.firstcrusade.tip.withdraw.desc", resourceName, stored),
+                Component.translatable("gui.firstcrusade.reason.withdraw_empty", resourceName)
         );
     }
 
@@ -333,69 +342,72 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         return this.menu.getBarracksCount() - this.menu.getRecruitsInTraining();
     }
 
-    private String getRecruitBlockReason() {
+    @Nullable
+    private Component getRecruitBlockReason() {
         if (this.menu.getBarracksCount() <= 0) {
-            return "Build an Imperial Barracks first.";
+            return Component.translatable("gui.firstcrusade.reason.need_barracks");
         }
 
         if (!militaryHasRoomForRecruit()) {
-            return "Military capacity reached. Upgrade the city.";
+            return Component.translatable("gui.firstcrusade.reason.military_cap");
         }
 
         if (availableBarracks() <= 0) {
-            return "All Barracks are busy training recruits.";
+            return Component.translatable("gui.firstcrusade.reason.barracks_busy");
         }
 
         if (this.menu.getUnemployedCitizenCount() <= 0) {
-            return "No unemployed Citizen available to train.";
+            return Component.translatable("gui.firstcrusade.reason.no_unemployed");
         }
 
         return null;
     }
 
-    private String getGoldMineBlockReason() {
+    private Component getGoldMineBlockReason() {
         if (this.menu.getCityLevel() < 2) {
-            return "Requires an Imperial settlement of Level 2 or higher.";
+            return Component.translatable("gui.firstcrusade.reason.req_level_2");
         }
 
-        return "Gold Mine capacity reached. Upgrade the city to build more.";
+        return Component.translatable("gui.firstcrusade.reason.gold_mine_cap");
     }
 
-    private String getTradeDepotBlockReason() {
+    private Component getTradeDepotBlockReason() {
         if (this.menu.getCityLevel() < 3) {
-            return "Requires an Imperial settlement of Level 3 or higher.";
+            return Component.translatable("gui.firstcrusade.reason.req_level_3");
         }
 
-        return "Trade Depot capacity reached. Upgrade the city to build more.";
+        return Component.translatable("gui.firstcrusade.reason.trade_depot_cap");
     }
 
-    private String getReinforcementBlockReason() {
+    @Nullable
+    private Component getReinforcementBlockReason() {
         if (!this.menu.hasActiveRaid()) {
-            return "Only usable during an active Ork raid.";
+            return Component.translatable("gui.firstcrusade.reason.only_during_raid");
         }
 
         if (this.menu.getReinforcementCooldownSeconds() > 0) {
-            return "On cooldown: " + this.menu.getReinforcementCooldownSeconds() + "s.";
+            return Component.translatable("gui.firstcrusade.reason.reinf_cooldown", this.menu.getReinforcementCooldownSeconds());
         }
 
         if (!hasRecruitCapacity()) {
-            return "Military capacity reached.";
+            return Component.translatable("gui.firstcrusade.reason.military_cap_short");
         }
 
         return null;
     }
 
-    private String getUpgradeCostText() {
+    private Component getUpgradeCostText() {
         int level = this.menu.getCityLevel();
 
         if (level >= 5) {
-            return "City is at the maximum level.";
+            return Component.translatable("gui.firstcrusade.tip.upgrade.max");
         }
 
-        return "Cost: " + ImperialCityLevelStats.upgradeIronCost(level) + " Iron, "
-                + ImperialCityLevelStats.upgradeScrapCost(level) + " Scrap, "
-                + ImperialCityLevelStats.upgradeCoalCost(level) + " Coal, "
-                + ImperialCityLevelStats.upgradePlateCost(level) + " Crusadium Plate.";
+        return Component.translatable("gui.firstcrusade.tip.upgrade.desc",
+                ImperialCityLevelStats.upgradeIronCost(level),
+                ImperialCityLevelStats.upgradeScrapCost(level),
+                ImperialCityLevelStats.upgradeCoalCost(level),
+                ImperialCityLevelStats.upgradePlateCost(level));
     }
 
     private int reinforcementWarSupportCost() {
