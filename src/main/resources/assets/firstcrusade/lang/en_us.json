@@ -204,5 +204,22 @@
   "gui.firstcrusade.reason.military_cap_short": "Military capacity reached.",
   "gui.firstcrusade.reason.repair_full": "Core integrity is already full.",
   "gui.firstcrusade.reason.raid_active": "A raid is already active.",
-  "gui.firstcrusade.reason.withdraw_empty": "No %s stored to withdraw."
+  "gui.firstcrusade.reason.withdraw_empty": "No %s stored to withdraw.",
+  "msg.firstcrusade.upgrade.not_owner": "Only the owner can upgrade this city.",
+  "msg.firstcrusade.upgrade.max": "This city has reached the current max level.",
+  "msg.firstcrusade.upgrade.missing_iron": "Missing Iron: %s",
+  "msg.firstcrusade.upgrade.missing_scrap": "Missing Scrap Metal: %s",
+  "msg.firstcrusade.upgrade.missing_coal": "Missing Coal: %s",
+  "msg.firstcrusade.upgrade.missing_plate": "Missing Crusadium Plate: %s",
+  "msg.firstcrusade.upgrade.done": "City upgraded to Level %s.",
+  "msg.firstcrusade.upgrade.expanded": "City structure expanded.",
+  "msg.firstcrusade.upgrade.reassigned": "Guardsmen reassigned to defensive posts.",
+  "msg.firstcrusade.upgrade.new_storage": "New Storage Capacity: %s",
+  "msg.firstcrusade.upgrade.new_production": "New Daily Production: +%s Iron, +%s Scrap, +%s Coal",
+  "msg.firstcrusade.upgrade.new_military": "New Military Capacity: %s",
+  "msg.firstcrusade.upgrade.new_rank": "New Recruit Rank: %s",
+  "msg.firstcrusade.repair.not_owner": "Only the owner can repair this city.",
+  "msg.firstcrusade.repair.full": "The Imperial Command Core is already fully repaired.",
+  "msg.firstcrusade.repair.done": "Used 1 Crusadium Plate to repair the Core.",
+  "msg.firstcrusade.repair.integrity": "Core Integrity: %s/100"
 }

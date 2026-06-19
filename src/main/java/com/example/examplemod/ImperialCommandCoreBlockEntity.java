@@ -2047,12 +2047,12 @@ private int getSpaceMarinePromotionCooldownTicks() {
 
     public void tryUpgradeCity(Player player, ItemStack plateStack) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can upgrade this city."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.not_owner"), true);
         return;
     }
 
     if (!canUpgradeMore()) {
-        player.displayClientMessage(Component.literal("This city has reached the current max level."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.max"), true);
         return;
     }
 
@@ -2062,22 +2062,22 @@ private int getSpaceMarinePromotionCooldownTicks() {
     int plateCost = getUpgradePlateCost();
 
     if (this.resources.getIron() < ironCost) {
-        player.displayClientMessage(Component.literal("Missing Iron: " + (ironCost - this.resources.getIron())), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.missing_iron", ironCost - this.resources.getIron()), true);
         return;
     }
 
     if (this.resources.getScrapMetal() < scrapCost) {
-        player.displayClientMessage(Component.literal("Missing Scrap Metal: " + (scrapCost - this.resources.getScrapMetal())), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.missing_scrap", scrapCost - this.resources.getScrapMetal()), true);
         return;
     }
 
     if (this.resources.getCoal() < coalCost) {
-        player.displayClientMessage(Component.literal("Missing Coal: " + (coalCost - this.resources.getCoal())), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.missing_coal", coalCost - this.resources.getCoal()), true);
         return;
     }
 
     if (plateStack.getCount() < plateCost) {
-        player.displayClientMessage(Component.literal("Missing Crusadium Plate: " + (plateCost - plateStack.getCount())), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.missing_plate", plateCost - plateStack.getCount()), true);
         return;
     }
 
@@ -2097,13 +2097,13 @@ private int getSpaceMarinePromotionCooldownTicks() {
         this.level.sendBlockUpdated(this.worldPosition, getBlockState(), getBlockState(), 3);
     }
 
-    player.displayClientMessage(Component.literal("City upgraded to Level " + this.cityLevel + "."), false);
-    player.displayClientMessage(Component.literal("City structure expanded."), false);
-    player.displayClientMessage(Component.literal("Guardsmen reassigned to defensive posts."), false);
-    player.displayClientMessage(Component.literal("New Storage Capacity: " + getStorageCapacity()), false);
-    player.displayClientMessage(Component.literal("New Daily Production: +" + getDailyIronProduction() + " Iron, +" + getDailyScrapProduction() + " Scrap, +" + getDailyCoalProduction() + " Coal"), false);
-    player.displayClientMessage(Component.literal("New Military Capacity: " + getMilitaryCapacity()), false);
-    player.displayClientMessage(Component.literal("New Recruit Rank: " + getStartingGuardsmanRank().getDisplayName()), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.done", this.cityLevel), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.expanded"), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.reassigned"), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.new_storage", getStorageCapacity()), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.new_production", getDailyIronProduction(), getDailyScrapProduction(), getDailyCoalProduction()), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.new_military", getMilitaryCapacity()), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.new_rank", getStartingGuardsmanRank().getDisplayName()), false);
 }
 
 private void buildCityStructure(ServerLevel serverLevel) {
@@ -2556,12 +2556,12 @@ private void finishOrkRaidDefeat(ServerLevel serverLevel) {
 
 public void repairCity(Player player, ItemStack plateStack) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can repair this city."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.repair.not_owner"), true);
         return;
     }
 
     if (this.cityIntegrity >= 100) {
-        player.displayClientMessage(Component.literal("The Imperial Command Core is already fully repaired."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.repair.full"), true);
         return;
     }
 
@@ -2576,8 +2576,8 @@ public void repairCity(Player player, ItemStack plateStack) {
 
     setChanged();
 
-    player.displayClientMessage(Component.literal("Used 1 Crusadium Plate to repair the Core."), false);
-    player.displayClientMessage(Component.literal("Core Integrity: " + this.cityIntegrity + "/100"), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.repair.done"), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.repair.integrity", this.cityIntegrity), false);
 }
 
 private int getManualRepairAmount() {
@@ -2830,7 +2830,7 @@ public void openCommandInterface(Player player) {
             new MenuProvider() {
                 @Override
                 public Component getDisplayName() {
-                    return Component.literal("Imperial Command Core");
+                    return Component.translatable("block.firstcrusade.imperial_command_core");
                 }
 
                 @Override

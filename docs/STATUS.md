@@ -158,6 +158,14 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-19: **GUI em chaves de lang — fatia 4a (mensagens do block entity: upgrade + reparo)**.
+  Migrados para `Component.translatable` no `ImperialCommandCoreBlockEntity` os fluxos de **evoluir
+  cidade** (`tryUpgradeCity`: não-dono, nível máx, faltas de recurso, e os 7 avisos de resultado) e
+  **reparar Núcleo** (`repairCity`), além do **título do menu** (reusa `block.firstcrusade.
+  imperial_command_core`). Chaves `msg.firstcrusade.upgrade.*` / `.repair.*` em en_us+pt_br (**223
+  cada**). **Ainda faltam ~100 `Component.literal`** no mesmo arquivo (build/recruit/depósito/withdraw/
+  reforço/rally/fortify/Space Marine/raid) — fazer por fluxo nas próximas fatias (4b, 4c…). Build OK.
+
 - 2026-06-19: **GUI em chaves de lang — fatia 3 (tooltips dos botões)**. `applyButton` agora recebe
   `Component` (título/descrição/motivo) em vez de String; motivo de bloqueio em vermelho via
   `ChatFormatting.RED`. Todos os tooltips (Build/Military/Defense/Resources/City) e os helpers de

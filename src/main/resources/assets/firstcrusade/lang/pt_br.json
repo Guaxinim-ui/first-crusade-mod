@@ -204,5 +204,22 @@
   "gui.firstcrusade.reason.military_cap_short": "Capacidade militar atingida.",
   "gui.firstcrusade.reason.repair_full": "A integridade do Núcleo já está cheia.",
   "gui.firstcrusade.reason.raid_active": "Um ataque já está ativo.",
-  "gui.firstcrusade.reason.withdraw_empty": "Nenhum %s armazenado para retirar."
+  "gui.firstcrusade.reason.withdraw_empty": "Nenhum %s armazenado para retirar.",
+  "msg.firstcrusade.upgrade.not_owner": "Só o dono pode evoluir esta cidade.",
+  "msg.firstcrusade.upgrade.max": "Esta cidade já atingiu o nível máximo atual.",
+  "msg.firstcrusade.upgrade.missing_iron": "Falta Ferro: %s",
+  "msg.firstcrusade.upgrade.missing_scrap": "Falta Sucata: %s",
+  "msg.firstcrusade.upgrade.missing_coal": "Falta Carvão: %s",
+  "msg.firstcrusade.upgrade.missing_plate": "Falta Placa de Crusadium: %s",
+  "msg.firstcrusade.upgrade.done": "Cidade evoluída para o Nível %s.",
+  "msg.firstcrusade.upgrade.expanded": "Estrutura da cidade expandida.",
+  "msg.firstcrusade.upgrade.reassigned": "Guardsmen realocados para postos defensivos.",
+  "msg.firstcrusade.upgrade.new_storage": "Nova Capacidade de Armazenamento: %s",
+  "msg.firstcrusade.upgrade.new_production": "Nova Produção Diária: +%s Ferro, +%s Sucata, +%s Carvão",
+  "msg.firstcrusade.upgrade.new_military": "Nova Capacidade Militar: %s",
+  "msg.firstcrusade.upgrade.new_rank": "Novo Rank de Recruta: %s",
+  "msg.firstcrusade.repair.not_owner": "Só o dono pode reparar esta cidade.",
+  "msg.firstcrusade.repair.full": "O Núcleo de Comando Imperial já está totalmente reparado.",
+  "msg.firstcrusade.repair.done": "Usou 1 Placa de Crusadium para reparar o Núcleo.",
+  "msg.firstcrusade.repair.integrity": "Integridade do Núcleo: %s/100"
 }
