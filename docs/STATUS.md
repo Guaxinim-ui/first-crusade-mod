@@ -158,6 +158,14 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-19: **GUI em chaves de lang — fatia 4b (mensagens de construção)**. Os 8 fluxos de build
+  (mina/mina de ouro/fazenda/depósito/ferro-velho/refinaria/quartel/forja) migrados para
+  `Component.translatable`. Chaves **compartilhadas** reduziram a duplicação: `build.not_owner`
+  (8×), `build.need_3`/`need_2_is`/`need_2_ic` (custos), `build.res_3`/`res_2` (resultado), e
+  `build.*_cap` / `*_level` por estrutura. `msg.firstcrusade.build.*` em en_us+pt_br (**239 cada**).
+  `Component.literal` no block entity: **121 → 69**. Falta: recrutar, depositar/withdraw, reforço/
+  rally/fortify, Space Marine, especialista, raid (fatias 4c+).
+
 - 2026-06-19: **GUI em chaves de lang — fatia 4a (mensagens do block entity: upgrade + reparo)**.
   Migrados para `Component.translatable` no `ImperialCommandCoreBlockEntity` os fluxos de **evoluir
   cidade** (`tryUpgradeCity`: não-dono, nível máx, faltas de recurso, e os 7 avisos de resultado) e

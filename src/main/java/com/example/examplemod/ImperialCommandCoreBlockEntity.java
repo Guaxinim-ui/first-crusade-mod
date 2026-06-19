@@ -115,7 +115,7 @@ private int selectedSpecialistOrdinal = 1;
 
 public void tryBuildImperialMine(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
         return;
     }
 
@@ -126,9 +126,7 @@ public void tryBuildImperialMine(Player player) {
     int currentMines = ImperialWorkSiteManager.countImperialMines(serverLevel, this, 128);
 
     if (currentMines >= getImperialMineCapacity()) {
-        player.displayClientMessage(Component.literal(
-                "Imperial Mine capacity reached. Upgrade the city to build more mines."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.mine_cap"), true);
         return;
     }
 
@@ -137,12 +135,7 @@ public void tryBuildImperialMine(Player player) {
     int coalCost = 5;
 
     if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
-        player.displayClientMessage(Component.literal(
-                "Not enough city resources. Need: "
-                        + ironCost + " Iron, "
-                        + scrapCost + " Scrap, "
-                        + coalCost + " Coal."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_3", ironCost, scrapCost, coalCost), true);
         return;
     }
 
@@ -156,12 +149,7 @@ public void tryBuildImperialMine(Player player) {
 
     setChanged();
 
-    player.displayClientMessage(Component.literal(
-            "City Resources: "
-                    + this.resources.getIron() + " Iron, "
-                    + this.resources.getScrapMetal() + " Scrap, "
-                    + this.resources.getCoal() + " Coal."
-    ), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_3", this.resources.getIron(), this.resources.getScrapMetal(), this.resources.getCoal()), false);
 }
 
 // Each focus city type runs one extra of its signature work site (Mining→Mine, Fortress→Barracks,
@@ -178,7 +166,7 @@ public int getImperialMineCapacity() {
 // Gold mining unlocks at city level 2 and stays scarce: capacity grows slowly with the city.
 public void tryBuildImperialGoldMine(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
         return;
     }
 
@@ -187,18 +175,14 @@ public void tryBuildImperialGoldMine(Player player) {
     }
 
     if (this.cityLevel < 2) {
-        player.displayClientMessage(Component.literal(
-                "Gold Mines require an Imperial settlement of Level 2 or higher."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.gold_mine_level"), true);
         return;
     }
 
     int currentGoldMines = ImperialGoldMineManager.countGoldMines(serverLevel, this, 128);
 
     if (currentGoldMines >= getGoldMineCapacity()) {
-        player.displayClientMessage(Component.literal(
-                "Gold Mine capacity reached. Upgrade the city to build more gold mines."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.gold_mine_cap"), true);
         return;
     }
 
@@ -207,12 +191,7 @@ public void tryBuildImperialGoldMine(Player player) {
     int coalCost = 15;
 
     if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
-        player.displayClientMessage(Component.literal(
-                "Not enough city resources. Need: "
-                        + ironCost + " Iron, "
-                        + scrapCost + " Scrap, "
-                        + coalCost + " Coal."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_3", ironCost, scrapCost, coalCost), true);
         return;
     }
 
@@ -226,12 +205,7 @@ public void tryBuildImperialGoldMine(Player player) {
 
     setChanged();
 
-    player.displayClientMessage(Component.literal(
-            "City Resources: "
-                    + this.resources.getIron() + " Iron, "
-                    + this.resources.getScrapMetal() + " Scrap, "
-                    + this.resources.getCoal() + " Coal."
-    ), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_3", this.resources.getIron(), this.resources.getScrapMetal(), this.resources.getCoal()), false);
 }
 
 public int getGoldMineCapacity() {
@@ -245,7 +219,7 @@ public int getGoldMineCapacity() {
 // Farms feed the city: a staffed Farm raises morale and sustains population growth.
 public void tryBuildImperialFarm(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
         return;
     }
 
@@ -256,9 +230,7 @@ public void tryBuildImperialFarm(Player player) {
     int currentFarms = ImperialFarmManager.countFarms(serverLevel, this, 128);
 
     if (currentFarms >= getFarmCapacity()) {
-        player.displayClientMessage(Component.literal(
-                "Farm capacity reached. Upgrade the city to build more farms."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.farm_cap"), true);
         return;
     }
 
@@ -266,11 +238,7 @@ public void tryBuildImperialFarm(Player player) {
     int scrapCost = 5;
 
     if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost) {
-        player.displayClientMessage(Component.literal(
-                "Not enough city resources. Need: "
-                        + ironCost + " Iron, "
-                        + scrapCost + " Scrap."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_2_is", ironCost, scrapCost), true);
         return;
     }
 
@@ -284,11 +252,7 @@ public void tryBuildImperialFarm(Player player) {
 
     setChanged();
 
-    player.displayClientMessage(Component.literal(
-            "City Resources: "
-                    + this.resources.getIron() + " Iron, "
-                    + this.resources.getScrapMetal() + " Scrap."
-    ), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_2", this.resources.getIron(), this.resources.getScrapMetal()), false);
 }
 
 public int getFarmCapacity() {
@@ -298,7 +262,7 @@ public int getFarmCapacity() {
 // Trade Depots unlock at city level 3 and trade Gold for Emerald with the capital.
 public void tryBuildEmeraldTradeDepot(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
         return;
     }
 
@@ -307,18 +271,14 @@ public void tryBuildEmeraldTradeDepot(Player player) {
     }
 
     if (this.cityLevel < 3) {
-        player.displayClientMessage(Component.literal(
-                "Emerald Trade Depots require an Imperial settlement of Level 3 or higher."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.trade_depot_level"), true);
         return;
     }
 
     int currentDepots = ImperialEmeraldTradeDepotManager.countTradeDepots(serverLevel, this, 128);
 
     if (currentDepots >= getTradeDepotCapacity()) {
-        player.displayClientMessage(Component.literal(
-                "Emerald Trade Depot capacity reached. Upgrade the city to build more."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.trade_depot_cap"), true);
         return;
     }
 
@@ -327,12 +287,7 @@ public void tryBuildEmeraldTradeDepot(Player player) {
     int coalCost = 10;
 
     if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
-        player.displayClientMessage(Component.literal(
-                "Not enough city resources. Need: "
-                        + ironCost + " Iron, "
-                        + scrapCost + " Scrap, "
-                        + coalCost + " Coal."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_3", ironCost, scrapCost, coalCost), true);
         return;
     }
 
@@ -346,12 +301,7 @@ public void tryBuildEmeraldTradeDepot(Player player) {
 
     setChanged();
 
-    player.displayClientMessage(Component.literal(
-            "City Resources: "
-                    + this.resources.getIron() + " Iron, "
-                    + this.resources.getScrapMetal() + " Scrap, "
-                    + this.resources.getCoal() + " Coal."
-    ), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_3", this.resources.getIron(), this.resources.getScrapMetal(), this.resources.getCoal()), false);
 }
 
 public int getTradeDepotCapacity() {
@@ -3260,7 +3210,7 @@ if (this.reinforcementCooldownTicks < 0) {
 }
 public void tryBuildScrapYard(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
         return;
     }
 
@@ -3271,9 +3221,7 @@ public void tryBuildScrapYard(Player player) {
     int currentScrapYards = ImperialScrapYardManager.countScrapYards(serverLevel, this, 128);
 
     if (currentScrapYards >= getScrapYardCapacity()) {
-        player.displayClientMessage(Component.literal(
-                "Scrap Yard capacity reached. Upgrade the city to build more Scrap Yards."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.scrap_yard_cap"), true);
         return;
     }
 
@@ -3281,11 +3229,7 @@ public void tryBuildScrapYard(Player player) {
     int coalCost = 5;
 
     if (this.resources.getIron() < ironCost || this.resources.getCoal() < coalCost) {
-        player.displayClientMessage(Component.literal(
-                "Not enough city resources. Need: "
-                        + ironCost + " Iron, "
-                        + coalCost + " Coal."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_2_ic", ironCost, coalCost), true);
         return;
     }
 
@@ -3299,12 +3243,7 @@ public void tryBuildScrapYard(Player player) {
 
     setChanged();
 
-    player.displayClientMessage(Component.literal(
-            "City Resources: "
-                    + this.resources.getIron() + " Iron, "
-                    + this.resources.getScrapMetal() + " Scrap, "
-                    + this.resources.getCoal() + " Coal."
-    ), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_3", this.resources.getIron(), this.resources.getScrapMetal(), this.resources.getCoal()), false);
 }
 
 public int getScrapYardCapacity() {
@@ -3313,7 +3252,7 @@ public int getScrapYardCapacity() {
 
 public void tryBuildPromethiumRefinery(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
         return;
     }
 
@@ -3324,9 +3263,7 @@ public void tryBuildPromethiumRefinery(Player player) {
     int currentRefineries = ImperialPromethiumRefineryManager.countRefineries(serverLevel, this, 128);
 
     if (currentRefineries >= getPromethiumRefineryCapacity()) {
-        player.displayClientMessage(Component.literal(
-                "Promethium Refinery capacity reached. Upgrade the city to build more refineries."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.refinery_cap"), true);
         return;
     }
 
@@ -3334,11 +3271,7 @@ public void tryBuildPromethiumRefinery(Player player) {
     int scrapCost = 8;
 
     if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost) {
-        player.displayClientMessage(Component.literal(
-                "Not enough city resources. Need: "
-                        + ironCost + " Iron, "
-                        + scrapCost + " Scrap."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_2_is", ironCost, scrapCost), true);
         return;
     }
 
@@ -3352,12 +3285,7 @@ public void tryBuildPromethiumRefinery(Player player) {
 
     setChanged();
 
-    player.displayClientMessage(Component.literal(
-            "City Resources: "
-                    + this.resources.getIron() + " Iron, "
-                    + this.resources.getScrapMetal() + " Scrap, "
-                    + this.resources.getCoal() + " Coal."
-    ), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_3", this.resources.getIron(), this.resources.getScrapMetal(), this.resources.getCoal()), false);
 }
 
 public int getBarracksCapacity() {
@@ -3366,7 +3294,7 @@ public int getBarracksCapacity() {
 
 public void tryBuildBarracks(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
         return;
     }
 
@@ -3377,9 +3305,7 @@ public void tryBuildBarracks(Player player) {
     int currentBarracks = ImperialBarracksManager.countBarracks(serverLevel, this, 128);
 
     if (currentBarracks >= getBarracksCapacity()) {
-        player.displayClientMessage(Component.literal(
-                "Barracks capacity reached. Upgrade the city to build more barracks."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.barracks_cap"), true);
         return;
     }
 
@@ -3388,12 +3314,7 @@ public void tryBuildBarracks(Player player) {
     int coalCost = 5;
 
     if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
-        player.displayClientMessage(Component.literal(
-                "Not enough city resources. Need: "
-                        + ironCost + " Iron, "
-                        + scrapCost + " Scrap, "
-                        + coalCost + " Coal."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_3", ironCost, scrapCost, coalCost), true);
         return;
     }
 
@@ -3407,17 +3328,12 @@ public void tryBuildBarracks(Player player) {
 
     setChanged();
 
-    player.displayClientMessage(Component.literal(
-            "City Resources: "
-                    + this.resources.getIron() + " Iron, "
-                    + this.resources.getScrapMetal() + " Scrap, "
-                    + this.resources.getCoal() + " Coal."
-    ), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_3", this.resources.getIron(), this.resources.getScrapMetal(), this.resources.getCoal()), false);
 }
 
 public void tryBuildImperialForge(Player player) {
     if (!isOwner(player)) {
-        player.displayClientMessage(Component.literal("Only the owner can build city work sites."), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
         return;
     }
 
@@ -3428,9 +3344,7 @@ public void tryBuildImperialForge(Player player) {
     int currentForges = ImperialForgeManager.countForges(serverLevel, this, 128);
 
     if (currentForges >= getImperialForgeCapacity()) {
-        player.displayClientMessage(Component.literal(
-                "Imperial Forge capacity reached. Upgrade the city to build more forges."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.forge_cap"), true);
         return;
     }
 
@@ -3439,12 +3353,7 @@ public void tryBuildImperialForge(Player player) {
     int coalCost = 10;
 
     if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
-        player.displayClientMessage(Component.literal(
-                "Not enough city resources. Need: "
-                        + ironCost + " Iron, "
-                        + scrapCost + " Scrap, "
-                        + coalCost + " Coal."
-        ), true);
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_3", ironCost, scrapCost, coalCost), true);
         return;
     }
 
@@ -3458,12 +3367,7 @@ public void tryBuildImperialForge(Player player) {
 
     setChanged();
 
-    player.displayClientMessage(Component.literal(
-            "City Resources: "
-                    + this.resources.getIron() + " Iron, "
-                    + this.resources.getScrapMetal() + " Scrap, "
-                    + this.resources.getCoal() + " Coal."
-    ), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_3", this.resources.getIron(), this.resources.getScrapMetal(), this.resources.getCoal()), false);
 }
 
 public int getImperialForgeCapacity() {

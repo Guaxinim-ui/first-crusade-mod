@@ -221,5 +221,21 @@
   "msg.firstcrusade.repair.not_owner": "Só o dono pode reparar esta cidade.",
   "msg.firstcrusade.repair.full": "O Núcleo de Comando Imperial já está totalmente reparado.",
   "msg.firstcrusade.repair.done": "Usou 1 Placa de Crusadium para reparar o Núcleo.",
-  "msg.firstcrusade.repair.integrity": "Integridade do Núcleo: %s/100"
+  "msg.firstcrusade.repair.integrity": "Integridade do Núcleo: %s/100",
+  "msg.firstcrusade.build.not_owner": "Só o dono pode construir locais de trabalho da cidade.",
+  "msg.firstcrusade.build.need_3": "Recursos da cidade insuficientes. Precisa: %s Ferro, %s Sucata, %s Carvão.",
+  "msg.firstcrusade.build.need_2_is": "Recursos da cidade insuficientes. Precisa: %s Ferro, %s Sucata.",
+  "msg.firstcrusade.build.need_2_ic": "Recursos da cidade insuficientes. Precisa: %s Ferro, %s Carvão.",
+  "msg.firstcrusade.build.res_3": "Recursos da Cidade: %s Ferro, %s Sucata, %s Carvão.",
+  "msg.firstcrusade.build.res_2": "Recursos da Cidade: %s Ferro, %s Sucata.",
+  "msg.firstcrusade.build.mine_cap": "Capacidade de Minas Imperiais atingida. Evolua a cidade para construir mais minas.",
+  "msg.firstcrusade.build.gold_mine_cap": "Capacidade de Minas de Ouro atingida. Evolua a cidade para construir mais minas de ouro.",
+  "msg.firstcrusade.build.gold_mine_level": "Minas de Ouro requerem um assentamento Imperial de Nível 2 ou superior.",
+  "msg.firstcrusade.build.farm_cap": "Capacidade de Fazendas atingida. Evolua a cidade para construir mais fazendas.",
+  "msg.firstcrusade.build.trade_depot_cap": "Capacidade de Depósitos de Comércio de Esmeralda atingida. Evolua a cidade para construir mais.",
+  "msg.firstcrusade.build.trade_depot_level": "Depósitos de Comércio de Esmeralda requerem um assentamento Imperial de Nível 3 ou superior.",
+  "msg.firstcrusade.build.scrap_yard_cap": "Capacidade de Ferros-Velhos atingida. Evolua a cidade para construir mais Ferros-Velhos.",
+  "msg.firstcrusade.build.refinery_cap": "Capacidade de Refinarias de Prometium atingida. Evolua a cidade para construir mais refinarias.",
+  "msg.firstcrusade.build.barracks_cap": "Capacidade de Quartéis atingida. Evolua a cidade para construir mais quartéis.",
+  "msg.firstcrusade.build.forge_cap": "Capacidade de Forjas Imperiais atingida. Evolua a cidade para construir mais forjas."
 }

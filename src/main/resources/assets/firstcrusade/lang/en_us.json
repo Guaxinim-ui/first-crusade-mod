@@ -221,5 +221,21 @@
   "msg.firstcrusade.repair.not_owner": "Only the owner can repair this city.",
   "msg.firstcrusade.repair.full": "The Imperial Command Core is already fully repaired.",
   "msg.firstcrusade.repair.done": "Used 1 Crusadium Plate to repair the Core.",
-  "msg.firstcrusade.repair.integrity": "Core Integrity: %s/100"
+  "msg.firstcrusade.repair.integrity": "Core Integrity: %s/100",
+  "msg.firstcrusade.build.not_owner": "Only the owner can build city work sites.",
+  "msg.firstcrusade.build.need_3": "Not enough city resources. Need: %s Iron, %s Scrap, %s Coal.",
+  "msg.firstcrusade.build.need_2_is": "Not enough city resources. Need: %s Iron, %s Scrap.",
+  "msg.firstcrusade.build.need_2_ic": "Not enough city resources. Need: %s Iron, %s Coal.",
+  "msg.firstcrusade.build.res_3": "City Resources: %s Iron, %s Scrap, %s Coal.",
+  "msg.firstcrusade.build.res_2": "City Resources: %s Iron, %s Scrap.",
+  "msg.firstcrusade.build.mine_cap": "Imperial Mine capacity reached. Upgrade the city to build more mines.",
+  "msg.firstcrusade.build.gold_mine_cap": "Gold Mine capacity reached. Upgrade the city to build more gold mines.",
+  "msg.firstcrusade.build.gold_mine_level": "Gold Mines require an Imperial settlement of Level 2 or higher.",
+  "msg.firstcrusade.build.farm_cap": "Farm capacity reached. Upgrade the city to build more farms.",
+  "msg.firstcrusade.build.trade_depot_cap": "Emerald Trade Depot capacity reached. Upgrade the city to build more.",
+  "msg.firstcrusade.build.trade_depot_level": "Emerald Trade Depots require an Imperial settlement of Level 3 or higher.",
+  "msg.firstcrusade.build.scrap_yard_cap": "Scrap Yard capacity reached. Upgrade the city to build more Scrap Yards.",
+  "msg.firstcrusade.build.refinery_cap": "Promethium Refinery capacity reached. Upgrade the city to build more refineries.",
+  "msg.firstcrusade.build.barracks_cap": "Barracks capacity reached. Upgrade the city to build more barracks.",
+  "msg.firstcrusade.build.forge_cap": "Imperial Forge capacity reached. Upgrade the city to build more forges."
 }
