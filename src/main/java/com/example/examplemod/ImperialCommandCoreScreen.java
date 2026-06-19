@@ -436,55 +436,55 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         int y = 46;
         drawLine(guiGraphics, this.menu.getCityType().getDisplayName(), 12, y, 0xFFE0C070);
         y += 13;
-        drawLine(guiGraphics, "Level: " + this.menu.getCityLevel(), 12, y, 0xFFFFFFFF);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.level", this.menu.getCityLevel()), 12, y, 0xFFFFFFFF);
         y += 11;
-        drawLine(guiGraphics, "Integrity: " + this.menu.getCityIntegrity() + "/100", 12, y, getIntegrityColor());
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.integrity", this.menu.getCityIntegrity()), 12, y, getIntegrityColor());
         y += 11;
-        drawLine(guiGraphics, "Morale: " + this.menu.getCityMorale() + " (" + ImperialCityMoraleManager.getMoraleLabel(this.menu.getCityMorale()) + ")", 12, y, getMoraleColor());
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.morale", this.menu.getCityMorale(), ImperialCityMoraleManager.getMoraleLabel(this.menu.getCityMorale())), 12, y, getMoraleColor());
         y += 11;
-        drawLine(guiGraphics, "Citizens: " + this.menu.getCitizenCount() + "/" + getCitizenCapacityText(), 12, y, 0xFFBBD7FF);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.citizens", this.menu.getCitizenCount(), getCitizenCapacityText()), 12, y, 0xFFBBD7FF);
         y += 11;
-        drawLine(guiGraphics, "Unemployed: " + this.menu.getUnemployedCitizenCount(), 12, y, 0xFFBBD7FF);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.unemployed", this.menu.getUnemployedCitizenCount()), 12, y, 0xFFBBD7FF);
         y += 11;
-        drawLine(guiGraphics, "Soldiers: " + this.menu.getRecruitedGuardsmen() + "/" + this.menu.getMilitaryCapacity(), 12, y, 0xFFBBD7FF);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.soldiers", this.menu.getRecruitedGuardsmen(), this.menu.getMilitaryCapacity()), 12, y, 0xFFBBD7FF);
         y += 11;
-        drawLine(guiGraphics, "Threat: " + getThreatText(), 12, y, getThreatColor());
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.threat", getThreatText()), 12, y, getThreatColor());
         y += 11;
-        drawLine(guiGraphics, "Raid: " + getRaidStatusText(), 12, y, getRaidStatusColor());
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.raid", getRaidStatusText()), 12, y, getRaidStatusColor());
     }
 
     private void renderBuildInfo(GuiGraphics guiGraphics) {
         int y = 46;
         drawHeader(guiGraphics, "gui.firstcrusade.section.structures", 12, y, 0xFFFFD27D);
         y += 13;
-        drawLine(guiGraphics, "Mines: " + this.menu.getMineCount() + "/" + this.menu.getMineCapacity() + " (" + this.menu.getMinerCount() + ")", 12, y, 0xFFFFDD77);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.mines", this.menu.getMineCount(), this.menu.getMineCapacity(), this.menu.getMinerCount()), 12, y, 0xFFFFDD77);
         y += 11;
-        drawLine(guiGraphics, "Gold Mines: " + this.menu.getGoldMineCount() + "/" + this.menu.getGoldMineCapacity() + " (" + this.menu.getGoldMinerCount() + ")", 12, y, 0xFFFFE08A);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.gold_mines", this.menu.getGoldMineCount(), this.menu.getGoldMineCapacity(), this.menu.getGoldMinerCount()), 12, y, 0xFFFFE08A);
         y += 11;
-        drawLine(guiGraphics, "Scrap Yards: " + this.menu.getScrapYardCount() + "/" + this.menu.getScrapYardCapacity() + " (" + this.menu.getScrapperCount() + ")", 12, y, 0xFFFFDD77);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.scrap_yards", this.menu.getScrapYardCount(), this.menu.getScrapYardCapacity(), this.menu.getScrapperCount()), 12, y, 0xFFFFDD77);
         y += 11;
-        drawLine(guiGraphics, "Forges: " + this.menu.getForgeCount() + "/" + this.menu.getForgeCapacity() + " (" + this.menu.getSmithCount() + ")", 12, y, 0xFFFFDD77);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.forges", this.menu.getForgeCount(), this.menu.getForgeCapacity(), this.menu.getSmithCount()), 12, y, 0xFFFFDD77);
         y += 11;
-        drawLine(guiGraphics, "Refineries: " + this.menu.getRefineryCount() + "/" + this.menu.getRefineryCapacity() + " (" + this.menu.getStokerCount() + ")", 12, y, 0xFFFFDD77);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.refineries", this.menu.getRefineryCount(), this.menu.getRefineryCapacity(), this.menu.getStokerCount()), 12, y, 0xFFFFDD77);
         y += 11;
-        drawLine(guiGraphics, "Farms: " + this.menu.getFarmCount() + "/" + this.menu.getFarmCapacity() + " (" + this.menu.getFarmerCount() + ")", 12, y, 0xFF9BE07A);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.farms", this.menu.getFarmCount(), this.menu.getFarmCapacity(), this.menu.getFarmerCount()), 12, y, 0xFF9BE07A);
         y += 11;
-        drawLine(guiGraphics, "Trade Depots: " + this.menu.getTradeDepotCount() + "/" + this.menu.getTradeDepotCapacity() + " (" + this.menu.getTraderCount() + ")", 12, y, 0xFF7AE0B0);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.trade_depots", this.menu.getTradeDepotCount(), this.menu.getTradeDepotCapacity(), this.menu.getTraderCount()), 12, y, 0xFF7AE0B0);
         y += 11;
-        drawLine(guiGraphics, "Barracks: " + this.menu.getBarracksCount() + "/" + this.menu.getBarracksCapacity() + " (" + this.menu.getRecruitsInTraining() + ")", 12, y, 0xFFFFDD77);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.barracks", this.menu.getBarracksCount(), this.menu.getBarracksCapacity(), this.menu.getRecruitsInTraining()), 12, y, 0xFFFFDD77);
     }
 
     private void renderMilitaryInfo(GuiGraphics guiGraphics) {
         int y = 46;
         drawHeader(guiGraphics, "gui.firstcrusade.section.military", 12, y, 0xFFFFD27D);
         y += 13;
-        drawLine(guiGraphics, "Soldiers: " + this.menu.getRecruitedGuardsmen() + "/" + this.menu.getMilitaryCapacity(), 12, y, 0xFFBBD7FF);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.soldiers", this.menu.getRecruitedGuardsmen(), this.menu.getMilitaryCapacity()), 12, y, 0xFFBBD7FF);
         y += 11;
-        drawLine(guiGraphics, "Recruits training: " + this.menu.getRecruitsInTraining(), 12, y, 0xFFBBD7FF);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.recruits_training", this.menu.getRecruitsInTraining()), 12, y, 0xFFBBD7FF);
         y += 11;
-        drawLine(guiGraphics, "Specialist: " + this.menu.getSelectedSpecialization().getDisplayName(), 12, y, 0xFF9AD0FF);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.specialist", this.menu.getSelectedSpecialization().getDisplayName()), 12, y, 0xFF9AD0FF);
         y += 11;
-        drawLine(guiGraphics, "Gene " + this.menu.getEmperorGeneSeed() + "/" + this.menu.getEmperorGeneSeedCapacity() + " +" + this.menu.getDailyGeneProduction() + "/day", 12, y, 0xFFB066FF);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.gene", this.menu.getEmperorGeneSeed(), this.menu.getEmperorGeneSeedCapacity(), this.menu.getDailyGeneProduction()), 12, y, 0xFFB066FF);
         y += 11;
         drawLine(guiGraphics, getSpaceMarineText(), 12, y, 0xFFFFD27D);
     }
@@ -493,13 +493,13 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         int y = 46;
         drawHeader(guiGraphics, "gui.firstcrusade.section.defense", 12, y, 0xFFFFD27D);
         y += 13;
-        drawLine(guiGraphics, "Integrity: " + this.menu.getCityIntegrity() + "/100", 12, y, getIntegrityColor());
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.integrity", this.menu.getCityIntegrity()), 12, y, getIntegrityColor());
         y += 11;
-        drawLine(guiGraphics, "Threat: " + getThreatText(), 12, y, getThreatColor());
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.threat", getThreatText()), 12, y, getThreatColor());
         y += 11;
-        drawLine(guiGraphics, "Raid: " + getRaidStatusText(), 12, y, getRaidStatusColor());
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.raid", getRaidStatusText()), 12, y, getRaidStatusColor());
         y += 11;
-        drawLine(guiGraphics, "Raids/Victories: " + this.menu.getOrkRaidCount() + "/" + this.menu.getOrkRaidVictories(), 12, y, 0xFFFFBBBB);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.raids_victories", this.menu.getOrkRaidCount(), this.menu.getOrkRaidVictories()), 12, y, 0xFFFFBBBB);
         y += 11;
         drawLine(guiGraphics, getReinforcementText(), 12, y, 0xFFBBD7FF);
     }
@@ -509,19 +509,19 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         int cap = this.menu.getStorageCapacity();
         drawHeader(guiGraphics, "gui.firstcrusade.section.resources", 12, y, 0xFFFFD27D);
         y += 13;
-        drawLine(guiGraphics, "Iron: " + this.menu.getIron() + "/" + cap, 12, y, 0xFFD8D8D8);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.iron", this.menu.getIron(), cap), 12, y, 0xFFD8D8D8);
         y += 11;
-        drawLine(guiGraphics, "Scrap: " + this.menu.getScrapMetal() + "/" + cap, 12, y, 0xFFD8D8D8);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.scrap", this.menu.getScrapMetal(), cap), 12, y, 0xFFD8D8D8);
         y += 11;
-        drawLine(guiGraphics, "Coal: " + this.menu.getCoal() + "/" + cap, 12, y, 0xFFD8D8D8);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.coal", this.menu.getCoal(), cap), 12, y, 0xFFD8D8D8);
         y += 11;
-        drawLine(guiGraphics, "Gold: " + this.menu.getGold() + "/" + cap, 12, y, 0xFFFFD700);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.gold", this.menu.getGold(), cap), 12, y, 0xFFFFD700);
         y += 11;
-        drawLine(guiGraphics, "Emerald: " + this.menu.getEmerald() + "/" + cap, 12, y, 0xFF2ECC71);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.emerald", this.menu.getEmerald(), cap), 12, y, 0xFF2ECC71);
         y += 11;
-        drawLine(guiGraphics, "Crusadium: " + this.menu.getCrusadium() + "/" + cap, 12, y, 0xFFB0C4DE);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.crusadium", this.menu.getCrusadium(), cap), 12, y, 0xFFB0C4DE);
         y += 11;
-        drawLine(guiGraphics, "Food: " + this.menu.getFood() + "/" + cap, 12, y, 0xFFE6D27A);
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.food", this.menu.getFood(), cap), 12, y, 0xFFE6D27A);
     }
 
     private void drawLine(GuiGraphics guiGraphics, String text, int x, int y, int color) {
@@ -592,10 +592,10 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
     private String getRaidStatusText() {
         if (this.menu.hasActiveRaid()) {
-            return "ACTIVE " + this.menu.getActiveRaidSeconds() + "s";
+            return Component.translatable("gui.firstcrusade.status.raid_active", this.menu.getActiveRaidSeconds()).getString();
         }
 
-        return "Safe";
+        return Component.translatable("gui.firstcrusade.status.raid_safe").getString();
     }
 
     private int getRaidStatusColor() {
@@ -608,22 +608,22 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
     private String getReinforcementText() {
         if (this.menu.getReinforcementCooldownSeconds() > 0) {
-            return "Reinf: " + this.menu.getReinforcementCooldownSeconds() + "s";
+            return Component.translatable("gui.firstcrusade.status.reinf_cooldown", this.menu.getReinforcementCooldownSeconds()).getString();
         }
 
-        return "Reinf: Ready";
+        return Component.translatable("gui.firstcrusade.status.reinf_ready").getString();
     }
 
     private String getSpaceMarineText() {
         if (this.menu.hasPendingSpaceMarineCandidate()) {
-            return "SM: Candidate moving to Core";
+            return Component.translatable("gui.firstcrusade.status.sm_candidate").getString();
         }
 
         if (this.menu.getSpaceMarineCooldownSeconds() > 0) {
-            return "SM Cooldown: " + this.menu.getSpaceMarineCooldownSeconds() + "s";
+            return Component.translatable("gui.firstcrusade.status.sm_cooldown", this.menu.getSpaceMarineCooldownSeconds()).getString();
         }
 
-        return "SM Ascension: Ready";
+        return Component.translatable("gui.firstcrusade.status.sm_ready").getString();
     }
 
     @Override

@@ -158,6 +158,15 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-19: **GUI em chaves de lang — fatia 2 (painel de status esquerdo)**. Todas as linhas dos
+  painéis City/Build/Military/Defense/Resources viraram `Component.translatable(chave, valores)` com
+  `%s` (Level/Integrity/Morale/Citizens/Soldiers/estruturas/recursos/etc.), e os status curtos da
+  própria tela (raid ATIVO/Seguro, reforço pronto/cooldown, Space Marine) também. Chaves
+  `gui.firstcrusade.info.*` e `.status.*` em en_us+pt_br (**139 chaves cada, em sincronia**).
+  **Ainda em inglês (outras classes):** nome do nível de ameaça (`ThreatAssessmentManager`) e rótulo
+  de moral (`ImperialCityMoraleManager`) — passam como `%s`. **Falta:** tooltips dos botões
+  (`applyButton`) e mensagens no `ImperialCommandCoreBlockEntity`. Build OK.
+
 - 2026-06-19: **GUI em chaves de lang — fatia 1 (rótulos estáticos)**. Migrados para
   `Component.translatable` na `ImperialCommandCoreScreen`: nomes das **abas**, textos de **todos os
   botões** (City/Build/Military/Defense/Resources), **cabeçalhos de seção** e o **título** da tela.
