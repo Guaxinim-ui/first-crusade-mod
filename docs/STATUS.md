@@ -160,6 +160,10 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Primarch empunha a Chainsword** (antes Netherite Sword vanilla). `equipAsPrimarch`
+  usa `ExampleMod.CHAINSWORD` — líder imperial com arma do mod. (Custodes mantém a lâmina dourada
+  genérica; Guilliman é bare-handed pois a aparência vem do modelo custom dele.) Compila OK.
+
 - 2026-06-20: **Conteúdo Ork — arma de elite Power Klaw**. `SwordItem` com `POWER_KLAW_TIER` forte
   (900 usos, +5 dano, nível 4, conserta com Ork Teeth), golpe muito lento/devastador (speed -2.8).
   **Warboss** (trocou o Iron Axe vanilla) e **Meganob** agora empunham a Power Klaw — elite Ork com
