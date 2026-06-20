@@ -248,6 +248,17 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Hive city — chão pavimentado + verticalidade + cidadãos operando**. Pedido do dono
+  (referências hive 40k). (1) **Chão arrumado:** `buildFoundation` agora **força** o piso de tijolo
+  em todo o interior (antes não trocava a grama → interior virava gramado; só a rua era pavimentada)
+  + sub-floor de cobbled sobre buracos. (2) **Verticalidade hive:** espira central **bem mais alta**
+  (`wallHeight + 26 + nível*4`, sempre construída) + **espirais secundárias** (~1/9 das células viram
+  torre 12–24 de altura) + **chaminés fumegantes** (`placeSmokestack`, campfire, ~1/3 das casas) →
+  silhueta industrial/vertical. (3) **Cidadãos operam a cidade:** `placeCityWorksites` coloca
+  **Fazenda/Mina/Forja/Ferro-velho** na praça, atribuídos ao Core → o `ImperialWorkforceManager`
+  emprega cidadãos ociosos neles e os prédios produzem recursos (que financiam o auto-recrutar/
+  evoluir). Build/jar OK; não testado em jogo.
+
 - 2026-06-20: **Cidade menos quadrada — casas góticas com telhado inclinado (estilo 40k)**. Feedback:
   muito quadrada, casas caixas. Agora `buildSimpleHouse` é um **hab-block gótico**: paredes deepslate
   com **janelas-lanceta altas** (1 de largura, do y1 ao topo), **telhado gable inclinado** de

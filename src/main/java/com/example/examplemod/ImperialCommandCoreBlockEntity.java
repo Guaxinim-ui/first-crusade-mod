@@ -2189,9 +2189,39 @@ public void buildAutonomousVillage(ServerLevel serverLevel) {
     this.cityLevel = Math.max(this.cityLevel, AUTONOMOUS_VILLAGE_LEVEL);
 
     buildCityStructure(serverLevel);
+    placeCityWorksites(serverLevel);
     spawnStartingPopulation(serverLevel, AUTONOMOUS_START_POPULATION);
     spawnInitialGarrison(serverLevel, AUTONOMOUS_GARRISON);
     setChanged();
+}
+
+// Gives an autonomous city real industry so its citizens have work: a Farm, Mine, Forge and Scrap
+// Yard on the plaza, each bound to this Core. The workforce manager then employs idle citizens at
+// them and the buildings produce resources — which in turn fund the city's own recruiting and growth.
+private void placeCityWorksites(ServerLevel serverLevel) {
+    placeWorksite(serverLevel, this.worldPosition.offset(8, 0, 8), ExampleMod.IMPERIAL_FARM.get());
+    placeWorksite(serverLevel, this.worldPosition.offset(-8, 0, 8), ExampleMod.IMPERIAL_MINE.get());
+    placeWorksite(serverLevel, this.worldPosition.offset(8, 0, -8), ExampleMod.IMPERIAL_FORGE.get());
+    placeWorksite(serverLevel, this.worldPosition.offset(-8, 0, -8), ExampleMod.IMPERIAL_SCRAP_YARD.get());
+}
+
+private void placeWorksite(ServerLevel serverLevel, BlockPos pos, net.minecraft.world.level.block.Block block) {
+    serverLevel.setBlock(pos, block.defaultBlockState(), 3);
+
+    BlockEntity blockEntity = serverLevel.getBlockEntity(pos);
+    if (blockEntity instanceof ImperialFarmBlockEntity farm) {
+        farm.assignToCommandCore(this.worldPosition);
+    } else if (blockEntity instanceof ImperialMineBlockEntity mine) {
+        mine.assignToCommandCore(this.worldPosition);
+    } else if (blockEntity instanceof ImperialForgeBlockEntity forge) {
+        forge.assignToCommandCore(this.worldPosition);
+    } else if (blockEntity instanceof ImperialScrapYardBlockEntity scrapYard) {
+        scrapYard.assignToCommandCore(this.worldPosition);
+    }
+
+    // A lit base so the worksite reads as a tended building on the plaza.
+    safePlace(serverLevel, pos.offset(1, 0, 0), Blocks.LANTERN.defaultBlockState());
+    safePlace(serverLevel, pos.offset(-1, 0, 0), Blocks.LANTERN.defaultBlockState());
 }
 
 // Settles a starting population inside a freshly generated town so it reads as inhabited from the
@@ -2257,10 +2287,9 @@ private void buildCityStructure(ServerLevel serverLevel) {
     // Fill the rest of the interior with a grid of houses (each with beds), like a real village.
     buildHousingDistrict(serverLevel, radius);
 
-    // A grand gothic cathedral spire rises behind the keep as the town's crowning landmark.
-    if (this.cityLevel >= 4) {
-        buildCentralSpire(serverLevel, this.worldPosition.offset(-1, 0, -(radius / 2)), wallHeight + 14);
-    }
+    // The towering central hive spire rises behind the keep — the city's crowning landmark, climbing
+    // far above the walls like the spire of an Imperial hive.
+    buildCentralSpire(serverLevel, this.worldPosition.offset(-1, 0, -(radius / 2)), wallHeight + 26 + this.cityLevel * 4);
 }
 
 private static final int CENTRAL_KEEP_HALF = 6;
@@ -2333,13 +2362,32 @@ private void buildHousingDistrict(ServerLevel serverLevel, int radius) {
                 continue;
             }
 
+            // Now and then a tall subsidiary hive spire rises among the houses, for vertical scale.
+            if (serverLevel.random.nextInt(9) == 0) {
+                buildTower(serverLevel, this.worldPosition.offset(sx + 1, 0, sz + 1), 12 + serverLevel.random.nextInt(12));
+                continue;
+            }
+
             int wallHeight = 4 + serverLevel.random.nextInt(2);   // 4..5
             buildSimpleHouse(serverLevel, this.worldPosition.offset(sx, 0, sz), w, d, wallHeight);
 
             // Street lamp on the corner facing the avenue.
             placeLampPost(serverLevel, this.worldPosition.offset(sx - 1, 0, sz - 1), 3);
+
+            // Many hab-blocks vent a smoking manufactorum chimney — the industrial breath of a hive.
+            if (serverLevel.random.nextInt(3) == 0) {
+                placeSmokestack(serverLevel, this.worldPosition.offset(sx + 1, wallHeight, sz + 1), 3 + serverLevel.random.nextInt(3));
+            }
         }
     }
+}
+
+// An industrial chimney venting smoke (a lit campfire), poking up through a hab-block roof.
+private void placeSmokestack(ServerLevel serverLevel, BlockPos base, int height) {
+    for (int y = 0; y < height; y++) {
+        safePlace(serverLevel, base.offset(0, y, 0), Blocks.POLISHED_BLACKSTONE.defaultBlockState());
+    }
+    safePlace(serverLevel, base.offset(0, height, 0), Blocks.CAMPFIRE.defaultBlockState());
 }
 
 // A gothic street lamp: a slim dark post crowned with a lantern, lighting the town after dark.
@@ -2368,10 +2416,16 @@ private void buildFoundation(ServerLevel serverLevel, int radius) {
 
     for (int x = -radius; x <= radius; x++) {
         for (int z = -radius; z <= radius; z++) {
-            BlockPos pos = this.worldPosition.offset(x, -1, z);
+            // Pave the whole interior floor (replacing grass/dirt), so the city has a proper stone
+            // plaza instead of patches of bare ground. A thin sub-floor keeps it solid over dips.
+            BlockPos floor = this.worldPosition.offset(x, -1, z);
+            BlockState tile = ((x + z) & 1) == 0 ? lightTile : darkTile;
+            serverLevel.setBlock(floor, tile, 3);
 
-            if (serverLevel.getBlockState(pos).isAir() || !serverLevel.getBlockState(pos).isCollisionShapeFullBlock(serverLevel, pos)) {
-                serverLevel.setBlock(pos, ((x + z) & 1) == 0 ? lightTile : darkTile, 3);
+            BlockPos below = floor.below();
+            if (serverLevel.getBlockState(below).isAir()
+                    || !serverLevel.getBlockState(below).isCollisionShapeFullBlock(serverLevel, below)) {
+                serverLevel.setBlock(below, Blocks.COBBLED_DEEPSLATE.defaultBlockState(), 3);
             }
         }
     }
