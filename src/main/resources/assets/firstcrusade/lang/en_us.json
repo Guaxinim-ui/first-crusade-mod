@@ -296,5 +296,9 @@
   "msg.firstcrusade.sm.cost": "Cost: %s Iron, %s Scrap, %s Coal, %s War Support, 1 Netherite Ingot.",
   "msg.firstcrusade.raid.not_owner": "Only the owner can force an Ork raid test.",
   "msg.firstcrusade.interface.not_owner": "Only the owner can access the Imperial Command Core interface.",
-  "msg.firstcrusade.lasgun.no_charge": "No charged Lasgun Power Cell available."
+  "msg.firstcrusade.lasgun.no_charge": "No charged Lasgun Power Cell available.",
+  "msg.firstcrusade.crusade.tier1": "The Crusade gathers strength — Imperial reinforcements grow. (Crusade Tier 1)",
+  "msg.firstcrusade.crusade.tier2": "The Imperial Crusade swells across the land. (Crusade Tier 2)",
+  "msg.firstcrusade.crusade.tier3": "A great Crusade marches! The Emperor's might rises. (Crusade Tier 3)",
+  "msg.firstcrusade.crusade.tier4": "The Imperium's Crusade engulfs the world in His light! (Crusade Tier 4)"
 }

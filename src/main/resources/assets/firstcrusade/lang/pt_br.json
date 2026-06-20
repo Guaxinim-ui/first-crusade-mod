@@ -296,5 +296,9 @@
   "msg.firstcrusade.sm.cost": "Custo: %s Ferro, %s Sucata, %s Carvão, %s Apoio de Guerra, 1 Lingote de Netherite.",
   "msg.firstcrusade.raid.not_owner": "Só o dono pode forçar um teste de ataque Ork.",
   "msg.firstcrusade.interface.not_owner": "Só o dono pode acessar a interface do Núcleo de Comando Imperial.",
-  "msg.firstcrusade.lasgun.no_charge": "Nenhuma Célula de Energia de Lasgun carregada disponível."
+  "msg.firstcrusade.lasgun.no_charge": "Nenhuma Célula de Energia de Lasgun carregada disponível.",
+  "msg.firstcrusade.crusade.tier1": "A Cruzada ganha força — os reforços Imperiais aumentam. (Cruzada Nível 1)",
+  "msg.firstcrusade.crusade.tier2": "A Cruzada Imperial cresce por toda a terra. (Cruzada Nível 2)",
+  "msg.firstcrusade.crusade.tier3": "Uma grande Cruzada marcha! O poder do Imperador se ergue. (Cruzada Nível 3)",
+  "msg.firstcrusade.crusade.tier4": "A Cruzada do Imperium engolfa o mundo em Sua luz! (Cruzada Nível 4)"
 }

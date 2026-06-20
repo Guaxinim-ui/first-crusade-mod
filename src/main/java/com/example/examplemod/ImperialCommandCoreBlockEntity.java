@@ -404,6 +404,7 @@ ImperialCustodesManager.tickCustodes(serverLevel, blockEntity);
 blockEntity.reducePrimarchMourningCooldown();
 ImperialPrimarchManager.tickPrimarch(serverLevel, blockEntity);
 WaaaghOverlordManager.contributeFromCity(serverLevel, blockEntity);
+ImperiumOverlordManager.contributeFromCity(serverLevel, blockEntity);
 blockEntity.trySeedOrkCamp(serverLevel);
 blockEntity.trySpawnOrkRaid(serverLevel);
 blockEntity.checkActiveOrkRaid(serverLevel);
@@ -1674,7 +1675,7 @@ private int getReinforcementWarSupportCost() {
 }
 
 private int getReinforcementCount() {
-    return switch (this.cityLevel) {
+    int base = switch (this.cityLevel) {
         case 1 -> 1;
         case 2 -> 2;
         case 3 -> 3;
@@ -1682,6 +1683,13 @@ private int getReinforcementCount() {
         case 5 -> 6;
         default -> 1;
     };
+
+    // The global Imperial Crusade dispatches heavier reinforcements as it grows (Fase D overlord).
+    if (this.level instanceof ServerLevel serverLevel) {
+        base += ImperiumOverlordManager.getTier(serverLevel);
+    }
+
+    return base;
 }
 
 private int getReinforcementCooldownTicks() {
