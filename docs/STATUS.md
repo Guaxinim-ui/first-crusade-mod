@@ -160,6 +160,10 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-19: **Space Marine empunha a Chainsword** (antes Netherite Sword vanilla). `equipAsSpaceMarine`
+  agora usa `ExampleMod.CHAINSWORD` no MAINHAND — dá presença in-world à arma nova no usuário icônico
+  (encaixa no `MeleeAttackGoal` existente; drop chance 0). Import `Items` removido. Build/jar OK.
+
 - 2026-06-19: **Conteúdo — nova arma melee: Chainsword** (Adeptus Astartes). `ChainswordItem` estende
   `SwordItem` (como a Combat Knife) com `CHAINSWORD_TIER` forte (700 usos, +5 dano, nível 3, conserta
   com Placa de Crusadium); golpe pesado/lento (modifier 4, speed -2.0) que **incendeia o alvo 3s**
