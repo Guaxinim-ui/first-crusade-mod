@@ -310,5 +310,11 @@
   "msg.firstcrusade.bcast.primarch_charge": "The Primarch leads a decisive counter-charge against the foe!",
   "msg.firstcrusade.bcast.warboss_risen": "A %s Warboss rises to lead the WAAAGH! against the city!",
   "msg.firstcrusade.bcast.war_party": "WAAAGH! A %s war party (%s) marches on the city!",
-  "msg.firstcrusade.bcast.neophyte_matured": "A Neophyte has completed his trials and is now a full Space Marine."
+  "msg.firstcrusade.bcast.neophyte_matured": "A Neophyte has completed his trials and is now a full Space Marine.",
+  "msg.firstcrusade.bcast.reinf_deployed": "Imperial reinforcements deployed: %s Guardsmen.",
+  "msg.firstcrusade.bcast.warsupport_spent": "War Support spent: %s. Remaining: %s.",
+  "msg.firstcrusade.bcast.rally_issued": "Imperial order issued: defenders rally to the Core!",
+  "msg.firstcrusade.bcast.rally_count": "Defenders repositioned: %s",
+  "msg.firstcrusade.bcast.fortify_issued": "Imperial order issued: defenders fortified!",
+  "msg.firstcrusade.bcast.fortify_count": "Fortified Guardsmen: %s. War Support spent: %s."
 }

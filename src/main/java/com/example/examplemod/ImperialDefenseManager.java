@@ -77,6 +77,10 @@ public class ImperialDefenseManager {
     }
 
     public static void notifyDefenseCommand(ServerLevel serverLevel, BlockPos corePos, String message) {
+        notifyDefenseCommand(serverLevel, corePos, Component.literal(message));
+    }
+
+    public static void notifyDefenseCommand(ServerLevel serverLevel, BlockPos corePos, Component message) {
         double range = 128.0D;
         double rangeSquared = range * range;
 
@@ -86,7 +90,7 @@ public class ImperialDefenseManager {
                     corePos.getY() + 0.5D,
                     corePos.getZ() + 0.5D
             ) <= rangeSquared) {
-                serverPlayer.displayClientMessage(Component.literal(message), false);
+                serverPlayer.displayClientMessage(message, false);
             }
         }
     }

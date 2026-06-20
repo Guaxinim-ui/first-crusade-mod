@@ -1660,13 +1660,13 @@ public void callImperialReinforcements(Player player) {
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "Imperial reinforcements deployed: " + spawned + " Guardsmen."
+            Component.translatable("msg.firstcrusade.bcast.reinf_deployed", spawned)
     );
 
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "War Support spent: " + warSupportCost + ". Remaining: " + this.imperialWarSupport + "."
+            Component.translatable("msg.firstcrusade.bcast.warsupport_spent", warSupportCost, this.imperialWarSupport)
     );
 }
 
@@ -1733,13 +1733,13 @@ public void rallyDefenders(Player player) {
     ImperialDefenseManager.notifyDefenseCommand(
             serverLevel,
             this.worldPosition,
-            "Imperial order issued: defenders rally to the Core!"
+            Component.translatable("msg.firstcrusade.bcast.rally_issued")
     );
 
     ImperialDefenseManager.notifyDefenseCommand(
             serverLevel,
             this.worldPosition,
-            "Defenders repositioned: " + affected
+            Component.translatable("msg.firstcrusade.bcast.rally_count", affected)
     );
 }
 
@@ -1781,13 +1781,13 @@ public void fortifyDefenders(Player player) {
     ImperialDefenseManager.notifyDefenseCommand(
             serverLevel,
             this.worldPosition,
-            "Imperial order issued: defenders fortified!"
+            Component.translatable("msg.firstcrusade.bcast.fortify_issued")
     );
 
     ImperialDefenseManager.notifyDefenseCommand(
             serverLevel,
             this.worldPosition,
-            "Fortified Guardsmen: " + affected + ". War Support spent: " + warSupportCost + "."
+            Component.translatable("msg.firstcrusade.bcast.fortify_count", affected, warSupportCost)
     );
 }
 
