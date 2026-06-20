@@ -248,6 +248,16 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Cidade menos quadrada — casas góticas com telhado inclinado (estilo 40k)**. Feedback:
+  muito quadrada, casas caixas. Agora `buildSimpleHouse` é um **hab-block gótico**: paredes deepslate
+  com **janelas-lanceta altas** (1 de largura, do y1 ao topo), **telhado gable inclinado** de
+  `DEEPSLATE_TILE_STAIRS` (`buildGableRoof` ao longo do eixo maior, com beiral e empena preenchida),
+  **pináculo dourado + end_rod** no cume, lanterna interna. `buildHousingDistrict` agora **varia
+  footprint (5..7 × 5..7), altura (4..5) e orientação do telhado** por casa, e abre **pátios** (~1/6
+  das células vira praça com poste) → bem menos grade. ⚠️ Stairs do telhado podem precisar **inverter
+  facing** se aparecerem ao contrário (1 linha em `buildGableRoof`/`placeRoofStair`). Build/jar OK;
+  não testado em jogo.
+
 - 2026-06-20: **Cidades autônomas se governam + plataforma do Spaceport melhor**. (1) Cidades
   **não-reivindicadas** (sem dono) agora rodam sozinhas: `tickAutonomousGovernance` (no serverTick,
   só se `!hasOwner()`) → **auto-recruta** guarnição até `getMilitaryCapacity` pagando ferro/ramp

@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 
 import java.util.List;
@@ -2303,16 +2304,18 @@ private void buildCentralKeep(ServerLevel serverLevel, int keepHalf, int height)
 // gate) clear. Every house gets a street lamp at its corner so the city lights up at night. The
 // number of houses scales with the wall radius, so bigger cities are bigger towns.
 private void buildHousingDistrict(ServerLevel serverLevel, int radius) {
-    int houseSize = 6;
-    int pitch = houseSize + 3;                  // house + a 3-block street
+    int cell = 9;                                // grid cell pitch (house up to 7 + street)
     int inner = radius - 3;                      // keep houses off the curtain wall
     int plazaHalf = CENTRAL_KEEP_HALF + 4;       // open plaza ringing the keep
     int roadHalf = 2;                            // central cross-road corridor kept clear
 
-    for (int sx = -inner; sx + houseSize - 1 <= inner; sx += pitch) {
-        for (int sz = -inner; sz + houseSize - 1 <= inner; sz += pitch) {
-            int x1 = sx + houseSize - 1;
-            int z1 = sz + houseSize - 1;
+    for (int sx = -inner; sx + 7 <= inner; sx += cell) {
+        for (int sz = -inner; sz + 7 <= inner; sz += cell) {
+            // Vary each house's footprint so the district isn't a wall of identical boxes.
+            int w = 5 + serverLevel.random.nextInt(3);   // 5..7
+            int d = 5 + serverLevel.random.nextInt(3);   // 5..7
+            int x1 = sx + w - 1;
+            int z1 = sz + d - 1;
 
             // Reserve the central plaza (the keep plus breathing room around it).
             if (x1 >= -plazaHalf && sx <= plazaHalf && z1 >= -plazaHalf && sz <= plazaHalf) {
@@ -2324,9 +2327,14 @@ private void buildHousingDistrict(ServerLevel serverLevel, int radius) {
                 continue;
             }
 
-            // Vary the rooflines a little so the skyline isn't a uniform block.
-            int houseHeight = (((sx + sz) & 1) == 0) ? 4 : 3;
-            buildSimpleHouse(serverLevel, this.worldPosition.offset(sx, 0, sz), houseSize, houseSize, houseHeight);
+            // Leave the odd block as an open lamp-lit courtyard so it doesn't read as a solid grid.
+            if (serverLevel.random.nextInt(6) == 0) {
+                placeLampPost(serverLevel, this.worldPosition.offset(sx + w / 2, 0, sz + d / 2), 4);
+                continue;
+            }
+
+            int wallHeight = 4 + serverLevel.random.nextInt(2);   // 4..5
+            buildSimpleHouse(serverLevel, this.worldPosition.offset(sx, 0, sz), w, d, wallHeight);
 
             // Street lamp on the corner facing the avenue.
             placeLampPost(serverLevel, this.worldPosition.offset(sx - 1, 0, sz - 1), 3);
@@ -2482,6 +2490,9 @@ private void buildTower(ServerLevel serverLevel, BlockPos corner, int height) {
     safePlace(serverLevel, corner.offset(0, spireY, -1), Blocks.LANTERN.defaultBlockState());
 }
 
+// A gothic Imperial hab-block: dark brick walls with tall narrow lancet windows, a gabled tiled
+// roof, a gilded finial, and beds inside. Footprint and roof axis vary per house so the district
+// reads as a real town of distinct buildings rather than a grid of identical boxes.
 private void buildSimpleHouse(ServerLevel serverLevel, BlockPos start, int width, int depth, int height) {
     BlockState wall = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
     BlockState corner = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
@@ -2497,8 +2508,9 @@ private void buildSimpleHouse(ServerLevel serverLevel, BlockPos start, int width
             if (border) {
                 for (int y = 0; y < height; y++) {
                     boolean doorway = z == 0 && x == width / 2 && y <= 1;
-                    boolean windowSlot = !isCorner && (y == 1 || y == 2)
-                            && (x == width / 2 || z == depth / 2);
+                    // Tall, narrow lancet windows centred on each wall (gothic 40k look).
+                    boolean windowSlot = !isCorner && (x == width / 2 || z == depth / 2)
+                            && y >= 1 && y <= height - 2;
 
                     if (doorway) {
                         continue;
@@ -2511,24 +2523,87 @@ private void buildSimpleHouse(ServerLevel serverLevel, BlockPos start, int width
         }
     }
 
-    // Dark pitched-look roof rim + a gilded finial at the apex.
-    for (int x = -1; x <= width; x++) {
-        for (int z = -1; z <= depth; z++) {
-            safePlace(serverLevel, start.offset(x, height, z), Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState());
-        }
-    }
+    // A pitched, tiled gable roof along the longer axis (varies the silhouette house to house).
+    boolean ridgeAlongX = width >= depth;
+    buildGableRoof(serverLevel, start, width, depth, height, ridgeAlongX);
 
-    safePlace(serverLevel, start.offset(width / 2, height + 1, depth / 2), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
-    safePlace(serverLevel, start.offset(width / 2, height + 2, depth / 2), Blocks.GOLD_BLOCK.defaultBlockState());
+    // Gilded finial crowning the ridge.
+    int peak = (ridgeAlongX ? depth : width) / 2;
+    safePlace(serverLevel, start.offset(width / 2, height + peak + 1, depth / 2), Blocks.GOLD_BLOCK.defaultBlockState());
+    safePlace(serverLevel, start.offset(width / 2, height + peak + 2, depth / 2), Blocks.END_ROD.defaultBlockState());
 
-    // Homes are where the population sleeps and grows: each house gets one or two beds tucked
-    // against the back-left wall, plus a hanging lantern so it stays lit at night. The beds also
-    // register as home POIs, which the citizens' sleep behaviour will later use.
+    // A lantern hung from the ridge lights the home at night.
+    safePlace(serverLevel, start.offset(width / 2, height - 1, depth / 2), Blocks.LANTERN.defaultBlockState());
+
+    // Beds (homes are where the population sleeps and grows; beds also register as home POIs).
     placeBed(serverLevel, start.offset(1, 0, 1), Direction.SOUTH);
-    if (width >= 6) {
+    if (width >= 6 && depth >= 5) {
         placeBed(serverLevel, start.offset(width - 2, 0, 1), Direction.SOUTH);
     }
-    safePlace(serverLevel, start.offset(width / 2, height - 1, depth / 2), Blocks.LANTERN.defaultBlockState());
+}
+
+// Builds a tiled gable roof over a [0..width-1] x [0..depth-1] house whose walls top out at y=height,
+// with a one-block eave overhang and the gable-end walls filled in. The ridge runs along the longer
+// axis. Roof stairs face outward (away from the ridge); flip the facings here if it ever looks
+// inverted in game.
+private void buildGableRoof(ServerLevel serverLevel, BlockPos start, int width, int depth, int height, boolean ridgeAlongX) {
+    BlockState ridge = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
+    BlockState gableWall = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
+
+    if (ridgeAlongX) {
+        int peak = depth / 2;
+        for (int i = 0; i <= peak; i++) {
+            int y = height + i;
+            int zf = i;
+            int zb = depth - 1 - i;
+
+            for (int x = -1; x <= width; x++) {
+                if (zf < zb) {
+                    placeRoofStair(serverLevel, start.offset(x, y, zf), Direction.SOUTH);
+                    placeRoofStair(serverLevel, start.offset(x, y, zb), Direction.NORTH);
+                } else {
+                    safePlace(serverLevel, start.offset(x, y, zf), ridge);
+                }
+            }
+
+            // Fill the triangular gable ends so the attic isn't open.
+            for (int z = zf + 1; z < zb; z++) {
+                safePlace(serverLevel, start.offset(0, y, z), gableWall);
+                safePlace(serverLevel, start.offset(width - 1, y, z), gableWall);
+            }
+        }
+    } else {
+        int peak = width / 2;
+        for (int i = 0; i <= peak; i++) {
+            int y = height + i;
+            int xf = i;
+            int xb = width - 1 - i;
+
+            for (int z = -1; z <= depth; z++) {
+                if (xf < xb) {
+                    placeRoofStair(serverLevel, start.offset(xf, y, z), Direction.WEST);
+                    placeRoofStair(serverLevel, start.offset(xb, y, z), Direction.EAST);
+                } else {
+                    safePlace(serverLevel, start.offset(xf, y, z), ridge);
+                }
+            }
+
+            for (int x = xf + 1; x < xb; x++) {
+                safePlace(serverLevel, start.offset(x, y, 0), gableWall);
+                safePlace(serverLevel, start.offset(x, y, depth - 1), gableWall);
+            }
+        }
+    }
+}
+
+// Places a roof stair (into empty space only) facing the given direction.
+private void placeRoofStair(ServerLevel serverLevel, BlockPos pos, Direction facing) {
+    if (pos.equals(this.worldPosition) || !serverLevel.getBlockState(pos).isAir()) {
+        return;
+    }
+
+    serverLevel.setBlock(pos, Blocks.DEEPSLATE_TILE_STAIRS.defaultBlockState()
+            .setValue(BlockStateProperties.HORIZONTAL_FACING, facing), 3);
 }
 
 // Places a two-block bed (foot + head) facing the given direction, only into empty space.
