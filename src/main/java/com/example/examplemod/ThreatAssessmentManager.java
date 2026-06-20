@@ -51,6 +51,43 @@ public final class ThreatAssessmentManager {
         return score;
     }
 
+    // The single most dangerous enemy near a settlement (highest quality weight, ties broken by
+    // nearness). Used to dispatch a leader to counter-charge the spearhead of an assault.
+    public static Mob findStrongestEnemy(ServerLevel serverLevel, BlockPos centerPos, int radius) {
+        AABB box = new AABB(
+                centerPos.getX() - radius,
+                centerPos.getY() - 64,
+                centerPos.getZ() - radius,
+                centerPos.getX() + radius,
+                centerPos.getY() + 96,
+                centerPos.getZ() + radius
+        );
+
+        List<Mob> enemies = serverLevel.getEntitiesOfClass(
+                Mob.class,
+                box,
+                mob -> mob.isAlive() && isEnemyOfImperium(mob)
+        );
+
+        Mob strongest = null;
+        int bestWeight = Integer.MIN_VALUE;
+        double bestDistanceSqr = Double.MAX_VALUE;
+
+        for (Mob enemy : enemies) {
+            int weight = weightOf(enemy);
+            double distanceSqr = enemy.distanceToSqr(
+                    centerPos.getX() + 0.5D, centerPos.getY() + 0.5D, centerPos.getZ() + 0.5D);
+
+            if (weight > bestWeight || (weight == bestWeight && distanceSqr < bestDistanceSqr)) {
+                bestWeight = weight;
+                bestDistanceSqr = distanceSqr;
+                strongest = enemy;
+            }
+        }
+
+        return strongest;
+    }
+
     public static int threatLevel(int score) {
         if (score <= 0) {
             return LEVEL_CALM;

@@ -116,8 +116,10 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
   global) — `ImperiumOverlordData` (SavedData no overworld) + `ImperiumOverlordManager`, espelho do
   WAAAGH!: cresce com a prosperidade das cidades (tier 0-4, anúncio global por chave de lang), e o
   tier **aumenta os reforços** de toda cidade (`getReinforcementCount += tier`). Agora há os dois
-  overlords (Imperium × WAAAGH!) crescendo em paralelo. **Falta:** território, geração de assentamentos
-  no worldgen (maior risco), despacho automático de líderes por nível de ameaça, e mostrar a Cruzada na GUI.
+  overlords (Imperium × WAAAGH!) crescendo em paralelo. **2ª fatia:** **despacho de líder por ameaça** —
+  no nível CRÍTICO o Primarch carrega contra o inimigo mais forte (`leadCriticalCounterCharge` +
+  `ThreatAssessmentManager.findStrongestEnemy`). **Falta:** território, geração no worldgen (maior
+  risco), mostrar a Cruzada na GUI, e (simetria) despacho equivalente do lado Ork/Warboss.
 - [ ] **Fase E** (maior risco) — mundo achatado + menor + dimensões-planeta substituindo Nether/End
   + viagem planetária (via Spaceport). **Planetas pequenos/fechados, SEM mineração/quebra de blocos**
   (jogo vira comando, não extração) + **Mesa de Guerra** (tela do Core vira mapa tático com fichas de
@@ -163,6 +165,13 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 - Mensagens de commit em pt-BR, terminar com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
 ## 7. Changelog (mais recente no topo)
+
+- 2026-06-20: **Fase D — despacho de líder por ameaça (Primarch counter-charge)**. No nível de ameaça
+  **CRÍTICO**, o Primarch é despachado para **carregar contra o inimigo mais forte** perto da cidade
+  (em vez de só ficar passivo): `ImperialPrimarchManager.leadCriticalCounterCharge` usa o novo
+  `ThreatAssessmentManager.findStrongestEnemy` (maior peso, desempate por proximidade) e dá `setTarget`
+  no Primarch (a comitiva segue o alvo dele). Anúncio único por despacho (throttle de ~1 min via NBT).
+  Abaixo de crítico, mantém o comportamento antigo (ataca o camp quando seguro). Compila OK.
 
 - 2026-06-20: **Fase D iniciada — Imperium Overlord (a Cruzada global)**. `ImperiumOverlordData`
   (SavedData no overworld) + `ImperiumOverlordManager`, espelho exato do WAAAGH!: cresce com o nível

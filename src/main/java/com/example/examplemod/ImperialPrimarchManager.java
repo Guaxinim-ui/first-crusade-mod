@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.phys.AABB;
 
 import java.util.Comparator;
@@ -24,6 +25,11 @@ public final class ImperialPrimarchManager {
     private static final int GENE_SEED_COST = 15;
     private static final int CRUSADIUM_COST = 32;
     private static final int SEARCH_RADIUS = 192;
+
+    // Throttle for the "decisive counter-charge" announcement so it fires once per dispatch, not
+    // every tick the city stays at critical threat.
+    private static final String LAST_DISPATCH_TAG = "FirstCrusadeLastDispatch";
+    private static final long DISPATCH_ANNOUNCE_COOLDOWN = 1200L; // ~1 minute
 
     // Personal army (retinue): the nearest Guardsmen who march and fight alongside the Primarch.
     private static final String RETINUE_TAG = "FirstCrusadeRetinueUntil";
@@ -83,8 +89,14 @@ public final class ImperialPrimarchManager {
             core.engineerRepair(1);
             // ...gathers his personal army...
             updatePersonalArmy(serverLevel, core, primarch);
-            // ...and, when the city is safe, marches out to break the nearby Ork camp.
-            leadSortieAgainstCamp(serverLevel, core, primarch);
+
+            // ...and acts on the threat: at a critical assault he is dispatched to counter-charge the
+            // enemy spearhead; while the city is safe he instead marches out to break the Ork camp.
+            if (core.getLiveThreatLevel() >= ThreatAssessmentManager.LEVEL_CRITICAL) {
+                leadCriticalCounterCharge(serverLevel, core, primarch);
+            } else {
+                leadSortieAgainstCamp(serverLevel, core, primarch);
+            }
             return;
         }
 
@@ -129,6 +141,35 @@ public final class ImperialPrimarchManager {
         );
 
         return primarchs.isEmpty() ? null : primarchs.get(0);
+    }
+
+    // At a critical assault the Primarch is dispatched to take the fight to the enemy: he charges the
+    // single most dangerous foe near the city (with his retinue, which follows his target), rather
+    // than waiting for the horde to reach the Core. Announced once per dispatch.
+    private static void leadCriticalCounterCharge(ServerLevel serverLevel, ImperialCommandCoreBlockEntity core, PrimarchEntity primarch) {
+        if (primarch.getTarget() != null) {
+            return; // already locked onto a foe
+        }
+
+        Mob spearhead = ThreatAssessmentManager.findStrongestEnemy(
+                serverLevel, core.getBlockPos(), ThreatAssessmentManager.DEFAULT_RADIUS);
+
+        if (spearhead == null || !FirstCrusadeFactionManager.canAttack(primarch, spearhead)) {
+            return;
+        }
+
+        primarch.setTarget(spearhead);
+
+        long now = serverLevel.getGameTime();
+
+        if (primarch.getPersistentData().getLong(LAST_DISPATCH_TAG) + DISPATCH_ANNOUNCE_COOLDOWN < now) {
+            primarch.getPersistentData().putLong(LAST_DISPATCH_TAG, now);
+            OrkRaidManager.notifyNearbyPlayers(
+                    serverLevel,
+                    core.getBlockPos(),
+                    "The Primarch leads a decisive counter-charge against the foe!"
+            );
+        }
     }
 
     // While the city is safe, the Primarch marches on the Ork camp to break it at the source.
