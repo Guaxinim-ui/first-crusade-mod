@@ -169,6 +169,16 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Planeta (B) v2 — noise_settings plano (sem montanhas/cavernas de ruído)**. Datapack
+  `small_planet` agora sobrescreve `worldgen/noise_settings/overworld.json`: `final_density` =
+  gradiente Y (solo até ~y65, ar acima) → **terreno plano, sem cavernas de ruído**; referencia o
+  clima vanilla (`minecraft:overworld/temperature|vegetation|continents|erosion|depth|ridges`) p/
+  manter **biomas/árvores**; aquifers/veins off; surface_rule simples (bedrock+grama+terra). JSON
+  valida. **Vilas**: instruir o dono a criar mundo com **"Gerar Estruturas" OFF** (infalível).
+  ⚠️ Worldgen escrito à mão e **não testável aqui** — dono cria mundo novo Default e reporta erro
+  exato se houver (não corrompe: mundo novo). Antes: v1 (carvers+altura) parecia não aplicar —
+  confirmar `/datapack list`.
+
 - 2026-06-20: **Planeta (B) v1 — datapack: cavernas escavadas off + altura baixa**. No datapack opt-in
   `small_planet` (mundo NOVO): overrides dos carvers `cave`/`cave_extra_underground`/`canyon` com
   `probability 0` (sem cavernas escavadas nem ravinas) + dimension_type raso (min_y 0/height 128).
