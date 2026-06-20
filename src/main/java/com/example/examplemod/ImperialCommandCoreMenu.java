@@ -10,7 +10,7 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 
 public class ImperialCommandCoreMenu extends AbstractContainerMenu {
-    private static final int DATA_COUNT = 56;
+    private static final int DATA_COUNT = 57;
 
     private final ContainerData data;
     private final BlockPos commandCorePos;
@@ -101,6 +101,7 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
                     case 53 -> commandCore.getTradeDepotCapacity();
                     case 54 -> commandCore.getCachedTraderCount();
                     case 55 -> commandCore.getFood();
+                    case 56 -> commandCore.getCrusadeTier();
                     default -> 0;
                 };
             }
@@ -369,5 +370,9 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
 
     public int getFood() {
         return this.data.get(55);
+    }
+
+    public int getCrusadeTier() {
+        return this.data.get(56);
     }
 }

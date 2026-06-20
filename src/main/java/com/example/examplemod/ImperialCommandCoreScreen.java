@@ -463,6 +463,8 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.threat", getThreatText()), 12, y, getThreatColor());
         y += 11;
         drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.raid", getRaidStatusText()), 12, y, getRaidStatusColor());
+        y += 11;
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.crusade", this.menu.getCrusadeTier()), 12, y, 0xFFD6B85A);
     }
 
     private void renderBuildInfo(GuiGraphics guiGraphics) {

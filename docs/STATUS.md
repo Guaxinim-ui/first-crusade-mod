@@ -166,6 +166,11 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Fase D — Cruzada na GUI do Core**. Nova linha "Cruzada: Nível X" no painel City,
+  mostrando o tier do `ImperiumOverlordManager`. Sincronizado via ContainerData (slot 56;
+  `DATA_COUNT` 56→57; `getCrusadeTier` no Core lê o overlord server-side; getter no menu). Chave
+  `gui.firstcrusade.info.crusade` (en/pt). Agora o jogador vê o crescimento da Cruzada global. Build OK; 303.
+
 - 2026-06-20: **Fase D — despacho de líder por ameaça (Primarch counter-charge)**. No nível de ameaça
   **CRÍTICO**, o Primarch é despachado para **carregar contra o inimigo mais forte** perto da cidade
   (em vez de só ficar passivo): `ImperialPrimarchManager.leadCriticalCounterCharge` usa o novo

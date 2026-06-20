@@ -118,6 +118,7 @@
   "gui.firstcrusade.info.soldiers": "Soldiers: %s/%s",
   "gui.firstcrusade.info.threat": "Threat: %s",
   "gui.firstcrusade.info.raid": "Raid: %s",
+  "gui.firstcrusade.info.crusade": "Crusade: Tier %s",
   "gui.firstcrusade.info.mines": "Mines: %s/%s (%s)",
   "gui.firstcrusade.info.gold_mines": "Gold Mines: %s/%s (%s)",
   "gui.firstcrusade.info.scrap_yards": "Scrap Yards: %s/%s (%s)",

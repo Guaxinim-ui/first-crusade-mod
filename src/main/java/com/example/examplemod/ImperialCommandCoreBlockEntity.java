@@ -2801,6 +2801,15 @@ public int getCityTypeOrdinal() {
     return getCityType().ordinal();
 }
 
+// Global Imperial Crusade tier (0-4) — the strategic overlord state shared by every city (Fase D).
+public int getCrusadeTier() {
+    if (this.level instanceof ServerLevel serverLevel) {
+        return ImperiumOverlordManager.getTier(serverLevel);
+    }
+
+    return 0;
+}
+
 // Live threat from actual nearby enemies (quantity x quality), not raid history.
 public int getLiveThreatScore() {
     if (this.level instanceof ServerLevel serverLevel) {
