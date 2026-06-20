@@ -248,6 +248,20 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Corrupção Ork (sculk) — 1ª fatia + limpa sculk solto do worldgen**. Ideia do dono:
+  o sculk que aparecia na superfície vira a **praga Ork** que se espalha. Novo `OrkCorruptionManager`:
+  (1) **camps irradiam corrupção** — halo de sculk que cresce a cada ciclo até um raio máx escalado
+  pelo **tier do WAAAGH!** (`BASE_RADIUS 4 + tier*5`), convertendo só **chão natural** (dirt/grass/
+  areia/pedra/etc., nunca estruturas/árvores) em `SCULK` (+ `SCULK_VEIN` ocasional); raio guardado em
+  NBT `CorruptionRadius` no `OrkCampBlockEntity`. (2) **mortes alimentam a praga** — `LivingDeathEvent`
+  em `ExampleMod`: onde um Ork morre/mata, semeia um patch de sculk (`corruptDeathSite`). (3) O sculk
+  **solto do worldgen** (do bioma deep_dark raso) é removido via **biome modifier** Forge
+  `data/firstcrusade/forge/biome_modifier/remove_stray_sculk.json` (remove placed features
+  sculk_vein/sculk_patch_deep_dark/ancient_city de `#minecraft:is_overworld`) — data-driven, reversível.
+  Build/jar OK; **não testado em jogo**. Dono testa: sculk solto sumiu? corrupção cresce em volta dos
+  camps e nas batalhas? Tunável (raio/tier/blocos por ciclo em `OrkCorruptionManager`). Futuro: praga
+  afeta unidades imperiais / pode ser purificada / espalha sozinha entre blocos.
+
 - 2026-06-20: **Fase F1b — vilas grandes + população + nascem no CHÃO (não em árvores)**. Feedback do
   dono: ficou fortaleza vazia em cima de árvores. Agora: (1) `buildCityStructure` reescrito —
   **bairro de casas em grade** (`buildHousingDistrict`, ~10-15 casas com cama, ruas de 2 blocos) +

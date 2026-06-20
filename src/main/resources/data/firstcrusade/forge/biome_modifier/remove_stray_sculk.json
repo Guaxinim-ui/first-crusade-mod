@@ -1,0 +1,9 @@
+{
+  "type": "forge:remove_features",
+  "biomes": "#minecraft:is_overworld",
+  "features": [
+    "minecraft:sculk_vein",
+    "minecraft:sculk_patch_deep_dark",
+    "minecraft:sculk_patch_ancient_city"
+  ]
+}

@@ -971,6 +971,24 @@ public void onPlayerLoggedIn(net.minecraftforge.event.entity.player.PlayerEvent.
     }
 }
 
+// The Ork corruption feeds on death: wherever an Ork falls (or fells something), a patch of sculk
+// scabs over the ground. Combined with the camps' steady halo, the green tide leaves a visible
+// stain that grows with every battle and every step of their expansion. See OrkCorruptionManager.
+@SubscribeEvent
+public void onLivingDeath(net.minecraftforge.event.entity.living.LivingDeathEvent event) {
+    if (!(event.getEntity().level() instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
+        return;
+    }
+
+    net.minecraft.world.entity.Entity killer = event.getSource().getEntity();
+    boolean orkInvolved = FirstCrusadeFactionManager.getFaction(event.getEntity()) == FirstCrusadeFaction.ORKS
+            || (killer != null && FirstCrusadeFactionManager.getFaction(killer) == FirstCrusadeFaction.ORKS);
+
+    if (orkInvolved) {
+        OrkCorruptionManager.corruptDeathSite(serverLevel, event.getEntity().blockPosition(), 3);
+    }
+}
+
 @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public static class ClientModEvents {
         @SubscribeEvent

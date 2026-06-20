@@ -41,6 +41,7 @@ public class OrkCampBlockEntity extends BlockEntity {
     private int warPartiesLaunched = 0;
     private boolean warbossSpawned = false;
     private boolean hasSpread = false;
+    private int corruptionRadius = 0;
     private int tickCounter = 0;
 
     public OrkCampBlockEntity(BlockPos pos, BlockState state) {
@@ -81,6 +82,11 @@ public class OrkCampBlockEntity extends BlockEntity {
         camp.maintainGarrison(serverLevel, pos);
         camp.buildWaaagh(serverLevel, pos);
         camp.trySpreadWaaagh(serverLevel, pos);
+
+        // The camp scabs the land around it with sculk; its reach grows with the WAAAGH! tier.
+        int tier = WaaaghOverlordManager.getTier(serverLevel);
+        camp.corruptionRadius = OrkCorruptionManager.spreadFromCamp(serverLevel, pos, tier, camp.corruptionRadius);
+        camp.setChanged();
     }
 
     // Once the global WAAAGH! has grown (tier 2+), an established camp eventually plants a single
@@ -314,6 +320,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         tag.putInt("WarPartiesLaunched", this.warPartiesLaunched);
         tag.putBoolean("WarbossSpawned", this.warbossSpawned);
         tag.putBoolean("HasSpread", this.hasSpread);
+        tag.putInt("CorruptionRadius", this.corruptionRadius);
         tag.putString("Clan", this.clan.name());
 
         if (this.targetCorePos != null) {
@@ -329,6 +336,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         this.warPartiesLaunched = tag.getInt("WarPartiesLaunched");
         this.warbossSpawned = tag.getBoolean("WarbossSpawned");
         this.hasSpread = tag.getBoolean("HasSpread");
+        this.corruptionRadius = tag.getInt("CorruptionRadius");
         this.clan = OrkClan.fromName(tag.getString("Clan"));
 
         if (tag.contains("TargetCorePos")) {
