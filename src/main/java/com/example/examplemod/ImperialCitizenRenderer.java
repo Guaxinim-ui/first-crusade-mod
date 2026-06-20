@@ -1,5 +1,6 @@
 package com.example.examplemod;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.VillagerModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -17,5 +18,12 @@ public class ImperialCitizenRenderer extends MobRenderer<ImperialCitizenEntity, 
     @Override
     public ResourceLocation getTextureLocation(ImperialCitizenEntity entity) {
         return TEXTURE;
+    }
+
+    @Override
+    protected void scale(ImperialCitizenEntity entity, PoseStack poseStack, float partialTick) {
+        if (entity.isBaby()) {
+            poseStack.scale(0.6F, 0.6F, 0.6F);
+        }
     }
 }

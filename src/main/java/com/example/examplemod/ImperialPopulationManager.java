@@ -3,7 +3,11 @@ package com.example.examplemod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 
@@ -12,6 +16,10 @@ import java.util.List;
 public class ImperialPopulationManager {
     private static final int CITIZEN_GROWTH_INTERVAL_TICKS = 1200;
     private static final int FOOD_PER_NEW_CITIZEN = 4;
+    private static final int BED_SEARCH_RADIUS = 36;
+    private static final int PARENTS_REQUIRED = 2;
+    // A bedless outpost can still hold a handful of people roughing it; beds raise the ceiling above this.
+    private static final int MIN_CAPACITY_WITHOUT_BEDS = 3;
 
     private ImperialPopulationManager() {
     }
@@ -27,9 +35,19 @@ public class ImperialPopulationManager {
         }
 
         int currentCitizens = countAssignedCitizens(serverLevel, commandCore);
-        int capacity = getCitizenCapacity(commandCore);
+
+        // Beds cap the population: every house (and so every wall expansion) raises the ceiling.
+        int beds = countBeds(serverLevel, commandCore.getBlockPos());
+        int capacity = Math.min(getCitizenCapacity(commandCore), Math.max(beds, MIN_CAPACITY_WITHOUT_BEDS));
 
         if (currentCitizens >= capacity) {
+            return;
+        }
+
+        // Below two citizens a settlement attracts settlers to bootstrap itself; beyond that, new
+        // citizens are children born of adults who are home asleep for the night.
+        boolean bootstrapping = currentCitizens < PARENTS_REQUIRED;
+        if (!bootstrapping && countRestingAdults(serverLevel, commandCore) < PARENTS_REQUIRED) {
             return;
         }
 
@@ -46,6 +64,9 @@ public class ImperialPopulationManager {
         }
 
         citizen.assignToCommandCore(commandCore.getBlockPos());
+        if (!bootstrapping) {
+            citizen.setChild(ImperialCitizenEntity.CHILDHOOD_TICKS);
+        }
         citizen.moveTo(
                 spawnPos.getX() + 0.5D,
                 spawnPos.getY(),
@@ -54,7 +75,6 @@ public class ImperialPopulationManager {
                 0.0F
         );
 
-        citizen.setCustomName(Component.literal("Imperial Citizen"));
         serverLevel.addFreshEntity(citizen);
 
         // A new mouth to feed: consume some stored Food if available (never blocks growth, so a
@@ -62,6 +82,45 @@ public class ImperialPopulationManager {
         commandCore.consumeFood(FOOD_PER_NEW_CITIZEN);
 
         commandCore.setChanged();
+    }
+
+    // Counts the city's beds (once per bed, by the foot block) within reach of the Core. Beds are
+    // placed by the village builder and by any house the player adds.
+    public static int countBeds(ServerLevel serverLevel, BlockPos corePos) {
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        int beds = 0;
+
+        for (int x = -BED_SEARCH_RADIUS; x <= BED_SEARCH_RADIUS; x++) {
+            for (int z = -BED_SEARCH_RADIUS; z <= BED_SEARCH_RADIUS; z++) {
+                for (int y = -6; y <= 8; y++) {
+                    cursor.set(corePos.getX() + x, corePos.getY() + y, corePos.getZ() + z);
+                    BlockState state = serverLevel.getBlockState(cursor);
+
+                    if (state.is(BlockTags.BEDS)
+                            && state.getValue(BlockStateProperties.BED_PART) == BedPart.FOOT) {
+                        beds++;
+                    }
+                }
+            }
+        }
+
+        return beds;
+    }
+
+    // Adults currently home asleep — the potential parents for a new birth.
+    public static int countRestingAdults(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore) {
+        BlockPos corePos = commandCore.getBlockPos();
+
+        List<ImperialCitizenEntity> resting = serverLevel.getEntitiesOfClass(
+                ImperialCitizenEntity.class,
+                createSearchBox(corePos, 96),
+                citizen -> citizen.isAlive()
+                        && citizen.isAssignedToCommandCore(corePos)
+                        && !citizen.isChild()
+                        && citizen.isRestingAtHome()
+        );
+
+        return resting.size();
     }
 
     public static boolean trainNearestCitizenAsGuardsman(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player) {

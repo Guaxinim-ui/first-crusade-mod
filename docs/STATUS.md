@@ -248,6 +248,19 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Fase F2a — cidadãos dormem → nascem crianças (cama/comida/pais gateiam)**.
+  `ImperialCitizenEntity`: campo `childhoodTicks` (NBT) → `isChild()`/`isBaby()` (criança não trabalha,
+  não treina, renderiza **menor** via `ImperialCitizenRenderer.scale` 0.6), cresce em ~1.5 dia
+  (`CHILDHOOD_TICKS`); flag transitória `restingAtHome`. Novo `ImperialCitizenSleepGoal` (prioridade 2):
+  à **noite** (13000–23000) o cidadão acha a **cama mais próxima** (BEDS foot, raio 28 do Core, scan
+  throttled) e vai pra casa descansar (`setRestingAtHome`). `updateWorkRoutine` não puxa pro trabalho à
+  noite/criança. `ImperialPopulationManager.tickCitizenGrowth` reescrito: capacidade = min(tipo,
+  max(**nº de camas**, 3)) → **camas (e expansão da muralha) limitam a população**; nascimento exige **2
+  adultos dormindo** (`countRestingAdults`) e gera **criança**; **bootstrap** (colonos adultos) só
+  enquanto há <2 cidadãos. Build/jar OK; **não testado em jogo**. Próximo: **F3 aspirante→Space Marine**
+  (só crianças escolhidas → implantes + teste em batalha). Futuro F2: pose de sono real; criança vira
+  adulto com aviso.
+
 - 2026-06-20: **Corrupção Ork (sculk) — 1ª fatia + limpa sculk solto do worldgen**. Ideia do dono:
   o sculk que aparecia na superfície vira a **praga Ork** que se espalha. Novo `OrkCorruptionManager`:
   (1) **camps irradiam corrupção** — halo de sculk que cresce a cada ciclo até um raio máx escalado

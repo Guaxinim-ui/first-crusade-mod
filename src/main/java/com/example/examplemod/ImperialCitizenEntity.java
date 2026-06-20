@@ -22,8 +22,15 @@ public class ImperialCitizenEntity extends PathfinderMob {
 
     private ImperialCitizenJob job = ImperialCitizenJob.UNEMPLOYED;
 
+    // How long the citizen stays a child before reaching adulthood (~1.5 days). Children can't work
+    // or be recruited; only an adult who grew up here can ever be chosen as a Space Marine aspirant.
+    public static final int CHILDHOOD_TICKS = 36000;
+
     private int citizenAgeTicks;
     private int workTicks;
+    private int childhoodTicks;
+    // Transient: set by the sleep goal while the citizen is at home for the night (gates births).
+    private boolean restingAtHome;
 
     public ImperialCitizenEntity(EntityType<? extends ImperialCitizenEntity> entityType, Level level) {
         super(entityType, level);
@@ -42,9 +49,10 @@ public class ImperialCitizenEntity extends PathfinderMob {
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new PanicGoal(this, 1.25D));
-        this.goalSelector.addGoal(2, new WaterAvoidingRandomStrollGoal(this, 0.75D));
-        this.goalSelector.addGoal(3, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(4, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(2, new ImperialCitizenSleepGoal(this));
+        this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.75D));
+        this.goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));
     }
 
     @Override
@@ -57,6 +65,13 @@ public class ImperialCitizenEntity extends PathfinderMob {
 
         this.citizenAgeTicks++;
 
+        if (this.childhoodTicks > 0) {
+            this.childhoodTicks--;
+            if (this.childhoodTicks == 0) {
+                updateCitizenName();
+            }
+        }
+
         if (this.tickCount % 40 == 0) {
             updateWorkRoutine();
         }
@@ -68,6 +83,12 @@ public class ImperialCitizenEntity extends PathfinderMob {
 
     private void updateWorkRoutine() {
         if (this.commandCorePos == null) {
+            return;
+        }
+
+        // At night the citizen heads home to sleep (handled by ImperialCitizenSleepGoal); don't drag
+        // them back to work. Children never work either.
+        if (this.restingAtHome || isChild() || isNightTime()) {
             return;
         }
 
@@ -126,12 +147,48 @@ public class ImperialCitizenEntity extends PathfinderMob {
     }
 
     private void updateCitizenName() {
+        if (isChild()) {
+            this.setCustomName(Component.literal("Imperial Child"));
+            return;
+        }
+
         if (this.job == ImperialCitizenJob.UNEMPLOYED) {
             this.setCustomName(Component.literal("Imperial Citizen"));
             return;
         }
 
         this.setCustomName(Component.literal("Imperial Citizen - " + this.job.getDisplayName()));
+    }
+
+    // --- Childhood ---------------------------------------------------------------------------
+
+    public void setChild(int childhoodTicks) {
+        this.childhoodTicks = Math.max(0, childhoodTicks);
+        updateCitizenName();
+    }
+
+    public boolean isChild() {
+        return this.childhoodTicks > 0;
+    }
+
+    @Override
+    public boolean isBaby() {
+        return isChild();
+    }
+
+    // --- Sleep / home ------------------------------------------------------------------------
+
+    private boolean isNightTime() {
+        long time = this.level().getDayTime() % 24000L;
+        return time >= 13000L && time < 23000L;
+    }
+
+    public boolean isRestingAtHome() {
+        return this.restingAtHome;
+    }
+
+    public void setRestingAtHome(boolean restingAtHome) {
+        this.restingAtHome = restingAtHome;
     }
 
     public void assignToCommandCore(BlockPos commandCorePos) {
@@ -201,7 +258,7 @@ public class ImperialCitizenEntity extends PathfinderMob {
     }
 
     public boolean isReadyForTraining() {
-        return this.job == ImperialCitizenJob.UNEMPLOYED && this.citizenAgeTicks >= 200;
+        return !isChild() && this.job == ImperialCitizenJob.UNEMPLOYED && this.citizenAgeTicks >= 200;
     }
 
     @Override
@@ -210,6 +267,7 @@ public class ImperialCitizenEntity extends PathfinderMob {
 
         tag.putInt("CitizenAgeTicks", this.citizenAgeTicks);
         tag.putInt("WorkTicks", this.workTicks);
+        tag.putInt("ChildhoodTicks", this.childhoodTicks);
         tag.putString("CitizenJob", this.job.name());
 
         if (this.commandCorePos != null) {
@@ -237,6 +295,7 @@ public class ImperialCitizenEntity extends PathfinderMob {
 
         this.citizenAgeTicks = tag.getInt("CitizenAgeTicks");
         this.workTicks = tag.getInt("WorkTicks");
+        this.childhoodTicks = tag.getInt("ChildhoodTicks");
         this.job = readJob(tag.getString("CitizenJob"));
 
         if (tag.getBoolean("HasCommandCorePos")) {
