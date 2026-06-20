@@ -2178,23 +2178,24 @@ private void buildCentralKeep(ServerLevel serverLevel, int keepHalf, int height)
     }
 }
 
-// Lays a grid of gabled houses (each with beds) across the town interior, leaving 2-block streets
-// between them, the central keep clear, and the main cross-roads (incl. the south gate) open. The
-// number of houses scales with the wall radius, so bigger cities are denser towns.
+// Lays out the residential blocks of the town: gabled houses (each with beds) on a grid with wide
+// streets, leaving an open plaza around the central keep and the main cross-roads (incl. the south
+// gate) clear. Every house gets a street lamp at its corner so the city lights up at night. The
+// number of houses scales with the wall radius, so bigger cities are bigger towns.
 private void buildHousingDistrict(ServerLevel serverLevel, int radius) {
     int houseSize = 6;
-    int pitch = houseSize + 2;     // house + a 2-block street
-    int inner = radius - 3;        // keep houses off the curtain wall
-    int roadHalf = 2;              // central cross-road corridor kept clear
+    int pitch = houseSize + 3;                  // house + a 3-block street
+    int inner = radius - 3;                      // keep houses off the curtain wall
+    int plazaHalf = CENTRAL_KEEP_HALF + 4;       // open plaza ringing the keep
+    int roadHalf = 2;                            // central cross-road corridor kept clear
 
     for (int sx = -inner; sx + houseSize - 1 <= inner; sx += pitch) {
         for (int sz = -inner; sz + houseSize - 1 <= inner; sz += pitch) {
             int x1 = sx + houseSize - 1;
             int z1 = sz + houseSize - 1;
 
-            // Reserve the central keep.
-            if (x1 >= -CENTRAL_KEEP_HALF && sx <= CENTRAL_KEEP_HALF
-                    && z1 >= -CENTRAL_KEEP_HALF && sz <= CENTRAL_KEEP_HALF) {
+            // Reserve the central plaza (the keep plus breathing room around it).
+            if (x1 >= -plazaHalf && sx <= plazaHalf && z1 >= -plazaHalf && sz <= plazaHalf) {
                 continue;
             }
 
@@ -2203,9 +2204,22 @@ private void buildHousingDistrict(ServerLevel serverLevel, int radius) {
                 continue;
             }
 
-            buildSimpleHouse(serverLevel, this.worldPosition.offset(sx, 0, sz), houseSize, houseSize, 4);
+            // Vary the rooflines a little so the skyline isn't a uniform block.
+            int houseHeight = (((sx + sz) & 1) == 0) ? 4 : 3;
+            buildSimpleHouse(serverLevel, this.worldPosition.offset(sx, 0, sz), houseSize, houseSize, houseHeight);
+
+            // Street lamp on the corner facing the avenue.
+            placeLampPost(serverLevel, this.worldPosition.offset(sx - 1, 0, sz - 1), 3);
         }
     }
+}
+
+// A gothic street lamp: a slim dark post crowned with a lantern, lighting the town after dark.
+private void placeLampPost(ServerLevel serverLevel, BlockPos base, int height) {
+    for (int y = 0; y < height; y++) {
+        safePlace(serverLevel, base.offset(0, y, 0), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
+    }
+    safePlace(serverLevel, base.offset(0, height, 0), Blocks.LANTERN.defaultBlockState());
 }
 
 // A tall gothic spire: a 2x2 dark-stone shaft with banded buttresses, an overhanging
@@ -2431,6 +2445,23 @@ private void buildCentralRoad(ServerLevel serverLevel, int radius) {
         forcePlaceFloor(serverLevel, this.worldPosition.offset(x, -1, 0), inlay);
         forcePlaceFloor(serverLevel, this.worldPosition.offset(x, -1, 1), road);
         forcePlaceFloor(serverLevel, this.worldPosition.offset(x, -1, -1), road);
+    }
+
+    // Lamp posts line the grand avenues so the city glows after dark (skipping the keep around the
+    // centre so they don't punch through its wall).
+    for (int z = -radius + 4; z <= radius - 4; z += 6) {
+        if (Math.abs(z) <= CENTRAL_KEEP_HALF + 1) {
+            continue;
+        }
+        placeLampPost(serverLevel, this.worldPosition.offset(2, 0, z), 3);
+        placeLampPost(serverLevel, this.worldPosition.offset(-2, 0, z), 3);
+    }
+    for (int x = -radius + 4; x <= radius - 4; x += 6) {
+        if (Math.abs(x) <= CENTRAL_KEEP_HALF + 1) {
+            continue;
+        }
+        placeLampPost(serverLevel, this.worldPosition.offset(x, 0, 2), 3);
+        placeLampPost(serverLevel, this.worldPosition.offset(x, 0, -2), 3);
     }
 }
 
@@ -2862,10 +2893,10 @@ private float getRaidChance() {
 private int getCityStructureRadius() {
     return switch (this.cityLevel) {
         case 1 -> 8;
-        case 2 -> 14;
-        case 3 -> 20;
-        case 4 -> 26;
-        case 5 -> 34;
+        case 2 -> 15;
+        case 3 -> 22;
+        case 4 -> 30;
+        case 5 -> 40;
         default -> 8;
     };
 }

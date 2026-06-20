@@ -248,6 +248,16 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Cidade grande/funcional/bonita — layout planejado (pedido do dono)**. Feedback: queria
+  o estilo gótico antigo + muralha em volta + cidade grande. Mantido o gótico (muralha + torres de
+  cúpula dourada + torre central + castelo). Melhorias de layout em `buildCityStructure`: ruas mais
+  **largas** (pitch 6+3), **praça central aberta** ao redor do castelo (`plazaHalf = CENTRAL_KEEP_HALF+4`,
+  casas não invadem o centro), **postes de luz** (`placeLampPost`: muro+lanterna) em cada casa e
+  ladeando as avenidas (`buildCentralRoad`) → cidade **acende à noite** (combina com o sono dos
+  cidadãos), **alturas de casa variadas** (3/4) pra quebrar a uniformidade. Escala maior
+  (`getCityStructureRadius` 8/15/22/30/40; vila do mundo = nível 4 → raio 30, ~61 de lado). Build/jar
+  OK; **não testado em jogo** — dono testa em mundo novo e diz se a escala/estética ficou boa.
+
 - 2026-06-20: **Fase F2a — cidadãos dormem → nascem crianças (cama/comida/pais gateiam)**.
   `ImperialCitizenEntity`: campo `childhoodTicks` (NBT) → `isChild()`/`isBaby()` (criança não trabalha,
   não treina, renderiza **menor** via `ImperialCitizenRenderer.scale` 0.6), cresce em ~1.5 dia
