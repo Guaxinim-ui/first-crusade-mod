@@ -248,6 +248,18 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Fase F1b — vilas grandes + população + nascem no CHÃO (não em árvores)**. Feedback do
+  dono: ficou fortaleza vazia em cima de árvores. Agora: (1) `buildCityStructure` reescrito —
+  **bairro de casas em grade** (`buildHousingDistrict`, ~10-15 casas com cama, ruas de 2 blocos) +
+  **castelo central** (`buildCentralKeep`, muralha quadrada com portão em volta do Core) + cross-road
+  sempre; raios **bem maiores** (`getCityStructureRadius` 8/14/20/26/34). (2) Vila do mundo nasce
+  **nível 4** (`AUTONOMOUS_VILLAGE_LEVEL`) com **12 cidadãos** já dentro (`spawnStartingPopulation`).
+  (3) **Novo `WorldGenPlacement`**: `groundPlacement` acha o **chão real** (ignora troncos/folhas/
+  plantas — antes plantava no topo das árvores) e `clearVegetation` **limpa o perímetro** (footprint +
+  margem 4, altura wallHeight+16) de árvores/folhas/plantas/neve. Usado por cidade (no `buildCityStructure`)
+  e por **camps Ork** (`OrkCampManager`: surface no chão + limpa raio+2). Build/jar OK; dono testa em
+  mundo novo. **Obs:** vilas só nascem perto do spawn (anel 140-360) — espalhar pelo mundo é fatia futura.
+
 - 2026-06-20: **Fase F1 — vilas reais no mundo (Core = castelo central + muralha + casas com cama)**.
   Já existia `buildCityStructure` (fortaleza gótica escalando por nível), mas só no upgrade do jogador
   e sem camas. Agora: `buildSimpleHouse` coloca **camas** (`RED_BED` foot+head + lampião); novo

@@ -4,7 +4,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +71,7 @@ public final class WorldSettlementSeeder {
     // it to raise a full walled village around itself (Core as central keep, curtain wall, towers
     // and houses with beds). The Core then governs and grows the settlement on its own.
     private static void foundCity(ServerLevel serverLevel, BlockPos spot) {
-        BlockPos surface = serverLevel.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, spot);
+        BlockPos surface = WorldGenPlacement.groundPlacement(serverLevel, spot.getX(), spot.getZ());
         serverLevel.setBlock(surface, ExampleMod.IMPERIAL_COMMAND_CORE.get().defaultBlockState(), 3);
 
         if (serverLevel.getBlockEntity(surface) instanceof ImperialCommandCoreBlockEntity core) {
@@ -104,10 +103,7 @@ public final class WorldSettlementSeeder {
             int x = spawn.getX() + (int) Math.round(Math.cos(angle) * distance);
             int z = spawn.getZ() + (int) Math.round(Math.sin(angle) * distance);
 
-            BlockPos surface = serverLevel.getHeightmapPos(
-                    Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                    new BlockPos(x, spawn.getY(), z)
-            );
+            BlockPos surface = WorldGenPlacement.groundPlacement(serverLevel, x, z);
 
             if (!isDryGround(serverLevel, surface)) {
                 continue;

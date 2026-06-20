@@ -7,7 +7,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.Heightmap;
 
 /**
  * Seeds and locates living Ork Camps. A single camp is planted at a distance once a settlement
@@ -50,10 +49,7 @@ public final class OrkCampManager {
         int x = origin.getX() + (int) Math.round(Math.cos(angle) * distance);
         int z = origin.getZ() + (int) Math.round(Math.sin(angle) * distance);
 
-        BlockPos surface = serverLevel.getHeightmapPos(
-                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                new BlockPos(x, origin.getY(), z)
-        );
+        BlockPos surface = WorldGenPlacement.groundPlacement(serverLevel, x, z);
 
         // Don't plant on top of another camp.
         if (isCampStillThere(serverLevel, surface)) {
@@ -94,6 +90,9 @@ public final class OrkCampManager {
     private static void buildCampStructure(ServerLevel serverLevel, BlockPos center) {
         RandomSource rng = serverLevel.random;
         int r = CAMP_RADIUS;
+
+        // Strip surrounding trees/leaves/plants so the camp isn't buried in forest canopy.
+        WorldGenPlacement.clearVegetation(serverLevel, center, r + 2, 10);
 
         // 1. Clear the ground and lay a trampled-dirt floor.
         for (int x = -r; x <= r; x++) {

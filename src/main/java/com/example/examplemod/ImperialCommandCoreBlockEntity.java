@@ -2058,7 +2058,8 @@ private int getSpaceMarinePromotionCooldownTicks() {
 // World-generated cities are established settlements, not fresh outposts: they start as a proper
 // walled village (Core as the central keep, curtain wall around the whole town, towers and houses
 // with beds). Called once by WorldSettlementSeeder right after the Core is placed.
-private static final int AUTONOMOUS_VILLAGE_LEVEL = 3;
+private static final int AUTONOMOUS_VILLAGE_LEVEL = 4;
+private static final int AUTONOMOUS_START_POPULATION = 12;
 
 public void buildAutonomousVillage(ServerLevel serverLevel) {
     if (this.cityType == null) {
@@ -2068,35 +2069,142 @@ public void buildAutonomousVillage(ServerLevel serverLevel) {
     this.cityLevel = Math.max(this.cityLevel, AUTONOMOUS_VILLAGE_LEVEL);
 
     buildCityStructure(serverLevel);
+    spawnStartingPopulation(serverLevel, AUTONOMOUS_START_POPULATION);
     setChanged();
+}
+
+// Settles a starting population inside a freshly generated town so it reads as inhabited from the
+// first moment (instead of slowly growing from empty). Citizens are assigned to this Core and find
+// work / patrol / grow on their own from there.
+private void spawnStartingPopulation(ServerLevel serverLevel, int count) {
+    int radius = getCityStructureRadius();
+    int spawned = 0;
+    int attempts = 0;
+    int maxAttempts = count * 10;
+
+    while (spawned < count && attempts < maxAttempts) {
+        attempts++;
+
+        int dx = serverLevel.random.nextInt(radius * 2 - 4) - (radius - 2);
+        int dz = serverLevel.random.nextInt(radius * 2 - 4) - (radius - 2);
+        BlockPos pos = this.worldPosition.offset(dx, 0, dz);
+
+        // Stand on solid ground with two blocks of clearance, never inside a wall or the Core.
+        if (!serverLevel.isEmptyBlock(pos) || !serverLevel.isEmptyBlock(pos.above())) {
+            continue;
+        }
+        if (serverLevel.isEmptyBlock(pos.below())) {
+            continue;
+        }
+
+        ImperialCitizenEntity citizen = ExampleMod.IMPERIAL_CITIZEN.get().create(serverLevel);
+        if (citizen == null) {
+            break;
+        }
+
+        citizen.assignToCommandCore(this.worldPosition);
+        citizen.moveTo(
+                pos.getX() + 0.5D,
+                pos.getY(),
+                pos.getZ() + 0.5D,
+                serverLevel.random.nextFloat() * 360.0F,
+                0.0F
+        );
+        citizen.setCustomName(Component.literal("Imperial Citizen"));
+        serverLevel.addFreshEntity(citizen);
+        spawned++;
+    }
 }
 
 private void buildCityStructure(ServerLevel serverLevel) {
     int radius = getCityStructureRadius();
     int wallHeight = getCityWallHeight();
 
+    // Clear the whole footprint (plus a perimeter margin) of trees, leaves, plants and snow first,
+    // so ambient terrain never pokes through or blocks the town.
+    WorldGenPlacement.clearVegetation(serverLevel, this.worldPosition, radius + 4, wallHeight + 16);
+
+    // Curtain wall around the whole town, corner towers, and a paved cross of main streets.
     buildFoundation(serverLevel, radius);
     buildOuterWall(serverLevel, radius, wallHeight);
     buildCornerTowers(serverLevel, radius, wallHeight);
+    buildCentralRoad(serverLevel, radius);
 
-    if (this.cityLevel >= 3) {
-        buildSimpleHouse(serverLevel, this.worldPosition.offset(4, 0, 4), 5, 5, 3);
-        buildSimpleHouse(serverLevel, this.worldPosition.offset(-8, 0, 4), 5, 5, 3);
-    }
+    // The Core is the central keep: a small castle in the middle of the town.
+    buildCentralKeep(serverLevel, CENTRAL_KEEP_HALF, wallHeight + 3);
 
+    // Fill the rest of the interior with a grid of houses (each with beds), like a real village.
+    buildHousingDistrict(serverLevel, radius);
+
+    // A grand gothic cathedral spire rises behind the keep as the town's crowning landmark.
     if (this.cityLevel >= 4) {
-        buildSimpleHouse(serverLevel, this.worldPosition.offset(4, 0, -8), 6, 5, 4);
-        buildSimpleHouse(serverLevel, this.worldPosition.offset(-10, 0, -8), 6, 5, 4);
-    }
-
-    if (this.cityLevel >= 5) {
-        buildCentralRoad(serverLevel, radius);
-        buildSimpleHouse(serverLevel, this.worldPosition.offset(10, 0, 10), 7, 6, 4);
-        buildSimpleHouse(serverLevel, this.worldPosition.offset(-16, 0, 10), 7, 6, 4);
-        buildSimpleHouse(serverLevel, this.worldPosition.offset(10, 0, -14), 7, 6, 4);
-        buildSimpleHouse(serverLevel, this.worldPosition.offset(-16, 0, -14), 7, 6, 4);
-        // A grand gothic cathedral spire rises behind the Core as the city's crowning landmark.
         buildCentralSpire(serverLevel, this.worldPosition.offset(-1, 0, -(radius / 2)), wallHeight + 14);
+    }
+}
+
+private static final int CENTRAL_KEEP_HALF = 6;
+
+// The town's heart: a square gothic keep walled around the Core, with a southern gate, taller
+// corner pillars and battlements. The Core itself sits in the courtyard at the centre.
+private void buildCentralKeep(ServerLevel serverLevel, int keepHalf, int height) {
+    BlockState wall = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
+    BlockState pillar = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
+    BlockState crenel = Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState();
+
+    for (int x = -keepHalf; x <= keepHalf; x++) {
+        for (int z = -keepHalf; z <= keepHalf; z++) {
+            boolean perimeter = Math.abs(x) == keepHalf || Math.abs(z) == keepHalf;
+            if (!perimeter) {
+                continue;
+            }
+
+            boolean gate = z == keepHalf && x >= -1 && x <= 1;
+            boolean isCorner = Math.abs(x) == keepHalf && Math.abs(z) == keepHalf;
+            int top = isCorner ? height + 2 : height;
+
+            for (int y = 0; y < top; y++) {
+                if (gate && y < 4) {
+                    continue;
+                }
+                safePlace(serverLevel, this.worldPosition.offset(x, y, z), isCorner ? pillar : wall);
+            }
+
+            if (isCorner) {
+                safePlace(serverLevel, this.worldPosition.offset(x, top, z), Blocks.LANTERN.defaultBlockState());
+            } else if (!gate && ((x + z) & 1) == 0) {
+                safePlace(serverLevel, this.worldPosition.offset(x, height, z), crenel);
+            }
+        }
+    }
+}
+
+// Lays a grid of gabled houses (each with beds) across the town interior, leaving 2-block streets
+// between them, the central keep clear, and the main cross-roads (incl. the south gate) open. The
+// number of houses scales with the wall radius, so bigger cities are denser towns.
+private void buildHousingDistrict(ServerLevel serverLevel, int radius) {
+    int houseSize = 6;
+    int pitch = houseSize + 2;     // house + a 2-block street
+    int inner = radius - 3;        // keep houses off the curtain wall
+    int roadHalf = 2;              // central cross-road corridor kept clear
+
+    for (int sx = -inner; sx + houseSize - 1 <= inner; sx += pitch) {
+        for (int sz = -inner; sz + houseSize - 1 <= inner; sz += pitch) {
+            int x1 = sx + houseSize - 1;
+            int z1 = sz + houseSize - 1;
+
+            // Reserve the central keep.
+            if (x1 >= -CENTRAL_KEEP_HALF && sx <= CENTRAL_KEEP_HALF
+                    && z1 >= -CENTRAL_KEEP_HALF && sz <= CENTRAL_KEEP_HALF) {
+                continue;
+            }
+
+            // Keep the main cross-roads (and the south gate) open.
+            if ((x1 >= -roadHalf && sx <= roadHalf) || (z1 >= -roadHalf && sz <= roadHalf)) {
+                continue;
+            }
+
+            buildSimpleHouse(serverLevel, this.worldPosition.offset(sx, 0, sz), houseSize, houseSize, 4);
+        }
     }
 }
 
@@ -2753,12 +2861,12 @@ private float getRaidChance() {
 
 private int getCityStructureRadius() {
     return switch (this.cityLevel) {
-        case 1 -> 4;
-        case 2 -> 8;
-        case 3 -> 12;
-        case 4 -> 18;
-        case 5 -> 26;
-        default -> 4;
+        case 1 -> 8;
+        case 2 -> 14;
+        case 3 -> 20;
+        case 4 -> 26;
+        case 5 -> 34;
+        default -> 8;
     };
 }
 
