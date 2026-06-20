@@ -9,6 +9,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraftforge.network.NetworkHooks;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -16,9 +17,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.phys.AABB;
 
 import java.util.List;
@@ -2052,6 +2055,22 @@ private int getSpaceMarinePromotionCooldownTicks() {
     player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.new_rank", getStartingGuardsmanRank().getDisplayName()), false);
 }
 
+// World-generated cities are established settlements, not fresh outposts: they start as a proper
+// walled village (Core as the central keep, curtain wall around the whole town, towers and houses
+// with beds). Called once by WorldSettlementSeeder right after the Core is placed.
+private static final int AUTONOMOUS_VILLAGE_LEVEL = 3;
+
+public void buildAutonomousVillage(ServerLevel serverLevel) {
+    if (this.cityType == null) {
+        assignCityType(serverLevel);
+    }
+
+    this.cityLevel = Math.max(this.cityLevel, AUTONOMOUS_VILLAGE_LEVEL);
+
+    buildCityStructure(serverLevel);
+    setChanged();
+}
+
 private void buildCityStructure(ServerLevel serverLevel) {
     int radius = getCityStructureRadius();
     int wallHeight = getCityWallHeight();
@@ -2259,6 +2278,35 @@ private void buildSimpleHouse(ServerLevel serverLevel, BlockPos start, int width
 
     safePlace(serverLevel, start.offset(width / 2, height + 1, depth / 2), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
     safePlace(serverLevel, start.offset(width / 2, height + 2, depth / 2), Blocks.GOLD_BLOCK.defaultBlockState());
+
+    // Homes are where the population sleeps and grows: each house gets one or two beds tucked
+    // against the back-left wall, plus a hanging lantern so it stays lit at night. The beds also
+    // register as home POIs, which the citizens' sleep behaviour will later use.
+    placeBed(serverLevel, start.offset(1, 0, 1), Direction.SOUTH);
+    if (width >= 6) {
+        placeBed(serverLevel, start.offset(width - 2, 0, 1), Direction.SOUTH);
+    }
+    safePlace(serverLevel, start.offset(width / 2, height - 1, depth / 2), Blocks.LANTERN.defaultBlockState());
+}
+
+// Places a two-block bed (foot + head) facing the given direction, only into empty space.
+private void placeBed(ServerLevel serverLevel, BlockPos footPos, Direction facing) {
+    BlockPos headPos = footPos.relative(facing);
+
+    if (footPos.equals(this.worldPosition) || headPos.equals(this.worldPosition)) {
+        return;
+    }
+
+    if (!serverLevel.getBlockState(footPos).isAir() || !serverLevel.getBlockState(headPos).isAir()) {
+        return;
+    }
+
+    serverLevel.setBlock(footPos, Blocks.RED_BED.defaultBlockState()
+            .setValue(BedBlock.FACING, facing)
+            .setValue(BedBlock.PART, BedPart.FOOT), 3);
+    serverLevel.setBlock(headPos, Blocks.RED_BED.defaultBlockState()
+            .setValue(BedBlock.FACING, facing)
+            .setValue(BedBlock.PART, BedPart.HEAD), 3);
 }
 
 private void buildCentralRoad(ServerLevel serverLevel, int radius) {

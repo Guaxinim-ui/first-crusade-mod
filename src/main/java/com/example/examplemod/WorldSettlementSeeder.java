@@ -3,7 +3,6 @@ package com.example.examplemod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 
@@ -26,11 +25,9 @@ public final class WorldSettlementSeeder {
     private static final int MIN_RADIUS = 140;
     private static final int MAX_RADIUS = 360;
 
-    // Keep settlements from piling up on each other.
-    private static final int MIN_SEPARATION = 80;
+    // Keep settlements from piling up on each other (the level-3 villages are ~25 blocks wide).
+    private static final int MIN_SEPARATION = 96;
     private static final int ATTEMPTS_PER_SETTLEMENT = 24;
-
-    private static final int PLAZA_RADIUS = 4;
 
     private WorldSettlementSeeder() {
     }
@@ -71,47 +68,15 @@ public final class WorldSettlementSeeder {
         }
     }
 
-    // Founds an autonomous Imperial city: a small stone foundation crowned by an unclaimed Command
-    // Core. The Core's serverTick assigns the (biome-biased) city type and grows it on its own.
+    // Founds an autonomous Imperial city: places an unclaimed Command Core on the surface and asks
+    // it to raise a full walled village around itself (Core as central keep, curtain wall, towers
+    // and houses with beds). The Core then governs and grows the settlement on its own.
     private static void foundCity(ServerLevel serverLevel, BlockPos spot) {
         BlockPos surface = serverLevel.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, spot);
-        buildCityFoundation(serverLevel, surface);
         serverLevel.setBlock(surface, ExampleMod.IMPERIAL_COMMAND_CORE.get().defaultBlockState(), 3);
-    }
 
-    // A plain Imperial plaza: a stone-brick platform, corner pillars with lanterns and a banner,
-    // so a world-generated city reads as a settlement and not a lone floating block.
-    private static void buildCityFoundation(ServerLevel serverLevel, BlockPos center) {
-        int r = PLAZA_RADIUS;
-        BlockState floor = Blocks.STONE_BRICKS.defaultBlockState();
-        BlockState pillar = Blocks.POLISHED_ANDESITE.defaultBlockState();
-
-        for (int x = -r; x <= r; x++) {
-            for (int z = -r; z <= r; z++) {
-                // Clear a little headroom above the plaza.
-                for (int y = 0; y <= 4; y++) {
-                    BlockPos clear = center.offset(x, y, z);
-                    if (!clear.equals(center)) {
-                        serverLevel.setBlock(clear, Blocks.AIR.defaultBlockState(), 2);
-                    }
-                }
-                // Lay the floor one below the surface so the Core sits on the plaza.
-                serverLevel.setBlock(center.offset(x, -1, z), floor, 3);
-            }
-        }
-
-        // Pedestal directly under the Core.
-        serverLevel.setBlock(center.below(), Blocks.CHISELED_STONE_BRICKS.defaultBlockState(), 3);
-
-        // Corner pillars with a lantern on top and a banner partway up.
-        int[][] corners = {{-r, -r}, {-r, r}, {r, -r}, {r, r}};
-        for (int[] c : corners) {
-            BlockPos base = center.offset(c[0], 0, c[1]);
-            for (int y = 0; y < 4; y++) {
-                serverLevel.setBlock(base.offset(0, y, 0), pillar, 3);
-            }
-            place(serverLevel, base.offset(0, 4, 0), Blocks.LANTERN.defaultBlockState());
-            place(serverLevel, base.offset(0, 2, 0), Blocks.BLUE_BANNER.defaultBlockState());
+        if (serverLevel.getBlockEntity(surface) instanceof ImperialCommandCoreBlockEntity core) {
+            core.buildAutonomousVillage(serverLevel);
         }
     }
 
@@ -182,12 +147,5 @@ public final class WorldSettlementSeeder {
             }
         }
         return false;
-    }
-
-    // Places a block only into empty space, never overwriting the central Core.
-    private static void place(ServerLevel serverLevel, BlockPos pos, BlockState state) {
-        if (serverLevel.isEmptyBlock(pos)) {
-            serverLevel.setBlock(pos, state, 3);
-        }
     }
 }

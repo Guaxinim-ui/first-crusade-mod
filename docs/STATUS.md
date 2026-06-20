@@ -132,6 +132,36 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
 
 ### >>> HANDOFF / PRÓXIMO PASSO (retomar aqui após o /clear) <<<
 
+**🏰 FASE F — VILAS VIVAS (nova, pedido do dono 2026-06-20):** o mundo deve ter **vilas reais**
+com o **Core = castelo central**, **muralha em volta da vila toda** que **cresce** (mais casas+camas)
+conforme a cidade evolui; **cidadãos dormem em camas → nascem crianças**; e **só crianças escolhidas**
+viram aspirantes → estágios de **implante de órgãos** + **teste em batalha** → Space Marine.
+Plano em 3 fatias:
+- **F1 — Vila real (FEITO, NÃO testado em jogo):** já existia `buildCityStructure` (fundação +
+  muralha em volta + torres de canto + casas + estrada + torre central, escalando por nível
+  `getCityStructureRadius` 4/8/12/18/26 e `getCityWallHeight` 1/3/5/7/9), mas só rodava no **upgrade**
+  do jogador e as casas **não tinham cama**. Agora: (1) `buildSimpleHouse` ganha **camas** (`RED_BED`
+  foot+head, 1 por casa / 2 se largura≥6) + lampião interno; (2) novo `buildAutonomousVillage()`
+  público no Core (sobe a cidade pro nível 3 e chama `buildCityStructure`); (3) o **seeder B5**
+  (`WorldSettlementSeeder.foundCity`) agora coloca o Core e chama `buildAutonomousVillage` — cidades
+  do mundo nascem como **vila murada nível 3** (castelo central + muralha + 2 casas com cama), em vez
+  da plaza simples. A muralha do jogador **já cresce** ao dar upgrade (plate). Build/jar OK.
+- **F2 — dormir → filhos (PRÓXIMO):** `ImperialCitizenEntity` precisa de goal de **dormir** (achar
+  cama livre/POI `home` à noite, deitar) e o nascimento em `ImperialPopulationManager.tickCitizenGrowth`
+  passar a exigir **cama livre + comida + 2 adultos** em vez de só timer+capacidade. Camas já são
+  colocadas em F1 (registram POI). Spawnar **criança** (citizen com flag baby/idade) que cresce.
+- **F3 — aspirante → Space Marine:** só **algumas crianças** marcadas como aspirantes; pipeline com
+  estágios de implante (reusar a maturação do Neófito em `SpaceMarineEntity`) + **teste em batalha**
+  antes de virar SM. Hoje é Guardsman→SM direto (`processAutomaticSpaceMarinePromotion` +
+  `SpaceMarineUpgradeManager`). Repensar como child→aspirante→neófito(implantes)→prova→Space Marine.
+
+**>>> AÇÃO IMEDIATA F1:** dono testa em **MUNDO NOVO** (git pull + da run): as 3 cidades do mundo
+nasceram como **vila murada** (muralha gótica em volta, Core no centro, casas COM cama)? ficou bom o
+visual/escala? deu erro (ler `run/logs/latest.log`)? Tunável: nível inicial em `AUTONOMOUS_VILLAGE_LEVEL`
+(3) e geometria em `getCityStructureRadius`/`getCityWallHeight`/posições de casa em `buildCityStructure`.
+Depois OK do dono, seguir pra **F2 (dormir→filhos)**.
+
+
 **Estado geral (tudo compilando, em origin/main):**
 - **Fases A, B, C** maduras. **Fase D essencialmente completa**: overlord Imperial (Cruzada,
   `ImperiumOverlordData`/`ImperiumOverlordManager`, tier 0-4, soma reforços) × WAAAGH! em paralelo;
@@ -217,6 +247,14 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 - Mensagens de commit em pt-BR, terminar com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
 ## 7. Changelog (mais recente no topo)
+
+- 2026-06-20: **Fase F1 — vilas reais no mundo (Core = castelo central + muralha + casas com cama)**.
+  Já existia `buildCityStructure` (fortaleza gótica escalando por nível), mas só no upgrade do jogador
+  e sem camas. Agora: `buildSimpleHouse` coloca **camas** (`RED_BED` foot+head + lampião); novo
+  `ImperialCommandCoreBlockEntity.buildAutonomousVillage()` (nível→3 + `buildCityStructure`); o seeder
+  B5 (`WorldSettlementSeeder.foundCity`) chama-o → cidades do mundo nascem como **vila murada nível 3**
+  (substituiu a plaza simples). Separação entre assentamentos subiu p/ 96 (vilas ~25 blocos). Build/jar
+  OK; **não testado em jogo** (worldgen) — dono testa em mundo novo. Próximo: **F2 dormir→filhos**.
 
 - 2026-06-20: **Fase D/B5 (1ª fatia) — assentamentos no worldgen (planeta começa povoado)**. Novo
   `WorldSettlementSeeder` + `WorldSettlementData` (SavedData, flag `Seeded`): no **primeiro login**
