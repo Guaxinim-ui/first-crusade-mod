@@ -306,6 +306,42 @@ public static final RegistryObject<BlockEntityType<OrkCampBlockEntity>> ORK_CAMP
     public static final RegistryObject<Item> GUARDSMAN_COMBAT_KNIFE = ITEMS.register("guardsman_combat_knife",
             () -> new SwordItem(GUARDSMAN_MELEE_TIER, 2, -1.8F, new Item.Properties()));
 
+    // Astartes close-combat weapon: heavier and far stronger than the combat knife.
+    public static final Tier CHAINSWORD_TIER = new Tier() {
+        @Override
+        public int getUses() {
+            return 700;
+        }
+
+        @Override
+        public float getSpeed() {
+            return 7.0F;
+        }
+
+        @Override
+        public float getAttackDamageBonus() {
+            return 5.0F;
+        }
+
+        @Override
+        public int getLevel() {
+            return 3;
+        }
+
+        @Override
+        public int getEnchantmentValue() {
+            return 14;
+        }
+
+        @Override
+        public Ingredient getRepairIngredient() {
+            return Ingredient.of(CRUSADIUM_PLATE.get());
+        }
+    };
+
+    public static final RegistryObject<Item> CHAINSWORD = ITEMS.register("chainsword",
+            () -> new ChainswordItem(CHAINSWORD_TIER, 4, -2.0F, new Item.Properties()));
+
     // =========================
     // GUARDSMEN SUPPORT ITEMS
     // =========================
@@ -726,6 +762,7 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
                         output.accept(LASGUN.get());
                         output.accept(BOLTER.get());
                         output.accept(GUARDSMAN_COMBAT_KNIFE.get());
+                        output.accept(CHAINSWORD.get());
                         output.accept(GUARDSMAN_MED_KIT.get());
                         output.accept(GUARDSMAN_COMMAND_BATON.get());
 

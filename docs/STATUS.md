@@ -160,6 +160,12 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-19: **Conteúdo — nova arma melee: Chainsword** (Adeptus Astartes). `ChainswordItem` estende
+  `SwordItem` (como a Combat Knife) com `CHAINSWORD_TIER` forte (700 usos, +5 dano, nível 3, conserta
+  com Placa de Crusadium); golpe pesado/lento (modifier 4, speed -2.0) que **incendeia o alvo 3s**
+  (dentes serrando). Registro completo: item + tier + creative tab + modelo `item/handheld` + textura
+  placeholder (cópia da faca) + lang en/pt ("Chainsword"/"Espada-Serra"). Build/jar OK; 294 chaves.
+
 - 2026-06-19: **Conteúdo — nova arma: Bolter** (Adeptus Astartes). `BolterItem` reusa o molde do
   `LasgunItem`/`LasgunShotEntity`: tiro forte (12 dano, knockback 1), **sem munição** (Space Marine
   autossuficiente), mais lento (cooldown 24t) e menos preciso, gastando durabilidade própria (768).
