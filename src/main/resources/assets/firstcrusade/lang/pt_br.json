@@ -302,5 +302,13 @@
   "msg.firstcrusade.crusade.tier1": "A Cruzada ganha força — os reforços Imperiais aumentam. (Cruzada Nível 1)",
   "msg.firstcrusade.crusade.tier2": "A Cruzada Imperial cresce por toda a terra. (Cruzada Nível 2)",
   "msg.firstcrusade.crusade.tier3": "Uma grande Cruzada marcha! O poder do Imperador se ergue. (Cruzada Nível 3)",
-  "msg.firstcrusade.crusade.tier4": "A Cruzada do Imperium engolfa o mundo em Sua luz! (Cruzada Nível 4)"
+  "msg.firstcrusade.crusade.tier4": "A Cruzada do Imperium engolfa o mundo em Sua luz! (Cruzada Nível 4)",
+  "msg.firstcrusade.bcast.raid_forced": "Teste de ataque Ork forçado iniciado.",
+  "msg.firstcrusade.bcast.raid_incoming": "Ataque Ork chegando! Defendam o assentamento Imperial!",
+  "msg.firstcrusade.bcast.raid_strength": "Força do ataque: %s Ork Boyz, %s Ork Nobz.",
+  "msg.firstcrusade.bcast.primarch_risen": "O Primarca se ergueu! O filho do Imperador avança para liderar a cidade.",
+  "msg.firstcrusade.bcast.primarch_charge": "O Primarca lidera um contra-ataque decisivo contra o inimigo!",
+  "msg.firstcrusade.bcast.warboss_risen": "Um Warboss %s se ergue para liderar o WAAAGH! contra a cidade!",
+  "msg.firstcrusade.bcast.war_party": "WAAAGH! Uma war party %s (%s) marcha sobre a cidade!",
+  "msg.firstcrusade.bcast.neophyte_matured": "Um Neófito completou suas provações e agora é um Space Marine completo."
 }

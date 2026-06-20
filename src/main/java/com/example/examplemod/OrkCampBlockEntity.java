@@ -2,6 +2,7 @@ package com.example.examplemod;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
@@ -133,7 +134,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel,
                 this.targetCorePos,
-                "WAAAGH! A " + this.clan.getDisplayName() + " war party (" + this.clan.getTactics() + ") marches on the city!"
+                Component.translatable("msg.firstcrusade.bcast.war_party", this.clan.getDisplayName(), this.clan.getTactics())
         );
 
         this.warPartiesLaunched++;
@@ -211,7 +212,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel,
                 this.targetCorePos,
-                "A " + this.clan.getDisplayName() + " Warboss rises to lead the WAAAGH! against the city!"
+                Component.translatable("msg.firstcrusade.bcast.warboss_risen", this.clan.getDisplayName())
         );
     }
 

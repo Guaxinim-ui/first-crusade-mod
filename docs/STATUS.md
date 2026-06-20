@@ -169,6 +169,13 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **i18n — notificações broadcast (fatia 1, anúncios narrativos)**. `OrkRaidManager.
+  notifyNearbyPlayers` ganhou sobrecarga que aceita `Component` (a de `String` delega pra ela, então
+  chamadores antigos seguem funcionando). Migrados para `Component.translatable` os anúncios mais
+  visíveis: início de raid (forçado/chegando/força), Primarch surge + counter-charge, Warboss surge,
+  war party marcha, Neófito vira Space Marine. Chaves `msg.firstcrusade.bcast.*` (en/pt, 312 chaves).
+  Faltam os broadcasts secundários (reforços, rally/fortify via `notifyDefenseCommand`, Custodes). Build OK.
+
 - 2026-06-20: **Fase D — território da cidade (raio que escala)**. `getTerritoryRadius()` no Core
   (`64 + nível*16` → L1 80, L5 144): a área que a cidade reivindica/defende. Usado como alcance do
   **counter-charge do Primarch** (defende todo o território, não só raio fixo) e **exibido na GUI**

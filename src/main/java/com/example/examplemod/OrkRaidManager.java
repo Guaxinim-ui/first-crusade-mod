@@ -43,15 +43,15 @@ public class OrkRaidManager {
         }
 
         if (forced) {
-            notifyNearbyPlayers(serverLevel, commandCore.getBlockPos(), "Forced Ork raid test started.");
+            notifyNearbyPlayers(serverLevel, commandCore.getBlockPos(), Component.translatable("msg.firstcrusade.bcast.raid_forced"));
         } else {
-            notifyNearbyPlayers(serverLevel, commandCore.getBlockPos(), "Ork raid incoming! Defend the Imperial settlement!");
+            notifyNearbyPlayers(serverLevel, commandCore.getBlockPos(), Component.translatable("msg.firstcrusade.bcast.raid_incoming"));
         }
 
         notifyNearbyPlayers(
                 serverLevel,
                 commandCore.getBlockPos(),
-                "Raid strength: " + boyCount + " Ork Boyz, " + nobCount + " Ork Nobz."
+                Component.translatable("msg.firstcrusade.bcast.raid_strength", boyCount, nobCount)
         );
     }
 
@@ -258,6 +258,10 @@ public class OrkRaidManager {
     }
 
     public static void notifyNearbyPlayers(ServerLevel serverLevel, BlockPos corePos, String message) {
+        notifyNearbyPlayers(serverLevel, corePos, Component.literal(message));
+    }
+
+    public static void notifyNearbyPlayers(ServerLevel serverLevel, BlockPos corePos, Component message) {
         double range = 128.0D;
         double rangeSquared = range * range;
 
@@ -267,7 +271,7 @@ public class OrkRaidManager {
                     corePos.getY() + 0.5D,
                     corePos.getZ() + 0.5D
             ) <= rangeSquared) {
-                serverPlayer.displayClientMessage(Component.literal(message), false);
+                serverPlayer.displayClientMessage(message, false);
             }
         }
     }

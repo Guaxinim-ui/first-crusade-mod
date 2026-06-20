@@ -302,5 +302,13 @@
   "msg.firstcrusade.crusade.tier1": "The Crusade gathers strength — Imperial reinforcements grow. (Crusade Tier 1)",
   "msg.firstcrusade.crusade.tier2": "The Imperial Crusade swells across the land. (Crusade Tier 2)",
   "msg.firstcrusade.crusade.tier3": "A great Crusade marches! The Emperor's might rises. (Crusade Tier 3)",
-  "msg.firstcrusade.crusade.tier4": "The Imperium's Crusade engulfs the world in His light! (Crusade Tier 4)"
+  "msg.firstcrusade.crusade.tier4": "The Imperium's Crusade engulfs the world in His light! (Crusade Tier 4)",
+  "msg.firstcrusade.bcast.raid_forced": "Forced Ork raid test started.",
+  "msg.firstcrusade.bcast.raid_incoming": "Ork raid incoming! Defend the Imperial settlement!",
+  "msg.firstcrusade.bcast.raid_strength": "Raid strength: %s Ork Boyz, %s Ork Nobz.",
+  "msg.firstcrusade.bcast.primarch_risen": "The Primarch has risen! The Emperor's son strides forth to lead the city.",
+  "msg.firstcrusade.bcast.primarch_charge": "The Primarch leads a decisive counter-charge against the foe!",
+  "msg.firstcrusade.bcast.warboss_risen": "A %s Warboss rises to lead the WAAAGH! against the city!",
+  "msg.firstcrusade.bcast.war_party": "WAAAGH! A %s war party (%s) marches on the city!",
+  "msg.firstcrusade.bcast.neophyte_matured": "A Neophyte has completed his trials and is now a full Space Marine."
 }

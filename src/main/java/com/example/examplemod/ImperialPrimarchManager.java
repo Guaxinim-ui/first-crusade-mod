@@ -1,6 +1,7 @@
 package com.example.examplemod;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -167,7 +168,7 @@ public final class ImperialPrimarchManager {
             OrkRaidManager.notifyNearbyPlayers(
                     serverLevel,
                     core.getBlockPos(),
-                    "The Primarch leads a decisive counter-charge against the foe!"
+                    Component.translatable("msg.firstcrusade.bcast.primarch_charge")
             );
         }
     }
@@ -235,7 +236,7 @@ public final class ImperialPrimarchManager {
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel,
                 corePos,
-                "The Primarch has risen! The Emperor's son strides forth to lead the city."
+                Component.translatable("msg.firstcrusade.bcast.primarch_risen")
         );
     }
 

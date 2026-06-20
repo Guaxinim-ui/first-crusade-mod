@@ -158,7 +158,7 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
             OrkRaidManager.notifyNearbyPlayers(
                     serverLevel,
                     this.commandCorePos,
-                    "A Neophyte has completed his trials and is now a full Space Marine."
+                    Component.translatable("msg.firstcrusade.bcast.neophyte_matured")
             );
         }
     }
