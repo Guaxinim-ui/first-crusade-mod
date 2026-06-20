@@ -34,6 +34,7 @@ import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
+import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -946,6 +947,17 @@ public void onServerStarting(ServerStartingEvent event) {
     net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
     overworld.getWorldBorder().setSize(WORLD_BORDER_SIZE);
     LOGGER.info("First Crusade: overworld border clamped to {} blocks.", WORLD_BORDER_SIZE);
+}
+
+// The Crusade is fought on the surface world: the Nether and the End are sealed off. Travel to
+// either is cancelled, so portals never take anyone there. Works on any world (no worldgen change).
+@SubscribeEvent
+public void onTravelToDimension(EntityTravelToDimensionEvent event) {
+    net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> target = event.getDimension();
+
+    if (target == net.minecraft.world.level.Level.NETHER || target == net.minecraft.world.level.Level.END) {
+        event.setCanceled(true);
+    }
 }
 
 @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)

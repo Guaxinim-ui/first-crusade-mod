@@ -169,6 +169,15 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Mundo "planeta" — Nether/End selados + datapack de altura**. (1) Código (qualquer
+  mundo, sem risco): `EntityTravelToDimensionEvent` cancela viagem para `Level.NETHER`/`Level.END`
+  (portais não levam a lugar nenhum) — a Cruzada é só na superfície. (2) Datapack **opt-in**
+  `datapacks/small_planet/` (NÃO embutido no jar, p/ não quebrar mundos): overworld raso
+  (`dimension_type` min_y 0, height 128). README recomenda criar mundo **Superflat** para terreno
+  plano/sem cavernas/sem montanhas (confiável, sem worldgen frágil) + este datapack p/ baixar o teto;
+  o mod cuida de border 5000 e Nether/End. Terreno NATURAL achatado (noise_settings custom) fica para
+  fatia futura, a testar. Compila OK.
+
 - 2026-06-20: **Fase D — mundo se popula sozinho: propagação do WAAAGH!** (abordagem SEGURA, sem
   structure features/datapack que poderiam quebrar mundos). A maré verde se espalha: um camp
   estabelecido planta **um** camp-filho mais distante (`OrkCampManager.seedSpreadCamp` + `plantCamp`
