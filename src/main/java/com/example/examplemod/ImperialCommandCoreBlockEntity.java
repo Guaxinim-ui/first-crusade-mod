@@ -2371,7 +2371,7 @@ private void checkActiveOrkRaid(ServerLevel serverLevel) {
             OrkRaidManager.notifyNearbyPlayers(
                     serverLevel,
                     this.worldPosition,
-                    "Orks are damaging the Imperial Command Core! Integrity: " + this.cityIntegrity + "/100"
+                    Component.translatable("msg.firstcrusade.bcast.raid_damaging", this.cityIntegrity)
             );
 
             if (this.cityIntegrity <= 0) {
@@ -2387,7 +2387,7 @@ private void checkActiveOrkRaid(ServerLevel serverLevel) {
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel,
                 this.worldPosition,
-                "Ork raid still active. Remaining enemies: " + remainingRaiders + ". Core Integrity: " + this.cityIntegrity + "/100"
+                Component.translatable("msg.firstcrusade.bcast.raid_active", remainingRaiders, this.cityIntegrity)
         );
     }
 
@@ -2401,7 +2401,7 @@ private void checkActiveOrkRaid(ServerLevel serverLevel) {
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel,
                 this.worldPosition,
-                "The Ork raid has scattered. Some enemies may still be nearby."
+                Component.translatable("msg.firstcrusade.bcast.raid_scattered")
         );
     }
 }
@@ -2431,25 +2431,25 @@ private void finishOrkRaidVictory(ServerLevel serverLevel) {
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "Ork raid defeated! The Imperial settlement stands victorious."
+            Component.translatable("msg.firstcrusade.bcast.raid_victory")
     );
 
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "Victory reward: +" + ironReward + " Iron, +" + scrapReward + " Scrap, +" + coalReward + " Coal, +" + warSupportReward + " War Support."
+            Component.translatable("msg.firstcrusade.bcast.victory_reward", ironReward, scrapReward, coalReward, warSupportReward)
     );
 
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "Core repaired by victory momentum: +" + integrityRepairReward + " Integrity."
+            Component.translatable("msg.firstcrusade.bcast.victory_repair", integrityRepairReward)
     );
 
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "Total Ork Raid Victories: " + this.orkRaidVictories
+            Component.translatable("msg.firstcrusade.bcast.victory_total", this.orkRaidVictories)
     );
 }
 
@@ -2485,19 +2485,19 @@ private void finishOrkRaidDefeat(ServerLevel serverLevel) {
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "The Imperial Command Core was overrun! The settlement has suffered heavy damage."
+            Component.translatable("msg.firstcrusade.bcast.defeat_overrun")
     );
 
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "Lost resources: -" + lostIron + " Iron, -" + lostScrap + " Scrap, -" + lostCoal + " Coal."
+            Component.translatable("msg.firstcrusade.bcast.defeat_lost", lostIron, lostScrap, lostCoal)
     );
 
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "Core Integrity restored to emergency level: 25/100."
+            Component.translatable("msg.firstcrusade.bcast.defeat_restored")
     );
 }
 

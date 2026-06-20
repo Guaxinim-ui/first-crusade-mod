@@ -316,5 +316,15 @@
   "msg.firstcrusade.bcast.rally_issued": "Imperial order issued: defenders rally to the Core!",
   "msg.firstcrusade.bcast.rally_count": "Defenders repositioned: %s",
   "msg.firstcrusade.bcast.fortify_issued": "Imperial order issued: defenders fortified!",
-  "msg.firstcrusade.bcast.fortify_count": "Fortified Guardsmen: %s. War Support spent: %s."
+  "msg.firstcrusade.bcast.fortify_count": "Fortified Guardsmen: %s. War Support spent: %s.",
+  "msg.firstcrusade.bcast.raid_damaging": "Orks are damaging the Imperial Command Core! Integrity: %s/100",
+  "msg.firstcrusade.bcast.raid_active": "Ork raid still active. Remaining enemies: %s. Core Integrity: %s/100",
+  "msg.firstcrusade.bcast.raid_scattered": "The Ork raid has scattered. Some enemies may still be nearby.",
+  "msg.firstcrusade.bcast.raid_victory": "Ork raid defeated! The Imperial settlement stands victorious.",
+  "msg.firstcrusade.bcast.victory_reward": "Victory reward: +%s Iron, +%s Scrap, +%s Coal, +%s War Support.",
+  "msg.firstcrusade.bcast.victory_repair": "Core repaired by victory momentum: +%s Integrity.",
+  "msg.firstcrusade.bcast.victory_total": "Total Ork Raid Victories: %s",
+  "msg.firstcrusade.bcast.defeat_overrun": "The Imperial Command Core was overrun! The settlement has suffered heavy damage.",
+  "msg.firstcrusade.bcast.defeat_lost": "Lost resources: -%s Iron, -%s Scrap, -%s Coal.",
+  "msg.firstcrusade.bcast.defeat_restored": "Core Integrity restored to emergency level: 25/100."
 }
