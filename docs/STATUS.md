@@ -169,6 +169,13 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Planeta (B) v1 — datapack: cavernas escavadas off + altura baixa**. No datapack opt-in
+  `small_planet` (mundo NOVO): overrides dos carvers `cave`/`cave_extra_underground`/`canyon` com
+  `probability 0` (sem cavernas escavadas nem ravinas) + dimension_type raso (min_y 0/height 128).
+  JSONs validados. **Falta v2** (mexe em `noise_settings`, iterativo+testado): cavernas de **ruído**
+  (cavernas abertas 1.18) e **achatar montanhas**. Dono testa em mundo novo Default e reporta erros.
+  (Mod já sela Nether/End e aplica border 5000 — qualquer mundo.)
+
 - 2026-06-20: **Mundo "planeta" — Nether/End selados + datapack de altura**. (1) Código (qualquer
   mundo, sem risco): `EntityTravelToDimensionEvent` cancela viagem para `Level.NETHER`/`Level.END`
   (portais não levam a lugar nenhum) — a Cruzada é só na superfície. (2) Datapack **opt-in**
