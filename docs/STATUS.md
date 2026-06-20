@@ -163,20 +163,35 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
   `vegetation` não existem como DF nomeada (usar constante); carvers exigiam `debug_settings` (foram
   removidos, redundantes); `monster_spawn_light_level` tinha que ser int, não objeto.
 
-**>>> AÇÃO IMEDIATA ao retomar:** acabei de commitar **A1+A2** (ondulações leves via continents*0.4 +
-erosion*0.2 somados ao gradiente; oceanos onde o terreno cai abaixo do mar; **areia** em praia/fundo
-d'água no `surface_rule`). **Compila e o JSON valida, mas AINDA NÃO foi testado em jogo.** Pedir ao
-dono pra `git pull` + `da run` + mundo novo e dizer: carregou? como ficou (ondulação/oceanos/areia)?
-deu erro (ler o log)? Ajustar amplitudes (`mul` 0.4/0.2) e `from_y/to_y` (44/64) conforme o gosto.
+**>>> AÇÃO IMEDIATA ao retomar:** acabei de implementar **B5 (1ª fatia) — assentamentos no
+worldgen**. **Compila e o jar builda, mas worldgen NÃO é testável aqui.** Pedir ao dono pra
+`git pull` + `da run` + **MUNDO NOVO** + andar perto do spawn (até ~360 blocos) e dizer:
+apareceram as cidades Imperiais (plaza de tijolo + Core central) e os camps Ork? quantos? ficaram
+em terra seca (não no oceano)? deu erro (ler `run/logs/latest.log`)? Tunar contagens/raio em
+`WorldSettlementSeeder` (CITY_COUNT/CAMP_COUNT/MIN_RADIUS/MAX_RADIUS) conforme o gosto.
+⚠️ Só semeia **uma vez por mundo** (flag `WorldSettlementData`), no **primeiro login** — mundo já
+existente não vai semear; testar em mundo novo.
 
-**Depois de A1+A2 (lista de próximos, por prioridade):**
-1. **A3** (opcional): restaurar variedade de clima (temperatura/umidade reais via noise válido) p/
+**Detalhe do que B5 faz:** no 1º login (`ExampleMod.onPlayerLoggedIn`), `WorldSettlementSeeder.
+seedAroundSpawn` semeia num anel ao redor do spawn (140–360 blocos): **3 cidades Imperiais** (coloca
+o `IMPERIAL_COMMAND_CORE` sem dono numa fundação de tijolo/andesito + pilares com lanterna/estandarte;
+o Core se autogoverna — atribui tipo pelo bioma e cresce sozinho) e **3 camps Ork** (reusa novo
+`OrkCampManager.seedWorldCamp`, cada um marchando na cidade mais próxima). Filtra terra seca (sem
+fluido na superfície/abaixo) e separação mínima (80 blocos). Só `setBlock`, sem mexer em chunk-gen
+(reversível, não corrompe mundo). Cidade gerada é **autônoma e não-reivindicada** — o dono pode
+clicar pra virar dono (`setOwner`) e abrir a GUI.
+
+**Depois de B5 (lista de próximos, por prioridade):**
+1. **B5+** (afinar): tunar contagens/raio após o teste do dono; talvez prédios iniciais reais
+   (Barracks/Habitation) na fundação além do Core; marcar origem `WORLD_GENERATED` no Core se útil
+   pra balanceamento (BE hoje não guarda origem; enum `ImperialSettlementOrigin` existe, é legado).
+2. **A3** (opcional): restaurar variedade de clima (temperatura/umidade reais via noise válido) p/
    desertos/neve — hoje é tudo temperado (temp/veg=0).
-2. **B5**: gerar **assentamentos no worldgen** (cidades Imperiais + camps Ork nascerem no mundo),
-   pro planeta já começar povoado pelas duas facções.
 3. **C6** (grande): planetas como **dimensões próprias** + viagem planetária (Spaceport) — Fase E real.
 4. **D7**: **Mesa de Guerra** (GUI-mapa tático no Core) — ver `DESIGN_WORLD_CITIES_FACTIONS.md` §5.1.
 5. Texturas (dono) + balanceamento.
+
+(A1+A2 do terreno — ondulações/areia — ficou como está; o dono pediu pra deixar plano por hora.)
 
 **Regras ao continuar:** reusar padrões existentes (tropa-tema, manager por sistema, lang en/pt
 sincronizadas). Dono faz texturas. Compilar offline (§2) e **commitar/push a cada fatia**. Worldgen
@@ -202,6 +217,17 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 - Mensagens de commit em pt-BR, terminar com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
 ## 7. Changelog (mais recente no topo)
+
+- 2026-06-20: **Fase D/B5 (1ª fatia) — assentamentos no worldgen (planeta começa povoado)**. Novo
+  `WorldSettlementSeeder` + `WorldSettlementData` (SavedData, flag `Seeded`): no **primeiro login**
+  (`ExampleMod.onPlayerLoggedIn`) semeia, **uma vez por mundo**, **3 cidades Imperiais** + **3 camps
+  Ork** num anel de 140–360 blocos ao redor do spawn. Cidade = `IMPERIAL_COMMAND_CORE` (sem dono,
+  autônomo) sobre fundação de tijolo/andesito com pilares (lanterna+estandarte azul); camp via novo
+  `OrkCampManager.seedWorldCamp` (planta no ponto via `plantCamp` dist 0), mirando a cidade mais
+  próxima. Filtra terra seca (fluido na superfície/abaixo) + separação mín. 80. **Só `setBlock`, sem
+  alterar chunk-gen** → reversível, não corrompe mundo (abordagem segura, sem structure features).
+  Build/jar OK. **NÃO testado em jogo** (worldgen): dono testa em **mundo novo** (git pull + da run +
+  andar perto do spawn) e reporta.
 
 - 2026-06-20: **Planeta A1+A2 (ondulações + areia) — COMMITADO, NÃO TESTADO em jogo ainda**.
   `noise_settings/overworld.json`: `final_density` (e initial) = gradiente Y (from_y44/to_y64) +

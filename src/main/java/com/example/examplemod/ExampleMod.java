@@ -960,6 +960,17 @@ public void onTravelToDimension(EntityTravelToDimensionEvent event) {
     }
 }
 
+// The planet starts populated by both factions: the first time anyone joins a world, a handful of
+// autonomous Imperial cities and Ork camps are seeded around spawn (runs once per world, guarded by
+// WorldSettlementData; only sets blocks, no chunk-gen changes). See WorldSettlementSeeder.
+@SubscribeEvent
+public void onPlayerLoggedIn(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent event) {
+    if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+        net.minecraft.server.level.ServerLevel overworld = serverPlayer.serverLevel().getServer().overworld();
+        WorldSettlementSeeder.seedAroundSpawn(overworld);
+    }
+}
+
 @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public static class ClientModEvents {
         @SubscribeEvent

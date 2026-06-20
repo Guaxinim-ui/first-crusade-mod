@@ -37,6 +37,12 @@ public final class OrkCampManager {
         return plantCamp(serverLevel, fromPos, targetCore, SPREAD_MIN_DISTANCE, SPREAD_MAX_DISTANCE);
     }
 
+    // World generation: plant a camp directly at (the surface above) a chosen spot, marching on the
+    // given city. Used by WorldSettlementSeeder so the planet starts populated by the WAAAGH! too.
+    public static BlockPos seedWorldCamp(ServerLevel serverLevel, BlockPos spot, BlockPos targetCore) {
+        return plantCamp(serverLevel, spot, targetCore, 0, 0);
+    }
+
     private static BlockPos plantCamp(ServerLevel serverLevel, BlockPos origin, BlockPos targetCore, int minDistance, int maxDistance) {
         double angle = serverLevel.random.nextDouble() * Math.PI * 2.0D;
         int distance = minDistance + serverLevel.random.nextInt(maxDistance - minDistance + 1);
