@@ -19,23 +19,40 @@ public final class OrkCampManager {
     private static final int MIN_DISTANCE = 64;
     private static final int MAX_DISTANCE = 96;
 
+    // When the WAAAGH! spreads, the daughter camp is planted farther out than the original ring.
+    private static final int SPREAD_MIN_DISTANCE = 96;
+    private static final int SPREAD_MAX_DISTANCE = 160;
+
     private OrkCampManager() {
     }
 
     // Plants a camp around the city and returns its position, or null if none could be placed.
     public static BlockPos seedCamp(ServerLevel serverLevel, ImperialCommandCoreBlockEntity core) {
-        BlockPos corePos = core.getBlockPos();
+        return plantCamp(serverLevel, core.getBlockPos(), core.getBlockPos(), MIN_DISTANCE, MAX_DISTANCE);
+    }
 
+    // The green tide spreads: an established camp plants a new camp farther out that joins the
+    // assault on the same city. Returns the new camp's position, or null if it could not be placed.
+    public static BlockPos seedSpreadCamp(ServerLevel serverLevel, BlockPos fromPos, BlockPos targetCore) {
+        return plantCamp(serverLevel, fromPos, targetCore, SPREAD_MIN_DISTANCE, SPREAD_MAX_DISTANCE);
+    }
+
+    private static BlockPos plantCamp(ServerLevel serverLevel, BlockPos origin, BlockPos targetCore, int minDistance, int maxDistance) {
         double angle = serverLevel.random.nextDouble() * Math.PI * 2.0D;
-        int distance = MIN_DISTANCE + serverLevel.random.nextInt(MAX_DISTANCE - MIN_DISTANCE + 1);
+        int distance = minDistance + serverLevel.random.nextInt(maxDistance - minDistance + 1);
 
-        int x = corePos.getX() + (int) Math.round(Math.cos(angle) * distance);
-        int z = corePos.getZ() + (int) Math.round(Math.sin(angle) * distance);
+        int x = origin.getX() + (int) Math.round(Math.cos(angle) * distance);
+        int z = origin.getZ() + (int) Math.round(Math.sin(angle) * distance);
 
         BlockPos surface = serverLevel.getHeightmapPos(
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                new BlockPos(x, corePos.getY(), z)
+                new BlockPos(x, origin.getY(), z)
         );
+
+        // Don't plant on top of another camp.
+        if (isCampStillThere(serverLevel, surface)) {
+            return null;
+        }
 
         buildCampStructure(serverLevel, surface);
 
@@ -46,13 +63,13 @@ public final class OrkCampManager {
         BlockEntity blockEntity = serverLevel.getBlockEntity(surface);
 
         if (blockEntity instanceof OrkCampBlockEntity camp) {
-            camp.setTargetCore(corePos);
+            camp.setTargetCore(targetCore);
             camp.setClan(clan);
         }
 
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel,
-                corePos,
+                surface,
                 Component.translatable("msg.firstcrusade.bcast.camp_raised", clan.getDisplayName())
         );
 

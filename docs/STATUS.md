@@ -169,6 +169,15 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Fase D — mundo se popula sozinho: propagação do WAAAGH!** (abordagem SEGURA, sem
+  structure features/datapack que poderiam quebrar mundos). A maré verde se espalha: um camp
+  estabelecido planta **um** camp-filho mais distante (`OrkCampManager.seedSpreadCamp` + `plantCamp`
+  generalizado), com o mesmo alvo. Gatilho no tick do camp (`trySpreadWaaagh`): só com WAAAGH! global
+  **tier ≥ 2**, **~1/12** por ciclo, e **no máximo 1 filho por camp** (flag `hasSpread`, em NBT). Não
+  planta sobre outro camp. Assim os Orks expandem pelo mundo gradualmente, sem corromper chunks.
+  Build/jar OK. **Tunável** (tier/chance/distância); sem hard-cap global — se crescer demais, fácil
+  adicionar teto via `WaaaghOverlordData`.
+
 - 2026-06-20: **i18n — notificações broadcast COMPLETAS (fatias 3 e 4)**. Migrados todos os broadcasts
   restantes para `Component.translatable`: ciclo de raid do Core (dano/ativo/dispersão/vitória+
   recompensas/derrota+perdas), recruta juntou-se, candidato/ascensão Space Marine, gene consumido,

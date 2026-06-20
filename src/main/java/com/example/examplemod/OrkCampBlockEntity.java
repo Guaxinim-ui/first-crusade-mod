@@ -30,11 +30,17 @@ public class OrkCampBlockEntity extends BlockEntity {
 
     private static final int WAR_PARTIES_BEFORE_WARBOSS = 3;
 
+    // The WAAAGH! spread: at a grown global tier, a camp plants ONE daughter camp farther out, so
+    // the green tide expands across the world on its own. Bounded to one child per camp.
+    private static final int SPREAD_MIN_TIER = 2;
+    private static final int SPREAD_CHANCE = 12; // ~1 in 12 per cycle (200 ticks) once eligible
+
     private BlockPos targetCorePos;
     private OrkClan clan = OrkClan.GOFFS;
     private int waaagh = 0;
     private int warPartiesLaunched = 0;
     private boolean warbossSpawned = false;
+    private boolean hasSpread = false;
     private int tickCounter = 0;
 
     public OrkCampBlockEntity(BlockPos pos, BlockState state) {
@@ -74,6 +80,31 @@ public class OrkCampBlockEntity extends BlockEntity {
 
         camp.maintainGarrison(serverLevel, pos);
         camp.buildWaaagh(serverLevel, pos);
+        camp.trySpreadWaaagh(serverLevel, pos);
+    }
+
+    // Once the global WAAAGH! has grown (tier 2+), an established camp eventually plants a single
+    // daughter camp farther out that joins the assault on the same city — the green tide spreading
+    // across the world on its own. Each camp spreads at most once (hasSpread), so growth is gradual.
+    private void trySpreadWaaagh(ServerLevel serverLevel, BlockPos pos) {
+        if (this.hasSpread || this.targetCorePos == null) {
+            return;
+        }
+
+        if (WaaaghOverlordManager.getTier(serverLevel) < SPREAD_MIN_TIER) {
+            return;
+        }
+
+        if (serverLevel.random.nextInt(SPREAD_CHANCE) != 0) {
+            return;
+        }
+
+        BlockPos child = OrkCampManager.seedSpreadCamp(serverLevel, pos, this.targetCorePos);
+
+        if (child != null) {
+            this.hasSpread = true;
+            setChanged();
+        }
     }
 
     private void maintainGarrison(ServerLevel serverLevel, BlockPos pos) {
@@ -282,6 +313,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         tag.putInt("Waaagh", this.waaagh);
         tag.putInt("WarPartiesLaunched", this.warPartiesLaunched);
         tag.putBoolean("WarbossSpawned", this.warbossSpawned);
+        tag.putBoolean("HasSpread", this.hasSpread);
         tag.putString("Clan", this.clan.name());
 
         if (this.targetCorePos != null) {
@@ -296,6 +328,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         this.waaagh = tag.getInt("Waaagh");
         this.warPartiesLaunched = tag.getInt("WarPartiesLaunched");
         this.warbossSpawned = tag.getBoolean("WarbossSpawned");
+        this.hasSpread = tag.getBoolean("HasSpread");
         this.clan = OrkClan.fromName(tag.getString("Clan"));
 
         if (tag.contains("TargetCorePos")) {
