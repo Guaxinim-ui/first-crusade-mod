@@ -248,6 +248,19 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **C6 (1ª fatia) — planeta-dimensão + viagem via Spaceport**. Fase E real começa.
+  **Novo planeta como dimensão própria** `firstcrusade:planet_secundus` (data-driven:
+  `data/firstcrusade/dimension/planet_secundus.json` gerador noise reusando o `noise_settings`
+  **minecraft:overworld** já achatado + biome_source preset overworld; `dimension_type/planet_secundus.json`
+  cópia do planeta: min_y 0, height 96). **Bloco `SpaceportBlock`** (registro SPACEPORT + item + aba
+  criativa + blockstate/model cube_column textura lodestone + loot + lang en/pt): right-click **teleporta
+  ida/volta** entre o overworld e o planeta (`ServerPlayer.teleportTo` cross-dim), construindo uma
+  **plataforma de pouso 3x3 + Spaceport de retorno** no destino (nunca fica preso/cai). Chave
+  `ExampleMod.PLANET_SECUNDUS` (ResourceKey<Level>). Build/jar OK; **NÃO testado** (dimensão só existe em
+  **mundo NOVO**). Dono testa: pega Spaceport no criativo, coloca, clica → vai pro planeta? volta? deu
+  erro ao criar mundo/registrar dimensão (ler `run/logs/latest.log`)? **Falta:** worldborder no planeta,
+  recurso/receita do Spaceport, planetas distintos (terreno/tema próprios), assentamentos no planeta.
+
 - 2026-06-20: **Cidade grande/funcional/bonita — layout planejado (pedido do dono)**. Feedback: queria
   o estilo gótico antigo + muralha em volta + cidade grande. Mantido o gótico (muralha + torres de
   cúpula dourada + torre central + castelo). Melhorias de layout em `buildCityStructure`: ruas mais

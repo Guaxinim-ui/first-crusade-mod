@@ -338,5 +338,8 @@
   "msg.firstcrusade.bcast.primarch_fallen": "The Primarch has fallen. The city is plunged into mourning.",
   "msg.firstcrusade.bcast.neophyte_begun": "A veteran Guardsman has begun his trials as a Neophyte.",
   "msg.firstcrusade.bcast.warboss_slain": "The Ork Warboss has been slain! The WAAAGH! falters.",
-  "msg.firstcrusade.bcast.camp_raised": "%s Orks have raised a camp nearby. It will grow into a threat."
+  "msg.firstcrusade.bcast.camp_raised": "%s Orks have raised a camp nearby. It will grow into a threat.",
+  "block.firstcrusade.spaceport": "Spaceport",
+  "msg.firstcrusade.spaceport.arrived": "Translation complete. Welcome to your destination.",
+  "msg.firstcrusade.spaceport.no_dest": "The warp is shut: this world cannot be reached."
 }

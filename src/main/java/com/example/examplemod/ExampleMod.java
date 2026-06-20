@@ -173,6 +173,22 @@ public static final RegistryObject<Item> IMPERIAL_MINE_ITEM =
         ITEMS.register("imperial_mine",
                 () -> new BlockItem(IMPERIAL_MINE.get(), new Item.Properties()));
 
+// Planetary travel (Fase E / C6): a second planet as its own dimension, reached via the Spaceport.
+public static final net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> PLANET_SECUNDUS =
+        net.minecraft.resources.ResourceKey.create(Registries.DIMENSION, new ResourceLocation(MODID, "planet_secundus"));
+
+public static final RegistryObject<Block> SPACEPORT =
+        BLOCKS.register("spaceport",
+                () -> new SpaceportBlock(BlockBehaviour.Properties.of()
+                        .strength(5.0F, 1200.0F)
+                        .requiresCorrectToolForDrops()
+                        .sound(SoundType.METAL)
+                        .lightLevel(state -> 7)));
+
+public static final RegistryObject<Item> SPACEPORT_ITEM =
+        ITEMS.register("spaceport",
+                () -> new BlockItem(SPACEPORT.get(), new Item.Properties()));
+
     public static final RegistryObject<Item> IMPERIAL_COMMAND_CORE_ITEM = ITEMS.register("imperial_command_core",
             () -> new BlockItem(IMPERIAL_COMMAND_CORE.get(), new Item.Properties()));
 
@@ -826,6 +842,7 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
                         output.accept(IMPERIAL_BARRACKS_ITEM.get());
                         output.accept(IMPERIAL_HABITATION_ITEM.get());
                         output.accept(ORK_CAMP_ITEM.get());
+                        output.accept(SPACEPORT_ITEM.get());
 
                         output.accept(CRUSADIUM_INGOT.get());
                         output.accept(CRUSADIUM_PLATE.get());
