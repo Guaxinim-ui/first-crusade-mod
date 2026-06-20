@@ -160,6 +160,12 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-19: **Conteúdo — nova arma: Plasma Gun** (energia, entre Lasgun e Bolter). `PlasmaGunItem`
+  reusa o molde do Lasgun: dispara um tiro **flamejante** (`setSecondsOnFire(100)` no projétil →
+  queima o alvo), dano 10, usa Lasgun Power Cell, cooldown 28t (carrega devagar), durabilidade 400.
+  Completa o trio Imperial **Lasgun/Plasma/Bolter** (planejado no design §6). Registro completo
+  (item + creative tab + modelo + textura placeholder + lang en/pt). Build/jar OK; 295 chaves.
+
 - 2026-06-19: **Space Marine empunha a Chainsword** (antes Netherite Sword vanilla). `equipAsSpaceMarine`
   agora usa `ExampleMod.CHAINSWORD` no MAINHAND — dá presença in-world à arma nova no usuário icônico
   (encaixa no `MeleeAttackGoal` existente; drop chance 0). Import `Items` removido. Build/jar OK.
