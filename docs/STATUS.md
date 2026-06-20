@@ -169,6 +169,15 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Planeta (B) v3 — worldgen EMBUTIDO no mod** (datapack externo removido). Movido o
+  override de `data/minecraft/{dimension_type/overworld, worldgen/noise_settings/overworld,
+  worldgen/configured_carver/*}` para `src/main/resources` → agora vai no jar (parte do "main"). O
+  dono não precisa mais arrastar datapack: `da run` + **mundo NOVO** já nasce planeta (plano, baixo
+  height 96, sem cavernas). **Vilas**: ainda criar mundo com **"Gerar Estruturas" OFF** (1 clique).
+  ⚠️ **MUNDOS ANTIGOS (altura cheia) provavelmente NÃO carregam** com este override — usar mundo novo.
+  ⚠️ noise_settings escrito à mão; se a criação do mundo der erro, reportar a mensagem p/ corrigir.
+  (Antes: tela "Select Data Packs" não mostrava o datapack externo — só embutidos; daí o impasse.)
+
 - 2026-06-20: **Planeta (B) v2 — noise_settings plano (sem montanhas/cavernas de ruído)**. Datapack
   `small_planet` agora sobrescreve `worldgen/noise_settings/overworld.json`: `final_density` =
   gradiente Y (solo até ~y65, ar acima) → **terreno plano, sem cavernas de ruído**; referencia o
