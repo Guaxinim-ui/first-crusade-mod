@@ -935,9 +935,17 @@ private void registerAttributes(EntityAttributeCreationEvent event) {
     event.put(FEUDAL_KNIGHT.get(), FeudalKnightEntity.createAttributes().build());
 }
 
+// Small, closed "planet": clamp the overworld to a compact playable area on every start. The
+// world border only limits movement (no worldgen/chunk changes), so this is fully reversible.
+private static final double WORLD_BORDER_SIZE = 5000.0D;
+
 @SubscribeEvent
 public void onServerStarting(ServerStartingEvent event) {
     LOGGER.info("First Crusade server starting.");
+
+    net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
+    overworld.getWorldBorder().setSize(WORLD_BORDER_SIZE);
+    LOGGER.info("First Crusade: overworld border clamped to {} blocks.", WORLD_BORDER_SIZE);
 }
 
 @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
