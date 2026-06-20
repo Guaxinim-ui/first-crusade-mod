@@ -381,6 +381,9 @@ public static final RegistryObject<BlockEntityType<OrkCampBlockEntity>> ORK_CAMP
     public static final RegistryObject<Item> CHOPPA = ITEMS.register("choppa",
             () -> new SwordItem(ORK_MELEE_TIER, 0, -2.4F, new Item.Properties()));
 
+    public static final RegistryObject<Item> SHOOTA = ITEMS.register("shoota",
+            () -> new ShootaItem(new Item.Properties().stacksTo(1).durability(220)));
+
     // =========================
     // GUARDSMEN SUPPORT ITEMS
     // =========================
@@ -791,6 +794,7 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
                         output.accept(CRUSADIUM_PLATE.get());
                         output.accept(ORK_TEETH.get());
                         output.accept(CHOPPA.get());
+                        output.accept(SHOOTA.get());
                         output.accept(SCRAP_METAL.get());
                         output.accept(IMPERIAL_CITIZEN_SPAWN_EGG.get());
                         output.accept(IMPERIAL_MINE_ITEM.get());

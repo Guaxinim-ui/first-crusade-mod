@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SST",
+    "IRI",
+    "S  "
+  ],
+  "key": {
+    "S": {
+      "item": "firstcrusade:scrap_metal"
+    },
+    "T": {
+      "item": "firstcrusade:ork_teeth"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "item": "firstcrusade:shoota",
+    "count": 1
+  }
+}

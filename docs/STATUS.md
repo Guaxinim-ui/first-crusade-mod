@@ -160,6 +160,12 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Conteúdo Ork — arma Shoota** (dakka). `ShootaItem` reusa o molde do Bolter: tiro
+  **rápido** (cooldown 8t), **fraco** (dano 4) e **muito impreciso** (inaccuracy 6.0 — "Ork não
+  mira"), **sem munição**, durabilidade baixa (220, quebra fácil). Item usável pelo jogador (sem
+  mudar IA dos Orks). Registro completo: item + creative tab + modelo + textura placeholder + lang
+  en/pt + receita (Sucata + Ferro + Redstone + Dentes). Fecha o par Ork melee/ranged. Build OK; 297.
+
 - 2026-06-20: **Conteúdo Ork — arma Choppa** (balanceia o lado Ork das armas). `SwordItem` com
   `ORK_MELEE_TIER` cru (180 usos, +2 dano, conserta com **Ork Teeth**), golpe lento/pesado
   (speed -2.4). **Ork Boy e Ork Nob agora empunham a Choppa** (no construtor, drop chance 0).
