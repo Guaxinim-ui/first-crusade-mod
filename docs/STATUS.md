@@ -160,6 +160,11 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-19: **Receitas das armas novas** (obteníveis em survival, não só creative). `crafting_shaped`
+  em `data/firstcrusade/recipes/`: **bolter** (3 Placa + 2 Ferro + Bloco de Redstone), **plasma_gun**
+  (2 Placa + Pó de Blaze + Bloco de Redstone + 2 Ferro), **chainsword** (2 Placa + 2 Ferro). Escala
+  pela força e usa Placa de Crusadium como material central, no padrão das receitas existentes. Build OK.
+
 - 2026-06-19: **Conteúdo — nova arma: Plasma Gun** (energia, entre Lasgun e Bolter). `PlasmaGunItem`
   reusa o molde do Lasgun: dispara um tiro **flamejante** (`setSecondsOnFire(100)` no projétil →
   queima o alvo), dano 10, usa Lasgun Power Cell, cooldown 28t (carrega devagar), durabilidade 400.
