@@ -411,6 +411,124 @@ ImperiumOverlordManager.contributeFromCity(serverLevel, blockEntity);
 blockEntity.trySeedOrkCamp(serverLevel);
 blockEntity.trySpawnOrkRaid(serverLevel);
 blockEntity.checkActiveOrkRaid(serverLevel);
+blockEntity.tickAutonomousGovernance(serverLevel);
+    }
+
+    // An unclaimed, world-generated city governs itself: it keeps a standing garrison and grows in
+    // level (expanding its walls/houses/population) on its own — no player owner required. A city a
+    // player has claimed is run by that player instead (this does nothing for owned cities).
+    private void tickAutonomousGovernance(ServerLevel serverLevel) {
+        if (hasOwner()) {
+            return;
+        }
+
+        autonomousRecruit(serverLevel);
+        autonomousUpgrade(serverLevel);
+    }
+
+    // Refill the garrison toward the city's military capacity, paying iron and ramping up gradually.
+    private void autonomousRecruit(ServerLevel serverLevel) {
+        if (this.recruitedGuardsmen >= getMilitaryCapacity()) {
+            return;
+        }
+
+        int ironCost = getCityType().getRecruitIronCost();
+        if (this.resources.getIron() < ironCost) {
+            return;
+        }
+
+        // Don't raise the whole garrison at once.
+        if (serverLevel.random.nextInt(3) != 0) {
+            return;
+        }
+
+        if (spawnGarrisonTroop(serverLevel, getReinforcementRank())) {
+            this.resources.remove(ImperialResourceType.IRON, ironCost);
+            this.recruitedGuardsmen++;
+            setChanged();
+        }
+    }
+
+    // A thriving autonomous city (near its population cap, with the resources to spare) expands to
+    // the next level by itself — no Crusadium Plate needed, unlike a player upgrade.
+    private void autonomousUpgrade(ServerLevel serverLevel) {
+        if (!canUpgradeMore()) {
+            return;
+        }
+
+        int ironCost = getUpgradeIronCost();
+        int scrapCost = getUpgradeScrapCost();
+        int coalCost = getUpgradeCoalCost();
+
+        if (this.resources.getIron() < ironCost
+                || this.resources.getScrapMetal() < scrapCost
+                || this.resources.getCoal() < coalCost) {
+            return;
+        }
+
+        // Only grow once the town is full of people pushing for more room.
+        if (ImperialPopulationManager.countAssignedCitizens(serverLevel, this)
+                < ImperialPopulationManager.getCitizenCapacity(this)) {
+            return;
+        }
+
+        // Growth is a slow, deliberate thing.
+        if (serverLevel.random.nextInt(4) != 0) {
+            return;
+        }
+
+        this.resources.spend(ironCost, scrapCost, coalCost);
+        this.cityLevel++;
+        buildCityStructure(serverLevel);
+        reorganizeExistingGuardsmen(serverLevel);
+        setChanged();
+
+        OrkRaidManager.notifyNearbyPlayers(
+                serverLevel,
+                this.worldPosition,
+                Component.translatable("msg.firstcrusade.bcast.city_grew", this.cityLevel)
+        );
+    }
+
+    // Raises a single garrison soldier (the city's themed troop, or a Guardsman with a guard post).
+    private boolean spawnGarrisonTroop(ServerLevel serverLevel, GuardsmanRank rank) {
+        BlockPos spawnPos = findSpawnPosition(serverLevel);
+        EntityType<? extends AbstractImperialTroopEntity> themedType = getThemedTroopType(getCityType());
+
+        if (themedType != null) {
+            return spawnThemedTroopAt(serverLevel, themedType,
+                    spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
+        }
+
+        GuardsmanEntity guardsman = ExampleMod.GUARDSMAN.get().create(serverLevel);
+        if (guardsman == null) {
+            return false;
+        }
+
+        BlockPos guardPostPos = findGuardPostPosition(this.recruitedGuardsmen);
+        prepareGuardPost(serverLevel, guardPostPos);
+
+        guardsman.moveTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
+        guardsman.assignToCommandCore(this.worldPosition);
+        guardsman.assignGuardPost(guardPostPos);
+        guardsman.assignRandomChapter();
+        guardsman.initializeFromCity(rank, getCityType());
+
+        serverLevel.addFreshEntity(guardsman);
+        return true;
+    }
+
+    // Garrisons a freshly founded autonomous town so it can defend itself from the first night.
+    private void spawnInitialGarrison(ServerLevel serverLevel, int count) {
+        for (int i = 0; i < count; i++) {
+            if (this.recruitedGuardsmen >= getMilitaryCapacity()) {
+                break;
+            }
+            if (spawnGarrisonTroop(serverLevel, getStartingGuardsmanRank())) {
+                this.recruitedGuardsmen++;
+            }
+        }
+        setChanged();
     }
 
     // Called by ImperialCommandCoreMenu when a player opens the GUI. Refreshes once immediately so
@@ -2060,6 +2178,7 @@ private int getSpaceMarinePromotionCooldownTicks() {
 // with beds). Called once by WorldSettlementSeeder right after the Core is placed.
 private static final int AUTONOMOUS_VILLAGE_LEVEL = 4;
 private static final int AUTONOMOUS_START_POPULATION = 12;
+private static final int AUTONOMOUS_GARRISON = 6;
 
 public void buildAutonomousVillage(ServerLevel serverLevel) {
     if (this.cityType == null) {
@@ -2070,6 +2189,7 @@ public void buildAutonomousVillage(ServerLevel serverLevel) {
 
     buildCityStructure(serverLevel);
     spawnStartingPopulation(serverLevel, AUTONOMOUS_START_POPULATION);
+    spawnInitialGarrison(serverLevel, AUTONOMOUS_GARRISON);
     setChanged();
 }
 

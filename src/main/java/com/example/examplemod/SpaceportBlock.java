@@ -63,19 +63,38 @@ public class SpaceportBlock extends Block {
         player.displayClientMessage(Component.translatable("msg.firstcrusade.spaceport.arrived"), true);
     }
 
-    // A 3x3 stone pad with clear headroom and a return Spaceport on its corner.
-    private void buildLandingPad(ServerLevel level, BlockPos landing) {
-        BlockState floor = Blocks.SMOOTH_STONE.defaultBlockState();
+    private static final int PAD_RADIUS = 3;
 
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                level.setBlock(landing.offset(dx, -1, dz), floor, 3);
-                level.setBlock(landing.offset(dx, 0, dz), Blocks.AIR.defaultBlockState(), 2);
-                level.setBlock(landing.offset(dx, 1, dz), Blocks.AIR.defaultBlockState(), 2);
+    // A bright, open landing pad: clears any trees/terrain in the way, lays a stone platform with
+    // lit corners and a return Spaceport, so the traveller never lands stranded in a dark pocket.
+    private void buildLandingPad(ServerLevel level, BlockPos landing) {
+        // Strip vegetation and give real headroom so you don't arrive boxed in.
+        WorldGenPlacement.clearVegetation(level, landing, PAD_RADIUS + 1, 6);
+
+        BlockState floor = Blocks.SMOOTH_STONE.defaultBlockState();
+        BlockState edge = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
+
+        for (int dx = -PAD_RADIUS; dx <= PAD_RADIUS; dx++) {
+            for (int dz = -PAD_RADIUS; dz <= PAD_RADIUS; dz++) {
+                boolean rim = Math.abs(dx) == PAD_RADIUS || Math.abs(dz) == PAD_RADIUS;
+                level.setBlock(landing.offset(dx, -1, dz), rim ? edge : floor, 3);
+
+                // Clear standing room above the pad.
+                for (int dy = 0; dy <= 4; dy++) {
+                    level.setBlock(landing.offset(dx, dy, dz), Blocks.AIR.defaultBlockState(), 2);
+                }
             }
         }
 
-        BlockPos returnPort = landing.offset(1, 0, 1);
+        // Lanterns on the four corners.
+        int[][] corners = {{-PAD_RADIUS, -PAD_RADIUS}, {-PAD_RADIUS, PAD_RADIUS}, {PAD_RADIUS, -PAD_RADIUS}, {PAD_RADIUS, PAD_RADIUS}};
+        for (int[] c : corners) {
+            level.setBlock(landing.offset(c[0], 0, c[1]), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState(), 3);
+            level.setBlock(landing.offset(c[0], 1, c[1]), Blocks.LANTERN.defaultBlockState(), 3);
+        }
+
+        // Return Spaceport beside the centre.
+        BlockPos returnPort = landing.offset(2, 0, 0);
         if (!level.getBlockState(returnPort).is(ExampleMod.SPACEPORT.get())) {
             level.setBlock(returnPort, ExampleMod.SPACEPORT.get().defaultBlockState(), 3);
         }

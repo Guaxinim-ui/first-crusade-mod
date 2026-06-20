@@ -339,6 +339,7 @@
   "msg.firstcrusade.bcast.neophyte_begun": "Um Guardsman veterano começou suas provações como Neófito.",
   "msg.firstcrusade.bcast.warboss_slain": "O Ork Warboss foi morto! O WAAAGH! vacila.",
   "msg.firstcrusade.bcast.camp_raised": "Orks %s ergueram um acampamento por perto. Vai virar uma ameaça.",
+  "msg.firstcrusade.bcast.city_grew": "Uma cidade Imperial cresceu para o nível %s.",
   "block.firstcrusade.spaceport": "Spaceport",
   "msg.firstcrusade.spaceport.arrived": "Translação completa. Bem-vindo ao destino.",
   "msg.firstcrusade.spaceport.no_dest": "A warp está fechada: este mundo não pode ser alcançado."

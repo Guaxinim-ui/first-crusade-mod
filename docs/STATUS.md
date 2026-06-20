@@ -248,6 +248,19 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Cidades autônomas se governam + plataforma do Spaceport melhor**. (1) Cidades
+  **não-reivindicadas** (sem dono) agora rodam sozinhas: `tickAutonomousGovernance` (no serverTick,
+  só se `!hasOwner()`) → **auto-recruta** guarnição até `getMilitaryCapacity` pagando ferro/ramp
+  gradual (`autonomousRecruit` + `spawnGarrisonTroop`, reusa tropa-tema/Guardsman+guard post), e
+  **auto-evolui de nível** quando próspera (pop no cap + recursos, sem placa) reconstruindo a
+  estrutura maior (`autonomousUpgrade`, broadcast `bcast.city_grew`). Vila do mundo nasce com
+  **guarnição inicial de 6** (`spawnInitialGarrison` em `buildAutonomousVillage`). Cidade reivindicada
+  pelo jogador volta a ser controlada por ele (governança autônoma só p/ unowned). (2) `SpaceportBlock.
+  buildLandingPad` agora limpa vegetação + plataforma **7x7** com borda/lanternas + 4 blocos de
+  headroom (antes 3x3 → caía num quartinho escuro). Lang 344/344. Build/jar OK; não testado em jogo.
+  ⚠️ **Planeta ainda visualmente idêntico ao overworld** (reusa o mesmo gerador) — dá impressão de
+  "mesma dimensão"; tornar planetas distintos (terreno/céu) é a próxima fatia do C6.
+
 - 2026-06-20: **C6 (1ª fatia) — planeta-dimensão + viagem via Spaceport**. Fase E real começa.
   **Novo planeta como dimensão própria** `firstcrusade:planet_secundus` (data-driven:
   `data/firstcrusade/dimension/planet_secundus.json` gerador noise reusando o `noise_settings`
