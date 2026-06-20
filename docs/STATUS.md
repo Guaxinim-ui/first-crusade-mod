@@ -160,6 +160,12 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Conteúdo Ork — arma Choppa** (balanceia o lado Ork das armas). `SwordItem` com
+  `ORK_MELEE_TIER` cru (180 usos, +2 dano, conserta com **Ork Teeth**), golpe lento/pesado
+  (speed -2.4). **Ork Boy e Ork Nob agora empunham a Choppa** (no construtor, drop chance 0).
+  Registro completo: tier + item + creative tab + modelo + textura placeholder + lang en/pt +
+  **receita** (Sucata + Ferro + Dentes de Ork). Build/jar OK; 296 chaves.
+
 - 2026-06-19: **Receitas das armas novas** (obteníveis em survival, não só creative). `crafting_shaped`
   em `data/firstcrusade/recipes/`: **bolter** (3 Placa + 2 Ferro + Bloco de Redstone), **plasma_gun**
   (2 Placa + Pó de Blaze + Bloco de Redstone + 2 Ferro), **chainsword** (2 Placa + 2 Ferro). Escala

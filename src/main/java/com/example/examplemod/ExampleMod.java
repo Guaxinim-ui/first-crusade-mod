@@ -345,6 +345,42 @@ public static final RegistryObject<BlockEntityType<OrkCampBlockEntity>> ORK_CAMP
     public static final RegistryObject<Item> CHAINSWORD = ITEMS.register("chainsword",
             () -> new ChainswordItem(CHAINSWORD_TIER, 4, -2.0F, new Item.Properties()));
 
+    // Crude Ork melee weapon: brutal but poorly made (low durability), repaired with Ork Teeth.
+    public static final Tier ORK_MELEE_TIER = new Tier() {
+        @Override
+        public int getUses() {
+            return 180;
+        }
+
+        @Override
+        public float getSpeed() {
+            return 5.0F;
+        }
+
+        @Override
+        public float getAttackDamageBonus() {
+            return 2.0F;
+        }
+
+        @Override
+        public int getLevel() {
+            return 1;
+        }
+
+        @Override
+        public int getEnchantmentValue() {
+            return 5;
+        }
+
+        @Override
+        public Ingredient getRepairIngredient() {
+            return Ingredient.of(ORK_TEETH.get());
+        }
+    };
+
+    public static final RegistryObject<Item> CHOPPA = ITEMS.register("choppa",
+            () -> new SwordItem(ORK_MELEE_TIER, 0, -2.4F, new Item.Properties()));
+
     // =========================
     // GUARDSMEN SUPPORT ITEMS
     // =========================
@@ -754,6 +790,7 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
                         output.accept(CRUSADIUM_INGOT.get());
                         output.accept(CRUSADIUM_PLATE.get());
                         output.accept(ORK_TEETH.get());
+                        output.accept(CHOPPA.get());
                         output.accept(SCRAP_METAL.get());
                         output.accept(IMPERIAL_CITIZEN_SPAWN_EGG.get());
                         output.accept(IMPERIAL_MINE_ITEM.get());

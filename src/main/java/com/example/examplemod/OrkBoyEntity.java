@@ -22,6 +22,9 @@ import net.minecraft.world.level.Level;
 public class OrkBoyEntity extends Monster {
     public OrkBoyEntity(EntityType<? extends OrkBoyEntity> entityType, Level level) {
         super(entityType, level);
+
+        this.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new net.minecraft.world.item.ItemStack(ExampleMod.CHOPPA.get()));
+        this.setDropChance(net.minecraft.world.entity.EquipmentSlot.MAINHAND, 0.0F);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
