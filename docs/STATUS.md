@@ -8,7 +8,7 @@
 > mudanças grandes, **verifique o estado real** com `git log --oneline -8`, `git status` e um
 > `Glob` em `src/main/java/com/example/examplemod/*.java` — não confie só neste arquivo.
 
-Última atualização: **2026-06-18** · branch `main` · remoto `github.com/Guaxinim-ui/first-crusade-mod`
+Última atualização: **2026-06-20** · branch `main` · remoto `github.com/Guaxinim-ui/first-crusade-mod`
 
 ---
 
@@ -130,23 +130,57 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
   Ideia do dono (2026-06-19), para o fim de tudo.
 - [ ] **Transversal** — conteúdo (armas/armaduras/recursos por facção) para não ficar entediante.
 
-### >>> PRÓXIMO PASSO (retomar aqui após o /clear) <<<
-O dono testou em jogo e **está tudo OK** até o commit `1db7d1f`. Fase C está madura. Escolher UM:
+### >>> HANDOFF / PRÓXIMO PASSO (retomar aqui após o /clear) <<<
 
-1. **GUI em chaves de lang — CONCLUÍDA para o Núcleo** (fatias 1–4). Tela e mensagens do Core 100%
-   traduzíveis (en/pt, 291 chaves sincronizadas). Restam só pendências menores/opcionais: notificações
-   broadcast que recebem String (mudar assinatura p/ Component), strings cross-class passadas como `%s`
-   (especialista/ameaça/moral/tropa), e `Component.literal` em **outros** arquivos (Ork Camp, etc.).
-   Próximo foco sugerido: **Fase D** (overlords/worldgen) OU **conteúdo transversal** (arma nova).
-2. **Fase D — Overlords/worldgen** (item de roadmap grande): começar pelo mais bounded — geração de
-   assentamentos no worldgen (structure feature) OU um `WorldFactionOverlordManager` que despacha
-   líder quando uma cidade atinge ameaça nível 4. Alto risco técnico (worldgen). Fazer slice por slice.
-3. **Conteúdo transversal** — armas novas (bolter/chainsword) reusando `LasgunItem`/`LasgunShotEntity`
-   como molde; bounded e visível.
+**Estado geral (tudo compilando, em origin/main):**
+- **Fases A, B, C** maduras. **Fase D essencialmente completa**: overlord Imperial (Cruzada,
+  `ImperiumOverlordData`/`ImperiumOverlordManager`, tier 0-4, soma reforços) × WAAAGH! em paralelo;
+  despacho de líder por ameaça (Primarch counter-charge no nível CRÍTICO); Cruzada na GUI; Warboss
+  escalado pelo tier; território da cidade; **mundo se popula via propagação do WAAAGH!** (camp planta
+  1 camp-filho, `OrkCampManager.seedSpreadCamp`).
+- **i18n essencialmente completa**: GUI do Core + todas as mensagens + **todas as broadcasts** em
+  `Component.translatable` (en/pt **sincronizados**, ~340 chaves). Validar contagem com PowerShell
+  ConvertFrom-Json. Pendências só de strings cross-class passadas como `%s` (rank/clã/especialista/
+  ameaça/moral) e nomes custom de entidade.
+- **Armas** (todas com molde reusado + receita + lang en/pt; arte = PLACEHOLDER, dono faz):
+  Imperium: Lasgun (modelo 3D+textura do dono), **Plasma Gun** (queima), **Bolter** (knockback);
+  melee **Chainsword** (SM + Primarch a usam). Orks: **Choppa** (Boy/Nob), **Shoota** (dakka),
+  **Power Klaw** (Warboss/Meganob).
 
-**Regras ao continuar:** reusar o padrão de tropa-tema (entidade + renderer + placeholder guardsman.png
-+ registro em ExampleMod + faction via base + lang en/pt + 1 linha em `getThemedTroopType`/enum).
-Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
+**🌍 PLANETA (Fase E em andamento) — FUNCIONANDO e confirmado em jogo:**
+- O **mod sela Nether/End** (`EntityTravelToDimensionEvent`) e aplica **worldborder 5000** no
+  overworld (`onServerStarting`, `WORLD_BORDER_SIZE` em `ExampleMod`). Vale em qualquer mundo.
+- **Worldgen do planeta vai EMBUTIDO no jar** em `src/main/resources/data/minecraft/`:
+  `dimension_type/overworld.json` (min_y 0, height 96) e `worldgen/noise_settings/overworld.json`
+  (terreno raso/plano, sem cavernas; clima temp/veg=0; continents/erosion/depth/ridges referenciam
+  DFs vanilla). **NÃO há mais datapack externo** (a tela "Select Data Packs" só lista embutidos;
+  por isso o externo nunca aparecia).
+- **Como o dono testa:** `git pull` + **`da run`** → criar **MUNDO NOVO**, aba **World** →
+  **Generate Structures: OFF** (tira vilas) + World Type Default → Create. (Mundos antigos de altura
+  cheia NÃO carregam mais com o override — usar mundo novo.)
+- **DEBUG de worldgen:** se a criação do mundo der erro, **ler `run/logs/latest.log`** (procurar
+  "Failed to parse"/"Not a JSON object"/"Unbound"). Foi assim que achei os bugs: `temperature`/
+  `vegetation` não existem como DF nomeada (usar constante); carvers exigiam `debug_settings` (foram
+  removidos, redundantes); `monster_spawn_light_level` tinha que ser int, não objeto.
+
+**>>> AÇÃO IMEDIATA ao retomar:** acabei de commitar **A1+A2** (ondulações leves via continents*0.4 +
+erosion*0.2 somados ao gradiente; oceanos onde o terreno cai abaixo do mar; **areia** em praia/fundo
+d'água no `surface_rule`). **Compila e o JSON valida, mas AINDA NÃO foi testado em jogo.** Pedir ao
+dono pra `git pull` + `da run` + mundo novo e dizer: carregou? como ficou (ondulação/oceanos/areia)?
+deu erro (ler o log)? Ajustar amplitudes (`mul` 0.4/0.2) e `from_y/to_y` (44/64) conforme o gosto.
+
+**Depois de A1+A2 (lista de próximos, por prioridade):**
+1. **A3** (opcional): restaurar variedade de clima (temperatura/umidade reais via noise válido) p/
+   desertos/neve — hoje é tudo temperado (temp/veg=0).
+2. **B5**: gerar **assentamentos no worldgen** (cidades Imperiais + camps Ork nascerem no mundo),
+   pro planeta já começar povoado pelas duas facções.
+3. **C6** (grande): planetas como **dimensões próprias** + viagem planetária (Spaceport) — Fase E real.
+4. **D7**: **Mesa de Guerra** (GUI-mapa tático no Core) — ver `DESIGN_WORLD_CITIES_FACTIONS.md` §5.1.
+5. Texturas (dono) + balanceamento.
+
+**Regras ao continuar:** reusar padrões existentes (tropa-tema, manager por sistema, lang en/pt
+sincronizadas). Dono faz texturas. Compilar offline (§2) e **commitar/push a cada fatia**. Worldgen
+não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/latest.log` se falhar.
 
 ## 5. Convenções de arquitetura (seguir)
 
@@ -168,6 +202,13 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 - Mensagens de commit em pt-BR, terminar com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
 ## 7. Changelog (mais recente no topo)
+
+- 2026-06-20: **Planeta A1+A2 (ondulações + areia) — COMMITADO, NÃO TESTADO em jogo ainda**.
+  `noise_settings/overworld.json`: `final_density` (e initial) = gradiente Y (from_y44/to_y64) +
+  `continents`*0.4 + `erosion`*0.2 → terreno com **ondulações leves** e **oceanos** (cai abaixo do
+  mar onde continents é baixo), sem montanhas. `surface_rule`: grama na terra, **areia** em praia/
+  fundo d'água (via `minecraft:water` offset -1), dirt no subsolo. JSON valida, jar builda. Próximo:
+  dono testa (git pull + da run + mundo novo) e afina amplitudes (mul 0.4/0.2) / from_y-to_y.
 
 - 2026-06-20: **Planeta (B) FUNCIONANDO** ✅ (confirmado em jogo pelo dono). Overworld embutido no mod:
   **plano** (superfície ~y51), **baixo** (height 96), **sem cavernas**, biomas variados por
