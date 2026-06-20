@@ -115,7 +115,10 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
 - [ ] **Fase D** — overlords globais: território, geração de assentamentos no worldgen, despacho de
   líderes por nível de ameaça.
 - [ ] **Fase E** (maior risco) — mundo achatado + menor + dimensões-planeta substituindo Nether/End
-  + viagem planetária (via Spaceport).
+  + viagem planetária (via Spaceport). **Planetas pequenos/fechados, SEM mineração/quebra de blocos**
+  (jogo vira comando, não extração) + **Mesa de Guerra** (tela do Core vira mapa tático com fichas de
+  aliados/inimigos e ícones de invasão/defesa). Detalhes em `DESIGN_WORLD_CITIES_FACTIONS.md` §5/§5.1.
+  Ideia do dono (2026-06-19), para o fim de tudo.
 - [ ] **Transversal** — conteúdo (armas/armaduras/recursos por facção) para não ficar entediante.
 
 ### >>> PRÓXIMO PASSO (retomar aqui após o /clear) <<<

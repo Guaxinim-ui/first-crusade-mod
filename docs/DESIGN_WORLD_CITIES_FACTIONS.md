@@ -171,9 +171,29 @@ Mudanças estruturais de mundo (fase dedicada, alto risco técnico — fazer por
   detalhadas** (cidades grandes, fortalezas, camps).
 - **Geração das cidades/camps** integrada ao worldgen (structure features) em vez de spawn só
   pelo Core — para o mundo já nascer povoado pelas duas facções.
+- **Planetas pequenos e "fechados"**: cada dimensão-planeta tem x/y/z **bem reduzidos** (worldborder
+  apertada + altura baixa) e é tratada como um **tabuleiro**, não um mundo de sobrevivência. O jogo
+  deixa de ser sobre extrair blocos: **sem mineração / sem quebrar blocos** (ou bloqueio total de
+  break, ou planetas de material indestrutível). A economia vem das **cidades autônomas** (produção
+  por tipo), não do jogador picaretando. O foco do jogador é **comandar**, não minerar.
 
 Ordem técnica recomendada: terreno achatado/sem cavernas → worldborder menor → dimensões-planeta
 → viagem planetária. Cada passo é testável isolado.
+
+### 5.1 Mesa de Guerra (War Table) — interface estratégica do Core
+
+Visão de **longo prazo** (depois de tudo, junto com os planetas reduzidos): a tela do
+`ImperialCommandCoreBlockEntity` evolui de painel de gestão para uma **"Mesa de Guerra"** — um
+**mapa tático em escala reduzida** do planeta (grade x/y/z limitada, estilo tabuleiro Warhammer).
+Em vez de listar números, mostra **fichas/ícones** sobre o mapa:
+- **Aliados** (cidades, tropas, líderes) e **inimigos** (camps, warbands, Warboss) como peças.
+- **Ícones de evento**: invasões em curso, cidades sob cerco, defesas ativas, despacho de líder —
+  acompanhando o `ThreatAssessmentManager` e o futuro `WorldFactionOverlordManager`.
+- Linhas de movimento/ameaça entre pontos (como rotas no tabuleiro da referência).
+Serve como o **HUD estratégico** da facção: o jogador comanda olhando a mesa, sem precisar viajar
+até cada cidade. Depende do mundo já estar reduzido/territorializado (Fase D/E), por isso vem por
+último. Implementação provável: render custom no `ImperialCommandCoreScreen` (camada de mapa +
+sprites de ícone), alimentado por dados agregados do overlord global.
 
 ---
 
@@ -206,7 +226,8 @@ Para sustentar tantas tropas e tipos, expandir conteúdo por **temas**, não ite
 | Líder que marcha | `PrimarchEntity` + `ImperialPrimarchManager` | "exército pessoal" que segue; lado Ork (Warboss) |
 | Ameaça | `getThreatScore` textual | Threat Score numérico por qualidade×quantidade (§1) |
 | Overlord global | — | `WorldFactionOverlordManager` (geração, território, despacho de líderes) |
-| Mundo | worldgen vanilla | terreno achatado, mundos menores, dimensões-planeta |
+| Mundo | worldgen vanilla | terreno achatado, mundos menores/fechados, sem mineração, dimensões-planeta |
+| HUD estratégico | tela de gestão do Core | **Mesa de Guerra**: mapa tático com fichas/ícones (§5.1) |
 
 Regra de ouro mantida: **um manager por sistema**, nada inchando o Core/Camp; tropas reusam
 `GuardsmanEntity`/`OrkBoyEntity` (ranks/variantes) antes de virar entidades novas.
@@ -239,8 +260,11 @@ Cada fase é testável e fecha um loop. Ordenadas por dependência e risco cresc
 
 **Fase E — Mundo e viagem planetária (maior risco técnico)**
 10. Terreno achatado + menos cavernas + altura reduzida.
-11. Worldborder menor por mundo.
+11. Worldborder menor por mundo → **planetas pequenos/fechados, sem mineração nem quebra de blocos**
+    (§5): o jogo vira comando estratégico, não extração.
 12. Dimensões-planeta substituindo Nether/End + viagem via Spaceport/dropship.
+13. **Mesa de Guerra** (§5.1): tela do Core vira mapa tático com fichas de aliados/inimigos e ícones
+    de invasão/defesa. Vem por último — depende de mundo reduzido + overlord global (Fase D).
 
 **Transversal (sempre): conteúdo (§6)** — armas/armaduras/recursos acompanham cada fase para não
 ficar entediante.
