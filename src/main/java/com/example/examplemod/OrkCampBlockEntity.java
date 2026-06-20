@@ -139,7 +139,11 @@ public class OrkCampBlockEntity extends BlockEntity {
         this.warPartiesLaunched++;
         setChanged();
 
-        if (!this.warbossSpawned && this.warPartiesLaunched >= WAR_PARTIES_BEFORE_WARBOSS) {
+        // The greater the global WAAAGH! (overlord tier), the sooner a Warboss rises to lead the
+        // assault — the Ork mirror of the Imperial Crusade dispatching heavier reinforcements.
+        int requiredWarParties = Math.max(1, WAR_PARTIES_BEFORE_WARBOSS - tier);
+
+        if (!this.warbossSpawned && this.warPartiesLaunched >= requiredWarParties) {
             spawnWarboss(serverLevel, pos);
         }
     }
