@@ -2810,6 +2810,12 @@ public int getCrusadeTier() {
     return 0;
 }
 
+// The radius (in blocks) the city claims and defends as its own territory; it widens as the city
+// grows (Fase D). Used as the reach of the Primarch's defence and shown in the GUI.
+public int getTerritoryRadius() {
+    return 64 + Math.max(1, this.cityLevel) * 16;
+}
+
 // Live threat from actual nearby enemies (quantity x quality), not raid history.
 public int getLiveThreatScore() {
     if (this.level instanceof ServerLevel serverLevel) {

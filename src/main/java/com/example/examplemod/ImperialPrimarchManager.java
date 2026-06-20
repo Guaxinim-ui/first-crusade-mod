@@ -152,7 +152,7 @@ public final class ImperialPrimarchManager {
         }
 
         Mob spearhead = ThreatAssessmentManager.findStrongestEnemy(
-                serverLevel, core.getBlockPos(), ThreatAssessmentManager.DEFAULT_RADIUS);
+                serverLevel, core.getBlockPos(), core.getTerritoryRadius());
 
         if (spearhead == null || !FirstCrusadeFactionManager.canAttack(primarch, spearhead)) {
             return;

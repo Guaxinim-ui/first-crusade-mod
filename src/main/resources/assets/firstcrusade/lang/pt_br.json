@@ -119,6 +119,7 @@
   "gui.firstcrusade.info.threat": "Ameaça: %s",
   "gui.firstcrusade.info.raid": "Ataque: %s",
   "gui.firstcrusade.info.crusade": "Cruzada: Nível %s",
+  "gui.firstcrusade.info.territory": "Território: %s",
   "gui.firstcrusade.info.mines": "Minas: %s/%s (%s)",
   "gui.firstcrusade.info.gold_mines": "Minas de Ouro: %s/%s (%s)",
   "gui.firstcrusade.info.scrap_yards": "Ferros-Velhos: %s/%s (%s)",
