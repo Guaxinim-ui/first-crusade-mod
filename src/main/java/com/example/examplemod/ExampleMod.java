@@ -384,6 +384,42 @@ public static final RegistryObject<BlockEntityType<OrkCampBlockEntity>> ORK_CAMP
     public static final RegistryObject<Item> SHOOTA = ITEMS.register("shoota",
             () -> new ShootaItem(new Item.Properties().stacksTo(1).durability(220)));
 
+    // Elite Ork close-combat weapon (Warboss/Meganob): a massive powered claw — slow but devastating.
+    public static final Tier POWER_KLAW_TIER = new Tier() {
+        @Override
+        public int getUses() {
+            return 900;
+        }
+
+        @Override
+        public float getSpeed() {
+            return 6.0F;
+        }
+
+        @Override
+        public float getAttackDamageBonus() {
+            return 5.0F;
+        }
+
+        @Override
+        public int getLevel() {
+            return 4;
+        }
+
+        @Override
+        public int getEnchantmentValue() {
+            return 8;
+        }
+
+        @Override
+        public Ingredient getRepairIngredient() {
+            return Ingredient.of(ORK_TEETH.get());
+        }
+    };
+
+    public static final RegistryObject<Item> POWER_KLAW = ITEMS.register("power_klaw",
+            () -> new SwordItem(POWER_KLAW_TIER, 2, -2.8F, new Item.Properties()));
+
     // =========================
     // GUARDSMEN SUPPORT ITEMS
     // =========================
@@ -795,6 +831,7 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
                         output.accept(ORK_TEETH.get());
                         output.accept(CHOPPA.get());
                         output.accept(SHOOTA.get());
+                        output.accept(POWER_KLAW.get());
                         output.accept(SCRAP_METAL.get());
                         output.accept(IMPERIAL_CITIZEN_SPAWN_EGG.get());
                         output.accept(IMPERIAL_MINE_ITEM.get());

@@ -21,7 +21,6 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
@@ -144,7 +143,7 @@ public class WarbossEntity extends PathfinderMob {
     }
 
     public void equipAsWarboss() {
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_AXE));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.POWER_KLAW.get()));
         this.setDropChance(EquipmentSlot.MAINHAND, 0.0F);
     }
 

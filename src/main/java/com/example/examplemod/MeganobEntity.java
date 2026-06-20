@@ -25,6 +25,9 @@ import net.minecraft.world.level.Level;
 public class MeganobEntity extends Monster {
     public MeganobEntity(EntityType<? extends MeganobEntity> entityType, Level level) {
         super(entityType, level);
+
+        this.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new net.minecraft.world.item.ItemStack(ExampleMod.POWER_KLAW.get()));
+        this.setDropChance(net.minecraft.world.entity.EquipmentSlot.MAINHAND, 0.0F);
     }
 
     public static AttributeSupplier.Builder createAttributes() {

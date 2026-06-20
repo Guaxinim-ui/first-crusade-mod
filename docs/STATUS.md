@@ -160,6 +160,12 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Conteúdo Ork — arma de elite Power Klaw**. `SwordItem` com `POWER_KLAW_TIER` forte
+  (900 usos, +5 dano, nível 4, conserta com Ork Teeth), golpe muito lento/devastador (speed -2.8).
+  **Warboss** (trocou o Iron Axe vanilla) e **Meganob** agora empunham a Power Klaw — elite Ork com
+  arma à altura. Registro completo: tier + item + creative tab + modelo + textura placeholder + lang
+  en/pt + receita cara (Blocos de Ferro + Bloco de Redstone + Dentes + Sucata). Build OK; 298 chaves.
+
 - 2026-06-20: **Conteúdo Ork — arma Shoota** (dakka). `ShootaItem` reusa o molde do Bolter: tiro
   **rápido** (cooldown 8t), **fraco** (dano 4) e **muito impreciso** (inaccuracy 6.0 — "Ork não
   mira"), **sem munição**, durabilidade baixa (220, quebra fácil). Item usável pelo jogador (sem
