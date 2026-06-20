@@ -166,7 +166,7 @@ public class CustodesEntity extends PathfinderMob {
         OrkRaidManager.notifyNearbyPlayers(
                 (net.minecraft.server.level.ServerLevel) this.level(),
                 this.commandCorePos,
-                "A Custodian Guard has fallen. The Emperor's vigil is diminished."
+                Component.translatable("msg.firstcrusade.bcast.custodes_fallen")
         );
     }
 

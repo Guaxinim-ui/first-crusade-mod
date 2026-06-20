@@ -1,6 +1,7 @@
 package com.example.examplemod;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.AABB;
 
@@ -84,7 +85,7 @@ public final class ImperialCustodesManager {
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel,
                 corePos,
-                "A Custodian Guard has answered the call and now stands vigil over the Command Core."
+                Component.translatable("msg.firstcrusade.bcast.custodes_risen")
         );
     }
 

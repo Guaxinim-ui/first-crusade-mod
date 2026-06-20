@@ -1,6 +1,7 @@
 package com.example.examplemod;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
@@ -52,7 +53,7 @@ public final class OrkCampManager {
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel,
                 corePos,
-                clan.getDisplayName() + " Orks have raised a camp nearby. It will grow into a threat."
+                Component.translatable("msg.firstcrusade.bcast.camp_raised", clan.getDisplayName())
         );
 
         return surface.immutable();

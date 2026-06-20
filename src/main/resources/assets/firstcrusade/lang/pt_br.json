@@ -326,5 +326,17 @@
   "msg.firstcrusade.bcast.victory_total": "Total de Vitórias contra Ataques Ork: %s",
   "msg.firstcrusade.bcast.defeat_overrun": "O Núcleo de Comando Imperial foi tomado! O assentamento sofreu grandes danos.",
   "msg.firstcrusade.bcast.defeat_lost": "Recursos perdidos: -%s Ferro, -%s Sucata, -%s Carvão.",
-  "msg.firstcrusade.bcast.defeat_restored": "Integridade do Núcleo restaurada ao nível de emergência: 25/100."
+  "msg.firstcrusade.bcast.defeat_restored": "Integridade do Núcleo restaurada ao nível de emergência: 25/100.",
+  "msg.firstcrusade.bcast.recruit_joined": "Um Recruta terminou o treino e juntou-se aos %ss da cidade. Soldados: %s/%s",
+  "msg.firstcrusade.bcast.sm_candidate": "Candidato a Space Marine selecionado: %s.",
+  "msg.firstcrusade.bcast.sm_candidate_moving": "O candidato está indo ao Núcleo de Comando Imperial para a ascensão.",
+  "msg.firstcrusade.bcast.gene_consumed": "Gene do Imperador consumido: 1. Restante: %s.",
+  "msg.firstcrusade.bcast.sm_cooldown": "Recarga até a próxima ascensão a Space Marine: %s segundos.",
+  "msg.firstcrusade.bcast.raid_already": "Já existe um ataque Ork ativo. Derrote os inimigos atuais primeiro.",
+  "msg.firstcrusade.bcast.custodes_fallen": "Um Guarda Custódio tombou. A vigília do Imperador está diminuída.",
+  "msg.firstcrusade.bcast.custodes_risen": "Um Guarda Custódio atendeu ao chamado e agora vigia o Núcleo de Comando.",
+  "msg.firstcrusade.bcast.primarch_fallen": "O Primarca tombou. A cidade mergulha no luto.",
+  "msg.firstcrusade.bcast.neophyte_begun": "Um Guardsman veterano começou suas provações como Neófito.",
+  "msg.firstcrusade.bcast.warboss_slain": "O Ork Warboss foi morto! O WAAAGH! vacila.",
+  "msg.firstcrusade.bcast.camp_raised": "Orks %s ergueram um acampamento por perto. Vai virar uma ameaça."
 }

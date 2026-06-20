@@ -169,6 +169,15 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **i18n — notificações broadcast COMPLETAS (fatias 3 e 4)**. Migrados todos os broadcasts
+  restantes para `Component.translatable`: ciclo de raid do Core (dano/ativo/dispersão/vitória+
+  recompensas/derrota+perdas), recruta juntou-se, candidato/ascensão Space Marine, gene consumido,
+  raid duplicado; e os de entidades/managers (Custodes surge/tomba, Primarca tomba, Neófito começa,
+  Warboss morto, camp Ork erguido). **0 `notifyNearbyPlayers`/`notifyDefenseCommand` com String
+  literal restante.** Chaves `msg.firstcrusade.bcast.*` (en/pt, **340 chaves**). **i18n do mod
+  essencialmente completa** (Core GUI+mensagens+broadcasts). Restam só strings cross-class passadas
+  como `%s` (nomes de rank/clã/especialista/ameaça/moral) e nomes custom de entidade. Build OK.
+
 - 2026-06-20: **i18n — notificações broadcast (fatia 1, anúncios narrativos)**. `OrkRaidManager.
   notifyNearbyPlayers` ganhou sobrecarga que aceita `Component` (a de `String` delega pra ela, então
   chamadores antigos seguem funcionando). Migrados para `Component.translatable` os anúncios mais

@@ -218,7 +218,7 @@ public class SpaceMarineUpgradeManager {
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel,
                 corePos,
-                "A veteran Guardsman has begun his trials as a Neophyte."
+                Component.translatable("msg.firstcrusade.bcast.neophyte_begun")
         );
     }
 

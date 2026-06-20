@@ -183,7 +183,7 @@ public class WarbossEntity extends PathfinderMob {
             OrkRaidManager.notifyNearbyPlayers(
                     serverLevel,
                     this.targetCorePos,
-                    "The Ork Warboss has been slain! The WAAAGH! falters."
+                    Component.translatable("msg.firstcrusade.bcast.warboss_slain")
             );
         }
     }

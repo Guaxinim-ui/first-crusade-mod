@@ -1165,8 +1165,7 @@ public boolean completeRecruitTraining(ServerLevel serverLevel, ImperialCitizenE
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "A Recruit completed training and joined the city's " + getFieldedUnitName() + "s. Soldiers: "
-                    + this.recruitedGuardsmen + "/" + getMilitaryCapacity()
+            Component.translatable("msg.firstcrusade.bcast.recruit_joined", getFieldedUnitName(), this.recruitedGuardsmen, getMilitaryCapacity())
     );
 
     return true;
@@ -1927,13 +1926,13 @@ private void processAutomaticSpaceMarinePromotion(ServerLevel serverLevel) {
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "Space Marine candidate selected: " + candidate.getGuardsmanRank().getDisplayName() + "."
+            Component.translatable("msg.firstcrusade.bcast.sm_candidate", candidate.getGuardsmanRank().getDisplayName())
     );
 
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "Candidate is moving to the Imperial Command Core for ascension."
+            Component.translatable("msg.firstcrusade.bcast.sm_candidate_moving")
     );
 }
 
@@ -1978,13 +1977,13 @@ private void continuePendingSpaceMarinePromotion(ServerLevel serverLevel) {
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "Gene of the Emperor consumed: 1. Remaining: " + this.emperorGeneSeed + "."
+            Component.translatable("msg.firstcrusade.bcast.gene_consumed", this.emperorGeneSeed)
     );
 
     OrkRaidManager.notifyNearbyPlayers(
             serverLevel,
             this.worldPosition,
-            "Next Space Marine ascension cooldown: " + (this.spaceMarinePromotionCooldownTicks / 20) + " seconds."
+            Component.translatable("msg.firstcrusade.bcast.sm_cooldown", this.spaceMarinePromotionCooldownTicks / 20)
     );
 }
 
@@ -2664,7 +2663,7 @@ private void spawnOrkRaid(ServerLevel serverLevel, long currentDay, boolean forc
             OrkRaidManager.notifyNearbyPlayers(
                     serverLevel,
                     this.worldPosition,
-                    "There is already an active Ork raid. Defeat the current enemies first."
+                    Component.translatable("msg.firstcrusade.bcast.raid_already")
             );
         }
 

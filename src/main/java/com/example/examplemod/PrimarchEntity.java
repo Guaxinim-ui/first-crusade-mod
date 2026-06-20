@@ -211,7 +211,7 @@ public class PrimarchEntity extends PathfinderMob {
             OrkRaidManager.notifyNearbyPlayers(
                     serverLevel,
                     this.commandCorePos,
-                    "The Primarch has fallen. The city is plunged into mourning."
+                    Component.translatable("msg.firstcrusade.bcast.primarch_fallen")
             );
         }
     }

@@ -326,5 +326,17 @@
   "msg.firstcrusade.bcast.victory_total": "Total Ork Raid Victories: %s",
   "msg.firstcrusade.bcast.defeat_overrun": "The Imperial Command Core was overrun! The settlement has suffered heavy damage.",
   "msg.firstcrusade.bcast.defeat_lost": "Lost resources: -%s Iron, -%s Scrap, -%s Coal.",
-  "msg.firstcrusade.bcast.defeat_restored": "Core Integrity restored to emergency level: 25/100."
+  "msg.firstcrusade.bcast.defeat_restored": "Core Integrity restored to emergency level: 25/100.",
+  "msg.firstcrusade.bcast.recruit_joined": "A Recruit completed training and joined the city's %ss. Soldiers: %s/%s",
+  "msg.firstcrusade.bcast.sm_candidate": "Space Marine candidate selected: %s.",
+  "msg.firstcrusade.bcast.sm_candidate_moving": "Candidate is moving to the Imperial Command Core for ascension.",
+  "msg.firstcrusade.bcast.gene_consumed": "Gene of the Emperor consumed: 1. Remaining: %s.",
+  "msg.firstcrusade.bcast.sm_cooldown": "Next Space Marine ascension cooldown: %s seconds.",
+  "msg.firstcrusade.bcast.raid_already": "There is already an active Ork raid. Defeat the current enemies first.",
+  "msg.firstcrusade.bcast.custodes_fallen": "A Custodian Guard has fallen. The Emperor's vigil is diminished.",
+  "msg.firstcrusade.bcast.custodes_risen": "A Custodian Guard has answered the call and now stands vigil over the Command Core.",
+  "msg.firstcrusade.bcast.primarch_fallen": "The Primarch has fallen. The city is plunged into mourning.",
+  "msg.firstcrusade.bcast.neophyte_begun": "A veteran Guardsman has begun his trials as a Neophyte.",
+  "msg.firstcrusade.bcast.warboss_slain": "The Ork Warboss has been slain! The WAAAGH! falters.",
+  "msg.firstcrusade.bcast.camp_raised": "%s Orks have raised a camp nearby. It will grow into a threat."
 }
