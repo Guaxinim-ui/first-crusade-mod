@@ -169,6 +169,13 @@ Dono faz as texturas. Compilar offline (ver §2) e commitar/push a cada slice.
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **Planeta (B) FUNCIONANDO** ✅ (confirmado em jogo pelo dono). Overworld embutido no mod:
+  **plano** (superfície ~y51), **baixo** (height 96), **sem cavernas**, biomas variados por
+  continentalidade/erosão (temp/veg constantes), **worldborder 5000** ativo, **Nether/End selados**,
+  vilas off via "Gerar Estruturas OFF" na criação. Mundo novo Default + estruturas off = planeta.
+  Próximos: ondulações leves no terreno, superfícies por bioma (areia/etc.), geração de assentamentos
+  no worldgen, e (grande) planetas como dimensões + viagem (Spaceport).
+
 - 2026-06-20: **Planeta (B) v3 — worldgen EMBUTIDO no mod** (datapack externo removido). Movido o
   override de `data/minecraft/{dimension_type/overworld, worldgen/noise_settings/overworld,
   worldgen/configured_carver/*}` para `src/main/resources` → agora vai no jar (parte do "main"). O
