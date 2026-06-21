@@ -248,6 +248,13 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-21: **Planeta Nether — lava mais alta + pouso seco do Spaceport**. Dono confirmou o planeta
+  vermelho/lava em jogo. Ajustes: (1) `sea_level` da lava 50→**54** (mais mares de lava; tunável se
+  inundar demais). (2) `SpaceportBlock.findDryLanding`: ao chegar, **busca em espiral (até 48 blocos)
+  uma superfície SECA** (sem lava na superfície/abaixo) e constrói o pad + Spaceport de retorno lá —
+  evita pousar/afundar na lava e garante o Spaceport **na superfície**. Build/jar OK; JSON valida; não
+  testado. (Se com 54 inundar muito, baixar pra 52.)
+
 - 2026-06-21: **C6 #2 — planeta-dimensão DISTINTO (estilo Nether) + receita Spaceport + assentamentos**.
   `planet_secundus` deixou de clonar o overworld: agora é um **mundo infernal**. **noise_settings próprio**
   (`firstcrusade:planet_secundus`): `default_block` **netherrack**, `default_fluid` **lava** (mares de

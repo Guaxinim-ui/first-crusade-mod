@@ -55,7 +55,7 @@ public class SpaceportBlock extends Block {
 
         int x = player.blockPosition().getX();
         int z = player.blockPosition().getZ();
-        BlockPos landing = WorldGenPlacement.groundPlacement(destination, x, z);
+        BlockPos landing = findDryLanding(destination, x, z);
 
         buildLandingPad(destination, landing);
 
@@ -66,6 +66,33 @@ public class SpaceportBlock extends Block {
 
         player.teleportTo(destination, x + 0.5D, landing.getY(), z + 0.5D, player.getYRot(), player.getXRot());
         player.displayClientMessage(Component.translatable("msg.firstcrusade.spaceport.arrived"), true);
+    }
+
+    // Finds a dry surface spot near (x,z) so the pad and Spaceport land on solid ground, not under a
+    // lava sea. Spirals outward; falls back to the raw surface if nowhere dry is found nearby.
+    private BlockPos findDryLanding(ServerLevel level, int x, int z) {
+        for (int r = 0; r <= 48; r += 4) {
+            int steps = r == 0 ? 1 : 8;
+            for (int a = 0; a < steps; a++) {
+                double ang = 2.0D * Math.PI * a / steps;
+                int px = x + (int) Math.round(Math.cos(ang) * r);
+                int pz = z + (int) Math.round(Math.sin(ang) * r);
+                BlockPos surface = WorldGenPlacement.groundPlacement(level, px, pz);
+
+                if (isDryLanding(level, surface)) {
+                    return surface;
+                }
+            }
+        }
+        return WorldGenPlacement.groundPlacement(level, x, z);
+    }
+
+    private boolean isDryLanding(ServerLevel level, BlockPos surface) {
+        if (!level.getFluidState(surface).isEmpty() || !level.getBlockState(surface).isAir()) {
+            return false;
+        }
+        BlockPos ground = surface.below();
+        return level.getBlockState(ground).getFluidState().isEmpty() && !level.getBlockState(ground).isAir();
     }
 
     private static final int PAD_RADIUS = 3;
