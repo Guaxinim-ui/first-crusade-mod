@@ -2,10 +2,10 @@
   "type": "firstcrusade:planet_secundus",
   "generator": {
     "type": "minecraft:noise",
-    "settings": "minecraft:overworld",
+    "settings": "firstcrusade:planet_secundus",
     "biome_source": {
-      "type": "minecraft:multi_noise",
-      "preset": "minecraft:overworld"
+      "type": "minecraft:fixed",
+      "biome": "minecraft:nether_wastes"
     }
   }
 }

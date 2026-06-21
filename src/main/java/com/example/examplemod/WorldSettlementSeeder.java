@@ -32,7 +32,7 @@ public final class WorldSettlementSeeder {
     private WorldSettlementSeeder() {
     }
 
-    // Plants the starting settlements around spawn the first time it is called for a world.
+    // Plants the starting settlements around spawn the first time anyone joins the world.
     public static void seedAroundSpawn(ServerLevel overworld) {
         WorldSettlementData data = WorldSettlementData.get(overworld);
         if (data.isSeeded()) {
@@ -41,29 +41,44 @@ public final class WorldSettlementSeeder {
         // Mark first so a mid-way failure never re-runs (and double-populates) on the next login.
         data.markSeeded();
 
-        RandomSource rng = overworld.random;
-        BlockPos spawn = overworld.getSharedSpawnPos();
+        seedRing(overworld, overworld.getSharedSpawnPos());
+    }
+
+    // Populates the planet dimension the first time a traveller lands there (around their landing).
+    public static void seedPlanet(ServerLevel planet, BlockPos center) {
+        WorldSettlementData data = WorldSettlementData.get(planet);
+        if (data.isPlanetSeeded()) {
+            return;
+        }
+        data.markPlanetSeeded();
+
+        seedRing(planet, center);
+    }
+
+    // Scatters CITY_COUNT autonomous cities and CAMP_COUNT Ork camps in a ring around a centre.
+    private static void seedRing(ServerLevel level, BlockPos center) {
+        RandomSource rng = level.random;
 
         List<BlockPos> placed = new ArrayList<>();
         List<BlockPos> cities = new ArrayList<>();
 
         for (int i = 0; i < CITY_COUNT; i++) {
-            BlockPos spot = findSurfaceSpot(overworld, spawn, placed, rng);
+            BlockPos spot = findSurfaceSpot(level, center, placed, rng);
             if (spot == null) {
                 continue;
             }
-            foundCity(overworld, spot);
+            foundCity(level, spot);
             placed.add(spot);
             cities.add(spot);
         }
 
         for (int i = 0; i < CAMP_COUNT; i++) {
-            BlockPos spot = findSurfaceSpot(overworld, spawn, placed, rng);
+            BlockPos spot = findSurfaceSpot(level, center, placed, rng);
             if (spot == null) {
                 continue;
             }
-            BlockPos target = nearestCity(cities, spot, spawn);
-            BlockPos camp = OrkCampManager.seedWorldCamp(overworld, spot, target);
+            BlockPos target = nearestCity(cities, spot, center);
+            BlockPos camp = OrkCampManager.seedWorldCamp(level, spot, target);
             placed.add(camp != null ? camp : spot);
         }
     }

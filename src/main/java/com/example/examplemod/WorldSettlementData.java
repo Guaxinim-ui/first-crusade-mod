@@ -13,6 +13,7 @@ public class WorldSettlementData extends SavedData {
     private static final String NAME = "firstcrusade_settlements";
 
     private boolean seeded = false;
+    private boolean planetSeeded = false;
 
     public WorldSettlementData() {
     }
@@ -25,12 +26,14 @@ public class WorldSettlementData extends SavedData {
     public static WorldSettlementData load(CompoundTag tag) {
         WorldSettlementData data = new WorldSettlementData();
         data.seeded = tag.getBoolean("Seeded");
+        data.planetSeeded = tag.getBoolean("PlanetSeeded");
         return data;
     }
 
     @Override
     public CompoundTag save(CompoundTag tag) {
         tag.putBoolean("Seeded", this.seeded);
+        tag.putBoolean("PlanetSeeded", this.planetSeeded);
         return tag;
     }
 
@@ -40,6 +43,15 @@ public class WorldSettlementData extends SavedData {
 
     public void markSeeded() {
         this.seeded = true;
+        setDirty();
+    }
+
+    public boolean isPlanetSeeded() {
+        return this.planetSeeded;
+    }
+
+    public void markPlanetSeeded() {
+        this.planetSeeded = true;
         setDirty();
     }
 }

@@ -248,6 +248,17 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-21: **C6 #2 — planeta-dimensão DISTINTO (estilo Nether) + receita Spaceport + assentamentos**.
+  `planet_secundus` deixou de clonar o overworld: agora é um **mundo infernal**. **noise_settings próprio**
+  (`firstcrusade:planet_secundus`): `default_block` **netherrack**, `default_fluid` **lava** (mares de
+  lava no sea_level 50), superfície netherrack (densidade reusa a do overworld). **dimension_type**:
+  `effects` the_nether (céu/névoa vermelha), `has_skylight` false, `ultrawarm` true, `bed_works` false,
+  infiniburn nether. **dimension**: biome_source fixed **nether_wastes**. **Receita** do Spaceport
+  (`recipes/spaceport.json`: 4 Placa Crusadium + 4 Bloco de Ferro + 1 Pérola do Ender). **Assentamentos
+  no planeta**: `WorldSettlementSeeder` refatorado (`seedRing` genérico + `seedPlanet` com flag
+  `planetSeeded` em `WorldSettlementData`); `SpaceportBlock.travel` semeia o planeta na **1ª chegada**
+  (vilas+camps ao redor do pouso). Build/jar OK; JSON valida; **NÃO testado** (mundo NOVO; teto 256).
+
 - 2026-06-21: **Cidades viraram vilas simples (estilo aldeia MC) p/ testar os sistemas**. Dono: a hive
   gigante ficou ruim/pesada pra testar; vai mandar um modelo de cidade depois. Por hora `buildAutonomousVillage`
   e `autonomousUpgrade` chamam o novo **`buildSimpleSettlement`** (anel de 8 casas de madeira leves —

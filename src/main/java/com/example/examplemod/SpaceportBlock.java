@@ -59,6 +59,11 @@ public class SpaceportBlock extends Block {
 
         buildLandingPad(destination, landing);
 
+        // The first time anyone reaches the planet, populate it with settlements around the landing.
+        if (destinationKey == ExampleMod.PLANET_SECUNDUS) {
+            WorldSettlementSeeder.seedPlanet(destination, landing);
+        }
+
         player.teleportTo(destination, x + 0.5D, landing.getY(), z + 0.5D, player.getYRot(), player.getXRot());
         player.displayClientMessage(Component.translatable("msg.firstcrusade.spaceport.arrived"), true);
     }
