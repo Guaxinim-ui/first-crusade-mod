@@ -426,6 +426,46 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
 
         autonomousRecruit(serverLevel);
         autonomousUpgrade(serverLevel);
+        autonomousOffensive(serverLevel);
+    }
+
+    private static final int OFFENSIVE_MIN_TROOPS = 6;
+    private static final int OFFENSIVE_CHANCE = 6;
+
+    // A strong autonomous city takes the war to the Orks: it musters half its garrison and marches
+    // them on the nearby Ork camp. The troops fight on arrival; once they overwhelm the defenders the
+    // camp is razed (see OrkCampBlockEntity.checkOverrun).
+    private void autonomousOffensive(ServerLevel serverLevel) {
+        if (this.orkCampPos == null || !OrkCampManager.isCampStillThere(serverLevel, this.orkCampPos)) {
+            return;
+        }
+        if (serverLevel.random.nextInt(OFFENSIVE_CHANCE) != 0) {
+            return;
+        }
+
+        int radius = getTerritoryRadius();
+        AABB box = new AABB(
+                this.worldPosition.getX() - radius, this.worldPosition.getY() - 32, this.worldPosition.getZ() - radius,
+                this.worldPosition.getX() + radius, this.worldPosition.getY() + 48, this.worldPosition.getZ() + radius);
+
+        List<net.minecraft.world.entity.PathfinderMob> troops = serverLevel.getEntitiesOfClass(
+                net.minecraft.world.entity.PathfinderMob.class, box,
+                mob -> mob.isAlive()
+                        && !(mob instanceof ImperialCitizenEntity)
+                        && FirstCrusadeFactionManager.getFaction(mob) == FirstCrusadeFaction.IMPERIUM);
+
+        if (troops.size() < OFFENSIVE_MIN_TROOPS) {
+            return;
+        }
+
+        int dispatch = troops.size() / 2;
+        for (int i = 0; i < dispatch; i++) {
+            troops.get(i).getNavigation().moveTo(
+                    this.orkCampPos.getX() + 0.5D, this.orkCampPos.getY(), this.orkCampPos.getZ() + 0.5D, 1.0D);
+        }
+
+        OrkRaidManager.notifyNearbyPlayers(
+                serverLevel, this.worldPosition, Component.translatable("msg.firstcrusade.bcast.expedition"));
     }
 
     // Refill the garrison toward the city's military capacity, paying iron and ramping up gradually.

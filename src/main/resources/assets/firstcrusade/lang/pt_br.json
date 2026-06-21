@@ -342,6 +342,8 @@
   "msg.firstcrusade.bcast.city_grew": "Uma cidade Imperial cresceu para o nível %s.",
   "msg.firstcrusade.bcast.implant": "Um aspirante recebe o implante de gene-seed %s de %s.",
   "msg.firstcrusade.bcast.neophyte_made": "Um aspirante tornou-se Neófito. Agora precisa provar-se em batalha.",
+  "msg.firstcrusade.bcast.expedition": "Uma expedição Imperial marcha sobre o acampamento Ork!",
+  "msg.firstcrusade.bcast.camp_razed_imperial": "Uma força Imperial dominou e arrasou um acampamento Ork!",
   "block.firstcrusade.spaceport": "Spaceport",
   "msg.firstcrusade.spaceport.arrived": "Translação completa. Bem-vindo ao destino.",
   "msg.firstcrusade.spaceport.no_dest": "A warp está fechada: este mundo não pode ser alcançado."

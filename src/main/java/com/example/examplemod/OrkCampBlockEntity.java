@@ -79,6 +79,11 @@ public class OrkCampBlockEntity extends BlockEntity {
 
         camp.tickCounter = 0;
 
+        // If an Imperial force has overrun the camp and broken its garrison, the camp is razed.
+        if (camp.checkOverrun(serverLevel, pos)) {
+            return;
+        }
+
         camp.maintainGarrison(serverLevel, pos);
         camp.buildWaaagh(serverLevel, pos);
         camp.trySpreadWaaagh(serverLevel, pos);
@@ -251,6 +256,36 @@ public class OrkCampBlockEntity extends BlockEntity {
                 this.targetCorePos,
                 Component.translatable("msg.firstcrusade.bcast.warboss_risen", this.clan.getDisplayName())
         );
+    }
+
+    private static final int OVERRUN_MIN_IMPERIALS = 3;
+
+    // True (and razes the camp) when enough Imperial troops have gathered and outnumber the Orks
+    // still defending it — the moment a sortie or expedition takes the camp.
+    private boolean checkOverrun(ServerLevel serverLevel, BlockPos pos) {
+        int imperials = countFaction(serverLevel, pos, FirstCrusadeFaction.IMPERIUM);
+
+        if (imperials < OVERRUN_MIN_IMPERIALS) {
+            return false;
+        }
+
+        int orks = countFaction(serverLevel, pos, FirstCrusadeFaction.ORKS);
+        if (imperials <= orks + 1) {
+            return false;
+        }
+
+        serverLevel.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
+        OrkRaidManager.notifyNearbyPlayers(
+                serverLevel, pos, Component.translatable("msg.firstcrusade.bcast.camp_razed_imperial"));
+        return true;
+    }
+
+    private int countFaction(ServerLevel serverLevel, BlockPos pos, FirstCrusadeFaction faction) {
+        return serverLevel.getEntitiesOfClass(
+                net.minecraft.world.entity.LivingEntity.class,
+                garrisonBox(pos),
+                e -> e.isAlive() && FirstCrusadeFactionManager.getFaction(e) == faction
+        ).size();
     }
 
     private int countCampOrks(ServerLevel serverLevel, BlockPos pos) {

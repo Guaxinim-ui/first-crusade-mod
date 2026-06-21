@@ -248,6 +248,16 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-21: **Guerra autônoma — camps destrutíveis + cidades despacham expedições**. Fecha o loop da
+  guerra sem o jogador. (1) `OrkCampBlockEntity.checkOverrun` (no serverTick): conta facções na
+  `garrisonBox`; se **Imperiais ≥3 e superam os Orks**, o camp é **arrasado** (bloco→ar, broadcast
+  `camp_razed_imperial`) — agora o lado Imperial pode tomar território (antes camp era imortal).
+  (2) `ImperialCommandCoreBlockEntity.autonomousOffensive` (em `tickAutonomousGovernance`, só cidades
+  sem dono): se há camp conhecido (`orkCampPos`) e a guarnição é forte (≥6), **mobiliza metade das
+  tropas** e marcha sobre o camp (`getNavigation().moveTo`), broadcast `expedition`; combate via target
+  goals na chegada → overrun → camp arrasado. Camps atacam cidades (já existia) × cidades atacam camps
+  (novo) = fronteira viva. Build/jar OK; lang 348/348; não testado.
+
 - 2026-06-21: **Corrupção Ork mais profunda — afeta unidades + cidades purificam**. A praga sculk ficou
   dinâmica/contestada: (1) `ExampleMod.onLivingTick` (`LivingTickEvent`, a cada 40 ticks/unidade):
   quem está **sobre SCULK** sofre efeito por facção — **Imperium = Lentidão**, **Orks = Regeneração**
