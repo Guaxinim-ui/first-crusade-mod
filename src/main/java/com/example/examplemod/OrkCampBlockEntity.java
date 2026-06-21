@@ -91,6 +91,8 @@ public class OrkCampBlockEntity extends BlockEntity {
         // The camp scabs the land around it with sculk; its reach grows with the WAAAGH! tier.
         int tier = WaaaghOverlordManager.getTier(serverLevel);
         camp.corruptionRadius = OrkCorruptionManager.spreadFromCamp(serverLevel, pos, tier, camp.corruptionRadius);
+        // The plague also creeps outward on its own, block by block, beyond that halo.
+        OrkCorruptionManager.creepSpread(serverLevel, pos, camp.corruptionRadius + 6, 10);
         camp.setChanged();
     }
 

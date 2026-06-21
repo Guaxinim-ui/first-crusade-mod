@@ -44,6 +44,58 @@ public final class OrkCorruptionManager {
         return radius;
     }
 
+    // The plague creeps on its own: corrupts a few blocks that border existing sculk, so patches
+    // grow outward edge by edge (not just within the camp's radius).
+    public static void creepSpread(ServerLevel level, BlockPos campPos, int radius, int attempts) {
+        RandomSource rng = level.random;
+
+        for (int i = 0; i < attempts; i++) {
+            int dx = rng.nextInt(radius * 2 + 1) - radius;
+            int dz = rng.nextInt(radius * 2 + 1) - radius;
+
+            if (dx * dx + dz * dz > radius * radius) {
+                continue;
+            }
+
+            BlockPos ground = WorldGenPlacement.groundPlacement(level, campPos.getX() + dx, campPos.getZ() + dz).below();
+            BlockState state = level.getBlockState(ground);
+
+            if (state.is(Blocks.SCULK) || !isCorruptible(state)) {
+                continue;
+            }
+
+            if (hasSculkNeighbour(level, ground)) {
+                level.setBlock(ground, Blocks.SCULK.defaultBlockState(), 3);
+            }
+        }
+    }
+
+    private static boolean hasSculkNeighbour(ServerLevel level, BlockPos ground) {
+        return level.getBlockState(ground.north()).is(Blocks.SCULK)
+                || level.getBlockState(ground.south()).is(Blocks.SCULK)
+                || level.getBlockState(ground.east()).is(Blocks.SCULK)
+                || level.getBlockState(ground.west()).is(Blocks.SCULK);
+    }
+
+    // How much corruption within a city's territory drags down its production: 1.0 (clean) down to
+    // 0.4 (overrun). Sampled cheaply (called once per in-game day).
+    public static double productionMultiplier(ServerLevel level, BlockPos center, int radius) {
+        int samples = 12;
+        int corrupted = 0;
+        RandomSource rng = level.random;
+
+        for (int i = 0; i < samples; i++) {
+            int dx = rng.nextInt(radius * 2 + 1) - radius;
+            int dz = rng.nextInt(radius * 2 + 1) - radius;
+            BlockPos ground = WorldGenPlacement.groundPlacement(level, center.getX() + dx, center.getZ() + dz).below();
+            if (level.getBlockState(ground).is(Blocks.SCULK)) {
+                corrupted++;
+            }
+        }
+
+        return Math.max(0.4D, 1.0D - (corrupted / (double) samples) * 0.6D);
+    }
+
     // The Imperium pushes back: an active city cleanses sculk back into living ground within its
     // territory, so the frontier between corruption and the Imperium shifts with the war.
     public static void purifyAround(ServerLevel level, BlockPos center, int radius, int count) {

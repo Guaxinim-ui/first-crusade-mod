@@ -1030,6 +1030,8 @@ public void onLivingTick(net.minecraftforge.event.entity.living.LivingEvent.Livi
     if (faction == FirstCrusadeFaction.IMPERIUM) {
         entity.addEffect(new net.minecraft.world.effect.MobEffectInstance(
                 net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 60, 0, false, false));
+        // The corruption is caustic to the Imperium — it slowly eats at anyone who lingers on it.
+        entity.hurt(entity.damageSources().magic(), 1.0F);
     } else if (faction == FirstCrusadeFaction.ORKS) {
         entity.addEffect(new net.minecraft.world.effect.MobEffectInstance(
                 net.minecraft.world.effect.MobEffects.REGENERATION, 60, 0, false, false));

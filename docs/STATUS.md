@@ -248,6 +248,14 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-21: **Corrupção v3 — creep bloco-a-bloco + dano + atrapalha produção**. (1) **Creep:**
+  `OrkCorruptionManager.creepSpread` (no tick do camp, raio+6, 10 tentativas) corrompe blocos que
+  **fazem fronteira com sculk existente** → a praga cresce borda a borda, não só pelo halo do camp.
+  (2) **Dano:** no `onLivingTick`, unidade Imperium sobre sculk leva **1 de dano** (magic) além da
+  lentidão (corrosivo). (3) **Produção:** `productionMultiplier` (amostra 12 pontos no território)
+  reduz a produção diária da cidade até **-60%** conforme a corrupção dentro do território
+  (`produceResourcesIfNewDay`). Build/jar OK; não testado. Tunável (atenção/chance/dano/penalidade).
+
 - 2026-06-21: **Planeta Nether — lava mais alta + pouso seco do Spaceport**. Dono confirmou o planeta
   vermelho/lava em jogo. Ajustes: (1) `sea_level` da lava 50→**54** (mais mares de lava; tunável se
   inundar demais). (2) `SpaceportBlock.findDryLanding`: ao chegar, **busca em espiral (até 48 blocos)

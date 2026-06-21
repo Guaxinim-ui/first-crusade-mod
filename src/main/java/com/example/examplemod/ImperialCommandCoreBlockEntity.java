@@ -730,6 +730,14 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
         scrapProduction = type.applyProductionFocus(ImperialResourceType.SCRAP, scrapProduction);
         coalProduction = type.applyProductionFocus(ImperialResourceType.COAL, coalProduction);
 
+        // Ork corruption within the city's territory chokes its industry.
+        if (level instanceof ServerLevel serverLevel) {
+            double corruptionMultiplier = OrkCorruptionManager.productionMultiplier(serverLevel, this.worldPosition, getTerritoryRadius());
+            ironProduction = (int) Math.round(ironProduction * corruptionMultiplier);
+            scrapProduction = (int) Math.round(scrapProduction * corruptionMultiplier);
+            coalProduction = (int) Math.round(coalProduction * corruptionMultiplier);
+        }
+
         addIron((int) daysPassed * ironProduction);
 addScrapMetal((int) daysPassed * scrapProduction);
 addCoal((int) daysPassed * coalProduction);
