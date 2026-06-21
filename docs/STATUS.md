@@ -248,6 +248,16 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-21: **Fase D7 — Mesa de Guerra (minimapa tático estilo Age of Empires)**. Nova aba **War** no
+  Core: minimapa centrado na cidade (anel de território azul) com **blips** — azul = unidades imperiais,
+  vermelho = Orks, vermelho-escuro grande = camp Ork; + coluna de status (domínio, ameaça, tier Cruzada/
+  WAAAGH!, território) e uma **barra de domínio** Imperium(azul)×WAAAGH!(verde) no rodapé. Dados: o Core
+  cacheia `computeWarTable` (scan de LivingEntity num raio 96 + camp conhecido, até 8 blips) em
+  `recomputeMenuStats` (só com menu aberto); sincronizado via ContainerData (DATA_COUNT 58→**85**: 58
+  domínio, 59 WAAAGH! tier, 60 contagem, 61..84 = 8 blips dx/dz/kind). Abas reduzidas (48px/51) p/ caber
+  6. `WarDominionData.getDominion` lido server-side. Build/jar OK; lang 354/354. **GUI não testada em
+  jogo** — pedir screenshot.
+
 - 2026-06-21: **Vitória global — placar de domínio do planeta (Imperium × WAAAGH!)**. Novo
   `WarDominionData` (SavedData, score −100..100 + `announcedSide`) + `WarDominionManager.shift`: eventos
   da guerra nudge o placar — camp arrasado **+6**, war party **−2**, tier-up da Cruzada **+10**, tier-up

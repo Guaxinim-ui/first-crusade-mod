@@ -16,13 +16,18 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
     private static final int TAB_MILITARY = 2;
     private static final int TAB_DEFENSE = 3;
     private static final int TAB_RESOURCES = 4;
+    private static final int TAB_WAR = 5;
+
+    // World range (blocks) the tactical minimap covers from the city centre.
+    private static final int WAR_MAP_RANGE = 96;
 
     private static final String[] TAB_KEYS = {
             "gui.firstcrusade.tab.city",
             "gui.firstcrusade.tab.build",
             "gui.firstcrusade.tab.military",
             "gui.firstcrusade.tab.defense",
-            "gui.firstcrusade.tab.resources"
+            "gui.firstcrusade.tab.resources",
+            "gui.firstcrusade.tab.war"
     };
 
     private int activeTab = TAB_CITY;
@@ -77,6 +82,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
             case TAB_MILITARY -> initMilitaryTab();
             case TAB_DEFENSE -> initDefenseTab();
             case TAB_RESOURCES -> initResourcesTab();
+            case TAB_WAR -> { /* the War Table has no buttons, only the map */ }
             default -> initCityTab();
         }
 
@@ -113,11 +119,11 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
     private void addTabButtons() {
         int tabY = this.topPos + 20;
-        int tabWidth = 59;
+        int tabWidth = 48;
 
         for (int i = 0; i < TAB_KEYS.length; i++) {
             int index = i;
-            int tabX = this.leftPos + 8 + i * 61;
+            int tabX = this.leftPos + 8 + i * 51;
 
             Button tab = this.addRenderableWidget(
                     Button.builder(
@@ -440,8 +446,82 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
             case TAB_MILITARY -> renderMilitaryInfo(guiGraphics);
             case TAB_DEFENSE -> renderDefenseInfo(guiGraphics);
             case TAB_RESOURCES -> renderResourcesInfo(guiGraphics);
+            case TAB_WAR -> renderWarInfo(guiGraphics);
             default -> renderCityInfo(guiGraphics);
         }
+    }
+
+    // The War Table: a left status column plus an Age-of-Empires-style tactical minimap and a
+    // dominion bar on the right (city centred; blue = Imperial units, red = Orks/camp).
+    private void renderWarInfo(GuiGraphics g) {
+        int y = 46;
+        drawHeader(g, "gui.firstcrusade.tab.war", 12, y, 0xFFFFD27D);
+        y += 13;
+        drawLine(g, Component.translatable("gui.firstcrusade.war.dominion", this.menu.getWarDominion()), 12, y, dominionColor());
+        y += 11;
+        drawLine(g, Component.translatable("gui.firstcrusade.info.threat", getThreatText()), 12, y, getThreatColor());
+        y += 11;
+        drawLine(g, Component.translatable("gui.firstcrusade.info.crusade", this.menu.getCrusadeTier()), 12, y, 0xFFD6B85A);
+        y += 11;
+        drawLine(g, Component.translatable("gui.firstcrusade.war.waaagh", this.menu.getWaaaghTier()), 12, y, 0xFF7CCB5A);
+        y += 11;
+        drawLine(g, Component.translatable("gui.firstcrusade.info.territory", this.menu.getTerritoryRadius()), 12, y, 0xFF9AD0FF);
+
+        int mx0 = 158;
+        int my0 = 46;
+        int size = 148;
+        int mx1 = mx0 + size;
+        int my1 = my0 + size;
+        int cx = mx0 + size / 2;
+        int cy = my0 + size / 2;
+        int half = size / 2 - 2;
+
+        g.fill(mx0, my0, mx1, my1, 0xFF0E140E);
+        g.fill(mx0, my0, mx1, my0 + 1, 0xFF3A2A12);
+        g.fill(mx0, my1 - 1, mx1, my1, 0xFF3A2A12);
+        g.fill(mx0, my0, mx0 + 1, my1, 0xFF3A2A12);
+        g.fill(mx1 - 1, my0, mx1, my1, 0xFF3A2A12);
+
+        int rPix = Math.min(half, this.menu.getTerritoryRadius() * half / WAR_MAP_RANGE);
+        drawCircle(g, cx, cy, rPix, 0x553A7AFF);
+
+        for (int i = 0; i < this.menu.getBlipCount(); i++) {
+            int px = cx + this.menu.getBlipDx(i) * half / WAR_MAP_RANGE;
+            int pz = cy + this.menu.getBlipDz(i) * half / WAR_MAP_RANGE;
+            switch (this.menu.getBlipKind(i)) {
+                case 3 -> g.fill(px - 2, pz - 2, px + 3, pz + 3, 0xFFCC1111);
+                case 2 -> g.fill(px - 1, pz - 1, px + 2, pz + 2, 0xFFFF5555);
+                default -> g.fill(px - 1, pz - 1, px + 2, pz + 2, 0xFF55AAFF);
+            }
+        }
+
+        g.fill(cx - 2, cy - 2, cx + 3, cy + 3, 0xFFFFFFFF);
+        g.fill(cx - 1, cy - 1, cx + 2, cy + 2, 0xFF3A7AFF);
+
+        int by0 = my1 + 4;
+        int by1 = by0 + 8;
+        g.fill(mx0, by0, mx1, by1, 0xFF202020);
+        int split = mx0 + (this.menu.getWarDominion() + 100) * size / 200;
+        g.fill(mx0, by0, split, by1, 0xFF3A7AFF);
+        g.fill(split, by0, mx1, by1, 0xFF4CA02C);
+        g.fill(split - 1, by0 - 1, split + 1, by1 + 1, 0xFFFFFFFF);
+    }
+
+    private void drawCircle(GuiGraphics g, int cx, int cy, int r, int color) {
+        if (r <= 0) {
+            return;
+        }
+        for (int a = 0; a < 360; a += 8) {
+            double rad = Math.toRadians(a);
+            int px = cx + (int) Math.round(Math.cos(rad) * r);
+            int py = cy + (int) Math.round(Math.sin(rad) * r);
+            g.fill(px, py, px + 1, py + 1, color);
+        }
+    }
+
+    private int dominionColor() {
+        int d = this.menu.getWarDominion();
+        return d >= 15 ? 0xFF6699FF : (d <= -15 ? 0xFF7CCB5A : 0xFFCCCCCC);
     }
 
     private void renderCityInfo(GuiGraphics guiGraphics) {

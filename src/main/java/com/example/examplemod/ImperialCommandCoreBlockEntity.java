@@ -592,6 +592,76 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
     // Recomputes the cached counts read by the Core GUI. Called a few times per second from
     // serverTick while the menu is open, so the menu never triggers these block/entity scans on
     // its own polling.
+    // --- War Table (tactical minimap) cached data ---
+    private static final int WAR_MAP_RANGE = 96;
+    private final int[] statBlipDx = new int[8];
+    private final int[] statBlipDz = new int[8];
+    private final int[] statBlipKind = new int[8]; // 1 friendly unit, 2 enemy unit, 3 enemy camp
+    private int statBlipCount;
+    private int statWarDominion;
+    private int statWaaaghTier;
+
+    // Scans the area for friendly/enemy blips and reads the global war balance, for the War Table.
+    private void computeWarTable(ServerLevel serverLevel) {
+        this.statWarDominion = WarDominionData.get(serverLevel).getDominion();
+        this.statWaaaghTier = WaaaghOverlordManager.getTier(serverLevel);
+        this.statBlipCount = 0;
+
+        if (this.orkCampPos != null
+                && Math.abs(this.orkCampPos.getX() - this.worldPosition.getX()) <= WAR_MAP_RANGE
+                && Math.abs(this.orkCampPos.getZ() - this.worldPosition.getZ()) <= WAR_MAP_RANGE) {
+            addBlip(this.orkCampPos.getX() - this.worldPosition.getX(), this.orkCampPos.getZ() - this.worldPosition.getZ(), 3);
+        }
+
+        AABB box = new AABB(this.worldPosition).inflate(WAR_MAP_RANGE);
+        for (net.minecraft.world.entity.LivingEntity entity :
+                serverLevel.getEntitiesOfClass(net.minecraft.world.entity.LivingEntity.class, box, e -> e.isAlive())) {
+            if (this.statBlipCount >= this.statBlipKind.length) {
+                break;
+            }
+            FirstCrusadeFaction faction = FirstCrusadeFactionManager.getFaction(entity);
+            int kind = faction == FirstCrusadeFaction.IMPERIUM ? 1 : (faction == FirstCrusadeFaction.ORKS ? 2 : 0);
+            if (kind == 0) {
+                continue;
+            }
+            addBlip((int) (entity.getX() - this.worldPosition.getX()), (int) (entity.getZ() - this.worldPosition.getZ()), kind);
+        }
+    }
+
+    private void addBlip(int dx, int dz, int kind) {
+        if (this.statBlipCount >= this.statBlipKind.length) {
+            return;
+        }
+        int i = this.statBlipCount++;
+        this.statBlipDx[i] = Math.max(-WAR_MAP_RANGE, Math.min(WAR_MAP_RANGE, dx));
+        this.statBlipDz[i] = Math.max(-WAR_MAP_RANGE, Math.min(WAR_MAP_RANGE, dz));
+        this.statBlipKind[i] = kind;
+    }
+
+    public int getWarDominionGui() {
+        return this.statWarDominion;
+    }
+
+    public int getWaaaghTierGui() {
+        return this.statWaaaghTier;
+    }
+
+    public int getBlipCount() {
+        return this.statBlipCount;
+    }
+
+    public int getBlipDx(int i) {
+        return i >= 0 && i < this.statBlipDx.length ? this.statBlipDx[i] : 0;
+    }
+
+    public int getBlipDz(int i) {
+        return i >= 0 && i < this.statBlipDz.length ? this.statBlipDz[i] : 0;
+    }
+
+    public int getBlipKind(int i) {
+        return i >= 0 && i < this.statBlipKind.length ? this.statBlipKind[i] : 0;
+    }
+
     private void recomputeMenuStats(ServerLevel serverLevel) {
         this.statMineCount = ImperialWorkSiteManager.countImperialMines(serverLevel, this, STATS_SCAN_RADIUS);
         this.statGoldMineCount = ImperialGoldMineManager.countGoldMines(serverLevel, this, STATS_SCAN_RADIUS);
@@ -616,6 +686,8 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
         this.statRecruitCount = census.withJob(ImperialCitizenJob.RECRUIT);
 
         this.statThreatScore = getLiveThreatScore();
+
+        computeWarTable(serverLevel);
     }
 
     public int getCachedMineCount() {

@@ -10,7 +10,9 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 
 public class ImperialCommandCoreMenu extends AbstractContainerMenu {
-    private static final int DATA_COUNT = 58;
+    // 0..57 = stats; 58 dominion, 59 WAAAGH! tier, 60 blip count, 61..84 = 8 blips (dx,dz,kind each).
+    private static final int DATA_COUNT = 85;
+    private static final int BLIP_BASE = 61;
 
     private final ContainerData data;
     private final BlockPos commandCorePos;
@@ -103,7 +105,20 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
                     case 55 -> commandCore.getFood();
                     case 56 -> commandCore.getCrusadeTier();
                     case 57 -> commandCore.getTerritoryRadius();
-                    default -> 0;
+                    case 58 -> commandCore.getWarDominionGui();
+                    case 59 -> commandCore.getWaaaghTierGui();
+                    case 60 -> commandCore.getBlipCount();
+                    default -> {
+                        if (index >= BLIP_BASE && index < DATA_COUNT) {
+                            int blip = (index - BLIP_BASE) / 3;
+                            yield switch ((index - BLIP_BASE) % 3) {
+                                case 0 -> commandCore.getBlipDx(blip);
+                                case 1 -> commandCore.getBlipDz(blip);
+                                default -> commandCore.getBlipKind(blip);
+                            };
+                        }
+                        yield 0;
+                    }
                 };
             }
 
@@ -379,5 +394,29 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
 
     public int getTerritoryRadius() {
         return this.data.get(57);
+    }
+
+    public int getWarDominion() {
+        return this.data.get(58);
+    }
+
+    public int getWaaaghTier() {
+        return this.data.get(59);
+    }
+
+    public int getBlipCount() {
+        return this.data.get(60);
+    }
+
+    public int getBlipDx(int i) {
+        return this.data.get(BLIP_BASE + i * 3);
+    }
+
+    public int getBlipDz(int i) {
+        return this.data.get(BLIP_BASE + i * 3 + 1);
+    }
+
+    public int getBlipKind(int i) {
+        return this.data.get(BLIP_BASE + i * 3 + 2);
     }
 }
