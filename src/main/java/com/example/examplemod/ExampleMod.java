@@ -1049,7 +1049,6 @@ public static void onClientSetup(FMLClientSetupEvent event) {
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(RobouteGuillimanModel.LAYER_LOCATION, RobouteGuillimanModel::createBodyLayer);
-        event.registerLayerDefinition(GuardsmanModel.LAYER, GuardsmanModel::createBodyLayer);
         event.registerLayerDefinition(EliteModelLayers.SPACE_MARINE, EliteModelLayers::createSpaceMarineLayer);
         event.registerLayerDefinition(EliteModelLayers.CUSTODES, EliteModelLayers::createCustodesLayer);
         event.registerLayerDefinition(EliteModelLayers.PRIMARCH, EliteModelLayers::createPrimarchLayer);
