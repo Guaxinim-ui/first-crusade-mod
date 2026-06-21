@@ -248,6 +248,20 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **HIVE VERTICAL — 5 tiers redondos empilhados (cada menor e +25 de altura)**. Pedido do
+  dono (referência Hive Primus). **Teto do planeta subiu p/ 256** (`dimension_type` + `noise_settings`
+  overworld e planet_secundus: height/logical_height 96→256; terreno segue plano ~y51, só ganha céu) —
+  ⚠️ **mundos antigos não carregam, usar mundo NOVO**. Novo `buildVerticalHive` (substitui buildHiveCity
+  nas autônomas): muralhas **redondas** (`buildCircleWall` midpoint), discos de piso (`fillDisc`),
+  torres aninhadas subindo (silhueta de espira central), **escadas-rampa espiral** ligando tiers
+  (`buildRampStairs`). Tiers: **T1** chão (worksites+casas, muralha robusta dupla), **T2** +25
+  (menos casas + **pontes** `buildTierBridges`), **T3** +50 (**bibliotecas+casas de bruxa/alquimia**
+  `placeScholarHouses`/`furnishLibrary`/`furnishWitchHouse`), **T4** +75 (**bastião** fechado de comando
+  `decorateBastion`), **T5** +100 (**catedral+sala do trono** `buildCathedral` + espira no topo). Raios
+  {62,48,36,24,14}. Seeder: **1 capital** (CITY_COUNT=1) + camps, anel 180–520. `buildHiveCity` e
+  helpers de anel ficaram **sem uso** (warnings). Build/jar OK; JSON valida; **NÃO testado em jogo**.
+  ⚠️ Login pesado (1 hive colossal). Pedir screenshot p/ iterar (escadas/telhados podem precisar ajuste).
+
 - 2026-06-20: **HIVE CITY GIGANTE — 3 tiers sociais concêntricos (pedido do dono: algo gigante)**.
   Novo `buildHiveCity` (substitui `buildCityStructure` nas cidades autônomas; player ainda usa o fort).
   Três **anéis murados concêntricos = estratos sociais**: **Underhive** (externo: habs curtos/densos/
