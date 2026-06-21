@@ -248,6 +248,14 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-21: **Modelo do Guardsman (Blockbench do dono) — corpo integrado**. Novo `GuardsmanModel`
+  (humanoide padrão p/ manter animação + lasgun na mão + camadas de armadura, mas com os **UV offsets**
+  do export do dono: head 0,0 / body 0,16 / right_arm 32,0 / left_arm 16,32 / right_leg 24,16 /
+  left_leg 0,32; "hat" vazio p/ satisfazer HumanoidModel). `GuardsmanRenderer` usa a layer
+  `GuardsmanModel.LAYER` (registrada em `registerLayerDefinitions`). Textura: o dono salva a PNG dele
+  em `assets/firstcrusade/textures/entity/guardsman.png` (placeholder atual). **Falta (fase 2):**
+  capacete + peitoral como **render layers** (modelos já recebidos do dono). Build/jar OK.
+
 - 2026-06-21: **Corrupção v3 — creep bloco-a-bloco + dano + atrapalha produção**. (1) **Creep:**
   `OrkCorruptionManager.creepSpread` (no tick do camp, raio+6, 10 tentativas) corrompe blocos que
   **fazem fronteira com sculk existente** → a praga cresce borda a borda, não só pelo halo do camp.
