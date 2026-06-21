@@ -2451,7 +2451,9 @@ private void buildRingDistrict(ServerLevel serverLevel, int rInner, int rOuter, 
 //   T4 (+75)     — an enclosed bastion: the command of expeditions, no homes.
 //   T5 (+100)    — a great cathedral with a throne room, crowned by a spire.
 // Needs the raised planet ceiling (height 256). Heavy to build — seeded sparingly.
-private static final int[] HIVE_TIER_RADIUS = {62, 48, 36, 24, 14};
+// Radii of the five tier walls (outer -> inner). Gaps are >= the tier step + 2 so a 1:1 staircase
+// climbing one tier always lands exactly on the next floor.
+private static final int[] HIVE_TIER_RADIUS = {120, 93, 66, 39, 12};
 private static final int HIVE_TIER_STEP = 25;
 
 private void buildVerticalHive(ServerLevel serverLevel) {
@@ -2464,12 +2466,13 @@ private void buildVerticalHive(ServerLevel serverLevel) {
 
     WorldGenPlacement.clearVegetation(serverLevel, this.worldPosition, outer + 4, 12);
 
-    // Floors/terraces (each tier's terrace spans the radius of the tier BELOW, ringing the tower).
+    // Floors: each tier's floor spans only its OWN radius, so the ring of the tier below stays OPEN
+    // to the sky (an open-topped terrace) instead of being roofed over into a dark hall.
     fillDisc(serverLevel, -1, HIVE_TIER_RADIUS[0],
             Blocks.COBBLED_DEEPSLATE.defaultBlockState(), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
     for (int i = 1; i < tiers; i++) {
         boolean high = i >= 3;
-        fillDisc(serverLevel, baseY[i] - 1, HIVE_TIER_RADIUS[i - 1],
+        fillDisc(serverLevel, baseY[i] - 1, HIVE_TIER_RADIUS[i],
                 high ? Blocks.POLISHED_BLACKSTONE.defaultBlockState() : Blocks.STONE_BRICKS.defaultBlockState(),
                 high ? Blocks.GILDED_BLACKSTONE.defaultBlockState() : Blocks.POLISHED_BLACKSTONE.defaultBlockState());
     }
@@ -2484,9 +2487,10 @@ private void buildVerticalHive(ServerLevel serverLevel) {
                 Blocks.DEEPSLATE_BRICKS.defaultBlockState(), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState(), true);
     }
 
-    // Ramped stairs hugging each inner tower, climbing tier to tier.
+    // Straight 1:1 staircases climbing exactly from each tier floor to the next (landing carved
+    // through the inner wall), on the east face.
     for (int i = 0; i < tiers - 1; i++) {
-        buildRampStairs(serverLevel, baseY[i], baseY[i + 1], HIVE_TIER_RADIUS[i + 1]);
+        buildRampStairs(serverLevel, baseY[i], baseY[i + 1], HIVE_TIER_RADIUS[i + 1], HIVE_TIER_RADIUS[i]);
     }
 
     // Tier contents.
@@ -2638,23 +2642,41 @@ private void buildCircleWall(ServerLevel serverLevel, int baseY, int height, int
     }
 }
 
-// A stair that spirals up around an inner tower from one tier floor to the next.
-private void buildRampStairs(ServerLevel serverLevel, int fromY, int toY, int towerRadius) {
-    int rr = towerRadius + 1;
-    double ang = Math.PI / 2.0;                 // start at the south gate
-    double angStep = 1.0 / rr;
-    int run = toY - fromY;
+// A straight 1:1 staircase on the east face climbing exactly from one tier floor (fromY) to the
+// next (toY): it starts just inside the outer wall and rises one block per step moving inward, so it
+// lands precisely at the inner tier's floor. A short landing then carves a doorway through the inner
+// wall so you walk straight onto the next tier.
+private void buildRampStairs(ServerLevel serverLevel, int fromY, int toY, int innerRadius, int outerRadius) {
+    BlockState support = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
+    BlockState rail = Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState();
+    int rise = toY - fromY;
+    int startD = outerRadius - 2;               // just inside the tier's outer wall
 
-    for (int s = 0; s <= run; s++) {
-        int y = fromY + 1 + s;
-        int dx = (int) Math.round(Math.cos(ang) * rr);
-        int dz = (int) Math.round(Math.sin(ang) * rr);
-        Direction facing = Direction.getNearest(-dx, 0, -dz);
+    for (int s = 0; s <= rise; s++) {
+        int y = fromY + s;
+        int d = startD - s;                     // move inward as we climb (1 in : 1 up)
 
-        setStruct(serverLevel, dx, y - 1, dz, Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState());
-        serverLevel.setBlock(this.worldPosition.offset(dx, y, dz),
-                Blocks.DEEPSLATE_TILE_STAIRS.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, facing), 3);
-        ang += angStep;
+        for (int w = -1; w <= 1; w++) {
+            setStruct(serverLevel, d, y - 1, w, support);
+            serverLevel.setBlock(this.worldPosition.offset(d, y, w),
+                    Blocks.DEEPSLATE_TILE_STAIRS.defaultBlockState()
+                            .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST), 3);
+        }
+        setStruct(serverLevel, d, y, -2, rail);
+        setStruct(serverLevel, d, y, 2, rail);
+    }
+
+    // Landing bridging to the inner wall, and a 3-wide doorway carved through it onto the next tier.
+    int topD = startD - rise;
+    for (int d = innerRadius; d <= topD; d++) {
+        for (int w = -1; w <= 1; w++) {
+            setStruct(serverLevel, d, toY - 1, w, support);
+        }
+    }
+    for (int w = -1; w <= 1; w++) {
+        for (int yy = 0; yy <= 3; yy++) {
+            setStruct(serverLevel, innerRadius, toY + yy, w, Blocks.AIR.defaultBlockState());
+        }
     }
 }
 

@@ -248,6 +248,16 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-21: **Hive — tetos abertos + tier 1 muito maior + escadas 1:1 que caem certo**. Feedback do
+  dono (andares fechados/escuros; escadas não conectavam). (1) **Tetos abertos:** cada piso agora usa o
+  **próprio raio** (`fillDisc(baseY[i]-1, R[i])` em vez de `R[i-1]`) → o anel do andar de baixo fica
+  **aberto pro céu** (terraço), não vira salão escuro. (2) **Tier 1 muito maior:** raios
+  {120,93,66,39,12} (T1=120 → **240 de lado**), com folga **27** entre anéis (≥ step 25 +2). (3)
+  **Escadas retas 1:1 corretas** (`buildRampStairs` reescrito): sobe 1 bloco por passo da muralha
+  externa pra dentro, **patamar + porta esculpida na muralha interna** no nível exato do próximo andar
+  (a matemática fecha: `startD-rise = outerR-27 = innerR`). Face leste. Build/jar OK; **não testado**.
+  ⚠️ Login bem pesado (T1=240 de lado, ~250k blocos). Mundo NOVO (teto 256).
+
 - 2026-06-21: **Hive vertical — pontes radiais + escadaria direta + 4 portões + guardas**. Dono mandou
   o plano (corte lateral + planta redonda). Ajustes no `buildVerticalHive`: (1) `buildCircleWall` abre
   **4 portões cardeais** (N/S/L/O) por muralha (era só sul). (2) **`buildRadialBridges`**: 4 catwalks
