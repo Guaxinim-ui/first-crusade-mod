@@ -1011,6 +1011,31 @@ public void onLivingDeath(net.minecraftforge.event.entity.living.LivingDeathEven
     }
 }
 
+// The Ork corruption is hostile ground for the Imperium: any Imperial unit standing on sculk is
+// slowed, while the green tide regenerates upon it. Checked every 40 ticks per unit (cheap).
+@SubscribeEvent
+public void onLivingTick(net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent event) {
+    net.minecraft.world.entity.LivingEntity entity = event.getEntity();
+
+    if (entity.level().isClientSide || entity.tickCount % 40 != 0) {
+        return;
+    }
+
+    if (!entity.level().getBlockState(entity.blockPosition().below()).is(net.minecraft.world.level.block.Blocks.SCULK)) {
+        return;
+    }
+
+    FirstCrusadeFaction faction = FirstCrusadeFactionManager.getFaction(entity);
+
+    if (faction == FirstCrusadeFaction.IMPERIUM) {
+        entity.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 60, 0, false, false));
+    } else if (faction == FirstCrusadeFaction.ORKS) {
+        entity.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                net.minecraft.world.effect.MobEffects.REGENERATION, 60, 0, false, false));
+    }
+}
+
 @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public static class ClientModEvents {
         @SubscribeEvent

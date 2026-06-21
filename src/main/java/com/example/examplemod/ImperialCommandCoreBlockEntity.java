@@ -413,6 +413,7 @@ blockEntity.trySeedOrkCamp(serverLevel);
 blockEntity.trySpawnOrkRaid(serverLevel);
 blockEntity.checkActiveOrkRaid(serverLevel);
 blockEntity.tickAutonomousGovernance(serverLevel);
+OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockEntity.getTerritoryRadius(), 6);
     }
 
     // An unclaimed, world-generated city governs itself: it keeps a standing garrison and grows in

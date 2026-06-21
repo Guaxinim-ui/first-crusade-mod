@@ -44,6 +44,31 @@ public final class OrkCorruptionManager {
         return radius;
     }
 
+    // The Imperium pushes back: an active city cleanses sculk back into living ground within its
+    // territory, so the frontier between corruption and the Imperium shifts with the war.
+    public static void purifyAround(ServerLevel level, BlockPos center, int radius, int count) {
+        RandomSource rng = level.random;
+
+        for (int i = 0; i < count; i++) {
+            int dx = rng.nextInt(radius * 2 + 1) - radius;
+            int dz = rng.nextInt(radius * 2 + 1) - radius;
+
+            if (dx * dx + dz * dz > radius * radius) {
+                continue;
+            }
+
+            BlockPos air = WorldGenPlacement.groundPlacement(level, center.getX() + dx, center.getZ() + dz);
+            BlockPos ground = air.below();
+
+            if (level.getBlockState(ground).is(Blocks.SCULK)) {
+                level.setBlock(ground, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+                if (level.getBlockState(air).is(Blocks.SCULK_VEIN)) {
+                    level.setBlock(air, Blocks.AIR.defaultBlockState(), 3);
+                }
+            }
+        }
+    }
+
     // Seeds a small corruption patch where something died in the Orks' shadow.
     public static void corruptDeathSite(ServerLevel level, BlockPos pos, int count) {
         RandomSource rng = level.random;

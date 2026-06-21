@@ -248,6 +248,15 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-21: **Corrupção Ork mais profunda — afeta unidades + cidades purificam**. A praga sculk ficou
+  dinâmica/contestada: (1) `ExampleMod.onLivingTick` (`LivingTickEvent`, a cada 40 ticks/unidade):
+  quem está **sobre SCULK** sofre efeito por facção — **Imperium = Lentidão**, **Orks = Regeneração**
+  (a maré verde prospera na corrupção). (2) `OrkCorruptionManager.purifyAround`: a cidade **limpa**
+  sculk de volta pra grama dentro do **território** (`getTerritoryRadius`), chamado no serverTick do
+  Core (6 blocos/ciclo) → fronteira corrupção×Imperium se move com a guerra (camps espalham, cidades
+  purificam). Build/jar OK; não testado. (Próximo possível: auto-espalhar bloco-a-bloco, dano além de
+  lentidão.)
+
 - 2026-06-21: **Fase F3 — Aspirante → Space Marine (só crianças escolhidas)**. Fecha o pedido original
   das 3 partes. Pipeline novo: **criança escolhida** (`ImperialPopulationManager`: ~1/4 das crianças,
   só cidade nível 3+ que colhe gene-seed, `markAsAspirant`) → cresce em **Aspirante** (campos
