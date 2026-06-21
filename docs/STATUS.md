@@ -248,6 +248,16 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-21: **Hive vertical — pontes radiais + escadaria direta + 4 portões + guardas**. Dono mandou
+  o plano (corte lateral + planta redonda). Ajustes no `buildVerticalHive`: (1) `buildCircleWall` abre
+  **4 portões cardeais** (N/S/L/O) por muralha (era só sul). (2) **`buildRadialBridges`**: 4 catwalks
+  radiais (deck blackstone + corrimão iron bars + lanternas) no nível do T3 (y50) cruzando a hive — as
+  "pontes verdes" pros soldados. (3) **`buildGrandStaircase`**: escadaria monumental (3 de largura +
+  corrimão) subindo **1 por degrau de fora do muro oeste até o topo** (a "escada roxa", caminhável).
+  (4) **`spawnGateGuards`**: posta um guarda (tropa-tema/Guardsman) em **cada portão de cada muralha**
+  (4×5). Build/jar OK; **não testado** — pedir screenshot p/ ajustar (facing das escadas, altura das
+  pontes). Mundo NOVO (teto 256).
+
 - 2026-06-20: **HIVE VERTICAL — 5 tiers redondos empilhados (cada menor e +25 de altura)**. Pedido do
   dono (referência Hive Primus). **Teto do planeta subiu p/ 256** (`dimension_type` + `noise_settings`
   overworld e planet_secundus: height/logical_height 96→256; terreno segue plano ~y51, só ganha céu) —

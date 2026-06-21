@@ -2191,6 +2191,7 @@ public void buildAutonomousVillage(ServerLevel serverLevel) {
     buildVerticalHive(serverLevel);
     spawnStartingPopulation(serverLevel, AUTONOMOUS_START_POPULATION);
     spawnInitialGarrison(serverLevel, AUTONOMOUS_GARRISON);
+    spawnGateGuards(serverLevel);
     setChanged();
 }
 
@@ -2496,6 +2497,97 @@ private void buildVerticalHive(ServerLevel serverLevel) {
     placeScholarHouses(serverLevel, HIVE_TIER_RADIUS[3] + 2, HIVE_TIER_RADIUS[2] - 2, baseY[2], 6);
     decorateBastion(serverLevel, HIVE_TIER_RADIUS[4], HIVE_TIER_RADIUS[3], baseY[3]);
     buildCathedral(serverLevel, HIVE_TIER_RADIUS[4], baseY[4]);
+
+    // Radial soldier bridges crossing the whole hive (the green spokes), and one grand staircase
+    // climbing straight from outside the walls up to the cathedral tier (the purple stair).
+    buildRadialBridges(serverLevel, baseY[2], 6, HIVE_TIER_RADIUS[0]);
+    buildGrandStaircase(serverLevel, baseY[4]);
+}
+
+// Four elevated railed catwalks (N/S/E/W) for soldiers to cross the hive between the high tiers.
+private void buildRadialBridges(ServerLevel serverLevel, int y, int fromRadius, int toRadius) {
+    BlockState deck = Blocks.POLISHED_BLACKSTONE.defaultBlockState();
+    BlockState rail = Blocks.IRON_BARS.defaultBlockState();
+
+    for (int r = fromRadius; r <= toRadius; r++) {
+        for (int w = -1; w <= 1; w++) {
+            setStruct(serverLevel, r, y - 1, w, deck);
+            setStruct(serverLevel, -r, y - 1, w, deck);
+            setStruct(serverLevel, w, y - 1, r, deck);
+            setStruct(serverLevel, w, y - 1, -r, deck);
+        }
+
+        setStruct(serverLevel, r, y, 2, rail);
+        setStruct(serverLevel, r, y, -2, rail);
+        setStruct(serverLevel, -r, y, 2, rail);
+        setStruct(serverLevel, -r, y, -2, rail);
+        setStruct(serverLevel, 2, y, r, rail);
+        setStruct(serverLevel, -2, y, r, rail);
+        setStruct(serverLevel, 2, y, -r, rail);
+        setStruct(serverLevel, -2, y, -r, rail);
+
+        if (r % 8 == 0) {
+            setStruct(serverLevel, r, y + 1, 0, Blocks.LANTERN.defaultBlockState());
+            setStruct(serverLevel, -r, y + 1, 0, Blocks.LANTERN.defaultBlockState());
+            setStruct(serverLevel, 0, y + 1, r, Blocks.LANTERN.defaultBlockState());
+            setStruct(serverLevel, 0, y + 1, -r, Blocks.LANTERN.defaultBlockState());
+        }
+    }
+}
+
+// A monumental staircase climbing straight from the ground outside the west wall up to the cathedral
+// tier — one block of rise per step, so it is fully walkable, with railings.
+private void buildGrandStaircase(ServerLevel serverLevel, int topY) {
+    BlockState support = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
+    for (int s = 0; s <= topY; s++) {
+        int x = -(topY - s);   // starts well outside the outer wall, climbs in to the centre
+        int y = s;
+
+        for (int w = -1; w <= 1; w++) {
+            setStruct(serverLevel, x, y - 1, w, support);
+            serverLevel.setBlock(this.worldPosition.offset(x, y, w),
+                    Blocks.POLISHED_BLACKSTONE_BRICK_STAIRS.defaultBlockState()
+                            .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST), 3);
+        }
+        setStruct(serverLevel, x, y, -2, Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
+        setStruct(serverLevel, x, y, 2, Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
+    }
+}
+
+// Posts a guard (the city's themed troop) at each cardinal gate of every tier wall.
+private void spawnGateGuards(ServerLevel serverLevel) {
+    int tiers = HIVE_TIER_RADIUS.length;
+    EntityType<? extends AbstractImperialTroopEntity> themedType = getThemedTroopType(getCityType());
+
+    for (int i = 0; i < tiers; i++) {
+        int r = HIVE_TIER_RADIUS[i];
+        int y = i * HIVE_TIER_STEP;
+        spawnGuardAt(serverLevel, themedType, 0, y, r);
+        spawnGuardAt(serverLevel, themedType, 0, y, -r);
+        spawnGuardAt(serverLevel, themedType, r, y, 0);
+        spawnGuardAt(serverLevel, themedType, -r, y, 0);
+    }
+}
+
+private void spawnGuardAt(ServerLevel serverLevel, EntityType<? extends AbstractImperialTroopEntity> themedType, int dx, int y, int dz) {
+    double px = this.worldPosition.getX() + dx + 0.5D;
+    double py = this.worldPosition.getY() + y;
+    double pz = this.worldPosition.getZ() + dz + 0.5D;
+
+    if (themedType != null) {
+        spawnThemedTroopAt(serverLevel, themedType, px, py, pz, 0.0F, 0.0F);
+        return;
+    }
+
+    GuardsmanEntity guardsman = ExampleMod.GUARDSMAN.get().create(serverLevel);
+    if (guardsman == null) {
+        return;
+    }
+    guardsman.moveTo(px, py, pz, 0.0F, 0.0F);
+    guardsman.assignToCommandCore(this.worldPosition);
+    guardsman.assignRandomChapter();
+    guardsman.initializeFromCity(getStartingGuardsmanRank(), getCityType());
+    serverLevel.addFreshEntity(guardsman);
 }
 
 // Forcefully sets a structural block (never the Core), in tier-relative coords.
@@ -2526,7 +2618,8 @@ private void buildCircleWall(ServerLevel serverLevel, int baseY, int height, int
                 continue;
             }
 
-            boolean gate = dz >= radius - 1 && Math.abs(dx) <= 1;
+            // Four cardinal gates (N/S/E/W) so the radial bridges and gate guards line up.
+            boolean gate = Math.abs(dx) <= 1 || Math.abs(dz) <= 1;
 
             for (int y = 0; y < height; y++) {
                 if (gate && y < 5) {
