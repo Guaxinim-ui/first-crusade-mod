@@ -51,5 +51,6 @@ public final class WaaaghOverlordManager {
                 Component.literal(TIER_CRIES[tier]),
                 false
         );
+        WarDominionManager.shift(level, -10);
     }
 }

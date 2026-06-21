@@ -248,6 +248,14 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-21: **Vitória global — placar de domínio do planeta (Imperium × WAAAGH!)**. Novo
+  `WarDominionData` (SavedData, score −100..100 + `announcedSide`) + `WarDominionManager.shift`: eventos
+  da guerra nudge o placar — camp arrasado **+6**, war party **−2**, tier-up da Cruzada **+10**, tier-up
+  do WAAAGH! **−10**. Ao cruzar **±50** dispara **anúncio global** de triunfo (`broadcastSystemMessage`):
+  `victory.imperium` / `victory.waaagh`; ao voltar pra perto de 0 (|d|<15) declara `victory.contested`
+  e re-arma (guerra pode virar e ser re-vencida). Hooks em `OrkCampBlockEntity` (checkOverrun/
+  launchWarParty) e `Imperium/WaaaghOverlordManager.announce`. Build/jar OK; lang 351/351; só lógica.
+
 - 2026-06-21: **Modelo do Guardsman (Blockbench do dono) — corpo integrado**. Novo `GuardsmanModel`
   (humanoide padrão p/ manter animação + lasgun na mão + camadas de armadura, mas com os **UV offsets**
   do export do dono: head 0,0 / body 0,16 / right_arm 32,0 / left_arm 16,32 / right_leg 24,16 /

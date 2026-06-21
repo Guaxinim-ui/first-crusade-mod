@@ -344,6 +344,9 @@
   "msg.firstcrusade.bcast.neophyte_made": "An aspirant has been made a Neophyte. He must now be blooded in battle.",
   "msg.firstcrusade.bcast.expedition": "An Imperial expedition marches on the Ork camp!",
   "msg.firstcrusade.bcast.camp_razed_imperial": "An Imperial force has overrun and razed an Ork camp!",
+  "msg.firstcrusade.victory.imperium": "THE IMPERIUM TRIUMPHS! The Crusade has broken the WAAAGH! and claims this world for the Emperor.",
+  "msg.firstcrusade.victory.waaagh": "WAAAGH! The greenskins have overrun this world — the Imperium is in retreat!",
+  "msg.firstcrusade.victory.contested": "The war for the planet is in the balance once more — the world is contested.",
   "block.firstcrusade.spaceport": "Spaceport",
   "msg.firstcrusade.spaceport.arrived": "Translation complete. Welcome to your destination.",
   "msg.firstcrusade.spaceport.no_dest": "The warp is shut: this world cannot be reached."

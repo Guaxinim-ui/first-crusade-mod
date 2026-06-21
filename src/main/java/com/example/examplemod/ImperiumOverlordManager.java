@@ -49,5 +49,6 @@ public final class ImperiumOverlordManager {
         }
 
         level.getServer().getPlayerList().broadcastSystemMessage(TIER_CRIES[tier], false);
+        WarDominionManager.shift(level, 10);
     }
 }

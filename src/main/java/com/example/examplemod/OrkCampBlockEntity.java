@@ -146,6 +146,9 @@ public class OrkCampBlockEntity extends BlockEntity {
             return;
         }
 
+        // The green tide marching on a city tips the war toward the WAAAGH!.
+        WarDominionManager.shift(serverLevel, -2);
+
         int tier = WaaaghOverlordManager.getTier(serverLevel);
 
         // Composition varies by clan: Goffs swarm Boyz, Bad Moons bring Nobz, Deathskulls grots...
@@ -279,6 +282,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         serverLevel.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel, pos, Component.translatable("msg.firstcrusade.bcast.camp_razed_imperial"));
+        WarDominionManager.shift(serverLevel, 6);
         return true;
     }
 

@@ -344,6 +344,9 @@
   "msg.firstcrusade.bcast.neophyte_made": "Um aspirante tornou-se Neófito. Agora precisa provar-se em batalha.",
   "msg.firstcrusade.bcast.expedition": "Uma expedição Imperial marcha sobre o acampamento Ork!",
   "msg.firstcrusade.bcast.camp_razed_imperial": "Uma força Imperial dominou e arrasou um acampamento Ork!",
+  "msg.firstcrusade.victory.imperium": "O IMPÉRIO TRIUNFA! A Cruzada quebrou o WAAAGH! e reivindica este mundo para o Imperador.",
+  "msg.firstcrusade.victory.waaagh": "WAAAGH! Os peles-verdes dominaram este mundo — o Império recua!",
+  "msg.firstcrusade.victory.contested": "A guerra pelo planeta volta a ficar equilibrada — o mundo está em disputa.",
   "block.firstcrusade.spaceport": "Spaceport",
   "msg.firstcrusade.spaceport.arrived": "Translação completa. Bem-vindo ao destino.",
   "msg.firstcrusade.spaceport.no_dest": "A warp está fechada: este mundo não pode ser alcançado."
