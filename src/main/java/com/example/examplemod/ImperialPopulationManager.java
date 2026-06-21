@@ -20,6 +20,8 @@ public class ImperialPopulationManager {
     private static final int PARENTS_REQUIRED = 2;
     // A bedless outpost can still hold a handful of people roughing it; beds raise the ceiling above this.
     private static final int MIN_CAPACITY_WITHOUT_BEDS = 3;
+    // Roughly 1 in N children is chosen as a Space Marine aspirant.
+    private static final int ASPIRANT_CHANCE = 4;
 
     private ImperialPopulationManager() {
     }
@@ -66,6 +68,12 @@ public class ImperialPopulationManager {
         citizen.assignToCommandCore(commandCore.getBlockPos());
         if (!bootstrapping) {
             citizen.setChild(ImperialCitizenEntity.CHILDHOOD_TICKS);
+
+            // Some of the children are chosen as Astartes aspirants — but only an advanced city
+            // (level 3+, harvesting gene-seed) can ever implant and ascend them.
+            if (commandCore.getCityLevel() >= 3 && serverLevel.random.nextInt(ASPIRANT_CHANCE) == 0) {
+                citizen.markAsAspirant();
+            }
         }
         citizen.moveTo(
                 spawnPos.getX() + 0.5D,

@@ -32,6 +32,12 @@ public class ImperialCitizenEntity extends PathfinderMob {
     // Transient: set by the sleep goal while the citizen is at home for the night (gates births).
     private boolean restingAtHome;
 
+    // Aspirant pipeline: a chosen child marked for the Astartes. As an adult the aspirant receives
+    // gene-seed organ implants (stages) at the Core before being made a Neophyte. See AspirantManager.
+    private boolean aspirant;
+    private int implantStage;
+    private int implantCooldown;
+
     public ImperialCitizenEntity(EntityType<? extends ImperialCitizenEntity> entityType, Level level) {
         super(entityType, level);
         updateCitizenName();
@@ -83,6 +89,12 @@ public class ImperialCitizenEntity extends PathfinderMob {
 
     private void updateWorkRoutine() {
         if (this.commandCorePos == null) {
+            return;
+        }
+
+        // Aspirants await their implants at the Core instead of taking a job.
+        if (this.aspirant) {
+            keepNearCommandCore();
             return;
         }
 
@@ -147,6 +159,13 @@ public class ImperialCitizenEntity extends PathfinderMob {
     }
 
     private void updateCitizenName() {
+        if (this.aspirant) {
+            this.setCustomName(Component.literal(isChild()
+                    ? "Chosen Child"
+                    : "Aspirant - Implant " + this.implantStage));
+            return;
+        }
+
         if (isChild()) {
             this.setCustomName(Component.literal("Imperial Child"));
             return;
@@ -174,6 +193,34 @@ public class ImperialCitizenEntity extends PathfinderMob {
     @Override
     public boolean isBaby() {
         return isChild();
+    }
+
+    // --- Aspirant (Space Marine pipeline) ----------------------------------------------------
+
+    public void markAsAspirant() {
+        this.aspirant = true;
+        updateCitizenName();
+    }
+
+    public boolean isAspirant() {
+        return this.aspirant;
+    }
+
+    public int getImplantStage() {
+        return this.implantStage;
+    }
+
+    public void setImplantStage(int implantStage) {
+        this.implantStage = Math.max(0, implantStage);
+        updateCitizenName();
+    }
+
+    public int getImplantCooldown() {
+        return this.implantCooldown;
+    }
+
+    public void setImplantCooldown(int implantCooldown) {
+        this.implantCooldown = Math.max(0, implantCooldown);
     }
 
     // --- Sleep / home ------------------------------------------------------------------------
@@ -268,6 +315,9 @@ public class ImperialCitizenEntity extends PathfinderMob {
         tag.putInt("CitizenAgeTicks", this.citizenAgeTicks);
         tag.putInt("WorkTicks", this.workTicks);
         tag.putInt("ChildhoodTicks", this.childhoodTicks);
+        tag.putBoolean("Aspirant", this.aspirant);
+        tag.putInt("ImplantStage", this.implantStage);
+        tag.putInt("ImplantCooldown", this.implantCooldown);
         tag.putString("CitizenJob", this.job.name());
 
         if (this.commandCorePos != null) {
@@ -296,6 +346,9 @@ public class ImperialCitizenEntity extends PathfinderMob {
         this.citizenAgeTicks = tag.getInt("CitizenAgeTicks");
         this.workTicks = tag.getInt("WorkTicks");
         this.childhoodTicks = tag.getInt("ChildhoodTicks");
+        this.aspirant = tag.getBoolean("Aspirant");
+        this.implantStage = tag.getInt("ImplantStage");
+        this.implantCooldown = tag.getInt("ImplantCooldown");
         this.job = readJob(tag.getString("CitizenJob"));
 
         if (tag.getBoolean("HasCommandCorePos")) {

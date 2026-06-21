@@ -32,15 +32,17 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import javax.annotation.Nullable;
 
 public class SpaceMarineEntity extends PathfinderMob {
-    // Autonomous Neophyte maturation: an ascended Guardsman first serves as a Neophyte
-    // (reduced gene-seed implants) and matures into a full Battle-Brother over time.
-    private static final int NEOPHYTE_MATURATION_TICKS = 6000; // ~5 minutes of trials
+    // A Neophyte must be blooded in battle (score a kill) before being made a full Battle-Brother:
+    // a short trial after proving itself, or — failing any war — a long autonomous maturation.
+    private static final int NEOPHYTE_TRIAL_MIN_TICKS = 1200;   // ~1 min after a confirmed kill
+    private static final int NEOPHYTE_FALLBACK_TICKS = 24000;   // ~20 min if no battle ever comes
 
     private BlockPos commandCorePos;
     private BlockPos guardPostPos;
 
     private boolean neophyte = false;
     private int neophyteTicks = 0;
+    private boolean battleProven = false;
 
     public SpaceMarineEntity(EntityType<? extends SpaceMarineEntity> entityType, Level level) {
         super(entityType, level);
@@ -96,7 +98,10 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
         if (this.neophyte) {
             this.neophyteTicks++;
 
-            if (this.neophyteTicks >= NEOPHYTE_MATURATION_TICKS) {
+            boolean trialComplete = (this.battleProven && this.neophyteTicks >= NEOPHYTE_TRIAL_MIN_TICKS)
+                    || this.neophyteTicks >= NEOPHYTE_FALLBACK_TICKS;
+
+            if (trialComplete) {
                 matureIntoFullMarine();
             }
         }
@@ -124,6 +129,7 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
     public void beginAsNeophyte() {
         this.neophyte = true;
         this.neophyteTicks = 0;
+        this.battleProven = false;
 
         applyNeophyteStats();
         updateNameForState();
@@ -131,6 +137,14 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
 
     public boolean isNeophyte() {
         return this.neophyte;
+    }
+
+    // The battle test: called when this Neophyte slays a foe, after which it can be made a full
+    // Battle-Brother (see aiStep). Has no effect on a Marine that has already ascended.
+    public void markBattleProven() {
+        if (this.neophyte) {
+            this.battleProven = true;
+        }
     }
 
     private void applyNeophyteStats() {
@@ -150,6 +164,7 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
     private void matureIntoFullMarine() {
         this.neophyte = false;
         this.neophyteTicks = 0;
+        this.battleProven = false;
 
         applyFullMarineStats();
         updateNameForState();
@@ -286,6 +301,7 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
 
         tag.putBoolean("Neophyte", this.neophyte);
         tag.putInt("NeophyteTicks", this.neophyteTicks);
+        tag.putBoolean("BattleProven", this.battleProven);
     }
 
     @Override
@@ -302,6 +318,7 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
 
         this.neophyte = tag.getBoolean("Neophyte");
         this.neophyteTicks = tag.getInt("NeophyteTicks");
+        this.battleProven = tag.getBoolean("BattleProven");
 
         prepareSpaceMarine();
 

@@ -340,6 +340,8 @@
   "msg.firstcrusade.bcast.warboss_slain": "The Ork Warboss has been slain! The WAAAGH! falters.",
   "msg.firstcrusade.bcast.camp_raised": "%s Orks have raised a camp nearby. It will grow into a threat.",
   "msg.firstcrusade.bcast.city_grew": "An Imperial city has grown to level %s.",
+  "msg.firstcrusade.bcast.implant": "An aspirant receives gene-seed implant %s of %s.",
+  "msg.firstcrusade.bcast.neophyte_made": "An aspirant has been made a Neophyte. He must now be blooded in battle.",
   "block.firstcrusade.spaceport": "Spaceport",
   "msg.firstcrusade.spaceport.arrived": "Translation complete. Welcome to your destination.",
   "msg.firstcrusade.spaceport.no_dest": "The warp is shut: this world cannot be reached."

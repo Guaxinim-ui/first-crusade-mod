@@ -248,6 +248,20 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-21: **Fase F3 — Aspirante → Space Marine (só crianças escolhidas)**. Fecha o pedido original
+  das 3 partes. Pipeline novo: **criança escolhida** (`ImperialPopulationManager`: ~1/4 das crianças,
+  só cidade nível 3+ que colhe gene-seed, `markAsAspirant`) → cresce em **Aspirante** (campos
+  `aspirant`/`implantStage`/`implantCooldown` no `ImperialCitizenEntity`; não trabalha, espera no Core)
+  → **estágios de implante de órgãos** (`AspirantManager.tickAspirants` no serverTick: 3 estágios, cada
+  um consome 1 Emperor Gene Seed + cooldown ~1min, broadcast `bcast.implant`) → vira **Neófito**
+  (`SpaceMarineEntity.beginAsNeophyte`, `bcast.neophyte_made`) → **teste em batalha** real: o Neófito só
+  ascende a Space Marine completo depois de **matar** um inimigo (`battleProven` via `LivingDeathEvent`
+  em `ExampleMod`; min ~1min após o abate, fallback ~20min sem guerra) → **Space Marine**. **Promoção
+  automática de Guardsman→SM DESLIGADA** (era `processAutomaticSpaceMarinePromotion`, agora não chamada)
+  — só crianças viram SM. Aspirantes/crianças excluídos do trabalho (`ImperialWorkforceManager`). Tally
+  militar via `registerAscendedMarine`. Build/jar OK; lang 346/346. **Não testado em jogo.** (Manual
+  Guardsman→SM via item ainda existe se o dono quiser.)
+
 - 2026-06-21: **Hive — tetos abertos + tier 1 muito maior + escadas 1:1 que caem certo**. Feedback do
   dono (andares fechados/escuros; escadas não conectavam). (1) **Tetos abertos:** cada piso agora usa o
   **próprio raio** (`fillDisc(baseY[i]-1, R[i])` em vez de `R[i-1]`) → o anel do andar de baixo fica

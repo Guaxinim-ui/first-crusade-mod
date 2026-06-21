@@ -42,7 +42,7 @@ public class ImperialWorkforceManager {
         Set<BlockPos> claimedSites = new HashSet<>();
 
         for (ImperialCitizenEntity citizen : citizens) {
-            if (citizen.isUnemployed()) {
+            if (citizen.isUnemployed() && !citizen.isChild() && !citizen.isAspirant()) {
                 idleCitizens.add(citizen);
             } else if (isWorkSiteJob(citizen.getJob()) && citizen.getWorkSitePos() != null) {
                 claimedSites.add(citizen.getWorkSitePos().immutable());

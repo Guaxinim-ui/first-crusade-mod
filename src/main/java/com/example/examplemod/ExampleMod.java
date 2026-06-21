@@ -1004,6 +1004,11 @@ public void onLivingDeath(net.minecraftforge.event.entity.living.LivingDeathEven
     if (orkInvolved) {
         OrkCorruptionManager.corruptDeathSite(serverLevel, event.getEntity().blockPosition(), 3);
     }
+
+    // The Neophyte's battle test: a kill in real combat bloods him for ascension to a full Marine.
+    if (killer instanceof SpaceMarineEntity marine && marine.isNeophyte()) {
+        marine.markBattleProven();
+    }
 }
 
 @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)

@@ -403,7 +403,7 @@ ImperialWorkforceManager.autoManageWorkforce(serverLevel, blockEntity);
 blockEntity.produceResourcesIfNewDay(level);
 blockEntity.reduceReinforcementCooldown();
 blockEntity.reduceSpaceMarinePromotionCooldown();
-blockEntity.processAutomaticSpaceMarinePromotion(serverLevel);
+AspirantManager.tickAspirants(serverLevel, blockEntity);
 ImperialCustodesManager.tickCustodes(serverLevel, blockEntity);
 blockEntity.reducePrimarchMourningCooldown();
 ImperialPrimarchManager.tickPrimarch(serverLevel, blockEntity);
@@ -1661,6 +1661,13 @@ public boolean engineerRepair(int amount) {
             this.recruitedGuardsmen--;
             setChanged();
         }
+    }
+
+    // A new Neophyte (from the aspirant pipeline) joins the garrison tally so its later death balances
+    // the count (Space Marines decrement via onAssignedGuardsmanDeath like any assigned trooper).
+    public void registerAscendedMarine() {
+        this.recruitedGuardsmen++;
+        setChanged();
     }
 
     private void reduceReinforcementCooldown() {
