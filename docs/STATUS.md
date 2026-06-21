@@ -248,6 +248,19 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-20: **HIVE CITY GIGANTE — 3 tiers sociais concêntricos (pedido do dono: algo gigante)**.
+  Novo `buildHiveCity` (substitui `buildCityStructure` nas cidades autônomas; player ainda usa o fort).
+  Três **anéis murados concêntricos = estratos sociais**: **Underhive** (externo: habs curtos/densos/
+  fumegantes, cobbled deepslate), **Hive City** (meio: habs altos + manufactorums/worksites, deepslate
+  brick) e **Spire** (centro: keep + espira **colossal**, gilded blackstone). Cada tier tem muralha/
+  torres/portões próprios e **paleta de blocos distinta**; piso pavimentado mais rico ao centro
+  (`buildHiveFloor`); avenidas iluminadas cruzando tudo. Escala **enorme**: `hiveOuterRadius = 40+nível*6`
+  (nível 4 → raio 64 = **128 de lado**), espira gigante (clampada ao teto y~94 do planeta via
+  `clampHeight`). Tiers via **anéis** (não terraços) porque o Core é fixo em y e o planeta tem teto
+  baixo (96) — terraço enterraria o Core. Seeder: **2 cidades** (eram 3), separação 220, anel 180–520.
+  ⚠️ **Custo de login alto** (2 hives gigantes geram no 1º login) — se travar, baixar `hiveOuterRadius`
+  ou `CITY_COUNT`. Build/jar OK; **não testado em jogo**. Tunável: raios/tiers/paletas em `buildHiveCity`.
+
 - 2026-06-20: **Hive city — chão pavimentado + verticalidade + cidadãos operando**. Pedido do dono
   (referências hive 40k). (1) **Chão arrumado:** `buildFoundation` agora **força** o piso de tijolo
   em todo o interior (antes não trocava a grama → interior virava gramado; só a rua era pavimentada)

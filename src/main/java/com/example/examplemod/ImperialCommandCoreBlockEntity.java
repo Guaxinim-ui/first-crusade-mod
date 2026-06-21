@@ -480,7 +480,7 @@ blockEntity.tickAutonomousGovernance(serverLevel);
 
         this.resources.spend(ironCost, scrapCost, coalCost);
         this.cityLevel++;
-        buildCityStructure(serverLevel);
+        buildHiveCity(serverLevel);
         reorganizeExistingGuardsmen(serverLevel);
         setChanged();
 
@@ -2188,7 +2188,7 @@ public void buildAutonomousVillage(ServerLevel serverLevel) {
 
     this.cityLevel = Math.max(this.cityLevel, AUTONOMOUS_VILLAGE_LEVEL);
 
-    buildCityStructure(serverLevel);
+    buildHiveCity(serverLevel);
     placeCityWorksites(serverLevel);
     spawnStartingPopulation(serverLevel, AUTONOMOUS_START_POPULATION);
     spawnInitialGarrison(serverLevel, AUTONOMOUS_GARRISON);
@@ -2199,10 +2199,10 @@ public void buildAutonomousVillage(ServerLevel serverLevel) {
 // Yard on the plaza, each bound to this Core. The workforce manager then employs idle citizens at
 // them and the buildings produce resources — which in turn fund the city's own recruiting and growth.
 private void placeCityWorksites(ServerLevel serverLevel) {
-    placeWorksite(serverLevel, this.worldPosition.offset(8, 0, 8), ExampleMod.IMPERIAL_FARM.get());
-    placeWorksite(serverLevel, this.worldPosition.offset(-8, 0, 8), ExampleMod.IMPERIAL_MINE.get());
-    placeWorksite(serverLevel, this.worldPosition.offset(8, 0, -8), ExampleMod.IMPERIAL_FORGE.get());
-    placeWorksite(serverLevel, this.worldPosition.offset(-8, 0, -8), ExampleMod.IMPERIAL_SCRAP_YARD.get());
+    placeWorksite(serverLevel, this.worldPosition.offset(12, 0, 12), ExampleMod.IMPERIAL_FARM.get());
+    placeWorksite(serverLevel, this.worldPosition.offset(-12, 0, 12), ExampleMod.IMPERIAL_MINE.get());
+    placeWorksite(serverLevel, this.worldPosition.offset(12, 0, -12), ExampleMod.IMPERIAL_FORGE.get());
+    placeWorksite(serverLevel, this.worldPosition.offset(-12, 0, -12), ExampleMod.IMPERIAL_SCRAP_YARD.get());
 }
 
 private void placeWorksite(ServerLevel serverLevel, BlockPos pos, net.minecraft.world.level.block.Block block) {
@@ -2264,6 +2264,181 @@ private void spawnStartingPopulation(ServerLevel serverLevel, int count) {
         citizen.setCustomName(Component.literal("Imperial Citizen"));
         serverLevel.addFreshEntity(citizen);
         spawned++;
+    }
+}
+
+// ============================ HIVE CITY (autonomous capitals) ============================
+// A gigantic tiered hive instead of a single walled fort: three concentric ring-districts standing
+// for the social strata of a hive world — the sprawling UNDERHIVE on the outside (short, dense,
+// smoky hab-blocks in rough cobbled deepslate), the HIVE CITY in the middle (taller habs + the
+// manufactorum worksites, deepslate brick), and the SPIRE at the heart (the keep + a colossal
+// central spire, gilded blackstone). Each tier has its own curtain wall, towers and gates, all
+// joined by the lamp-lit central avenues. Uses a wide palette of blocks and scales with city level.
+private int hiveOuterRadius() {
+    return 40 + this.cityLevel * 6;   // L4 -> 64 (a 128-wide city). Tunable; watch login cost.
+}
+
+private void buildHiveCity(ServerLevel serverLevel) {
+    int outer = hiveOuterRadius();
+    int mid = outer * 11 / 16;
+    int inner = outer * 6 / 16;
+    int wallHeight = 6 + this.cityLevel;
+
+    // Clear trees/plants across the whole footprint so nothing pokes through the hive.
+    WorldGenPlacement.clearVegetation(serverLevel, this.worldPosition, outer + 4, 16);
+
+    // Pave the entire interior, with a richer floor toward the centre.
+    buildHiveFloor(serverLevel, outer, mid, inner);
+
+    // Three tier walls: underhive -> hive city -> spire.
+    buildRingWall(serverLevel, outer, wallHeight,
+            Blocks.COBBLED_DEEPSLATE.defaultBlockState(),
+            Blocks.DEEPSLATE_TILES.defaultBlockState(),
+            Blocks.COBBLED_DEEPSLATE_WALL.defaultBlockState());
+    buildRingWall(serverLevel, mid, wallHeight,
+            Blocks.DEEPSLATE_BRICKS.defaultBlockState(),
+            Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState(),
+            Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
+    buildRingWall(serverLevel, inner, Math.max(4, wallHeight - 1),
+            Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState(),
+            Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState(),
+            Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
+
+    // Corner towers on the two outer rings.
+    buildRingTowers(serverLevel, outer, clampHeight(serverLevel, wallHeight + 8));
+    buildRingTowers(serverLevel, mid, clampHeight(serverLevel, wallHeight + 12));
+
+    // Districts: dense, short, smoky underhive; taller hive-city hab-blocks within.
+    buildRingDistrict(serverLevel, mid + 3, outer - 3, 3, 4, 2);
+    buildRingDistrict(serverLevel, inner + 3, mid - 3, 5, 7, 4);
+
+    // The grand lamp-lit avenues crossing the whole hive (aligned with every tier gate).
+    buildCentralRoad(serverLevel, outer);
+
+    // The Spire: the keep around the Core and a colossal central spire towering over everything.
+    buildCentralKeep(serverLevel, CENTRAL_KEEP_HALF, clampHeight(serverLevel, wallHeight + 4));
+    int spireHeight = clampHeight(serverLevel, wallHeight + 40 + this.cityLevel * 6) - this.worldPosition.getY();
+    buildCentralSpire(serverLevel, this.worldPosition.offset(-1, 0, -6), Math.max(20, spireHeight));
+}
+
+// Clamps an absolute build height to stay under the (low) planet build ceiling so spires/towers
+// aren't silently chopped off at the top of the world.
+private int clampHeight(ServerLevel serverLevel, int desiredAboveGround) {
+    int ceiling = serverLevel.getMaxBuildHeight() - 2;
+    return Math.min(this.worldPosition.getY() + desiredAboveGround, ceiling) - this.worldPosition.getY();
+}
+
+// Paves the whole square interior at floor level, choosing a richer palette toward the centre.
+private void buildHiveFloor(ServerLevel serverLevel, int outer, int mid, int inner) {
+    for (int x = -outer; x <= outer; x++) {
+        for (int z = -outer; z <= outer; z++) {
+            int ring = Math.max(Math.abs(x), Math.abs(z));
+            boolean even = ((x + z) & 1) == 0;
+
+            BlockState tile;
+            if (ring <= inner) {
+                tile = even ? Blocks.GILDED_BLACKSTONE.defaultBlockState() : Blocks.POLISHED_BLACKSTONE.defaultBlockState();
+            } else if (ring <= mid) {
+                tile = even ? Blocks.STONE_BRICKS.defaultBlockState() : Blocks.POLISHED_BLACKSTONE.defaultBlockState();
+            } else {
+                tile = even ? Blocks.COBBLED_DEEPSLATE.defaultBlockState() : Blocks.DEEPSLATE_BRICKS.defaultBlockState();
+            }
+
+            BlockPos floor = this.worldPosition.offset(x, -1, z);
+            serverLevel.setBlock(floor, tile, 3);
+
+            BlockPos below = floor.below();
+            if (serverLevel.getBlockState(below).isAir()
+                    || !serverLevel.getBlockState(below).isCollisionShapeFullBlock(serverLevel, below)) {
+                serverLevel.setBlock(below, Blocks.COBBLED_DEEPSLATE.defaultBlockState(), 3);
+            }
+        }
+    }
+}
+
+// A square curtain wall of the given materials, gated on all four avenues, with buttress pillars
+// (lantern-topped) and crenellations.
+private void buildRingWall(ServerLevel serverLevel, int radius, int height, BlockState wall, BlockState pillar, BlockState crenel) {
+    for (int x = -radius; x <= radius; x++) {
+        for (int z = -radius; z <= radius; z++) {
+            boolean isWall = Math.abs(x) == radius || Math.abs(z) == radius;
+            if (!isWall) {
+                continue;
+            }
+
+            boolean gate = (Math.abs(x) <= 1 && Math.abs(z) == radius) || (Math.abs(z) <= 1 && Math.abs(x) == radius);
+            boolean isPillar = (Math.abs(z) == radius && Math.floorMod(x, 6) == 0)
+                    || (Math.abs(x) == radius && Math.floorMod(z, 6) == 0);
+            int top = isPillar ? height + 2 : height;
+
+            for (int y = 0; y < top; y++) {
+                if (gate && y < 5) {
+                    continue;
+                }
+                safePlace(serverLevel, this.worldPosition.offset(x, y, z), isPillar ? pillar : wall);
+            }
+
+            if (isPillar) {
+                safePlace(serverLevel, this.worldPosition.offset(x, top, z), Blocks.LANTERN.defaultBlockState());
+            } else if (!gate && ((x + z) & 1) == 0) {
+                safePlace(serverLevel, this.worldPosition.offset(x, height, z), crenel);
+            }
+        }
+    }
+}
+
+private void buildRingTowers(ServerLevel serverLevel, int radius, int height) {
+    buildTower(serverLevel, this.worldPosition.offset(radius, 0, radius), height);
+    buildTower(serverLevel, this.worldPosition.offset(-radius, 0, radius), height);
+    buildTower(serverLevel, this.worldPosition.offset(radius, 0, -radius), height);
+    buildTower(serverLevel, this.worldPosition.offset(-radius, 0, -radius), height);
+}
+
+// Fills the square annulus between rInner and rOuter with hab-blocks of the given height range,
+// leaving the avenues open and scattering courtyards, subsidiary spires and smoking chimneys.
+private void buildRingDistrict(ServerLevel serverLevel, int rInner, int rOuter, int minHeight, int maxHeight, int smokeChance) {
+    int cell = 9;
+
+    for (int sx = -rOuter; sx + 7 <= rOuter; sx += cell) {
+        for (int sz = -rOuter; sz + 7 <= rOuter; sz += cell) {
+            int cx = sx + 3;
+            int cz = sz + 3;
+            int ring = Math.max(Math.abs(cx), Math.abs(cz));
+
+            // Stay within this tier's band.
+            if (ring < rInner || ring > rOuter) {
+                continue;
+            }
+
+            // Keep the central avenues (and their gates) clear.
+            if (Math.abs(cx) <= 2 || Math.abs(cz) <= 2) {
+                continue;
+            }
+
+            // Open courtyards break up the density.
+            if (serverLevel.random.nextInt(6) == 0) {
+                placeLampPost(serverLevel, this.worldPosition.offset(cx, 0, cz), 4);
+                continue;
+            }
+
+            // The odd subsidiary hive spire for vertical scale.
+            if (serverLevel.random.nextInt(9) == 0) {
+                buildTower(serverLevel, this.worldPosition.offset(sx + 1, 0, sz + 1),
+                        clampHeight(serverLevel, 14 + serverLevel.random.nextInt(14)));
+                continue;
+            }
+
+            int w = 5 + serverLevel.random.nextInt(3);
+            int d = 5 + serverLevel.random.nextInt(3);
+            int height = minHeight + serverLevel.random.nextInt(maxHeight - minHeight + 1);
+
+            buildSimpleHouse(serverLevel, this.worldPosition.offset(sx, 0, sz), w, d, height);
+            placeLampPost(serverLevel, this.worldPosition.offset(sx - 1, 0, sz - 1), 3);
+
+            if (serverLevel.random.nextInt(smokeChance) == 0) {
+                placeSmokestack(serverLevel, this.worldPosition.offset(sx + 1, height, sz + 1), 3 + serverLevel.random.nextInt(3));
+            }
+        }
     }
 }
 
