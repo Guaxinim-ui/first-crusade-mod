@@ -16,17 +16,17 @@ import java.util.List;
  * (unclaimed) {@link ImperialCommandCoreBlock} — the Core then governs itself like any city.
  */
 public final class WorldSettlementSeeder {
-    // The vertical hive is colossal, so we seed a single grand capital (plus the Ork camps).
-    private static final int CITY_COUNT = 1;
+    // Villages are light now, so seed a few of them (plus the Ork camps) for testing the systems.
+    private static final int CITY_COUNT = 3;
     private static final int CAMP_COUNT = 3;
 
     // Ring around spawn (blocks). Kept well within the 5000-block world border and not on top of
     // the player so spawn stays open.
-    private static final int MIN_RADIUS = 180;
-    private static final int MAX_RADIUS = 520;
+    private static final int MIN_RADIUS = 120;
+    private static final int MAX_RADIUS = 360;
 
-    // Keep the sprawling hive cities from overlapping each other.
-    private static final int MIN_SEPARATION = 220;
+    // Keep the villages from overlapping each other.
+    private static final int MIN_SEPARATION = 110;
     private static final int ATTEMPTS_PER_SETTLEMENT = 32;
 
     private WorldSettlementSeeder() {

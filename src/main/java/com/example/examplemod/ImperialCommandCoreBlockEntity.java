@@ -521,7 +521,6 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
 
         this.resources.spend(ironCost, scrapCost, coalCost);
         this.cityLevel++;
-        buildVerticalHive(serverLevel);
         reorganizeExistingGuardsmen(serverLevel);
         setChanged();
 
@@ -2236,10 +2235,9 @@ public void buildAutonomousVillage(ServerLevel serverLevel) {
 
     this.cityLevel = Math.max(this.cityLevel, AUTONOMOUS_VILLAGE_LEVEL);
 
-    buildVerticalHive(serverLevel);
+    buildSimpleSettlement(serverLevel);
     spawnStartingPopulation(serverLevel, AUTONOMOUS_START_POPULATION);
     spawnInitialGarrison(serverLevel, AUTONOMOUS_GARRISON);
-    spawnGateGuards(serverLevel);
     setChanged();
 }
 
@@ -2488,6 +2486,71 @@ private void buildRingDistrict(ServerLevel serverLevel, int rInner, int rOuter, 
             }
         }
     }
+}
+
+// ===================== SIMPLE VILLAGE (lightweight, for testing systems) =====================
+// A plain Minecraft-style village instead of the heavy procedural hive: a loose ring of small
+// timber houses (each with a bed), the manufactorum worksites, and a couple of torches — cheap to
+// generate so the autonomous systems can be tested. The owner will supply a proper city model later;
+// the full hive builder (below) is kept but no longer called.
+private void buildSimpleSettlement(ServerLevel serverLevel) {
+    int radius = 20;
+    WorldGenPlacement.clearVegetation(serverLevel, this.worldPosition, radius + 2, 8);
+
+    int houses = 8;
+    for (int k = 0; k < houses; k++) {
+        double ang = 2.0 * Math.PI * k / houses;
+        int rr = 9 + (k % 2) * 4;
+        int dx = (int) Math.round(Math.cos(ang) * rr);
+        int dz = (int) Math.round(Math.sin(ang) * rr);
+        buildVillagerHouse(serverLevel, this.worldPosition.offset(dx - 2, 0, dz - 2), 5, 5);
+    }
+
+    // The worksites that employ the citizens (kept close to the Core).
+    placeWorksiteAt(serverLevel, this.worldPosition.offset(6, 0, 0), ExampleMod.IMPERIAL_FARM.get());
+    placeWorksiteAt(serverLevel, this.worldPosition.offset(-6, 0, 0), ExampleMod.IMPERIAL_MINE.get());
+    placeWorksiteAt(serverLevel, this.worldPosition.offset(0, 0, 6), ExampleMod.IMPERIAL_FORGE.get());
+    placeWorksiteAt(serverLevel, this.worldPosition.offset(0, 0, -6), ExampleMod.IMPERIAL_SCRAP_YARD.get());
+}
+
+// A small plains-village-style house: cobblestone footing, oak-plank walls with log corners, a glass
+// window, an open doorway, a plank roof, a bed and torches.
+private void buildVillagerHouse(ServerLevel serverLevel, BlockPos start, int width, int depth) {
+    int height = 4;
+    BlockState wall = Blocks.OAK_PLANKS.defaultBlockState();
+    BlockState post = Blocks.OAK_LOG.defaultBlockState();
+    BlockState window = Blocks.GLASS_PANE.defaultBlockState();
+
+    for (int x = 0; x < width; x++) {
+        for (int z = 0; z < depth; z++) {
+            serverLevel.setBlock(start.offset(x, -1, z), Blocks.COBBLESTONE.defaultBlockState(), 3);
+
+            boolean border = x == 0 || z == 0 || x == width - 1 || z == depth - 1;
+            boolean isCorner = (x == 0 || x == width - 1) && (z == 0 || z == depth - 1);
+
+            if (border) {
+                for (int y = 0; y < height; y++) {
+                    boolean doorway = z == 0 && x == width / 2 && y <= 1;
+                    if (doorway) {
+                        continue;
+                    }
+                    boolean win = !isCorner && y == 2 && (x == width / 2 || z == depth / 2);
+                    safePlace(serverLevel, start.offset(x, y, z), isCorner ? post : (win ? window : wall));
+                }
+            }
+        }
+    }
+
+    // Plank roof with a one-block overhang.
+    for (int x = -1; x <= width; x++) {
+        for (int z = -1; z <= depth; z++) {
+            safePlace(serverLevel, start.offset(x, height, z), Blocks.OAK_PLANKS.defaultBlockState());
+        }
+    }
+
+    placeBed(serverLevel, start.offset(1, 0, 1), Direction.SOUTH);
+    safePlace(serverLevel, start.offset(width - 2, 0, depth - 2), Blocks.TORCH.defaultBlockState());
+    safePlace(serverLevel, start.offset(2, 0, 1), Blocks.TORCH.defaultBlockState());
 }
 
 // ======================= VERTICAL HIVE (round, stacked social tiers) =======================

@@ -248,6 +248,16 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-21: **Cidades viraram vilas simples (estilo aldeia MC) p/ testar os sistemas**. Dono: a hive
+  gigante ficou ruim/pesada pra testar; vai mandar um modelo de cidade depois. Por hora `buildAutonomousVillage`
+  e `autonomousUpgrade` chamam o novo **`buildSimpleSettlement`** (anel de 8 casas de madeira leves —
+  `buildVillagerHouse`: cobble + oak planks + log + janela de vidro + porta aberta + telhado de tábua +
+  cama + tochas — + os 4 worksites perto do Core). **Todo o construtor da hive vertical foi MANTIDO**
+  (buildVerticalHive/buildHiveCity/circular helpers/spawnGateGuards) mas **não é mais chamado** (código
+  morto, warnings) — reusar quando o dono mandar o modelo. Seeder voltou a **3 vilas** (sep. 110, anel
+  120–360). Teto do planeta segue 256 (inofensivo). Build/jar OK; lang 348/348. Sistemas (F3, corrupção,
+  guerra autônoma, economia) intactos — só a aparência da cidade mudou pra leve.
+
 - 2026-06-21: **Guerra autônoma — camps destrutíveis + cidades despacham expedições**. Fecha o loop da
   guerra sem o jogador. (1) `OrkCampBlockEntity.checkOverrun` (no serverTick): conta facções na
   `garrisonBox`; se **Imperiais ≥3 e superam os Orks**, o camp é **arrasado** (bloco→ar, broadcast
