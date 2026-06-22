@@ -16,7 +16,7 @@ public class ImperialFarmManager {
     }
 
     public static boolean buildImperialFarm(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player) {
-        BlockPos farmPos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, 28);
+        BlockPos farmPos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, Math.min(28, commandCore.getBuildBorderRadius()));
 
         if (farmPos == null) {
             player.displayClientMessage(Component.literal("No free space found near the city to build an Imperial Farm."), true);

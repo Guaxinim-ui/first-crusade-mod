@@ -1,5 +1,6 @@
 package com.example.examplemod;
 
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Monster;
@@ -56,8 +57,8 @@ public class FirstCrusadeFactionManager {
             return FirstCrusadeFaction.ORKS;
         }
 
-        if (entity instanceof Player) {
-            return FirstCrusadeFaction.PLAYER;
+        if (entity instanceof Player player) {
+            return getPlayerFaction(player);
         }
 
         if (entity instanceof Monster) {
@@ -65,6 +66,22 @@ public class FirstCrusadeFactionManager {
         }
 
         return FirstCrusadeFaction.NEUTRAL;
+    }
+
+    // A player's allegiance is the side they swore to on the faction screen (see PlayerFactionData):
+    // an Imperium player fights alongside the Imperium against the Orks; an Ork player is left alone by
+    // the green tide and hunted by Imperial troops. Until they have chosen (or off the server) they are
+    // the neutral-ish PLAYER faction, which the Orks/Hostiles still raid as before.
+    public static FirstCrusadeFaction getPlayerFaction(Player player) {
+        if (player.level() instanceof ServerLevel serverLevel) {
+            return switch (PlayerFactionData.get(serverLevel).getFaction(player.getUUID())) {
+                case IMPERIUM -> FirstCrusadeFaction.IMPERIUM;
+                case ORKS -> FirstCrusadeFaction.ORKS;
+                default -> FirstCrusadeFaction.PLAYER;
+            };
+        }
+
+        return FirstCrusadeFaction.PLAYER;
     }
 
     public static boolean areAllies(Entity first, Entity second) {

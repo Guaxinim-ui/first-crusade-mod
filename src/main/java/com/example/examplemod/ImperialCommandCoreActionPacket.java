@@ -133,6 +133,9 @@ public class ImperialCommandCoreActionPacket {
             case RALLY_DEFENDERS -> commandCore.rallyDefenders(player);
             case FORTIFY_DEFENDERS -> commandCore.fortifyDefenders(player);
             case FORCE_RAID_TEST -> commandCore.forceOrkRaid(player);
+
+            case TOGGLE_GOVERNANCE -> commandCore.toggleGovernanceDelegation(player);
+            case SURVEY_BORDER -> commandCore.surveyBuildBorder(player);
         }
     }
 

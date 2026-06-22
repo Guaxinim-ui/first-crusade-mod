@@ -8,7 +8,7 @@
 > mudanças grandes, **verifique o estado real** com `git log --oneline -8`, `git status` e um
 > `Glob` em `src/main/java/com/example/examplemod/*.java` — não confie só neste arquivo.
 
-Última atualização: **2026-06-20** · branch `main` · remoto `github.com/Guaxinim-ui/first-crusade-mod`
+Última atualização: **2026-06-22** · branch `main` · remoto `github.com/Guaxinim-ui/first-crusade-mod`
 
 ---
 
@@ -247,6 +247,69 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 - Mensagens de commit em pt-BR, terminar com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
 ## 7. Changelog (mais recente no topo)
+
+- 2026-06-22: **Fações se atacam de verdade + Mapa de Guerra do mundo todo** (pedido do dono via print:
+  Orks e tropas paradas a ~50 blocos sem se enfrentar). **(#1 — guerra):** a causa era o **FOLLOW_RANGE**
+  curtíssimo (Ork Boy 28, Guardsman 32) = só enxergavam inimigo a <30 blocos. Novo handler central
+  `ExampleMod.onEntityJoinLevel` põe **FOLLOW_RANGE 96** em toda unidade de combate Imperium/Ork ao
+  nascer (exceto Cidadãos e Custodes, que guardam o Core) → elas detectam o inimigo do outro lado do
+  campo, **largam o posto e marcham pra cima** (a IA de ataque navega até o alvo, sobrepondo patrulha/
+  guarda). Investida autônoma das cidades mais frequente (`OFFENSIVE_MIN_TROOPS` 6→4, `OFFENSIVE_CHANCE`
+  6→3). **(#3 — mapa mundial):** novo `WorldWarMapData` (SavedData no overworld) registra **toda cidade
+  (Core) e todo camp** do mundo — auto-registro no tick (cobre existentes/novos) + remoção no
+  `onRemove` dos blocos (raze/quebra). `computeWarTable` reescrito: plota **todos os assentamentos do
+  mundo** (cidade=azul, camp=verde) com **escala auto-ajustável** (`statMapRange` = distância do
+  assentamento mais longe, teto 2600 = world border) → o minimapa agora **abrange o planeta**, não só
+  raio 96. Blips 8→**32** (DATA_COUNT 89→**162**, governador realocado p/ 157-160 + range 161). Removida a
+  varredura de unidades por raio (mapa agora é estratégico/barato). Lang en/pt **386/386**. Build/jar OK;
+  **não testado em jogo.** Tunáveis: `WAR_FOLLOW_RANGE`, `WAR_MAP_MAX/MIN_RANGE`. ⚠️ FOLLOW_RANGE 96 faz
+  a guarnição inteira sortir contra Orks a até 96 blocos (deixa a cidade mais exposta — é o pedido).
+
+- 2026-06-22: **Facção do jogador LIGADA no combate (amigo/inimigo)**. Dono mandou "pode ligar". O efeito
+  base é a matriz de alvos: `FirstCrusadeFactionManager.getFaction(Player)` agora devolve a **facção
+  escolhida** (novo `getPlayerFaction`, lê `PlayerFactionData`). Consequência (via `canAttack`, já
+  existente): jogador **IMPERIUM** = aliado das tropas Imperiais, caçado pelos Orks (como antes);
+  jogador **ORKS** = **ignorado pelos Orks** e **atacado pelas tropas Imperiais**; UNCHOSEN/cliente =
+  PLAYER (comportamento antigo). Sem quebrar nada: `ThreatAssessmentManager` só conta `Mob` (player não
+  conta); `OrkCampBlockEntity.countFaction` passa a contar o player na facção dele (luta junto = efeito
+  desejado). **Nota/efeito colateral:** com a matriz atual, `HOSTILE` (mobs vanilla) não atacam `ORKS`,
+  então um jogador-Ork também é ignorado por zumbis/etc. (deixado assim de propósito — Orks são temidos;
+  fácil mudar se o dono quiser). Build/jar OK; **não testado em jogo**. Outros efeitos (GUI/tropas/spawn
+  por facção) seguem em aberto pro dono definir.
+
+- 2026-06-22: **Escolha de facção no 1º login (estilo Origins) — Imperium × Orks**. Pedido do dono: ao
+  entrar no mundo, uma tela obriga o jogador a escolher um lado. **O que faz HOJE:** persiste a escolha
+  por jogador; **os efeitos no gameplay o dono vai definir depois** (gancho pronto). Novos: `PlayerFaction`
+  (UNCHOSEN/IMPERIUM/ORKS), `PlayerFactionData` (SavedData no overworld, UUID→facção, padrão WaaaghOverlordData),
+  `OpenFactionSelectPacket` (S→C, abre a tela via `DistExecutor`+`FactionSelectClient`), `SelectFactionPacket`
+  (C→S, grava 1×/jogador + msg de confirmação), `FactionSelectScreen` (tela não-fechável: Esc não fecha,
+  `isPauseScreen`, 2 botões Imperium/Orks). Gatilho em `ExampleMod.onPlayerLoggedIn`: se `!hasChosen` →
+  manda `OpenFactionSelectPacket` pro player. 3 pacotes no `NETWORK_CHANNEL` (commonSetup). Lang en/pt **385/385**.
+  **Acessor pra ligar efeitos depois:** `PlayerFactionData.get(overworld).getFaction(player)`. Build/jar OK;
+  **não testado em jogo** — dono testa: mundo NOVO + `da run`, a tela aparece ao entrar? escolhe, fecha e
+  manda a msg? relog não pergunta de novo? **Próximo (a definir pelo dono):** o que cada facção muda
+  (ex.: Orks miram o player, GUI/tropas próprias, spawn perto de cidade vs camp, etc.).
+
+- 2026-06-22: **Governador da cidade (persona) + fronteira de construção que cresce (Slice 1, pedido do
+  dono — estilo AoE IV / MineColonies)**. (1) **Governador = persona** (sem entidade): cada Core nasce
+  com um `ImperialGovernorPersonality` (WARMONGER/ADMINISTRATOR/ARCHITECT/ZEALOT, enviesado pelo tipo de
+  cidade) + um nome de um pool compartilhado (`ImperialGovernorManager`, id sincronizado → GUI mostra o
+  nome sem rede de string). Campos/NBT no Core (`governorPersonality`/`governorNameId`/
+  `governanceDelegated`), inicializados em `ensureGovernor` (1º tick, cobre cidades novas e antigas).
+  (2) **Delegação:** `tickAutonomousGovernance` agora roda se `isGoverned()` = **sem dono OU dono delegou**.
+  Cidade de NPC: Governador toca sozinho (como já era). Cidade do player: botão **Nomear/Destituir
+  Governador** liga/desliga a governança autônoma (recruta/constrói/evolui) enquanto o dono está fora.
+  Personalidade enviesa os gates de `autonomousRecruit`/`autonomousUpgrade` e dá +raio de fronteira
+  (Architect). (3) **Fronteira de construção** (`getBuildBorderRadius` 16/24/34/46/60 +bônus): limite
+  **rígido que cresce por nível**; as **8 estruturas** (Mine/GoldMine/Scrap/Forge/Refinery/Farm/Depot/
+  Barracks) agora só constroem **dentro da fronteira** (clamp do maxRadius em cada manager). Botão **Ver
+  Fronteira** pinta um anel de partículas pro dono. (4) **GUI:** aba City mostra Governador (nome+
+  personalidade), Governança (Governador/Manual/Delegada) e Fronteira; 2 botões novos. Menu DATA_COUNT
+  85→**89** (slots 85 personalidade, 86 nameId, 87 estado de governança, 88 raio da fronteira). Ações
+  novas: `TOGGLE_GOVERNANCE`, `SURVEY_BORDER`. Lang en/pt **375/375**. **compileJava + build OK; NÃO
+  testado em jogo.** Tunáveis: raios da fronteira e biases em `ImperialGovernorPersonality`/`getBuildBorderRadius`.
+  **Próximo (Slice 2):** progressão estilo AoE IV (marcos/landmarks que destravam o upgrade) e, se o dono
+  quiser, colocação manual de lotes (BUILDER) dentro da fronteira.
 
 - 2026-06-21: **Fase D7 — Mesa de Guerra (minimapa tático estilo Age of Empires)**. Nova aba **War** no
   Core: minimapa centrado na cidade (anel de território azul) com **blips** — azul = unidades imperiais,

@@ -16,7 +16,7 @@ public class ImperialPromethiumRefineryManager {
     }
 
     public static boolean buildRefinery(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player) {
-        BlockPos refineryPos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, 28);
+        BlockPos refineryPos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, Math.min(28, commandCore.getBuildBorderRadius()));
 
         if (refineryPos == null) {
             player.displayClientMessage(Component.literal("No free space found near the city to build a Promethium Refinery."), true);

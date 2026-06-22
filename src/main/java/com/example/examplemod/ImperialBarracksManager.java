@@ -13,7 +13,7 @@ public class ImperialBarracksManager {
     }
 
     public static boolean buildBarracks(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player) {
-        BlockPos barracksPos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, 28);
+        BlockPos barracksPos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, Math.min(28, commandCore.getBuildBorderRadius()));
 
         if (barracksPos == null) {
             player.displayClientMessage(Component.literal("No free space found near the city to build an Imperial Barracks."), true);

@@ -45,6 +45,15 @@ public class ImperialCommandCoreBlockEntity extends BlockEntity {
 
     private int cityLevel = 1;
 
+    // The city's Governor — a persona (no entity) that runs its politics, economy and building.
+    // For an unclaimed city the Governor always rules (autonomous). For a player-owned city the
+    // owner may "appoint" the Governor (delegate) so the city keeps progressing while they are away.
+    // Personality biases the autonomous decisions and grants a small perk; the name is an id into a
+    // shared pool so the GUI can show it without networking a string (see ImperialGovernorManager).
+    private ImperialGovernorPersonality governorPersonality;
+    private int governorNameId = -1;
+    private boolean governanceDelegated = false;
+
     // The city's six stockpiled resources (Iron, Coal, Scrap, Gold, Emerald, Crusadium) and their
     // capacity-aware fill/spend logic live in a dedicated storage; capacity scales with city level.
     private final ImperialResourceStorage resources = new ImperialResourceStorage(this::getStorageCapacity);
@@ -380,6 +389,10 @@ public int receiveProducedResource(ImperialResourceType resourceType, int amount
             blockEntity.assignCityType(serverLevel);
         }
 
+        if (blockEntity.governorPersonality == null) {
+            blockEntity.ensureGovernor(serverLevel);
+        }
+
         ImperialPopulationManager.tickCitizenGrowth(serverLevel, blockEntity);
 
         // The (expensive) structure/citizen/threat counts are only read by the Core GUI, so we
@@ -397,6 +410,7 @@ public int receiveProducedResource(ImperialResourceType resourceType, int amount
         }
 
        blockEntity.tickCounter = 0;
+WorldWarMapData.get(serverLevel).recordCity(blockEntity.worldPosition);
 ImperialCityMoraleManager.tickMorale(serverLevel, blockEntity);
 ImperialPatrolManager.tickPatrols(serverLevel, blockEntity);
 ImperialWorkforceManager.autoManageWorkforce(serverLevel, blockEntity);
@@ -420,7 +434,9 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
     // level (expanding its walls/houses/population) on its own — no player owner required. A city a
     // player has claimed is run by that player instead (this does nothing for owned cities).
     private void tickAutonomousGovernance(ServerLevel serverLevel) {
-        if (hasOwner()) {
+        // The Governor runs the city when it is unclaimed, or when a player owner has appointed
+        // (delegated to) the Governor so it keeps progressing while they are away.
+        if (!isGoverned()) {
             return;
         }
 
@@ -429,8 +445,8 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
         autonomousOffensive(serverLevel);
     }
 
-    private static final int OFFENSIVE_MIN_TROOPS = 6;
-    private static final int OFFENSIVE_CHANCE = 6;
+    private static final int OFFENSIVE_MIN_TROOPS = 4;
+    private static final int OFFENSIVE_CHANCE = 3;
 
     // A strong autonomous city takes the war to the Orks: it musters half its garrison and marches
     // them on the nearby Ork camp. The troops fight on arrival; once they overwhelm the defenders the
@@ -479,8 +495,9 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
             return;
         }
 
-        // Don't raise the whole garrison at once.
-        if (serverLevel.random.nextInt(3) != 0) {
+        // Don't raise the whole garrison at once. A Warmonger Governor levies more eagerly.
+        int recruitGate = Math.max(1, 3 + getGovernorPersonality().getRecruitGateBias());
+        if (serverLevel.random.nextInt(recruitGate) != 0) {
             return;
         }
 
@@ -514,8 +531,9 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
             return;
         }
 
-        // Growth is a slow, deliberate thing.
-        if (serverLevel.random.nextInt(4) != 0) {
+        // Growth is a slow, deliberate thing. An Administrator/Architect Governor pushes harder.
+        int upgradeGate = Math.max(1, 4 + getGovernorPersonality().getUpgradeGateBias());
+        if (serverLevel.random.nextInt(upgradeGate) != 0) {
             return;
         }
 
@@ -592,40 +610,60 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
     // Recomputes the cached counts read by the Core GUI. Called a few times per second from
     // serverTick while the menu is open, so the menu never triggers these block/entity scans on
     // its own polling.
-    // --- War Table (tactical minimap) cached data ---
-    private static final int WAR_MAP_RANGE = 96;
-    private final int[] statBlipDx = new int[8];
-    private final int[] statBlipDz = new int[8];
-    private final int[] statBlipKind = new int[8]; // 1 friendly unit, 2 enemy unit, 3 enemy camp
+    // --- War Table (strategic world map) cached data ---
+    public static final int MAX_BLIPS = 32;
+    private static final int WAR_MAP_MAX_RANGE = 2600; // covers the world border (radius 2500) with margin
+    private static final int WAR_MAP_MIN_RANGE = 128;  // floor so a lone settlement isn't a single dot
+    private final int[] statBlipDx = new int[MAX_BLIPS];
+    private final int[] statBlipDz = new int[MAX_BLIPS];
+    private final int[] statBlipKind = new int[MAX_BLIPS]; // 1 imperial city, 2 ork camp
     private int statBlipCount;
     private int statWarDominion;
     private int statWaaaghTier;
+    private int statMapRange = WAR_MAP_MIN_RANGE;
 
-    // Scans the area for friendly/enemy blips and reads the global war balance, for the War Table.
+    // Builds the strategic war map: every Imperial city and Ork camp in the world (from the global
+    // register), placed relative to this city. The map range auto-fits the farthest settlement so the
+    // whole planet's front line is visible at once — no longer just a small radius around the Core.
     private void computeWarTable(ServerLevel serverLevel) {
         this.statWarDominion = WarDominionData.get(serverLevel).getDominion();
         this.statWaaaghTier = WaaaghOverlordManager.getTier(serverLevel);
         this.statBlipCount = 0;
 
-        if (this.orkCampPos != null
-                && Math.abs(this.orkCampPos.getX() - this.worldPosition.getX()) <= WAR_MAP_RANGE
-                && Math.abs(this.orkCampPos.getZ() - this.worldPosition.getZ()) <= WAR_MAP_RANGE) {
-            addBlip(this.orkCampPos.getX() - this.worldPosition.getX(), this.orkCampPos.getZ() - this.worldPosition.getZ(), 3);
+        WorldWarMapData map = WorldWarMapData.get(serverLevel);
+
+        // First pass: how far out does the farthest settlement sit? That sets the zoom.
+        int farthest = WAR_MAP_MIN_RANGE;
+        farthest = Math.max(farthest, farthestSettlement(map.getCities()));
+        farthest = Math.max(farthest, farthestSettlement(map.getCamps()));
+        this.statMapRange = Math.min(WAR_MAP_MAX_RANGE, farthest);
+
+        // Second pass: plot the blips (imperial cities, then ork camps).
+        for (long packed : map.getCities()) {
+            if (packed == this.worldPosition.asLong()) {
+                continue; // this city is the centre marker, drawn separately
+            }
+            BlockPos pos = BlockPos.of(packed);
+            addBlip(pos.getX() - this.worldPosition.getX(), pos.getZ() - this.worldPosition.getZ(), 1);
         }
 
-        AABB box = new AABB(this.worldPosition).inflate(WAR_MAP_RANGE);
-        for (net.minecraft.world.entity.LivingEntity entity :
-                serverLevel.getEntitiesOfClass(net.minecraft.world.entity.LivingEntity.class, box, e -> e.isAlive())) {
-            if (this.statBlipCount >= this.statBlipKind.length) {
-                break;
-            }
-            FirstCrusadeFaction faction = FirstCrusadeFactionManager.getFaction(entity);
-            int kind = faction == FirstCrusadeFaction.IMPERIUM ? 1 : (faction == FirstCrusadeFaction.ORKS ? 2 : 0);
-            if (kind == 0) {
-                continue;
-            }
-            addBlip((int) (entity.getX() - this.worldPosition.getX()), (int) (entity.getZ() - this.worldPosition.getZ()), kind);
+        for (long packed : map.getCamps()) {
+            BlockPos pos = BlockPos.of(packed);
+            addBlip(pos.getX() - this.worldPosition.getX(), pos.getZ() - this.worldPosition.getZ(), 2);
         }
+    }
+
+    private int farthestSettlement(java.util.Set<Long> packedPositions) {
+        int farthest = 0;
+
+        for (long packed : packedPositions) {
+            BlockPos pos = BlockPos.of(packed);
+            int dx = Math.abs(pos.getX() - this.worldPosition.getX());
+            int dz = Math.abs(pos.getZ() - this.worldPosition.getZ());
+            farthest = Math.max(farthest, Math.max(dx, dz));
+        }
+
+        return farthest;
     }
 
     private void addBlip(int dx, int dz, int kind) {
@@ -633,8 +671,8 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
             return;
         }
         int i = this.statBlipCount++;
-        this.statBlipDx[i] = Math.max(-WAR_MAP_RANGE, Math.min(WAR_MAP_RANGE, dx));
-        this.statBlipDz[i] = Math.max(-WAR_MAP_RANGE, Math.min(WAR_MAP_RANGE, dz));
+        this.statBlipDx[i] = Math.max(-this.statMapRange, Math.min(this.statMapRange, dx));
+        this.statBlipDz[i] = Math.max(-this.statMapRange, Math.min(this.statMapRange, dz));
         this.statBlipKind[i] = kind;
     }
 
@@ -644,6 +682,11 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
 
     public int getWaaaghTierGui() {
         return this.statWaaaghTier;
+    }
+
+    // World range (blocks from this city's centre) the war map currently spans, for the GUI scale.
+    public int getMapRangeGui() {
+        return this.statMapRange;
     }
 
     public int getBlipCount() {
@@ -3993,6 +4036,99 @@ public int getTerritoryRadius() {
     return 64 + Math.max(1, this.cityLevel) * 16;
 }
 
+// ----- Governor persona & build border -----
+
+// Picks this city's Governor once, biased by the city type. Called the first server tick a city
+// has no Governor yet (covers both freshly placed and older saved cities).
+private void ensureGovernor(ServerLevel serverLevel) {
+    this.governorPersonality = ImperialGovernorPersonality.pickForCityType(getCityType(), serverLevel.random);
+
+    if (this.governorNameId < 0) {
+        this.governorNameId = ImperialGovernorManager.randomNameId(serverLevel.random);
+    }
+
+    setChanged();
+}
+
+public ImperialGovernorPersonality getGovernorPersonality() {
+    return this.governorPersonality == null ? ImperialGovernorPersonality.DEFAULT : this.governorPersonality;
+}
+
+public int getGovernorPersonalityOrdinal() {
+    return getGovernorPersonality().ordinal();
+}
+
+public int getGovernorNameId() {
+    return Math.max(0, this.governorNameId);
+}
+
+public boolean isGovernanceDelegated() {
+    return this.governanceDelegated;
+}
+
+// The Governor runs the city when it is unclaimed, or when its player owner has delegated to it.
+public boolean isGoverned() {
+    return !hasOwner() || this.governanceDelegated;
+}
+
+// GUI code: 0 = unclaimed (Governor rules), 1 = owned & run by the player, 2 = owned & delegated.
+public int getGovernanceState() {
+    if (!hasOwner()) {
+        return 0;
+    }
+
+    return this.governanceDelegated ? 2 : 1;
+}
+
+// Owner toggles whether the Governor runs the city in their absence (appoint / recall).
+public void toggleGovernanceDelegation(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.interface.not_owner"), true);
+        return;
+    }
+
+    this.governanceDelegated = !this.governanceDelegated;
+    setChanged();
+
+    String governorName = ImperialGovernorManager.nameForId(getGovernorNameId());
+    Component key = this.governanceDelegated
+            ? Component.translatable("msg.firstcrusade.governor.appointed", governorName, this.baseName)
+            : Component.translatable("msg.firstcrusade.governor.recalled", governorName);
+    player.displayClientMessage(key, true);
+}
+
+// The radius (blocks) the city may build its work-sites within. It is a hard, level-scaled space
+// limit that grows as the city levels up (the MineColonies-style expanding plot); an Architect
+// Governor claims a little extra room.
+public int getBuildBorderRadius() {
+    int base = switch (this.cityLevel) {
+        case 1 -> 16;
+        case 2 -> 24;
+        case 3 -> 34;
+        case 4 -> 46;
+        case 5 -> 60;
+        default -> 16;
+    };
+
+    return base + getGovernorPersonality().getBorderBonus();
+}
+
+// Shows the owner the current build border as a ring of particles.
+public void surveyBuildBorder(Player player) {
+    if (!(player instanceof ServerPlayer serverPlayer) || !(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.interface.not_owner"), true);
+        return;
+    }
+
+    ImperialGovernorManager.surveyBuildBorder(serverLevel, serverPlayer, this.worldPosition, getBuildBorderRadius());
+    player.displayClientMessage(
+            Component.translatable("msg.firstcrusade.governor.surveyed", getBuildBorderRadius()), true);
+}
+
 // Live threat from actual nearby enemies (quantity x quality), not raid history.
 public int getLiveThreatScore() {
     if (this.level instanceof ServerLevel serverLevel) {
@@ -4243,6 +4379,12 @@ protected void saveAdditional(CompoundTag tag) {
 
     tag.putInt("CityLevel", this.cityLevel);
 
+    if (this.governorPersonality != null) {
+        tag.putString("GovernorPersonality", this.governorPersonality.name());
+    }
+    tag.putInt("GovernorNameId", this.governorNameId);
+    tag.putBoolean("GovernanceDelegated", this.governanceDelegated);
+
     this.resources.save(tag);
 
     tag.putInt("CityMorale", this.cityMorale);
@@ -4311,6 +4453,12 @@ public void load(CompoundTag tag) {
     if (this.cityLevel > MAX_CITY_LEVEL) {
         this.cityLevel = MAX_CITY_LEVEL;
     }
+
+    this.governorPersonality = tag.contains("GovernorPersonality")
+            ? ImperialGovernorPersonality.fromName(tag.getString("GovernorPersonality"))
+            : null;
+    this.governorNameId = tag.contains("GovernorNameId") ? tag.getInt("GovernorNameId") : -1;
+    this.governanceDelegated = tag.getBoolean("GovernanceDelegated");
 
     this.resources.load(tag);
     this.food = Math.min(tag.getInt("Food"), getFoodCapacity());

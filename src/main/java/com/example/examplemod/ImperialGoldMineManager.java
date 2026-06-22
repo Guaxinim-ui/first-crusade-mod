@@ -16,7 +16,7 @@ public class ImperialGoldMineManager {
     }
 
     public static boolean buildImperialGoldMine(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player) {
-        BlockPos minePos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, 28);
+        BlockPos minePos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, Math.min(28, commandCore.getBuildBorderRadius()));
 
         if (minePos == null) {
             player.displayClientMessage(Component.literal("No free space found near the city to build a Gold Mine."), true);

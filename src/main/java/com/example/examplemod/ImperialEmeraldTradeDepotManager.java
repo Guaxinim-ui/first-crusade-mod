@@ -16,7 +16,7 @@ public class ImperialEmeraldTradeDepotManager {
     }
 
     public static boolean buildTradeDepot(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player) {
-        BlockPos depotPos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, 28);
+        BlockPos depotPos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, Math.min(28, commandCore.getBuildBorderRadius()));
 
         if (depotPos == null) {
             player.displayClientMessage(Component.literal("No free space found near the city to build an Emerald Trade Depot."), true);

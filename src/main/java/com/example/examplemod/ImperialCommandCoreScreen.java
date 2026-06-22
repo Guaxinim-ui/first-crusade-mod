@@ -18,9 +18,6 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
     private static final int TAB_RESOURCES = 4;
     private static final int TAB_WAR = 5;
 
-    // World range (blocks) the tactical minimap covers from the city centre.
-    private static final int WAR_MAP_RANGE = 96;
-
     private static final String[] TAB_KEYS = {
             "gui.firstcrusade.tab.city",
             "gui.firstcrusade.tab.build",
@@ -34,6 +31,8 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
     // City tab
     private Button upgradeButton;
+    private Button governanceButton;
+    private Button surveyBorderButton;
     // Build tab
     private Button buildMineButton;
     private Button buildGoldMineButton;
@@ -150,6 +149,8 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
     private void initCityTab() {
         this.upgradeButton = addActionButton(buttonX(), buttonY(0), 148, 18, "gui.firstcrusade.button.upgrade_city", ImperialCommandCoreAction.UPGRADE_CITY);
+        this.governanceButton = addActionButton(buttonX(), buttonY(1), 148, 18, "gui.firstcrusade.button.appoint_governor", ImperialCommandCoreAction.TOGGLE_GOVERNANCE);
+        this.surveyBorderButton = addActionButton(buttonX(), buttonY(2), 148, 18, "gui.firstcrusade.button.survey_border", ImperialCommandCoreAction.SURVEY_BORDER);
     }
 
     private void initBuildTab() {
@@ -213,6 +214,24 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         applyButton(this.upgradeButton, this.menu.getCityLevel() < 5,
                 Component.translatable("gui.firstcrusade.tip.upgrade.title"), getUpgradeCostText(),
                 Component.translatable("gui.firstcrusade.reason.max_level"));
+
+        // Delegation is only meaningful for a city the player owns; an unclaimed city is always run
+        // by its Governor. The label flips between appointing and recalling.
+        if (this.governanceButton != null) {
+            this.governanceButton.setMessage(Component.translatable(this.menu.getGovernanceState() == 2
+                    ? "gui.firstcrusade.button.recall_governor"
+                    : "gui.firstcrusade.button.appoint_governor"));
+        }
+
+        applyButton(this.governanceButton, this.menu.getGovernanceState() != 0,
+                Component.translatable("gui.firstcrusade.tip.governor.title"),
+                Component.translatable("gui.firstcrusade.tip.governor.desc"),
+                Component.translatable("gui.firstcrusade.reason.unclaimed_governor"));
+
+        applyButton(this.surveyBorderButton, true,
+                Component.translatable("gui.firstcrusade.tip.survey.title"),
+                Component.translatable("gui.firstcrusade.tip.survey.desc", this.menu.getBuildBorderRadius()),
+                null);
 
         applyButton(this.buildMineButton, this.menu.getMineCount() < this.menu.getMineCapacity(),
                 Component.translatable("gui.firstcrusade.tip.mine.title"), Component.translatable("gui.firstcrusade.tip.mine.desc"),
@@ -466,6 +485,9 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         drawLine(g, Component.translatable("gui.firstcrusade.war.waaagh", this.menu.getWaaaghTier()), 12, y, 0xFF7CCB5A);
         y += 11;
         drawLine(g, Component.translatable("gui.firstcrusade.info.territory", this.menu.getTerritoryRadius()), 12, y, 0xFF9AD0FF);
+        y += 11;
+        // The map auto-zooms to fit every settlement, so show the span the player is looking at.
+        drawLine(g, Component.translatable("gui.firstcrusade.war.map_range", this.menu.getMapRange()), 12, y, 0xFF9AD0FF);
 
         int mx0 = 158;
         int my0 = 46;
@@ -475,6 +497,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         int cx = mx0 + size / 2;
         int cy = my0 + size / 2;
         int half = size / 2 - 2;
+        int range = this.menu.getMapRange();
 
         g.fill(mx0, my0, mx1, my1, 0xFF0E140E);
         g.fill(mx0, my0, mx1, my0 + 1, 0xFF3A2A12);
@@ -482,16 +505,16 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         g.fill(mx0, my0, mx0 + 1, my1, 0xFF3A2A12);
         g.fill(mx1 - 1, my0, mx1, my1, 0xFF3A2A12);
 
-        int rPix = Math.min(half, this.menu.getTerritoryRadius() * half / WAR_MAP_RANGE);
+        int rPix = Math.min(half, this.menu.getTerritoryRadius() * half / range);
         drawCircle(g, cx, cy, rPix, 0x553A7AFF);
 
+        // Strategic blips: every Imperial city (blue) and Ork camp (green) in the world.
         for (int i = 0; i < this.menu.getBlipCount(); i++) {
-            int px = cx + this.menu.getBlipDx(i) * half / WAR_MAP_RANGE;
-            int pz = cy + this.menu.getBlipDz(i) * half / WAR_MAP_RANGE;
+            int px = cx + this.menu.getBlipDx(i) * half / range;
+            int pz = cy + this.menu.getBlipDz(i) * half / range;
             switch (this.menu.getBlipKind(i)) {
-                case 3 -> g.fill(px - 2, pz - 2, px + 3, pz + 3, 0xFFCC1111);
-                case 2 -> g.fill(px - 1, pz - 1, px + 2, pz + 2, 0xFFFF5555);
-                default -> g.fill(px - 1, pz - 1, px + 2, pz + 2, 0xFF55AAFF);
+                case 2 -> g.fill(px - 2, pz - 2, px + 3, pz + 3, 0xFF4CA02C);
+                default -> g.fill(px - 2, pz - 2, px + 3, pz + 3, 0xFF3A7AFF);
             }
         }
 
@@ -547,6 +570,30 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.crusade", this.menu.getCrusadeTier()), 12, y, 0xFFD6B85A);
         y += 11;
         drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.territory", this.menu.getTerritoryRadius()), 12, y, 0xFF9AD0FF);
+        y += 11;
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.governor", this.menu.getGovernorName(), this.menu.getGovernorPersonality().getDisplayName()), 12, y, 0xFFE0C070);
+        y += 11;
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.governance", governanceText()), 12, y, governanceColor());
+        y += 11;
+        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.build_border", this.menu.getBuildBorderRadius()), 12, y, 0xFF9AD0FF);
+    }
+
+    // Label/colour for the city's current governance: ruled by the Governor (autonomous), run by the
+    // player owner, or delegated by the owner to the Governor.
+    private Component governanceText() {
+        return switch (this.menu.getGovernanceState()) {
+            case 1 -> Component.translatable("gui.firstcrusade.governance.manual");
+            case 2 -> Component.translatable("gui.firstcrusade.governance.delegated");
+            default -> Component.translatable("gui.firstcrusade.governance.autonomous");
+        };
+    }
+
+    private int governanceColor() {
+        return switch (this.menu.getGovernanceState()) {
+            case 1 -> 0xFFBBD7FF;
+            case 2 -> 0xFF9BE07A;
+            default -> 0xFFE0C070;
+        };
     }
 
     private void renderBuildInfo(GuiGraphics guiGraphics) {

@@ -10,9 +10,13 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 
 public class ImperialCommandCoreMenu extends AbstractContainerMenu {
-    // 0..57 = stats; 58 dominion, 59 WAAAGH! tier, 60 blip count, 61..84 = 8 blips (dx,dz,kind each).
-    private static final int DATA_COUNT = 85;
+    // 0..57 = stats; 58 dominion, 59 WAAAGH! tier, 60 blip count, 61.. = up to MAX_BLIPS world-map
+    // blips (dx,dz,kind each); then governor personality / name id / governance state / build border
+    // radius / war-map range.
+    private static final int MAX_BLIPS = ImperialCommandCoreBlockEntity.MAX_BLIPS;
     private static final int BLIP_BASE = 61;
+    private static final int GOVERNOR_BASE = BLIP_BASE + MAX_BLIPS * 3; // 157
+    private static final int DATA_COUNT = GOVERNOR_BASE + 5; // 162
 
     private final ContainerData data;
     private final BlockPos commandCorePos;
@@ -109,7 +113,7 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
                     case 59 -> commandCore.getWaaaghTierGui();
                     case 60 -> commandCore.getBlipCount();
                     default -> {
-                        if (index >= BLIP_BASE && index < DATA_COUNT) {
+                        if (index >= BLIP_BASE && index < GOVERNOR_BASE) {
                             int blip = (index - BLIP_BASE) / 3;
                             yield switch ((index - BLIP_BASE) % 3) {
                                 case 0 -> commandCore.getBlipDx(blip);
@@ -117,7 +121,14 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
                                 default -> commandCore.getBlipKind(blip);
                             };
                         }
-                        yield 0;
+                        yield switch (index - GOVERNOR_BASE) {
+                            case 0 -> commandCore.getGovernorPersonalityOrdinal();
+                            case 1 -> commandCore.getGovernorNameId();
+                            case 2 -> commandCore.getGovernanceState();
+                            case 3 -> commandCore.getBuildBorderRadius();
+                            case 4 -> commandCore.getMapRangeGui();
+                            default -> 0;
+                        };
                     }
                 };
             }
@@ -418,5 +429,26 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
 
     public int getBlipKind(int i) {
         return this.data.get(BLIP_BASE + i * 3 + 2);
+    }
+
+    public ImperialGovernorPersonality getGovernorPersonality() {
+        return ImperialGovernorPersonality.fromOrdinal(this.data.get(GOVERNOR_BASE));
+    }
+
+    public String getGovernorName() {
+        return ImperialGovernorManager.nameForId(this.data.get(GOVERNOR_BASE + 1));
+    }
+
+    public int getGovernanceState() {
+        return this.data.get(GOVERNOR_BASE + 2);
+    }
+
+    public int getBuildBorderRadius() {
+        return this.data.get(GOVERNOR_BASE + 3);
+    }
+
+    // World range (blocks) the strategic war map currently spans, for scaling the minimap.
+    public int getMapRange() {
+        return Math.max(1, this.data.get(GOVERNOR_BASE + 4));
     }
 }

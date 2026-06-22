@@ -2,6 +2,7 @@ package com.example.examplemod;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -46,6 +47,16 @@ public class ImperialCommandCoreBlock extends BaseEntityBlock {
                 ExampleMod.IMPERIAL_COMMAND_CORE_BLOCK_ENTITY.get(),
                 ImperialCommandCoreBlockEntity::serverTick
         );
+    }
+
+    // When the Core is destroyed the city falls — drop it from the world war map.
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+        if (!state.is(newState.getBlock()) && level instanceof ServerLevel serverLevel) {
+            WorldWarMapData.get(serverLevel).removeCity(pos);
+        }
+
+        super.onRemove(state, level, pos, newState, movedByPiston);
     }
 
     @Override

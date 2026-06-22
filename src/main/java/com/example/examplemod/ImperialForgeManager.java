@@ -16,7 +16,7 @@ public class ImperialForgeManager {
     }
 
     public static boolean buildForge(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player) {
-        BlockPos forgePos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, 32);
+        BlockPos forgePos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, Math.min(32, commandCore.getBuildBorderRadius()));
 
         if (forgePos == null) {
             player.displayClientMessage(Component.literal("No free space found near the city to build an Imperial Forge."), true);

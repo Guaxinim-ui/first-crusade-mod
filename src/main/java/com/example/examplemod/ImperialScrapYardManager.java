@@ -16,7 +16,7 @@ public class ImperialScrapYardManager {
     }
 
     public static boolean buildScrapYard(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player) {
-        BlockPos scrapYardPos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, 28);
+        BlockPos scrapYardPos = findFreeWorkSitePosition(serverLevel, commandCore.getBlockPos(), 8, Math.min(28, commandCore.getBuildBorderRadius()));
 
         if (scrapYardPos == null) {
             player.displayClientMessage(Component.literal("No free space found near the city to build a Scrap Yard."), true);

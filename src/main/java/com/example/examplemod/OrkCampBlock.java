@@ -1,6 +1,7 @@
 package com.example.examplemod;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
@@ -14,6 +15,16 @@ import javax.annotation.Nullable;
 public class OrkCampBlock extends BaseEntityBlock {
     public OrkCampBlock(Properties properties) {
         super(properties);
+    }
+
+    // When the camp is razed or broken, drop it from the world war map.
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+        if (!state.is(newState.getBlock()) && level instanceof ServerLevel serverLevel) {
+            WorldWarMapData.get(serverLevel).removeCamp(pos);
+        }
+
+        super.onRemove(state, level, pos, newState, movedByPiston);
     }
 
     @Override

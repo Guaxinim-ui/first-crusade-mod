@@ -84,6 +84,9 @@ public class OrkCampBlockEntity extends BlockEntity {
             return;
         }
 
+        // Put this camp on the world war map (so the Core's strategic map shows it).
+        WorldWarMapData.get(serverLevel).recordCamp(pos);
+
         camp.maintainGarrison(serverLevel, pos);
         camp.buildWaaagh(serverLevel, pos);
         camp.trySpreadWaaagh(serverLevel, pos);

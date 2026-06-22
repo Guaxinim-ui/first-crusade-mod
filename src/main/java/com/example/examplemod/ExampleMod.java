@@ -924,6 +924,22 @@ private void commonSetup(final FMLCommonSetupEvent event) {
                 ImperialCommandCoreActionPacket::decode,
                 ImperialCommandCoreActionPacket::handle
         );
+
+        NETWORK_CHANNEL.registerMessage(
+                networkPacketId++,
+                OpenFactionSelectPacket.class,
+                OpenFactionSelectPacket::encode,
+                OpenFactionSelectPacket::decode,
+                OpenFactionSelectPacket::handle
+        );
+
+        NETWORK_CHANNEL.registerMessage(
+                networkPacketId++,
+                SelectFactionPacket.class,
+                SelectFactionPacket::encode,
+                SelectFactionPacket::decode,
+                SelectFactionPacket::handle
+        );
     });
 
     LOGGER.info("First Crusade loaded successfully.");
@@ -985,6 +1001,14 @@ public void onPlayerLoggedIn(net.minecraftforge.event.entity.player.PlayerEvent.
     if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
         net.minecraft.server.level.ServerLevel overworld = serverPlayer.serverLevel().getServer().overworld();
         WorldSettlementSeeder.seedAroundSpawn(overworld);
+
+        // First time this player joins the world they must pick a side (Imperium or Orks). The
+        // server asks the client to open the faction screen; the choice persists in PlayerFactionData.
+        if (!PlayerFactionData.get(overworld).hasChosen(serverPlayer.getUUID())) {
+            NETWORK_CHANNEL.send(
+                    net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> serverPlayer),
+                    new OpenFactionSelectPacket());
+        }
     }
 }
 
@@ -1035,6 +1059,36 @@ public void onLivingTick(net.minecraftforge.event.entity.living.LivingEvent.Livi
     } else if (faction == FirstCrusadeFaction.ORKS) {
         entity.addEffect(new net.minecraft.world.effect.MobEffectInstance(
                 net.minecraft.world.effect.MobEffects.REGENERATION, 60, 0, false, false));
+    }
+}
+
+// The war should be fought across the field, not just at arm's length: the original detection range
+// (Ork Boy 28, Guardsman 32, ...) was so short that two factions could idle 50 blocks apart and never
+// notice each other (the player saw exactly this). Every Imperial/Ork combat unit gets a much wider
+// FOLLOW_RANGE on join, so it spots the enemy across the field, leaves its post and marches in to
+// fight. Citizens (non-combatants) and Custodes (sworn to guard the Core) keep their short range.
+private static final double WAR_FOLLOW_RANGE = 96.0D;
+
+@SubscribeEvent
+public void onEntityJoinLevel(net.minecraftforge.event.entity.EntityJoinLevelEvent event) {
+    if (event.getLevel().isClientSide
+            || !(event.getEntity() instanceof net.minecraft.world.entity.LivingEntity living)
+            || living instanceof net.minecraft.world.entity.player.Player
+            || living instanceof ImperialCitizenEntity
+            || living instanceof CustodesEntity) {
+        return;
+    }
+
+    FirstCrusadeFaction faction = FirstCrusadeFactionManager.getFaction(living);
+    if (faction != FirstCrusadeFaction.IMPERIUM && faction != FirstCrusadeFaction.ORKS) {
+        return;
+    }
+
+    net.minecraft.world.entity.ai.attributes.AttributeInstance followRange =
+            living.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.FOLLOW_RANGE);
+
+    if (followRange != null && followRange.getBaseValue() < WAR_FOLLOW_RANGE) {
+        followRange.setBaseValue(WAR_FOLLOW_RANGE);
     }
 }
 
