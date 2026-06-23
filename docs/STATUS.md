@@ -248,6 +248,66 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-22: **Bloco do acampamento Ork vira "Núcleo Ork" (não parece mais spawner)**. Pedido do dono
+  (print do cubo de tijolo vermelho). O bloco `ORK_CAMP` deixou de ser cubo `red_nether_bricks`: novo
+  modelo `models/block/ork_camp.json` = **altar/núcleo em camadas** (base polished_blackstone → pilar
+  nether_bricks → núcleo `magma` brilhante). Bloco agora emite luz 8 + `noOcclusion` + som NETHER_BRICKS +
+  strength 4/8. Renomeado pra **"Núcleo Ork (Waaagh!)"** (en/pt) e broadcasts ajustadas (en feito; dono
+  ajusta o texto pt). Funcionalmente já era o "core" da cidade Ork (governa populace/economia/crescimento).
+  Build/lang OK; **não testado em jogo** (textura é placeholder vanilla; dono faz a arte final).
+
+- 2026-06-22: **Fix casas debaixo da terra (superflat) + cidades Orks crescem devagar (sem fountain)**.
+  **(1) Underground:** `WorldGenPlacement.groundPlacement` agora força `level.getChunk(x>>4,z>>4)` ANTES
+  de ler o heightmap — sem isso, assentamento semeado num chunk ainda não gerado (distante) lia uma
+  superfície baixa falsa e era construído enterrado (bem visível no superflat). **(2) Orks deixam de ser
+  spawner:** `OrkCampBlockEntity` não mantém-mais-até-o-cap. Agora `foundIfNeeded` spawna o grupo inicial
+  UMA vez (lvl1 = 2 grots + 6 boyz; cidades semeadas lvl3 = 4 grots + 8 boyz), e `growSlowly` adiciona **no
+  máx 1 Ork a cada ~30s** (`GROWTH_INTERVAL_CYCLES=3`), grots primeiro e Boyz pagos com loot — nunca um
+  refill instantâneo. `seedAsCity` deixou de dar loot pra encher a guarnição de uma vez (loot=60). War
+  parties já mobilizam Boyz existentes (a cidade esvazia ao atacar e reconstrói nesse ritmo lento). NBT
+  `Founded`/`GrowthCooldown`. Build OK; **não testado em jogo** (testar em mundo NOVO superflat: as casas
+  ficam na superfície? os Orks aparecem aos poucos em vez de jorrar?).
+
+- 2026-06-22: **Mesa de Estratégia (pesquisa paga) + economia das cidades Orks + MODO TESTE (sandbox)**.
+  **(1) Pesquisa AoE/MineColonies:** novo bloco **`StrategiumBlock`** ("Mesa de Estratégia") + BE/Menu/
+  Screen/ActionPacket + `FactionResearchData` (SavedData) + `FactionResearchManager`. Abastece a mesa
+  com Ferro/Sucata (click direito) e paga p/ **pesquisar a próxima Era** (timer); ao concluir, sobe o
+  tier da Cruzada (`ImperiumOverlordData.ensureAtLeastTier`). As **boss bars do topo foram removidas**
+  (escolha do dono: progresso só na mesa). GUI desenhada com `fill()` (sem textura; bloco usa
+  cartography_table placeholder). Registrado em ExampleMod (block/item/BE/menu/creative/packet/
+  MenuScreens). Lang `gui/msg.firstcrusade.strategium.*` + `research.*`. **(2) Cidades Orks = economia
+  de verdade (deixaram de ser spawner):** `OrkCampBlockEntity` agora roda **Grots (populace) → Loot →
+  Boyz**. `maintainPopulace` (Gretchin grátis por nível), `produceLoot` (grots geram loot), `recruitWarriors`
+  (Boyz **custam loot**, até o cap), `launchWarParty` **mobiliza Boyz EXISTENTES** (não cria do nada — a
+  guarnição esvazia ao atacar e precisa ser refeita pela economia), crescimento de nível gasta loot +
+  exige populace cheia. NBT `Loot`. `seedAsCity` dá loot inicial. **(3) MODO TESTE** (`ExampleMod.
+  TEST_FIXED_WORLD = true`, `TEST_WARRIOR_CAP = 50`): **sem mobs vanilla** (handler em `onEntityJoinLevel`
+  cancela todo Mob namespace `minecraft` — passivo E hostil); seeder planta **5 cidades Imperiais ao SUL
+  (+Z) e 5 cidades Orks ao NORTE (-Z)** apontadas uma na outra (`seedTestLayout`); cidades Imperiais **não**
+  semeiam camps/raids próprios; ambas **capadas em 50 guerreiros**; Orks nascem nível 3. Imperializador de
+  vila vanilla desligado no modo teste. **Mundo: dono cria como SUPERFLAT** (sem mexer no worldgen).
+  ⚠️ Pra voltar ao jogo normal, **`TEST_FIXED_WORLD = false`**. Build/jar OK; **não testado em jogo**.
+  ⚠️ Perf: 5+5 cidades a 50 = muitas entidades (centenas) — baixar `TEST_COUNT_PER_SIDE`/caps se travar.
+
+- 2026-06-22: **Balanceamento estilo AoE: Orks mais lentos + barras de Era + Império mais rápido**
+  (pedido do dono via print: orcs spawnando rápido demais; quer barra de pesquisa/progresso AoE/
+  MineColonies p/ os dois lados; Império começar com mais aldeões e evoluir mais rápido). **(1)
+  Orks contidos:** `OrkCampBlockEntity` — guarnição 4→3, `WAAAGH_PER_CYCLE` 8→5, `WAAAGH_THRESHOLD`
+  100→150, war party 4→3, aceleração por tier `*3`→`*2`, spread `SPREAD_MIN_TIER` 2→3 + `SPREAD_CHANCE`
+  12→24. **Teto de enxame** novo (`WAR_FIELD_ORK_CAP` 20 em raio 56): antes de soltar war party o camp
+  conta Orks vivos perto da cidade-alvo e **segura o ataque** se já estiver saturado (orcs são
+  persistentes e empilhavam num exército infinito — causa do print). Raids da cidade também reduzidas
+  (`getRaidChance` ~−40%, `getRaidCooldownDays` +1~2 dias). **(2) Barra de Era (research bar):** novo
+  `FactionProgressBars` — duas **ServerBossEvent** no topo da tela (Cruzada=azul, WAAAGH!=verde) que
+  enchem rumo à próxima Era (tier 0-4), lendo `getProgressToNextTier()` (novo) dos overlords. Sem GUI/
+  pacote (boss bar sincroniza sozinha); driven em `StrategicWarAIEvents`. Lang `bar.firstcrusade.*`
+  (en/pt). **(3) Império mais rápido:** thresholds da Cruzada baixados (300/1100/3000/7000) e do WAAAGH!
+  **subidos** (900/3000/9000/22000) → Império "pesquisa"/sobe de Era na frente; `AUTONOMOUS_START_POPULATION`
+  12→18, `AUTONOMOUS_GARRISON` 6→8, `recruitGate` base 3→2, `upgradeGate` base 4→3. **A IA-bot estilo AoE
+  já existia** (Governador autônomo: economia via worksites → recruta → evolui de nível → marcha no camp)
+  — só foi acelerada/balanceada. Build/jar OK; lang válida; **NÃO testado em jogo** (dono testa em mundo
+  novo). Tunáveis: constantes em `OrkCampBlockEntity`, thresholds nos `*OverlordData`, `AUTONOMOUS_*`.
+
 - 2026-06-22: **Fações se atacam de verdade + Mapa de Guerra do mundo todo** (pedido do dono via print:
   Orks e tropas paradas a ~50 blocos sem se enfrentar). **(#1 — guerra):** a causa era o **FOLLOW_RANGE**
   curtíssimo (Ork Boy 28, Guardsman 32) = só enxergavam inimigo a <30 blocos. Novo handler central

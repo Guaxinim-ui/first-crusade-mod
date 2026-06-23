@@ -21,6 +21,11 @@ public final class WorldGenPlacement {
     // The air position directly above the true ground (terrain) surface at x,z — skipping trees
     // (logs/leaves), plants and snow so structures rest on the ground, not on a treetop.
     public static BlockPos groundPlacement(ServerLevel level, int x, int z) {
+        // Force the chunk to finish generating first, so its heightmap is valid. Without this, a
+        // settlement seeded into a not-yet-generated (e.g. distant) chunk reads a bogus low surface
+        // and is built underground — very visible on a superflat world.
+        level.getChunk(x >> 4, z >> 4);
+
         BlockPos top = level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE, new BlockPos(x, 0, z));
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos(x, top.getY(), z);
 

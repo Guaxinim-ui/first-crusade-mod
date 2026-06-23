@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -22,21 +23,53 @@ public class OrkCampBlockEntity extends BlockEntity {
     private static final String CAMP_ORK_TAG = "FirstCrusadeCampOrk";
     private static final String CAMP_POS_TAG = "FirstCrusadeCampPos";
 
-    private static final int GARRISON_SIZE = 4;
+    private static final int MAX_CAMP_LEVEL = 4;
+
+    // Momentum (gathered each 200-tick cycle) needed to grow from the current level to the next;
+    // indexed by current campLevel. The camp swells from a small encampment into a fortified Ork
+    // stronghold — the Ork mirror of an Imperial city levelling up.
+    private static final int[] GROWTH_TO_NEXT = {0, 24, 60, 120};
+
     private static final int GARRISON_RADIUS = 24;
-    private static final int WAAAGH_PER_CYCLE = 8;
-    private static final int WAAAGH_THRESHOLD = 100;
-    private static final int WAR_PARTY_SIZE = 4;
+    private static final int WAAAGH_PER_CYCLE = 5;
+    private static final int WAAAGH_THRESHOLD = 150;
+    private static final int WAR_PARTY_SIZE = 3;
 
     private static final int WAR_PARTIES_BEFORE_WARBOSS = 3;
 
+    // Hard ceiling on how many Orks may be milling about a target city at once. Because war-party
+    // Orks are persistent (they never despawn), without this they pile up into an endless swarm.
+    // When the field is already saturated the camp holds its assault back (its WAAAGH dissipates).
+    private static final int WAR_FIELD_ORK_CAP = 20;
+    private static final int WAR_FIELD_RADIUS = 56;
+
+    // ===== Ork city economy (so a camp is a working settlement, not a free mob spawner) =====
+    // Grots (Gretchin) are the labouring populace: they scavenge LOOT, which the city spends to raise
+    // Boyz and to muster war hosts. Boyz are no longer conjured from nothing — grots -> loot -> Boyz,
+    // the Ork mirror of the Imperial citizens -> resources -> troops loop. War hosts mobilise EXISTING
+    // Boyz (the garrison thins when it attacks and must be rebuilt from the economy).
+    private static final int LOOT_PER_GROT = 2;        // loot each grot scavenges per cycle
+    private static final int LOOT_CAP = 4000;
+    private static final int BOY_LOOT_COST = 8;        // loot to raise one Boy
+    private static final int WAR_PARTY_LOOT_COST = 40; // loot to muster and march a war host
+    private static final int GROWTH_LOOT_COST = 150;   // loot spent to expand the city a level
+    private static final int MIN_BOYZ_TO_MUSTER = 4;   // need a real warband before attacking
+    // Population grows SLOWLY and on its own — at most one new Ork every few cycles, never a fountain
+    // that refills to a cap from nothing. (200-tick cycles, so 3 = one Ork roughly every 30s.)
+    private static final int GROWTH_INTERVAL_CYCLES = 3;
+
     // The WAAAGH! spread: at a grown global tier, a camp plants ONE daughter camp farther out, so
     // the green tide expands across the world on its own. Bounded to one child per camp.
-    private static final int SPREAD_MIN_TIER = 2;
-    private static final int SPREAD_CHANCE = 12; // ~1 in 12 per cycle (200 ticks) once eligible
+    private static final int SPREAD_MIN_TIER = 3;
+    private static final int SPREAD_CHANCE = 24; // ~1 in 24 per cycle (200 ticks) once eligible
 
     private BlockPos targetCorePos;
     private OrkClan clan = OrkClan.GOFFS;
+    private int campLevel = 1;
+    private int growth = 0;
+    private int loot = 0;
+    private boolean founded = false;
+    private int growthCooldown = 0;
     private int waaagh = 0;
     private int warPartiesLaunched = 0;
     private boolean warbossSpawned = false;
@@ -87,8 +120,11 @@ public class OrkCampBlockEntity extends BlockEntity {
         // Put this camp on the world war map (so the Core's strategic map shows it).
         WorldWarMapData.get(serverLevel).recordCamp(pos);
 
-        camp.maintainGarrison(serverLevel, pos);
+        camp.foundIfNeeded(serverLevel, pos);
+        camp.produceLoot(serverLevel, pos);
+        camp.growSlowly(serverLevel, pos);
         camp.buildWaaagh(serverLevel, pos);
+        camp.tryGrowCamp(serverLevel, pos);
         camp.trySpreadWaaagh(serverLevel, pos);
 
         // The camp scabs the land around it with sculk; its reach grows with the WAAAGH! tier.
@@ -103,6 +139,11 @@ public class OrkCampBlockEntity extends BlockEntity {
     // daughter camp farther out that joins the assault on the same city — the green tide spreading
     // across the world on its own. Each camp spreads at most once (hasSpread), so growth is gradual.
     private void trySpreadWaaagh(ServerLevel serverLevel, BlockPos pos) {
+        // The fixed test world keeps exactly the seeded Ork cities — no self-spreading daughter camps.
+        if (ExampleMod.TEST_FIXED_WORLD) {
+            return;
+        }
+
         if (this.hasSpread || this.targetCorePos == null) {
             return;
         }
@@ -123,62 +164,175 @@ public class OrkCampBlockEntity extends BlockEntity {
         }
     }
 
-    private void maintainGarrison(ServerLevel serverLevel, BlockPos pos) {
-        int current = countCampOrks(serverLevel, pos);
-
-        for (int i = current; i < GARRISON_SIZE; i++) {
-            spawnCampOrk(serverLevel, pos);
+    // The settlement's founding inhabitants are placed exactly ONCE (a small starting group), then
+    // the city grows on its own. Nothing is ever maintained-to-cap, so Orks never pour in from nothing.
+    private void foundIfNeeded(ServerLevel serverLevel, BlockPos pos) {
+        if (this.founded) {
+            return;
         }
+        this.founded = true;
+        setChanged();
+
+        int startGrots = this.campLevel <= 1 ? 2 : Math.min(populaceForLevel(this.campLevel), 4);
+        int startBoyz = this.campLevel <= 1 ? 6 : Math.min(garrisonForLevel(this.campLevel), 8);
+
+        for (int i = 0; i < startGrots; i++) {
+            spawnCampUnit(serverLevel, pos, ExampleMod.GRETCHIN.get());
+        }
+        for (int i = 0; i < startBoyz; i++) {
+            spawnCampUnit(serverLevel, pos, ExampleMod.ORK_BOY.get());
+        }
+    }
+
+    // The populace scavenges loot — the city's economy, which funds Boyz and war hosts.
+    private void produceLoot(ServerLevel serverLevel, BlockPos pos) {
+        int grots = countCampOfType(serverLevel, pos, ExampleMod.GRETCHIN.get());
+        this.loot = Math.min(LOOT_CAP, this.loot + grots * LOOT_PER_GROT);
+        setChanged();
+    }
+
+    // Self-driven, GRADUAL growth: at most ONE new Ork per interval, up to the city's caps — never a
+    // refill-from-nothing. Grots (the workers) grow first; Boyz (warriors) are then raised from loot.
+    // When war kills or draws off Orks, the city rebuilds at this same slow pace.
+    private void growSlowly(ServerLevel serverLevel, BlockPos pos) {
+        if (this.growthCooldown > 0) {
+            this.growthCooldown--;
+            setChanged();
+            return;
+        }
+
+        int grots = countCampOfType(serverLevel, pos, ExampleMod.GRETCHIN.get());
+        if (grots < populaceForLevel(this.campLevel)) {
+            spawnCampUnit(serverLevel, pos, ExampleMod.GRETCHIN.get());
+            this.growthCooldown = GROWTH_INTERVAL_CYCLES;
+            setChanged();
+            return;
+        }
+
+        int boyz = countCampOfType(serverLevel, pos, ExampleMod.ORK_BOY.get());
+        if (boyz < garrisonForLevel(this.campLevel) && this.loot >= BOY_LOOT_COST) {
+            spawnCampUnit(serverLevel, pos, ExampleMod.ORK_BOY.get());
+            this.loot -= BOY_LOOT_COST;
+            this.growthCooldown = GROWTH_INTERVAL_CYCLES;
+            setChanged();
+        }
+    }
+
+    // The grot populace per city level — the workers that drive the economy.
+    private static int populaceForLevel(int campLevel) {
+        return switch (campLevel) {
+            case 2 -> 8;
+            case 3 -> 12;
+            case 4 -> 18;
+            default -> 4;
+        };
+    }
+
+    // The standing Boy garrison cap: a small encampment holds a handful (6-8); a full Ork city keeps
+    // a horde, up to the 50-warrior cap.
+    private static int garrisonForLevel(int campLevel) {
+        return switch (campLevel) {
+            case 2 -> 20;
+            case 3 -> 35;
+            case 4 -> 50;
+            default -> 7;
+        };
+    }
+
+    // Seeder hook: raise a freshly planted camp straight to a sizeable Ork city of the given level
+    // (fortified structure + bigger garrison), the Ork counterpart of a founded Imperial city.
+    public void seedAsCity(ServerLevel serverLevel, int level) {
+        this.campLevel = Math.max(1, Math.min(MAX_CAMP_LEVEL, level));
+        // A modest starting loot so the city can begin raising Boyz — NOT enough to burst a whole
+        // garrison into being. It founds a small group on its first tick, then grows slowly.
+        this.loot = 60;
+        OrkCampManager.fortifyCamp(serverLevel, this.worldPosition, this.campLevel);
+        setChanged();
+    }
+
+    // The camp gathers momentum every cycle (faster as the global WAAAGH! tier rises) and, once it
+    // has built enough, fortifies into a larger stronghold — the Ork mirror of a city levelling up.
+    private void tryGrowCamp(ServerLevel serverLevel, BlockPos pos) {
+        if (this.campLevel >= MAX_CAMP_LEVEL) {
+            return;
+        }
+
+        int tier = WaaaghOverlordManager.getTier(serverLevel);
+        this.growth += 1 + tier;
+
+        if (this.growth < GROWTH_TO_NEXT[this.campLevel]) {
+            return;
+        }
+
+        // A city only expands when it is prospering: a full populace and a loot surplus to spend on
+        // the expansion — the Ork mirror of an Imperial city needing its population at cap to grow.
+        int grots = countCampOfType(serverLevel, pos, ExampleMod.GRETCHIN.get());
+        if (grots < populaceForLevel(this.campLevel) || this.loot < GROWTH_LOOT_COST) {
+            return;
+        }
+
+        this.loot -= GROWTH_LOOT_COST;
+        this.campLevel++;
+        this.growth = 0;
+        OrkCampManager.fortifyCamp(serverLevel, pos, this.campLevel);
+        setChanged();
+
+        OrkRaidManager.notifyNearbyPlayers(
+                serverLevel,
+                pos,
+                Component.translatable("msg.firstcrusade.bcast.camp_grew", this.clan.getDisplayName(), this.campLevel)
+        );
     }
 
     private void buildWaaagh(ServerLevel serverLevel, BlockPos pos) {
         // The global WAAAGH! tier makes every camp gather momentum faster.
         int tier = WaaaghOverlordManager.getTier(serverLevel);
-        this.waaagh += WAAAGH_PER_CYCLE + tier * 3;
+        this.waaagh += WAAAGH_PER_CYCLE + tier * 2;
         setChanged();
 
-        if (this.waaagh >= WAAAGH_THRESHOLD) {
-            launchWarParty(serverLevel, pos);
-            this.waaagh = 0;
-            setChanged();
+        // Once mustered, the host marches only if the city can pay to field it AND actually mobilises
+        // a warband. Otherwise it stays ready and waits for the economy/garrison to catch up.
+        if (this.waaagh >= WAAAGH_THRESHOLD && this.loot >= WAR_PARTY_LOOT_COST) {
+            if (launchWarParty(serverLevel, pos)) {
+                this.loot -= WAR_PARTY_LOOT_COST;
+                this.waaagh = 0;
+                setChanged();
+            }
         }
     }
 
-    private void launchWarParty(ServerLevel serverLevel, BlockPos pos) {
+    // Musters a war host from the city's STANDING Boyz and marches it on the target — it does NOT
+    // conjure fresh Orks. Returns true if a host actually set out (so the caller charges the loot).
+    private boolean launchWarParty(ServerLevel serverLevel, BlockPos pos) {
         if (this.targetCorePos == null) {
-            return;
+            return false;
+        }
+
+        // Don't keep feeding an already-saturated battlefield. Persistent Orks otherwise stack up
+        // into an unbeatable swarm; once the cap is reached the city holds its host back.
+        if (countNearbyOrks(serverLevel, this.targetCorePos) >= WAR_FIELD_ORK_CAP) {
+            return false;
+        }
+
+        List<OrkBoyEntity> garrison = serverLevel.getEntitiesOfClass(
+                OrkBoyEntity.class,
+                garrisonBox(pos),
+                ork -> ork.isAlive() && isCampOrk(ork, pos)
+        );
+
+        if (garrison.size() < MIN_BOYZ_TO_MUSTER) {
+            return false; // not enough of an army raised yet — keep building it from the economy
         }
 
         // The green tide marching on a city tips the war toward the WAAAGH!.
         WarDominionManager.shift(serverLevel, -2);
 
         int tier = WaaaghOverlordManager.getTier(serverLevel);
+        int wanted = WAR_PARTY_SIZE + tier + this.clan.getBonusBoyz() + (this.campLevel - 1);
+        int partySize = Math.min(garrison.size(), wanted);
 
-        // Composition varies by clan: Goffs swarm Boyz, Bad Moons bring Nobz, Deathskulls grots...
-        int boyz = WAR_PARTY_SIZE + tier + this.clan.getBonusBoyz();
-        for (int i = 0; i < boyz; i++) {
-            dispatchMarcher(serverLevel, pos, ExampleMod.ORK_BOY.get().create(serverLevel));
-        }
-
-        for (int i = 0; i < this.clan.getNobz(); i++) {
-            dispatchMarcher(serverLevel, pos, ExampleMod.ORK_NOB.get().create(serverLevel));
-        }
-
-        // Grots tag along as fodder (Deathskulls bring extra, Snakebites fewer).
-        int gretchin = Math.max(0, 2 + this.clan.getBonusGretchin());
-        for (int i = 0; i < gretchin; i++) {
-            dispatchMarcher(serverLevel, pos, ExampleMod.GRETCHIN.get().create(serverLevel));
-        }
-
-        // A grown WAAAGH! (camp Warboss risen, or global tier 2+) fields Meganobz at the head.
-        int meganobz = (this.warbossSpawned ? 1 : 0) + Math.max(0, tier - 1);
-        for (int i = 0; i < meganobz; i++) {
-            dispatchMarcher(serverLevel, pos, ExampleMod.MEGANOB.get().create(serverLevel));
-        }
-
-        // The greatest WAAAGH!s (global tier 3+) roll out a Killa Kan war machine.
-        if (tier >= 3) {
-            dispatchMarcher(serverLevel, pos, ExampleMod.KILLA_KAN.get().create(serverLevel));
+        for (int i = 0; i < partySize; i++) {
+            marchOrkToWar(garrison.get(i));
         }
 
         OrkRaidManager.notifyNearbyPlayers(
@@ -194,38 +348,27 @@ public class OrkCampBlockEntity extends BlockEntity {
         // assault — the Ork mirror of the Imperial Crusade dispatching heavier reinforcements.
         int requiredWarParties = Math.max(1, WAR_PARTIES_BEFORE_WARBOSS - tier);
 
-        if (!this.warbossSpawned && this.warPartiesLaunched >= requiredWarParties) {
+        // The Warboss is conjured fresh, so in the fixed test world (nothing appears from nothing)
+        // it is suppressed — the war is fought entirely by the city's own mustered Boyz.
+        if (!ExampleMod.TEST_FIXED_WORLD
+                && !this.warbossSpawned && this.warPartiesLaunched >= requiredWarParties) {
             spawnWarboss(serverLevel, pos);
         }
+
+        return true;
     }
 
-    // Positions an Ork at the camp, applies its clan profile, and sends it marching on the city.
-    private void dispatchMarcher(ServerLevel serverLevel, BlockPos pos, Mob ork) {
-        if (ork == null) {
-            return;
-        }
-
-        BlockPos spawnPos = groundPos(serverLevel, pos.offset(serverLevel.random.nextInt(5) - 2, 0, serverLevel.random.nextInt(5) - 2));
-
-        ork.moveTo(
-                spawnPos.getX() + 0.5D,
-                spawnPos.getY(),
-                spawnPos.getZ() + 0.5D,
-                serverLevel.random.nextFloat() * 360.0F,
-                0.0F
-        );
-
-        this.clan.applyTo(ork);
-
+    // A standing Boy leaves the garrison and marches to war: it stops counting toward the city's
+    // defence, so the city must raise a replacement from its loot. No new entity is created.
+    private void marchOrkToWar(OrkBoyEntity ork) {
+        ork.getPersistentData().putBoolean(CAMP_ORK_TAG, false);
         ork.getNavigation().moveTo(
                 this.targetCorePos.getX() + 0.5D,
                 this.targetCorePos.getY(),
                 this.targetCorePos.getZ() + 0.5D,
                 1.1D
         );
-
         ork.setPersistenceRequired();
-        serverLevel.addFreshEntity(ork);
     }
 
     // Once the WAAAGH! has built enough momentum, the camp's biggest Ork rises to lead it.
@@ -289,6 +432,18 @@ public class OrkCampBlockEntity extends BlockEntity {
         return true;
     }
 
+    // Counts living Orks (any kind) around a point — used to cap the swarm besieging a city.
+    private int countNearbyOrks(ServerLevel serverLevel, BlockPos around) {
+        AABB box = new AABB(
+                around.getX() - WAR_FIELD_RADIUS, around.getY() - 48, around.getZ() - WAR_FIELD_RADIUS,
+                around.getX() + WAR_FIELD_RADIUS, around.getY() + 48, around.getZ() + WAR_FIELD_RADIUS);
+
+        return serverLevel.getEntitiesOfClass(
+                net.minecraft.world.entity.LivingEntity.class, box,
+                e -> e.isAlive() && FirstCrusadeFactionManager.getFaction(e) == FirstCrusadeFaction.ORKS
+        ).size();
+    }
+
     private int countFaction(ServerLevel serverLevel, BlockPos pos, FirstCrusadeFaction faction) {
         return serverLevel.getEntitiesOfClass(
                 net.minecraft.world.entity.LivingEntity.class,
@@ -297,21 +452,21 @@ public class OrkCampBlockEntity extends BlockEntity {
         ).size();
     }
 
-    private int countCampOrks(ServerLevel serverLevel, BlockPos pos) {
-        List<OrkBoyEntity> orks = serverLevel.getEntitiesOfClass(
-                OrkBoyEntity.class,
+    // Counts living units of one kind (Boyz, Grots, ...) belonging to this camp.
+    private int countCampOfType(ServerLevel serverLevel, BlockPos pos, EntityType<?> type) {
+        return serverLevel.getEntitiesOfClass(
+                Mob.class,
                 garrisonBox(pos),
-                ork -> ork.isAlive() && isCampOrk(ork, pos)
-        );
-
-        return orks.size();
+                mob -> mob.isAlive() && mob.getType() == type && isCampOrk(mob, pos)
+        ).size();
     }
 
-    private void spawnCampOrk(ServerLevel serverLevel, BlockPos pos) {
-        OrkBoyEntity ork = ExampleMod.ORK_BOY.get().create(serverLevel);
+    // Raises one camp unit (Boy or Grot), tags it to this camp, and stands it near the heart.
+    private boolean spawnCampUnit(ServerLevel serverLevel, BlockPos pos, EntityType<? extends Mob> type) {
+        Mob ork = type.create(serverLevel);
 
         if (ork == null) {
-            return;
+            return false;
         }
 
         BlockPos spawnPos = groundPos(serverLevel, pos.offset(serverLevel.random.nextInt(9) - 4, 0, serverLevel.random.nextInt(9) - 4));
@@ -328,6 +483,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         markAsCampOrk(ork, pos);
         ork.setPersistenceRequired();
         serverLevel.addFreshEntity(ork);
+        return true;
     }
 
     private static void markAsCampOrk(Mob mob, BlockPos campPos) {
@@ -360,6 +516,11 @@ public class OrkCampBlockEntity extends BlockEntity {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
 
+        tag.putInt("CampLevel", this.campLevel);
+        tag.putInt("Growth", this.growth);
+        tag.putInt("Loot", this.loot);
+        tag.putBoolean("Founded", this.founded);
+        tag.putInt("GrowthCooldown", this.growthCooldown);
         tag.putInt("Waaagh", this.waaagh);
         tag.putInt("WarPartiesLaunched", this.warPartiesLaunched);
         tag.putBoolean("WarbossSpawned", this.warbossSpawned);
@@ -376,6 +537,11 @@ public class OrkCampBlockEntity extends BlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
 
+        this.campLevel = Math.max(1, tag.getInt("CampLevel"));
+        this.growth = tag.getInt("Growth");
+        this.loot = tag.getInt("Loot");
+        this.founded = tag.getBoolean("Founded");
+        this.growthCooldown = tag.getInt("GrowthCooldown");
         this.waaagh = tag.getInt("Waaagh");
         this.warPartiesLaunched = tag.getInt("WarPartiesLaunched");
         this.warbossSpawned = tag.getBoolean("WarbossSpawned");

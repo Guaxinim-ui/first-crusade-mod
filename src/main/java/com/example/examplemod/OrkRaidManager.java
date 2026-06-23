@@ -302,14 +302,16 @@ public class OrkRaidManager {
         return baseAmount + Math.min(raidCount / 3, 3);
     }
 
+    // Raiders must appear OUTSIDE the city's walls (a walled village can reach radius ~62), then
+    // march in — never spawning straight inside the base.
     private static int getRaidSpawnRadius(int cityLevel) {
         return switch (cityLevel) {
-            case 1 -> 28;
-            case 2 -> 36;
-            case 3 -> 48;
-            case 4 -> 64;
-            case 5 -> 80;
-            default -> 28;
+            case 1 -> 80;
+            case 2 -> 88;
+            case 3 -> 96;
+            case 4 -> 112;
+            case 5 -> 130;
+            default -> 80;
         };
     }
 

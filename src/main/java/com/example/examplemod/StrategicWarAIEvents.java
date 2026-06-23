@@ -34,6 +34,11 @@ public final class StrategicWarAIEvents {
 
         long gameTime = overworld.getGameTime();
 
+        if (!ExampleMod.TEST_FIXED_WORLD) {
+            VanillaVillageImperializer.serverTick(overworld);
+        }
+        FactionResearchManager.tick(overworld);
+
         if (gameTime % CONSTRUCTION_AI_INTERVAL == 0) {
             StrategicWarAIData data = StrategicWarAIData.get(overworld);
             StrategicConstructionBuilder.tickConstruction(overworld, data);

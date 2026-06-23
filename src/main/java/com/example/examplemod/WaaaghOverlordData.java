@@ -50,20 +50,29 @@ public class WaaaghOverlordData extends SavedData {
         setDirty();
     }
 
+    // Points needed to enter tiers 1..4. The WAAAGH! climbs more slowly than the Imperial Crusade
+    // (see ImperiumOverlordData), so the green tide builds up gradually instead of flooding early.
+    private static final int[] TIER_THRESHOLDS = {900, 3000, 9000, 22000};
+
     public int getTier() {
-        if (this.waaagh < 500) {
-            return 0;
+        for (int i = 0; i < TIER_THRESHOLDS.length; i++) {
+            if (this.waaagh < TIER_THRESHOLDS[i]) {
+                return i;
+            }
         }
-        if (this.waaagh < 2000) {
-            return 1;
+        return TIER_THRESHOLDS.length;
+    }
+
+    // Fraction (0..1) of the way from the current tier to the next — drives the on-screen WAAAGH! bar.
+    public float getProgressToNextTier() {
+        int tier = getTier();
+        if (tier >= TIER_THRESHOLDS.length) {
+            return 1.0F;
         }
-        if (this.waaagh < 6000) {
-            return 2;
-        }
-        if (this.waaagh < 15000) {
-            return 3;
-        }
-        return 4;
+        int lower = tier == 0 ? 0 : TIER_THRESHOLDS[tier - 1];
+        int upper = TIER_THRESHOLDS[tier];
+        float progress = (this.waaagh - lower) / (float) (upper - lower);
+        return progress < 0.0F ? 0.0F : (progress > 1.0F ? 1.0F : progress);
     }
 
     public int getLastAnnouncedTier() {

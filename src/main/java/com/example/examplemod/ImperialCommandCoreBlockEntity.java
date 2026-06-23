@@ -496,7 +496,7 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
         }
 
         // Don't raise the whole garrison at once. A Warmonger Governor levies more eagerly.
-        int recruitGate = Math.max(1, 3 + getGovernorPersonality().getRecruitGateBias());
+        int recruitGate = Math.max(1, 2 + getGovernorPersonality().getRecruitGateBias());
         if (serverLevel.random.nextInt(recruitGate) != 0) {
             return;
         }
@@ -532,7 +532,7 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
         }
 
         // Growth is a slow, deliberate thing. An Administrator/Architect Governor pushes harder.
-        int upgradeGate = Math.max(1, 4 + getGovernorPersonality().getUpgradeGateBias());
+        int upgradeGate = Math.max(1, 3 + getGovernorPersonality().getUpgradeGateBias());
         if (serverLevel.random.nextInt(upgradeGate) != 0) {
             return;
         }
@@ -1332,6 +1332,11 @@ public BlockPos getOrkCampPos() {
 
 // Seeds one Ork Camp once the settlement is large enough to attract a warband.
 private void trySeedOrkCamp(ServerLevel serverLevel) {
+    // In the fixed test world the Ork cities are placed by the seeder, not spawned per-city.
+    if (ExampleMod.TEST_FIXED_WORLD) {
+        return;
+    }
+
     if (this.orkCampSeeded || this.cityLevel < 2) {
         return;
     }
@@ -2348,8 +2353,8 @@ private int getSpaceMarinePromotionCooldownTicks() {
 // walled village (Core as the central keep, curtain wall around the whole town, towers and houses
 // with beds). Called once by WorldSettlementSeeder right after the Core is placed.
 private static final int AUTONOMOUS_VILLAGE_LEVEL = 4;
-private static final int AUTONOMOUS_START_POPULATION = 12;
-private static final int AUTONOMOUS_GARRISON = 6;
+private static final int AUTONOMOUS_START_POPULATION = 18;
+private static final int AUTONOMOUS_GARRISON = 8;
 
 public void buildAutonomousVillage(ServerLevel serverLevel) {
     if (this.cityType == null) {
@@ -3517,6 +3522,11 @@ private void safePlace(ServerLevel serverLevel, BlockPos pos, BlockState state) 
 }
 
 private void trySpawnOrkRaid(ServerLevel serverLevel) {
+    // The fixed test world relies on the seeded Ork cities' war parties, not artificial raids.
+    if (ExampleMod.TEST_FIXED_WORLD) {
+        return;
+    }
+
     long currentDay = serverLevel.getDayTime() / 24000L;
 
     if (currentDay < 1) {
@@ -3904,23 +3914,23 @@ private void spawnOrkRaid(ServerLevel serverLevel, long currentDay, boolean forc
 
 private int getRaidCooldownDays() {
     return switch (this.cityLevel) {
-        case 1 -> 4;
-        case 2 -> 3;
-        case 3 -> 3;
-        case 4 -> 2;
-        case 5 -> 2;
-        default -> 4;
+        case 1 -> 6;
+        case 2 -> 5;
+        case 3 -> 4;
+        case 4 -> 3;
+        case 5 -> 3;
+        default -> 6;
     };
 }
 
 private float getRaidChance() {
     return switch (this.cityLevel) {
-        case 1 -> 0.20F;
-        case 2 -> 0.28F;
-        case 3 -> 0.36F;
-        case 4 -> 0.45F;
-        case 5 -> 0.55F;
-        default -> 0.20F;
+        case 1 -> 0.12F;
+        case 2 -> 0.18F;
+        case 3 -> 0.24F;
+        case 4 -> 0.32F;
+        case 5 -> 0.40F;
+        default -> 0.12F;
     };
 }
 
@@ -4298,7 +4308,16 @@ public int getStorageCapacity() {
 }
 
 public int getMilitaryCapacity() {
-    return ImperialCityLevelStats.militaryCapacity(this.cityLevel);
+    int cap = ImperialCityLevelStats.militaryCapacity(this.cityLevel);
+    return ExampleMod.TEST_FIXED_WORLD ? Math.min(ExampleMod.TEST_WARRIOR_CAP, cap) : cap;
+}
+
+// Test/seeder hook: point this city at an existing Ork city so it marches on it, without seeding
+// its own extra camp.
+public void setKnownOrkCamp(BlockPos campPos) {
+    this.orkCampPos = campPos;
+    this.orkCampSeeded = true;
+    setChanged();
 }
 
 public int getDailyIronProduction() {

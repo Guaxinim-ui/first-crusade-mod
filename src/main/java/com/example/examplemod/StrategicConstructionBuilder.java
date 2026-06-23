@@ -125,6 +125,10 @@ public final class StrategicConstructionBuilder {
                         + "."
         )
 );
+
+        return true;
+    }
+
     private static void finishProject(
             ServerLevel level,
             StrategicWarAIData data,

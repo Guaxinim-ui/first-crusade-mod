@@ -41,7 +41,51 @@ public final class WorldSettlementSeeder {
         // Mark first so a mid-way failure never re-runs (and double-populates) on the next login.
         data.markSeeded();
 
-        seedRing(overworld, overworld.getSharedSpawnPos());
+        if (ExampleMod.TEST_FIXED_WORLD) {
+            seedTestLayout(overworld, overworld.getSharedSpawnPos());
+        } else {
+            seedRing(overworld, overworld.getSharedSpawnPos());
+        }
+    }
+
+    // Test layout (owner request): a clean battlefield — 5 Imperial cities to the SOUTH (+Z) and 5
+    // Ork cities to the NORTH (-Z), each pointed at the nearest enemy so the two peoples make war on
+    // their own. The Ork cities are raised straight to a sizeable level so both sides start as cities.
+    private static final int TEST_ROW_SPACING = 130;
+    private static final int TEST_BAND_DISTANCE = 220;
+    private static final int TEST_COUNT_PER_SIDE = 5;
+    private static final int TEST_ORK_START_LEVEL = 3;
+
+    private static void seedTestLayout(ServerLevel level, BlockPos center) {
+        List<BlockPos> imperialCities = new ArrayList<>();
+        for (int i = 0; i < TEST_COUNT_PER_SIDE; i++) {
+            int x = center.getX() + (i - TEST_COUNT_PER_SIDE / 2) * TEST_ROW_SPACING;
+            int z = center.getZ() + TEST_BAND_DISTANCE; // south
+            imperialCities.add(foundCity(level, new BlockPos(x, center.getY(), z)));
+        }
+
+        List<BlockPos> orkCities = new ArrayList<>();
+        for (int i = 0; i < TEST_COUNT_PER_SIDE; i++) {
+            int x = center.getX() + (i - TEST_COUNT_PER_SIDE / 2) * TEST_ROW_SPACING;
+            int z = center.getZ() - TEST_BAND_DISTANCE; // north
+            BlockPos spot = new BlockPos(x, center.getY(), z);
+
+            BlockPos target = nearestCity(imperialCities, spot, center);
+            BlockPos camp = OrkCampManager.seedWorldCamp(level, spot, target);
+            BlockPos placed = camp != null ? camp : spot;
+            orkCities.add(placed);
+
+            if (camp != null && level.getBlockEntity(camp) instanceof OrkCampBlockEntity orkCity) {
+                orkCity.seedAsCity(level, TEST_ORK_START_LEVEL);
+            }
+        }
+
+        // Point each Imperial city at the nearest Ork city, so it sends expeditions north.
+        for (BlockPos cityPos : imperialCities) {
+            if (level.getBlockEntity(cityPos) instanceof ImperialCommandCoreBlockEntity core) {
+                core.setKnownOrkCamp(nearestCity(orkCities, cityPos, center));
+            }
+        }
     }
 
     // Populates the planet dimension the first time a traveller lands there (around their landing).
@@ -86,13 +130,15 @@ public final class WorldSettlementSeeder {
     // Founds an autonomous Imperial city: places an unclaimed Command Core on the surface and asks
     // it to raise a full walled village around itself (Core as central keep, curtain wall, towers
     // and houses with beds). The Core then governs and grows the settlement on its own.
-    private static void foundCity(ServerLevel serverLevel, BlockPos spot) {
+    private static BlockPos foundCity(ServerLevel serverLevel, BlockPos spot) {
         BlockPos surface = WorldGenPlacement.groundPlacement(serverLevel, spot.getX(), spot.getZ());
         serverLevel.setBlock(surface, ExampleMod.IMPERIAL_COMMAND_CORE.get().defaultBlockState(), 3);
 
         if (serverLevel.getBlockEntity(surface) instanceof ImperialCommandCoreBlockEntity core) {
             core.buildAutonomousVillage(serverLevel);
         }
+
+        return surface;
     }
 
     // Picks the city the camp will march on: the nearest founded city, or spawn if none exist.

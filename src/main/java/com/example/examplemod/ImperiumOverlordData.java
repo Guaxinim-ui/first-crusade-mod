@@ -51,20 +51,47 @@ public class ImperiumOverlordData extends SavedData {
         setDirty();
     }
 
+    // Points needed to enter tiers 1..4. The Crusade advances faster than the WAAAGH! (see
+    // WaaaghOverlordData) so the Imperium can research/age up ahead of the Ork tide.
+    private static final int[] TIER_THRESHOLDS = {300, 1100, 3000, 7000};
+
     public int getTier() {
-        if (this.crusade < 500) {
-            return 0;
+        for (int i = 0; i < TIER_THRESHOLDS.length; i++) {
+            if (this.crusade < TIER_THRESHOLDS[i]) {
+                return i;
+            }
         }
-        if (this.crusade < 2000) {
-            return 1;
+        return TIER_THRESHOLDS.length;
+    }
+
+    // Fraction (0..1) of the way from the current tier to the next — drives the on-screen Crusade bar.
+    public float getProgressToNextTier() {
+        int tier = getTier();
+        if (tier >= TIER_THRESHOLDS.length) {
+            return 1.0F;
         }
-        if (this.crusade < 6000) {
-            return 2;
+        int lower = tier == 0 ? 0 : TIER_THRESHOLDS[tier - 1];
+        int upper = TIER_THRESHOLDS[tier];
+        float progress = (this.crusade - lower) / (float) (upper - lower);
+        return progress < 0.0F ? 0.0F : (progress > 1.0F ? 1.0F : progress);
+    }
+
+    // Lifts the Crusade to (at least) the floor of the given tier — used by paid research to age up.
+    public void ensureAtLeastTier(int tier) {
+        if (tier <= 0 || tier > TIER_THRESHOLDS.length) {
+            return;
         }
-        if (this.crusade < 15000) {
-            return 3;
+
+        int floor = TIER_THRESHOLDS[tier - 1];
+        if (this.crusade < floor) {
+            this.crusade = floor;
+            setDirty();
         }
-        return 4;
+
+        if (tier > this.lastAnnouncedTier) {
+            this.lastAnnouncedTier = tier;
+            setDirty();
+        }
     }
 
     public int getLastAnnouncedTier() {

@@ -248,8 +248,10 @@ public static final RegistryObject<BlockEntityType<ImperialHabitationBlockEntity
 public static final RegistryObject<Block> ORK_CAMP =
         BLOCKS.register("ork_camp",
                 () -> new OrkCampBlock(BlockBehaviour.Properties.of()
-                        .strength(3.0F)
-                        .sound(SoundType.WOOD)));
+                        .strength(4.0F, 8.0F)
+                        .sound(SoundType.NETHER_BRICKS)
+                        .lightLevel(state -> 8)
+                        .noOcclusion()));
 
 public static final RegistryObject<Item> ORK_CAMP_ITEM =
         ITEMS.register("ork_camp",
@@ -258,6 +260,25 @@ public static final RegistryObject<Item> ORK_CAMP_ITEM =
 public static final RegistryObject<BlockEntityType<OrkCampBlockEntity>> ORK_CAMP_BLOCK_ENTITY =
         BLOCK_ENTITY_TYPES.register("ork_camp",
                 () -> BlockEntityType.Builder.of(OrkCampBlockEntity::new, ORK_CAMP.get()).build(null));
+
+// Strategium — the "Mesa de Estratégia" research bench (paid Age-up research).
+public static final RegistryObject<Block> STRATEGIUM =
+        BLOCKS.register("strategium",
+                () -> new StrategiumBlock(BlockBehaviour.Properties.of()
+                        .strength(3.5F)
+                        .sound(SoundType.WOOD)));
+
+public static final RegistryObject<Item> STRATEGIUM_ITEM =
+        ITEMS.register("strategium",
+                () -> new BlockItem(STRATEGIUM.get(), new Item.Properties()));
+
+public static final RegistryObject<BlockEntityType<StrategiumBlockEntity>> STRATEGIUM_BLOCK_ENTITY =
+        BLOCK_ENTITY_TYPES.register("strategium",
+                () -> BlockEntityType.Builder.of(StrategiumBlockEntity::new, STRATEGIUM.get()).build(null));
+
+public static final RegistryObject<MenuType<StrategiumMenu>> STRATEGIUM_MENU =
+        MENU_TYPES.register("strategium_menu",
+                () -> IForgeMenuType.create((windowId, inventory, data) -> new StrategiumMenu(windowId, inventory, data)));
 
     // =========================
     // MATERIALS
@@ -842,6 +863,7 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
                         output.accept(IMPERIAL_BARRACKS_ITEM.get());
                         output.accept(IMPERIAL_HABITATION_ITEM.get());
                         output.accept(ORK_CAMP_ITEM.get());
+                        output.accept(STRATEGIUM_ITEM.get());
                         output.accept(SPACEPORT_ITEM.get());
 
                         output.accept(CRUSADIUM_INGOT.get());
@@ -940,6 +962,14 @@ private void commonSetup(final FMLCommonSetupEvent event) {
                 SelectFactionPacket::decode,
                 SelectFactionPacket::handle
         );
+
+        NETWORK_CHANNEL.registerMessage(
+                networkPacketId++,
+                StrategiumActionPacket.class,
+                StrategiumActionPacket::encode,
+                StrategiumActionPacket::decode,
+                StrategiumActionPacket::handle
+        );
     });
 
     LOGGER.info("First Crusade loaded successfully.");
@@ -971,6 +1001,13 @@ private void registerAttributes(EntityAttributeCreationEvent event) {
 
 // Small, closed "planet": clamp the overworld to a compact playable area on every start. The
 // world border only limits movement (no worldgen/chunk changes), so this is fully reversible.
+// TEST MODE (temporary, owner request 2026-06-22): a clean sandbox to watch the two peoples
+// develop. When true: no vanilla mobs spawn, the world is seeded with a fixed layout (5 Ork cities
+// north, 5 Imperial cities south), cities don't seed their own extra camps/raids, and both factions
+// are capped at 50 warriors. Flip to false to return to normal world behaviour.
+public static final boolean TEST_FIXED_WORLD = true;
+public static final int TEST_WARRIOR_CAP = 50;
+
 private static final double WORLD_BORDER_SIZE = 5000.0D;
 
 @SubscribeEvent
@@ -1071,8 +1108,20 @@ private static final double WAR_FOLLOW_RANGE = 96.0D;
 
 @SubscribeEvent
 public void onEntityJoinLevel(net.minecraftforge.event.entity.EntityJoinLevelEvent event) {
-    if (event.getLevel().isClientSide
-            || !(event.getEntity() instanceof net.minecraft.world.entity.LivingEntity living)
+    if (event.getLevel().isClientSide) {
+        return;
+    }
+
+    // Test world: strip out every vanilla mob so only this mod's peoples populate the map.
+    if (TEST_FIXED_WORLD && event.getEntity() instanceof net.minecraft.world.entity.Mob mob) {
+        ResourceLocation key = ForgeRegistries.ENTITY_TYPES.getKey(mob.getType());
+        if (key != null && "minecraft".equals(key.getNamespace())) {
+            event.setCanceled(true);
+            return;
+        }
+    }
+
+    if (!(event.getEntity() instanceof net.minecraft.world.entity.LivingEntity living)
             || living instanceof net.minecraft.world.entity.player.Player
             || living instanceof ImperialCitizenEntity
             || living instanceof CustodesEntity) {
@@ -1098,6 +1147,7 @@ public static class ClientModEvents {
 public static void onClientSetup(FMLClientSetupEvent event) {
     event.enqueueWork(() -> {
         MenuScreens.register(IMPERIAL_COMMAND_CORE_MENU.get(), ImperialCommandCoreScreen::new);
+        MenuScreens.register(STRATEGIUM_MENU.get(), StrategiumScreen::new);
     });
 }
     @SubscribeEvent
