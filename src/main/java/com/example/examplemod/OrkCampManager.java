@@ -92,20 +92,21 @@ public final class OrkCampManager {
     // outward into a full stronghold — see fortifyCamp.
     private static final int CAMP_RADIUS_BASE = 4;
 
-    // Level 1 — a small Ork encampment: a trampled clearing ringed with campfires and red banners,
-    // a hide tent and a trophy totem. Home to a handful (6-8) of Boyz. The central block (set to
-    // ORK_CAMP afterwards) is left untouched. It grows into a stronghold over time (fortifyCamp).
+    // Level 1 — a small Ork settlement: a cleared, crudely paved plaza with a couple of scrappy Ork
+    // huts, a trophy totem and red banners. NO tents and NO campfires — it reads as a fledgling Ork
+    // town, not a camp. The central block (the Núcleo Ork, set afterwards) is left untouched. It
+    // grows into a proper walled Ork city over time (fortifyCamp).
     private static void buildCampStructure(ServerLevel serverLevel, BlockPos center) {
         RandomSource rng = serverLevel.random;
         int r = CAMP_RADIUS_BASE;
 
-        // Strip surrounding trees/leaves/plants so the camp isn't buried in forest canopy.
+        // Strip surrounding trees/leaves/plants so the settlement isn't buried in forest canopy.
         WorldGenPlacement.clearVegetation(serverLevel, center, r + 2, 8);
 
-        // Clear the ground and lay a trampled-dirt floor.
+        // Clear the interior to the sky and pave a crude plaza, leaving the central block alone.
         for (int x = -r; x <= r; x++) {
             for (int z = -r; z <= r; z++) {
-                for (int y = 0; y <= 3; y++) {
+                for (int y = 0; y <= 4; y++) {
                     BlockPos clear = center.offset(x, y, z);
                     if (!clear.equals(center)) {
                         serverLevel.setBlock(clear, Blocks.AIR.defaultBlockState(), 2);
@@ -113,24 +114,16 @@ public final class OrkCampManager {
                 }
                 serverLevel.setBlock(center.offset(x, -1, z), ((x + z) & 1) == 0
                         ? Blocks.COARSE_DIRT.defaultBlockState()
-                        : Blocks.PODZOL.defaultBlockState(), 3);
+                        : Blocks.COBBLESTONE.defaultBlockState(), 3);
             }
         }
 
-        // Campfires around the heart and red banners on stakes at the corners.
-        place(serverLevel, center.offset(r - 1, 0, 0), Blocks.CAMPFIRE.defaultBlockState());
-        place(serverLevel, center.offset(-(r - 1), 0, 0), Blocks.CAMPFIRE.defaultBlockState());
-        place(serverLevel, center.offset(0, 0, r - 1), Blocks.CAMPFIRE.defaultBlockState());
-        place(serverLevel, center.offset(0, 0, -(r - 1)), Blocks.CAMPFIRE.defaultBlockState());
-
-        buildBannerStake(serverLevel, center.offset(r, 0, r));
-        buildBannerStake(serverLevel, center.offset(-r, 0, r));
-        buildBannerStake(serverLevel, center.offset(r, 0, -r));
-        buildBannerStake(serverLevel, center.offset(-r, 0, -r));
-
-        // A single hide tent and a trophy totem.
-        buildTent(serverLevel, center.offset(-3, 0, 2));
+        // A couple of crude Ork huts, a trophy totem and banner stakes.
+        buildOrkHut(serverLevel, center.offset(2, 0, 1), 3, 3, 3);
+        buildOrkHut(serverLevel, center.offset(-4, 0, -3), 3, 3, 3);
         buildGateTotem(serverLevel, center.offset(0, 0, -r));
+        buildBannerStake(serverLevel, center.offset(r, 0, r));
+        buildBannerStake(serverLevel, center.offset(-r, 0, -r));
 
         scatterScrap(serverLevel, center, r, rng);
     }
@@ -142,61 +135,62 @@ public final class OrkCampManager {
         place(serverLevel, base.offset(0, 2, 0), Blocks.RED_BANNER.defaultBlockState());
     }
 
-    // As a camp's WAAAGH! grows, it fortifies into a larger Ork stronghold: a spiked timber palisade
-    // with a horned gate and watchtowers, expanding with each level (radius CAMP_RADIUS_BASE +
-    // campLevel*2). Called by OrkCampBlockEntity when the camp grows a level — the Ork mirror of an
-    // Imperial city levelling up. The central ORK_CAMP block is never overwritten (place/floor skip it).
+    // As an Ork city grows it expands into a larger WALLED settlement: a low crude wall of dark stone
+    // topped with iron-bar spikes, a gate, stone watchtowers, and more Ork huts inside — scaling with
+    // campLevel (radius CAMP_RADIUS_BASE + campLevel*2). The Ork mirror of an Imperial city levelling
+    // up. The central Núcleo Ork block is never overwritten (the clear loop skips it).
     public static void fortifyCamp(ServerLevel serverLevel, BlockPos center, int campLevel) {
         RandomSource rng = serverLevel.random;
         int r = CAMP_RADIUS_BASE + campLevel * 2;
 
-        WorldGenPlacement.clearVegetation(serverLevel, center, r + 2, 10);
+        WorldGenPlacement.clearVegetation(serverLevel, center, r + 2, 12);
 
-        BlockState logState = Blocks.SPRUCE_LOG.defaultBlockState();
+        BlockState wallBase = Blocks.COBBLED_DEEPSLATE.defaultBlockState();
+
         for (int x = -r; x <= r; x++) {
             for (int z = -r; z <= r; z++) {
-                boolean perimeter = Math.abs(x) == r || Math.abs(z) == r;
-
-                if (!perimeter) {
-                    // Lay (or refresh) the trampled floor, never touching the central camp block.
-                    if (!center.offset(x, -1, z).equals(center)) {
-                        serverLevel.setBlock(center.offset(x, -1, z), ((x + z) & 1) == 0
-                                ? Blocks.COARSE_DIRT.defaultBlockState()
-                                : Blocks.PODZOL.defaultBlockState(), 3);
+                // Clear the interior to the sky, leaving the central Núcleo Ork block.
+                for (int y = 0; y <= 5; y++) {
+                    BlockPos c = center.offset(x, y, z);
+                    if (!c.equals(center)) {
+                        serverLevel.setBlock(c, Blocks.AIR.defaultBlockState(), 2);
                     }
-                    continue;
                 }
+                serverLevel.setBlock(center.offset(x, -1, z), ((x + z) & 1) == 0
+                        ? Blocks.COARSE_DIRT.defaultBlockState()
+                        : Blocks.COBBLESTONE.defaultBlockState(), 3);
 
+                boolean perimeter = Math.abs(x) == r || Math.abs(z) == r;
                 boolean gateGap = z == r && x >= -1 && x <= 1;
-                if (gateGap) {
-                    continue;
-                }
-
-                for (int y = 0; y < 3; y++) {
-                    serverLevel.setBlock(center.offset(x, y, z), logState, 3);
-                }
-                serverLevel.setBlock(center.offset(x, 3, z), Blocks.SPRUCE_FENCE.defaultBlockState(), 3);
-
-                if (Math.floorMod(x + z, 6) == 0) {
-                    place(serverLevel, center.offset(x, 4, z), Blocks.RED_BANNER.defaultBlockState());
+                if (perimeter && !gateGap) {
+                    serverLevel.setBlock(center.offset(x, 0, z), wallBase, 3);
+                    serverLevel.setBlock(center.offset(x, 1, z), wallBase, 3);
+                    serverLevel.setBlock(center.offset(x, 2, z), Blocks.IRON_BARS.defaultBlockState(), 3);
+                    if (Math.floorMod(x + z, 6) == 0) {
+                        place(serverLevel, center.offset(x, 3, z), Blocks.RED_BANNER.defaultBlockState());
+                    }
                 }
             }
         }
 
-        // Horned gate totems flanking the southern opening.
+        // Horned gate totems flanking the southern opening, and stone watchtowers on the corners.
         buildGateTotem(serverLevel, center.offset(-2, 0, r));
         buildGateTotem(serverLevel, center.offset(2, 0, r));
-
-        // Watchtowers and tents, more of them as the stronghold grows.
         buildWatchtower(serverLevel, center.offset(r - 2, 0, -(r - 2)));
         buildWatchtower(serverLevel, center.offset(-(r - 2), 0, -(r - 2)));
-        buildTent(serverLevel, center.offset(-4, 0, -3));
-        buildTent(serverLevel, center.offset(4, 0, -4));
-
         if (campLevel >= 3) {
             buildWatchtower(serverLevel, center.offset(r - 2, 0, r - 2));
             buildWatchtower(serverLevel, center.offset(-(r - 2), 0, r - 2));
-            buildTent(serverLevel, center.offset(-5, 0, 3));
+        }
+
+        // Ork huts filling the city, more of them as it grows.
+        int hutRing = r - 3;
+        int huts = 3 + campLevel;
+        for (int i = 0; i < huts; i++) {
+            double ang = 2.0 * Math.PI * i / huts + 0.4;
+            int hx = (int) Math.round(Math.cos(ang) * hutRing);
+            int hz = (int) Math.round(Math.sin(ang) * hutRing);
+            buildOrkHut(serverLevel, center.offset(hx - 1, 0, hz - 1), 3, 3, 3);
         }
 
         scatterScrap(serverLevel, center, r, rng);
@@ -214,62 +208,70 @@ public final class OrkCampManager {
         place(serverLevel, base.offset(0, 4, 0), Blocks.WITHER_SKELETON_SKULL.defaultBlockState());
     }
 
-    // An open hide tent: four posts under a stepped terracotta roof.
-    private static void buildTent(ServerLevel serverLevel, BlockPos base) {
-        BlockState post = Blocks.STRIPPED_SPRUCE_LOG.defaultBlockState();
-        BlockState hide = Blocks.ORANGE_TERRACOTTA.defaultBlockState();
+    // A crude Ork hut: a small scrap-and-timber shack — log corners, plank walls, an open doorway, a
+    // barred window and a flat overhanging roof, with a red banner on the front.
+    private static void buildOrkHut(ServerLevel serverLevel, BlockPos start, int width, int depth, int height) {
+        BlockState wall = Blocks.SPRUCE_PLANKS.defaultBlockState();
+        BlockState post = Blocks.STRIPPED_DARK_OAK_LOG.defaultBlockState();
 
-        for (int dx = -2; dx <= 2; dx += 4) {
-            for (int dz = -2; dz <= 2; dz += 4) {
-                place(serverLevel, base.offset(dx, 0, dz), post);
-                place(serverLevel, base.offset(dx, 1, dz), post);
-                place(serverLevel, base.offset(dx, 2, dz), post);
+        for (int x = 0; x < width; x++) {
+            for (int z = 0; z < depth; z++) {
+                boolean border = x == 0 || z == 0 || x == width - 1 || z == depth - 1;
+                boolean corner = (x == 0 || x == width - 1) && (z == 0 || z == depth - 1);
+                if (!border) {
+                    continue;
+                }
+
+                for (int y = 0; y < height; y++) {
+                    boolean doorway = z == 0 && x == width / 2 && y <= 1;
+                    if (doorway) {
+                        continue;
+                    }
+                    boolean window = !corner && y == 1 && (x == width / 2 || z == depth / 2);
+                    place(serverLevel, start.offset(x, y, z),
+                            corner ? post : (window ? Blocks.IRON_BARS.defaultBlockState() : wall));
+                }
             }
         }
 
-        for (int dx = -2; dx <= 2; dx++) {
-            for (int dz = -2; dz <= 2; dz++) {
-                place(serverLevel, base.offset(dx, 3, dz), hide);
+        // Flat crude roof with a one-block overhang.
+        for (int x = -1; x <= width; x++) {
+            for (int z = -1; z <= depth; z++) {
+                place(serverLevel, start.offset(x, height, z), Blocks.DARK_OAK_PLANKS.defaultBlockState());
             }
         }
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                place(serverLevel, base.offset(dx, 4, dz), hide);
-            }
-        }
-        place(serverLevel, base.offset(0, 5, 0), hide);
+        place(serverLevel, start.offset(width / 2, height + 1, 0), Blocks.RED_BANNER.defaultBlockState());
     }
 
-    // A rickety lookout tower with a banner and a trophy skull.
+    // A crude Ork lookout tower of dark stone, topped with a banner and a trophy skull.
     private static void buildWatchtower(ServerLevel serverLevel, BlockPos base) {
         int height = 6;
+        BlockState stone = Blocks.COBBLED_DEEPSLATE.defaultBlockState();
         for (int y = 0; y < height; y++) {
-            serverLevel.setBlock(base.offset(0, y, 0), Blocks.SPRUCE_LOG.defaultBlockState(), 3);
-            serverLevel.setBlock(base.offset(1, y, 0), Blocks.SPRUCE_LOG.defaultBlockState(), 3);
-            serverLevel.setBlock(base.offset(0, y, 1), Blocks.SPRUCE_LOG.defaultBlockState(), 3);
-            serverLevel.setBlock(base.offset(1, y, 1), Blocks.SPRUCE_LOG.defaultBlockState(), 3);
+            serverLevel.setBlock(base.offset(0, y, 0), stone, 3);
+            serverLevel.setBlock(base.offset(1, y, 0), stone, 3);
+            serverLevel.setBlock(base.offset(0, y, 1), stone, 3);
+            serverLevel.setBlock(base.offset(1, y, 1), stone, 3);
         }
 
         for (int dx = -1; dx <= 2; dx++) {
             for (int dz = -1; dz <= 2; dz++) {
-                place(serverLevel, base.offset(dx, height, dz), Blocks.SPRUCE_PLANKS.defaultBlockState());
+                place(serverLevel, base.offset(dx, height, dz), Blocks.POLISHED_DEEPSLATE.defaultBlockState());
             }
         }
         // Railing, banner and skull on the lookout.
-        place(serverLevel, base.offset(-1, height + 1, -1), Blocks.SPRUCE_FENCE.defaultBlockState());
-        place(serverLevel, base.offset(2, height + 1, 2), Blocks.SPRUCE_FENCE.defaultBlockState());
+        place(serverLevel, base.offset(-1, height + 1, -1), Blocks.DEEPSLATE_BRICK_WALL.defaultBlockState());
+        place(serverLevel, base.offset(2, height + 1, 2), Blocks.DEEPSLATE_BRICK_WALL.defaultBlockState());
         place(serverLevel, base.offset(0, height + 1, 0), Blocks.RED_BANNER.defaultBlockState());
         place(serverLevel, base.offset(1, height + 1, 1), Blocks.WITHER_SKELETON_SKULL.defaultBlockState());
     }
 
-    // Smoking campfires, a battered anvil and looted scrap strewn around the camp.
+    // A battered anvil, a cauldron and looted scrap strewn around the Ork city — NO campfires.
     private static void scatterScrap(ServerLevel serverLevel, BlockPos center, int r, RandomSource rng) {
-        place(serverLevel, center.offset(2, 0, 1), Blocks.CAMPFIRE.defaultBlockState());
-        place(serverLevel, center.offset(-2, 0, -1), Blocks.CAMPFIRE.defaultBlockState());
         place(serverLevel, center.offset(3, 0, -2), Blocks.ANVIL.defaultBlockState());
         place(serverLevel, center.offset(-3, 0, 2), Blocks.CAULDRON.defaultBlockState());
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 8; i++) {
             int x = rng.nextInt(r * 2 - 2) - (r - 1);
             int z = rng.nextInt(r * 2 - 2) - (r - 1);
             BlockPos pos = center.offset(x, 0, z);
@@ -281,7 +283,7 @@ public final class OrkCampManager {
             BlockState scrap = switch (rng.nextInt(3)) {
                 case 0 -> Blocks.IRON_BARS.defaultBlockState();
                 case 1 -> Blocks.CHAIN.defaultBlockState();
-                default -> Blocks.SPRUCE_FENCE.defaultBlockState();
+                default -> Blocks.DEEPSLATE_TILE_WALL.defaultBlockState();
             };
             serverLevel.setBlock(pos, scrap, 3);
         }

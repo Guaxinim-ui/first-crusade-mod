@@ -248,6 +248,15 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-06-22: **Acampamento Ork vira CIDADE Ork (sem tendas/fogueiras/paliçada)**. Pedido do dono
+  (print: "nao quero esses acampamentos"). `OrkCampManager`: removidas **tendas** (terracotta),
+  **fogueiras** (fumaça) e a **paliçada de madeira**. Agora `buildCampStructure` (nível 1) faz uma
+  praça pavimentada (coarse dirt/cobble) com **cabanas Ork** (`buildOrkHut`: log+plank+barra de ferro
+  na janela+telhado), totem e estandartes. `fortifyCamp` (nível 2+) faz uma **cidade murada**: muralha
+  baixa de `cobbled_deepslate` com espinhos de `iron_bars` + portão, **torres de pedra**
+  (`buildWatchtower` agora deepslate), e mais cabanas em anel escalando com o nível. `scatterScrap` sem
+  campfires (só bigorna/caldeirão/sucata). Núcleo Ork no centro. Build OK; **não testado em jogo**.
+
 - 2026-06-22: **Bloco do acampamento Ork vira "Núcleo Ork" (não parece mais spawner)**. Pedido do dono
   (print do cubo de tijolo vermelho). O bloco `ORK_CAMP` deixou de ser cubo `red_nether_bricks`: novo
   modelo `models/block/ork_camp.json` = **altar/núcleo em camadas** (base polished_blackstone → pilar
