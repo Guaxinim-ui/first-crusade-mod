@@ -192,35 +192,37 @@ public final class StrategicWarAIManager {
             return StrategicConstructionType.HABITATION;
         }
 
-        if (settlement.getBuiltCount(StrategicConstructionType.FARM) < 2 + age.ordinal()) {
+        // Economy structures are kept to ONE of each — they level up with the city instead of
+        // multiplying (owner request: cleaner to test, the single work-site just produces more).
+        if (settlement.getBuiltCount(StrategicConstructionType.FARM) < 1) {
             return StrategicConstructionType.FARM;
         }
 
-        if (settlement.getBuiltCount(StrategicConstructionType.MINE) < 2 + age.ordinal()) {
+        if (settlement.getBuiltCount(StrategicConstructionType.MINE) < 1) {
             return StrategicConstructionType.MINE;
         }
 
-        if (settlement.getBuiltCount(StrategicConstructionType.SCRAP_YARD) < 1 + age.ordinal()) {
+        if (settlement.getBuiltCount(StrategicConstructionType.SCRAP_YARD) < 1) {
             return StrategicConstructionType.SCRAP_YARD;
         }
 
         if (age.ordinal() >= StrategicAge.FORTIFIED_SETTLEMENT.ordinal()
-                && settlement.getBuiltCount(StrategicConstructionType.REFINERY) < 1 + age.ordinal() / 2) {
+                && settlement.getBuiltCount(StrategicConstructionType.REFINERY) < 1) {
             return StrategicConstructionType.REFINERY;
         }
 
         if (age.ordinal() >= StrategicAge.MANUFACTORUM_AGE.ordinal()
-                && settlement.getBuiltCount(StrategicConstructionType.FORGE) < 1 + age.ordinal() / 2) {
+                && settlement.getBuiltCount(StrategicConstructionType.FORGE) < 1) {
             return StrategicConstructionType.FORGE;
         }
 
         if (age.ordinal() >= StrategicAge.MANUFACTORUM_AGE.ordinal()
-                && settlement.getBuiltCount(StrategicConstructionType.GOLD_MINE) < age.ordinal()) {
+                && settlement.getBuiltCount(StrategicConstructionType.GOLD_MINE) < 1) {
             return StrategicConstructionType.GOLD_MINE;
         }
 
         if (age.ordinal() >= StrategicAge.MANUFACTORUM_AGE.ordinal()
-                && settlement.getBuiltCount(StrategicConstructionType.TRADE_DEPOT) < age.ordinal()) {
+                && settlement.getBuiltCount(StrategicConstructionType.TRADE_DEPOT) < 1) {
             return StrategicConstructionType.TRADE_DEPOT;
         }
 

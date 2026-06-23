@@ -69,6 +69,7 @@
   "msg.firstcrusade.ork.no_space": "Sem espaço livre para um Poço de Loot.",
   "msg.firstcrusade.ork.built_loot_pit": "Os boyz cavaram um novo Poço de Loot!",
   "msg.firstcrusade.ork.too_far": "Longe demais da cidade Ork.",
+  "msg.firstcrusade.ork.loot_pit_exists": "A cidade já tem um Poço de Loot — ele cresce com a cidade.",
   "entity.firstcrusade.guardsman": "Guardsman",
   "entity.firstcrusade.space_marine": "Space Marine",
   "entity.firstcrusade.custodes": "Guarda Custódio",

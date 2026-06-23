@@ -203,7 +203,9 @@ public class OrkCampBlockEntity extends BlockEntity {
         this.cachedBoyz = countCampOfType(serverLevel, pos, ExampleMod.ORK_BOY.get());
         this.cachedLootPits = pits;
 
-        this.loot = Math.min(LOOT_CAP, this.loot + grots * LOOT_PER_GROT + pits * LOOT_PER_PIT);
+        // The single Loot Pit scales with the Ork city level (it levels up instead of multiplying).
+        this.loot = Math.min(LOOT_CAP,
+                this.loot + grots * LOOT_PER_GROT + pits * LOOT_PER_PIT * Math.max(1, this.campLevel));
         setChanged();
     }
 
@@ -607,6 +609,12 @@ public class OrkCampBlockEntity extends BlockEntity {
     // free spot within the city. The pit then adds to the loot economy (see produceLoot).
     public void buildLootPit(net.minecraft.world.entity.player.Player player) {
         if (!(this.level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        // One Loot Pit per city — it levels up with the city instead of multiplying.
+        if (countLootPits(serverLevel, this.worldPosition) >= 1) {
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.loot_pit_exists"), true);
             return;
         }
 

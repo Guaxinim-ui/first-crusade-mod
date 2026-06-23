@@ -90,6 +90,7 @@
   "msg.firstcrusade.ork.no_space": "No free space for a Loot Pit.",
   "msg.firstcrusade.ork.built_loot_pit": "Da boyz dug a new Loot Pit!",
   "msg.firstcrusade.ork.too_far": "Too far from the Ork city.",
+  "msg.firstcrusade.ork.loot_pit_exists": "Da city already has a Loot Pit — it grows with da city.",
   "gui.firstcrusade.tab.city": "City",
   "gui.firstcrusade.tab.build": "Build",
   "gui.firstcrusade.tab.military": "Military",

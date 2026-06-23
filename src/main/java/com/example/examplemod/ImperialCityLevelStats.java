@@ -81,34 +81,36 @@ public final class ImperialCityLevelStats {
         };
     }
 
-    // Resource produced per work cycle by a staffed work site.
+    // Resource produced per work cycle by a staffed work site. Since each city now keeps a SINGLE
+    // work-site of each type (it levels up instead of multiplying), the per-cycle yield is boosted so
+    // one site stays productive and the level-up is clearly felt as more resources.
     public static int mineIronYield(int cityLevel) {
         return switch (cityLevel) {
-            case 2 -> 2;
-            case 3 -> 3;
-            case 4 -> 5;
-            case 5 -> 8;
-            default -> 1;
+            case 2 -> 4;
+            case 3 -> 6;
+            case 4 -> 10;
+            case 5 -> 16;
+            default -> 2;
         };
     }
 
     public static int scrapYardScrapYield(int cityLevel) {
         return switch (cityLevel) {
-            case 2 -> 2;
-            case 3 -> 3;
-            case 4 -> 4;
-            case 5 -> 6;
-            default -> 1;
+            case 2 -> 4;
+            case 3 -> 6;
+            case 4 -> 8;
+            case 5 -> 12;
+            default -> 2;
         };
     }
 
     public static int refineryCoalYield(int cityLevel) {
         return switch (cityLevel) {
-            case 2 -> 1;
-            case 3 -> 2;
-            case 4 -> 3;
-            case 5 -> 4;
-            default -> 1;
+            case 2 -> 3;
+            case 3 -> 4;
+            case 4 -> 6;
+            case 5 -> 8;
+            default -> 2;
         };
     }
 

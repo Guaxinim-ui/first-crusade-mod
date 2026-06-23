@@ -36,7 +36,11 @@ public final class StrategicConstructionPlanner {
                 int x = corePos.getX() + (int) Math.round(Math.cos(angle) * radius);
                 int z = corePos.getZ() + (int) Math.round(Math.sin(angle) * radius);
 
-                BlockPos surface = ground(level, new BlockPos(x, corePos.getY(), z));
+                // Build on the city's ground plane (the Core's Y), NOT the heightmap. The heightmap
+                // returns the top of the tallest block — i.e. the ROOF of a nearby house — so sites
+                // were landing on rooftops. On the ground plane an occupied spot fails the clear check
+                // (its walls aren't replaceable) and is simply skipped, so houses are built around.
+                BlockPos surface = new BlockPos(x, corePos.getY(), z);
 
                 if (data.hasActiveProjectAt(surface)) {
                     continue;
