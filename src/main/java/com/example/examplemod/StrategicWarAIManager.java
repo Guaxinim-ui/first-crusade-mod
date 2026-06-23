@@ -396,7 +396,8 @@ public final class StrategicWarAIManager {
 
         int tier = WaaaghOverlordManager.getTier(level);
 
-        if (record.getResources().get(StrategicResourceType.WAAAGH) >= 90) {
+        // Waves are disabled for now (owner request): the Ork city builds itself instead of attacking.
+        if (ExampleMod.ORK_WAVES_ENABLED && record.getResources().get(StrategicResourceType.WAAAGH) >= 90) {
             launchOrkStrategicAttack(level, record, camp, campPos, nearestCity, tier);
         }
 

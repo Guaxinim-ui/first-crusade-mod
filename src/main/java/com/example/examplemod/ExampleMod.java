@@ -261,6 +261,22 @@ public static final RegistryObject<BlockEntityType<OrkCampBlockEntity>> ORK_CAMP
         BLOCK_ENTITY_TYPES.register("ork_camp",
                 () -> BlockEntityType.Builder.of(OrkCampBlockEntity::new, ORK_CAMP.get()).build(null));
 
+// Ork Loot Pit — the first buildable Ork city structure (raised from the Ork Core panel). Grots dig
+// it for loot, boosting the city's economy (see OrkCampBlockEntity.produceLoot).
+public static final RegistryObject<Block> ORK_LOOT_PIT =
+        BLOCKS.register("ork_loot_pit",
+                () -> new Block(BlockBehaviour.Properties.of()
+                        .strength(2.0F, 4.0F)
+                        .sound(SoundType.GRAVEL)));
+
+public static final RegistryObject<Item> ORK_LOOT_PIT_ITEM =
+        ITEMS.register("ork_loot_pit",
+                () -> new BlockItem(ORK_LOOT_PIT.get(), new Item.Properties()));
+
+public static final RegistryObject<MenuType<OrkCampMenu>> ORK_CAMP_MENU =
+        MENU_TYPES.register("ork_camp_menu",
+                () -> IForgeMenuType.create((windowId, inventory, data) -> new OrkCampMenu(windowId, inventory, data)));
+
 // Strategium — the "Mesa de Estratégia" research bench (paid Age-up research).
 public static final RegistryObject<Block> STRATEGIUM =
         BLOCKS.register("strategium",
@@ -863,6 +879,7 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
                         output.accept(IMPERIAL_BARRACKS_ITEM.get());
                         output.accept(IMPERIAL_HABITATION_ITEM.get());
                         output.accept(ORK_CAMP_ITEM.get());
+                        output.accept(ORK_LOOT_PIT_ITEM.get());
                         output.accept(STRATEGIUM_ITEM.get());
                         output.accept(SPACEPORT_ITEM.get());
 
@@ -970,6 +987,14 @@ private void commonSetup(final FMLCommonSetupEvent event) {
                 StrategiumActionPacket::decode,
                 StrategiumActionPacket::handle
         );
+
+        NETWORK_CHANNEL.registerMessage(
+                networkPacketId++,
+                OrkCampActionPacket.class,
+                OrkCampActionPacket::encode,
+                OrkCampActionPacket::decode,
+                OrkCampActionPacket::handle
+        );
     });
 
     LOGGER.info("First Crusade loaded successfully.");
@@ -1007,6 +1032,11 @@ private void registerAttributes(EntityAttributeCreationEvent event) {
 // are capped at 50 warriors. Flip to false to return to normal world behaviour.
 public static final boolean TEST_FIXED_WORLD = true;
 public static final int TEST_WARRIOR_CAP = 50;
+
+// Ork attack waves are switched off for now (owner request 2026-06-23): the Ork city should grow and
+// build as a peer of the Imperial city, not spam war parties. Flip to true to bring the waves back
+// (both the camp's own war parties and the strategic offensive honour this flag).
+public static final boolean ORK_WAVES_ENABLED = false;
 
 private static final double WORLD_BORDER_SIZE = 5000.0D;
 
@@ -1148,6 +1178,7 @@ public static void onClientSetup(FMLClientSetupEvent event) {
     event.enqueueWork(() -> {
         MenuScreens.register(IMPERIAL_COMMAND_CORE_MENU.get(), ImperialCommandCoreScreen::new);
         MenuScreens.register(STRATEGIUM_MENU.get(), StrategiumScreen::new);
+        MenuScreens.register(ORK_CAMP_MENU.get(), OrkCampScreen::new);
     });
 }
     @SubscribeEvent

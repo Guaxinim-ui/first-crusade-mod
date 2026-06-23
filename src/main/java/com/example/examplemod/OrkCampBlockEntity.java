@@ -49,6 +49,9 @@ public class OrkCampBlockEntity extends BlockEntity {
     // the Ork mirror of the Imperial citizens -> resources -> troops loop. War hosts mobilise EXISTING
     // Boyz (the garrison thins when it attacks and must be rebuilt from the economy).
     private static final int LOOT_PER_GROT = 2;        // loot each grot scavenges per cycle
+    private static final int LOOT_PER_PIT = 3;         // bonus loot per built Loot Pit per cycle
+    private static final int LOOT_PIT_COST = 40;       // loot to build one Loot Pit
+    private static final int BUILD_SCAN_RADIUS = 26;   // how far from the heart a structure may be placed
     private static final int LOOT_CAP = 4000;
     private static final int BOY_LOOT_COST = 8;        // loot to raise one Boy
     private static final int WAR_PARTY_LOOT_COST = 40; // loot to muster and march a war host
@@ -76,6 +79,12 @@ public class OrkCampBlockEntity extends BlockEntity {
     private boolean hasSpread = false;
     private int corruptionRadius = 0;
     private int tickCounter = 0;
+
+    // Cached populace/garrison/structure counts for the Ork Core GUI (refreshed each economy cycle so
+    // the menu never triggers entity/block scans on its own polling).
+    private int cachedGrots = 0;
+    private int cachedBoyz = 0;
+    private int cachedLootPits = 0;
 
     public OrkCampBlockEntity(BlockPos pos, BlockState state) {
         super(ExampleMod.ORK_CAMP_BLOCK_ENTITY.get(), pos, state);
@@ -173,8 +182,8 @@ public class OrkCampBlockEntity extends BlockEntity {
         this.founded = true;
         setChanged();
 
-        int startGrots = this.campLevel <= 1 ? 2 : Math.min(populaceForLevel(this.campLevel), 4);
-        int startBoyz = this.campLevel <= 1 ? 6 : Math.min(garrisonForLevel(this.campLevel), 8);
+        int startGrots = this.campLevel <= 1 ? 2 : Math.min(populaceForLevel(this.campLevel), 3);
+        int startBoyz = this.campLevel <= 1 ? 4 : Math.min(garrisonForLevel(this.campLevel), 6);
 
         for (int i = 0; i < startGrots; i++) {
             spawnCampUnit(serverLevel, pos, ExampleMod.GRETCHIN.get());
@@ -184,11 +193,33 @@ public class OrkCampBlockEntity extends BlockEntity {
         }
     }
 
-    // The populace scavenges loot — the city's economy, which funds Boyz and war hosts.
+    // The populace scavenges loot — the city's economy, which funds Boyz and war hosts. Built Loot
+    // Pits add a steady bonus. This also refreshes the cached counts the Ork Core GUI reads.
     private void produceLoot(ServerLevel serverLevel, BlockPos pos) {
         int grots = countCampOfType(serverLevel, pos, ExampleMod.GRETCHIN.get());
-        this.loot = Math.min(LOOT_CAP, this.loot + grots * LOOT_PER_GROT);
+        int pits = countLootPits(serverLevel, pos);
+
+        this.cachedGrots = grots;
+        this.cachedBoyz = countCampOfType(serverLevel, pos, ExampleMod.ORK_BOY.get());
+        this.cachedLootPits = pits;
+
+        this.loot = Math.min(LOOT_CAP, this.loot + grots * LOOT_PER_GROT + pits * LOOT_PER_PIT);
         setChanged();
+    }
+
+    // Counts the Loot Pits built around this Ork city (the Ork mirror of an Imperial work-site).
+    private int countLootPits(ServerLevel serverLevel, BlockPos pos) {
+        int count = 0;
+
+        for (BlockPos p : BlockPos.betweenClosed(
+                pos.offset(-BUILD_SCAN_RADIUS, -4, -BUILD_SCAN_RADIUS),
+                pos.offset(BUILD_SCAN_RADIUS, 8, BUILD_SCAN_RADIUS))) {
+            if (serverLevel.getBlockState(p).is(ExampleMod.ORK_LOOT_PIT.get())) {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     // Self-driven, GRADUAL growth: at most ONE new Ork per interval, up to the city's caps — never a
@@ -221,10 +252,10 @@ public class OrkCampBlockEntity extends BlockEntity {
     // The grot populace per city level — the workers that drive the economy.
     private static int populaceForLevel(int campLevel) {
         return switch (campLevel) {
-            case 2 -> 8;
-            case 3 -> 12;
-            case 4 -> 18;
-            default -> 4;
+            case 2 -> 4;
+            case 3 -> 6;
+            case 4 -> 8;
+            default -> 3;
         };
     }
 
@@ -232,10 +263,10 @@ public class OrkCampBlockEntity extends BlockEntity {
     // a horde, up to the 50-warrior cap.
     private static int garrisonForLevel(int campLevel) {
         return switch (campLevel) {
-            case 2 -> 20;
-            case 3 -> 35;
-            case 4 -> 50;
-            default -> 7;
+            case 2 -> 8;
+            case 3 -> 12;
+            case 4 -> 16;
+            default -> 4;
         };
     }
 
@@ -292,7 +323,8 @@ public class OrkCampBlockEntity extends BlockEntity {
 
         // Once mustered, the host marches only if the city can pay to field it AND actually mobilises
         // a warband. Otherwise it stays ready and waits for the economy/garrison to catch up.
-        if (this.waaagh >= WAAAGH_THRESHOLD && this.loot >= WAR_PARTY_LOOT_COST) {
+        // Waves are disabled for now (owner request) — the city just grows.
+        if (ExampleMod.ORK_WAVES_ENABLED && this.waaagh >= WAAAGH_THRESHOLD && this.loot >= WAR_PARTY_LOOT_COST) {
             if (launchWarParty(serverLevel, pos)) {
                 this.loot -= WAR_PARTY_LOOT_COST;
                 this.waaagh = 0;
@@ -510,6 +542,112 @@ public class OrkCampBlockEntity extends BlockEntity {
                 pos.getY() + 48,
                 pos.getZ() + GARRISON_RADIUS
         );
+    }
+
+    // ===== Ork Core GUI (simple panel) =====
+
+    public int getCampLevel() {
+        return this.campLevel;
+    }
+
+    public int getClanOrdinal() {
+        return this.clan.ordinal();
+    }
+
+    public int getLootValue() {
+        return this.loot;
+    }
+
+    public int getLootCapValue() {
+        return LOOT_CAP;
+    }
+
+    public int getLootPitCost() {
+        return LOOT_PIT_COST;
+    }
+
+    public int getCachedGrots() {
+        return this.cachedGrots;
+    }
+
+    public int getCachedBoyz() {
+        return this.cachedBoyz;
+    }
+
+    public int getCachedLootPits() {
+        return this.cachedLootPits;
+    }
+
+    // Opens the Ork city's command panel (the Ork mirror of the Imperial Command Core screen).
+    public void openOrkInterface(net.minecraft.world.entity.player.Player player) {
+        if (!(player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)) {
+            return;
+        }
+
+        net.minecraftforge.network.NetworkHooks.openScreen(
+                serverPlayer,
+                new net.minecraft.world.MenuProvider() {
+                    @Override
+                    public Component getDisplayName() {
+                        return Component.translatable("block.firstcrusade.ork_camp");
+                    }
+
+                    @Override
+                    public net.minecraft.world.inventory.AbstractContainerMenu createMenu(
+                            int containerId, net.minecraft.world.entity.player.Inventory inventory,
+                            net.minecraft.world.entity.player.Player p) {
+                        return new OrkCampMenu(containerId, inventory, OrkCampBlockEntity.this);
+                    }
+                },
+                this.worldPosition
+        );
+    }
+
+    // The boss orders a new Loot Pit raised: it spends the city's loot and a Grot crew digs it in at a
+    // free spot within the city. The pit then adds to the loot economy (see produceLoot).
+    public void buildLootPit(net.minecraft.world.entity.player.Player player) {
+        if (!(this.level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        if (this.loot < LOOT_PIT_COST) {
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.no_loot"), true);
+            return;
+        }
+
+        BlockPos spot = findFreeBuildSpot(serverLevel, this.worldPosition);
+
+        if (spot == null) {
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.no_space"), true);
+            return;
+        }
+
+        serverLevel.setBlock(spot, ExampleMod.ORK_LOOT_PIT.get().defaultBlockState(), 3);
+        this.loot -= LOOT_PIT_COST;
+        this.cachedLootPits++;
+        setChanged();
+
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.built_loot_pit"), true);
+    }
+
+    // Finds an empty surface spot in a ring around the heart to drop a new Ork structure on.
+    private BlockPos findFreeBuildSpot(ServerLevel serverLevel, BlockPos center) {
+        for (int radius = 6; radius <= BUILD_SCAN_RADIUS; radius += 3) {
+            for (int angle = 0; angle < 360; angle += 30) {
+                int x = center.getX() + (int) Math.round(Math.cos(Math.toRadians(angle)) * radius);
+                int z = center.getZ() + (int) Math.round(Math.sin(Math.toRadians(angle)) * radius);
+
+                BlockPos surface = groundPos(serverLevel, new BlockPos(x, center.getY(), z));
+
+                if (serverLevel.isEmptyBlock(surface)
+                        && serverLevel.isEmptyBlock(surface.above())
+                        && !serverLevel.getBlockState(surface.below()).isAir()) {
+                    return surface;
+                }
+            }
+        }
+
+        return null;
     }
 
     @Override

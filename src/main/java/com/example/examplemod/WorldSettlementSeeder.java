@@ -48,43 +48,20 @@ public final class WorldSettlementSeeder {
         }
     }
 
-    // Test layout (owner request): a clean battlefield — 5 Imperial cities to the SOUTH (+Z) and 5
-    // Ork cities to the NORTH (-Z), each pointed at the nearest enemy so the two peoples make war on
-    // their own. The Ork cities are raised straight to a sizeable level so both sides start as cities.
-    private static final int TEST_ROW_SPACING = 130;
+    // Test layout (owner request, 2026-06-23): keep ONLY a single Ork structure in the world and
+    // nothing else for now, so it can be looked at and tuned in isolation without a swarm. No
+    // Imperial cities are seeded (place a Command Core by hand to test against it). The lone camp is
+    // given no target, so it simply garrisons its structure instead of marching off to the player.
     private static final int TEST_BAND_DISTANCE = 220;
-    private static final int TEST_COUNT_PER_SIDE = 5;
-    private static final int TEST_ORK_START_LEVEL = 3;
+    // Level 4 = the same scale as a seeded Imperial city (radius 30), so the lone Ork city is a peer.
+    private static final int TEST_ORK_START_LEVEL = 4;
 
     private static void seedTestLayout(ServerLevel level, BlockPos center) {
-        List<BlockPos> imperialCities = new ArrayList<>();
-        for (int i = 0; i < TEST_COUNT_PER_SIDE; i++) {
-            int x = center.getX() + (i - TEST_COUNT_PER_SIDE / 2) * TEST_ROW_SPACING;
-            int z = center.getZ() + TEST_BAND_DISTANCE; // south
-            imperialCities.add(foundCity(level, new BlockPos(x, center.getY(), z)));
-        }
+        BlockPos spot = new BlockPos(center.getX(), center.getY(), center.getZ() - TEST_BAND_DISTANCE);
+        BlockPos camp = OrkCampManager.seedWorldCamp(level, spot, null);
 
-        List<BlockPos> orkCities = new ArrayList<>();
-        for (int i = 0; i < TEST_COUNT_PER_SIDE; i++) {
-            int x = center.getX() + (i - TEST_COUNT_PER_SIDE / 2) * TEST_ROW_SPACING;
-            int z = center.getZ() - TEST_BAND_DISTANCE; // north
-            BlockPos spot = new BlockPos(x, center.getY(), z);
-
-            BlockPos target = nearestCity(imperialCities, spot, center);
-            BlockPos camp = OrkCampManager.seedWorldCamp(level, spot, target);
-            BlockPos placed = camp != null ? camp : spot;
-            orkCities.add(placed);
-
-            if (camp != null && level.getBlockEntity(camp) instanceof OrkCampBlockEntity orkCity) {
-                orkCity.seedAsCity(level, TEST_ORK_START_LEVEL);
-            }
-        }
-
-        // Point each Imperial city at the nearest Ork city, so it sends expeditions north.
-        for (BlockPos cityPos : imperialCities) {
-            if (level.getBlockEntity(cityPos) instanceof ImperialCommandCoreBlockEntity core) {
-                core.setKnownOrkCamp(nearestCity(orkCities, cityPos, center));
-            }
+        if (camp != null && level.getBlockEntity(camp) instanceof OrkCampBlockEntity orkCity) {
+            orkCity.seedAsCity(level, TEST_ORK_START_LEVEL);
         }
     }
 

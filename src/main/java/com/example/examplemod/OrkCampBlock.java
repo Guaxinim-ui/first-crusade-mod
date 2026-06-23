@@ -17,6 +17,22 @@ public class OrkCampBlock extends BaseEntityBlock {
         super(properties);
     }
 
+    // Right-click opens the Ork city's command panel (build Loot Pits, see the city's state).
+    @Override
+    public net.minecraft.world.InteractionResult use(BlockState state, Level level, BlockPos pos,
+            net.minecraft.world.entity.player.Player player, net.minecraft.world.InteractionHand hand,
+            net.minecraft.world.phys.BlockHitResult hit) {
+        if (level.isClientSide) {
+            return net.minecraft.world.InteractionResult.SUCCESS;
+        }
+
+        if (level.getBlockEntity(pos) instanceof OrkCampBlockEntity camp) {
+            camp.openOrkInterface(player);
+        }
+
+        return net.minecraft.world.InteractionResult.SUCCESS;
+    }
+
     // When the camp is razed or broken, drop it from the world war map.
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {

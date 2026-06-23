@@ -139,9 +139,21 @@ public final class OrkCampManager {
     // topped with iron-bar spikes, a gate, stone watchtowers, and more Ork huts inside — scaling with
     // campLevel (radius CAMP_RADIUS_BASE + campLevel*2). The Ork mirror of an Imperial city levelling
     // up. The central Núcleo Ork block is never overwritten (the clear loop skips it).
+    // The Ork city is raised at the SAME scale as an Imperial city of the same level (mirrors
+    // ImperialCommandCoreBlockEntity.getCityStructureRadius: 8/15/22/30), so the two peoples build
+    // settlements of equal size — the Ork city is a true peer, not a small camp.
+    private static int cityRadiusForLevel(int campLevel) {
+        return switch (campLevel) {
+            case 2 -> 15;
+            case 3 -> 22;
+            case 4 -> 30;
+            default -> 8;
+        };
+    }
+
     public static void fortifyCamp(ServerLevel serverLevel, BlockPos center, int campLevel) {
         RandomSource rng = serverLevel.random;
-        int r = CAMP_RADIUS_BASE + campLevel * 2;
+        int r = cityRadiusForLevel(campLevel);
 
         WorldGenPlacement.clearVegetation(serverLevel, center, r + 2, 12);
 
@@ -183,9 +195,9 @@ public final class OrkCampManager {
             buildWatchtower(serverLevel, center.offset(-(r - 2), 0, r - 2));
         }
 
-        // Ork huts filling the city, more of them as it grows.
+        // Ork huts filling the city — scaled to the (now city-sized) radius so it doesn't look empty.
         int hutRing = r - 3;
-        int huts = 3 + campLevel;
+        int huts = Math.max(4, r / 2);
         for (int i = 0; i < huts; i++) {
             double ang = 2.0 * Math.PI * i / huts + 0.4;
             int hx = (int) Math.round(Math.cos(ang) * hutRing);
