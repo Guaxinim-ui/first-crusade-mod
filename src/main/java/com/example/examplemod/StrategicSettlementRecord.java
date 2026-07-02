@@ -1,6 +1,9 @@
 package com.example.examplemod;
 
 import java.util.EnumMap;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -14,6 +17,16 @@ public class StrategicSettlementRecord {
     private StrategicPlan plan = StrategicPlan.ECONOMY;
     private StrategicGovernor governor;
     private StrategicResourceBank resources = StrategicResourceBank.createImperialStart();
+
+    // Field commander (CityCommanderEntity) + military posture, managed by CityMilitaryManager.
+    @Nullable
+    private UUID commanderUUID;
+    private long commanderRespawnAtGameTime;
+    private long attackCooldownUntilGameTime;
+    private long defensiveUntilGameTime;
+
+    @Nullable
+    private CitySquad attackSquad;
 
     private final EnumMap<StrategicConstructionType, Integer> builtCounts =
             new EnumMap<>(StrategicConstructionType.class);
@@ -61,6 +74,49 @@ public class StrategicSettlementRecord {
 
     public StrategicResourceBank getResources() {
         return resources;
+    }
+
+    @Nullable
+    public UUID getCommanderUUID() {
+        return commanderUUID;
+    }
+
+    public void setCommanderUUID(@Nullable UUID commanderUUID) {
+        this.commanderUUID = commanderUUID;
+    }
+
+    public long getCommanderRespawnAtGameTime() {
+        return commanderRespawnAtGameTime;
+    }
+
+    public void onCommanderDied(long gameTime) {
+        this.commanderUUID = null;
+        this.commanderRespawnAtGameTime = gameTime + CityMilitaryManager.COMMANDER_RESPAWN_TICKS;
+    }
+
+    public long getAttackCooldownUntilGameTime() {
+        return attackCooldownUntilGameTime;
+    }
+
+    public void setAttackCooldownUntilGameTime(long attackCooldownUntilGameTime) {
+        this.attackCooldownUntilGameTime = attackCooldownUntilGameTime;
+    }
+
+    public long getDefensiveUntilGameTime() {
+        return defensiveUntilGameTime;
+    }
+
+    public void setDefensiveUntilGameTime(long defensiveUntilGameTime) {
+        this.defensiveUntilGameTime = defensiveUntilGameTime;
+    }
+
+    @Nullable
+    public CitySquad getAttackSquad() {
+        return attackSquad;
+    }
+
+    public void setAttackSquad(@Nullable CitySquad attackSquad) {
+        this.attackSquad = attackSquad;
     }
 
     public int getBuiltCount(StrategicConstructionType type) {
@@ -165,6 +221,18 @@ public class StrategicSettlementRecord {
         tag.put("Governor", governor.save());
         tag.put("Resources", resources.save());
 
+        if (commanderUUID != null) {
+            tag.putUUID("CommanderUUID", commanderUUID);
+        }
+
+        tag.putLong("CommanderRespawnAt", commanderRespawnAtGameTime);
+        tag.putLong("AttackCooldownUntil", attackCooldownUntilGameTime);
+        tag.putLong("DefensiveUntil", defensiveUntilGameTime);
+
+        if (attackSquad != null) {
+            tag.put("AttackSquad", attackSquad.save());
+        }
+
         CompoundTag builtTag = new CompoundTag();
 
         for (StrategicConstructionType type : StrategicConstructionType.values()) {
@@ -201,6 +269,18 @@ public class StrategicSettlementRecord {
 
         if (tag.contains("Resources", Tag.TAG_COMPOUND)) {
             record.resources.load(tag.getCompound("Resources"));
+        }
+
+        if (tag.hasUUID("CommanderUUID")) {
+            record.commanderUUID = tag.getUUID("CommanderUUID");
+        }
+
+        record.commanderRespawnAtGameTime = tag.getLong("CommanderRespawnAt");
+        record.attackCooldownUntilGameTime = tag.getLong("AttackCooldownUntil");
+        record.defensiveUntilGameTime = tag.getLong("DefensiveUntil");
+
+        if (tag.contains("AttackSquad", Tag.TAG_COMPOUND)) {
+            record.attackSquad = CitySquad.load(tag.getCompound("AttackSquad"));
         }
 
         CompoundTag builtTag = tag.getCompound("BuiltCounts");

@@ -43,9 +43,12 @@ public final class ImperialPatrolManager {
                         && guardsman.isAssignedToCommandCore(corePos)
                         && guardsman.getTarget() == null
                         && !ImperialPrimarchManager.isInRetinue(guardsman, gameTime)
+                        && !CityMilitaryManager.isSquadded(guardsman)
         );
 
         // Themed city troops (Skitarii, Kasrkin, Enforcer, ...) patrol the same way as Guardsmen.
+        // Troops under squad orders (marching with the City Commander / holding the Core) are
+        // skipped so the patrol ring doesn't fight the military manager's movement orders.
         List<AbstractImperialTroopEntity> themedTroops = serverLevel.getEntitiesOfClass(
                 AbstractImperialTroopEntity.class,
                 searchBox(corePos, GUARD_SEARCH_RADIUS),
@@ -53,6 +56,7 @@ public final class ImperialPatrolManager {
                         && troop.isAssignedToCommandCore(corePos)
                         && troop.getTarget() == null
                         && !ImperialPrimarchManager.isInRetinue(troop, gameTime)
+                        && !CityMilitaryManager.isSquadded(troop)
         );
 
         if (guardsmen.isEmpty() && themedTroops.isEmpty()) {

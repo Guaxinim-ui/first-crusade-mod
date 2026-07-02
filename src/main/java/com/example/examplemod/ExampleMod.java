@@ -710,6 +710,16 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
     public static final RegistryObject<Item> FEUDAL_KNIGHT_SPAWN_EGG = ITEMS.register("feudal_knight_spawn_egg",
             () -> new ForgeSpawnEggItem(FEUDAL_KNIGHT, 0x6E6E78, 0x8A2A2A, new Item.Properties()));
 
+    public static final RegistryObject<EntityType<CityCommanderEntity>> CITY_COMMANDER =
+            ENTITY_TYPES.register("city_commander",
+                    () -> EntityType.Builder.of(CityCommanderEntity::new, MobCategory.CREATURE)
+                            .sized(0.6F, 1.95F)
+                            .clientTrackingRange(10)
+                            .build(MODID + ":city_commander"));
+
+    public static final RegistryObject<Item> CITY_COMMANDER_SPAWN_EGG = ITEMS.register("city_commander_spawn_egg",
+            () -> new ForgeSpawnEggItem(CITY_COMMANDER, 0x1A2A4A, 0xD4AF37, new Item.Properties()));
+
     public static final RegistryObject<EntityType<KillaKanEntity>> KILLA_KAN =
             ENTITY_TYPES.register("killa_kan",
                     () -> EntityType.Builder.of(KillaKanEntity::new, MobCategory.MONSTER)
@@ -935,6 +945,7 @@ output.accept(SISTER_OF_BATTLE_SPAWN_EGG.get());
 output.accept(PENAL_LEGIONNAIRE_SPAWN_EGG.get());
 output.accept(JUNGLE_FIGHTER_SPAWN_EGG.get());
 output.accept(FEUDAL_KNIGHT_SPAWN_EGG.get());
+output.accept(CITY_COMMANDER_SPAWN_EGG.get());
                     })
                     .build());
 
@@ -1022,6 +1033,7 @@ private void registerAttributes(EntityAttributeCreationEvent event) {
     event.put(PENAL_LEGIONNAIRE.get(), PenalLegionnaireEntity.createAttributes().build());
     event.put(JUNGLE_FIGHTER.get(), JungleFighterEntity.createAttributes().build());
     event.put(FEUDAL_KNIGHT.get(), FeudalKnightEntity.createAttributes().build());
+    event.put(CITY_COMMANDER.get(), CityCommanderEntity.createAttributes().build());
 }
 
 // Small, closed "planet": clamp the overworld to a compact playable area on every start. The
@@ -1213,6 +1225,7 @@ public static void onClientSetup(FMLClientSetupEvent event) {
         event.registerEntityRenderer(PENAL_LEGIONNAIRE.get(), PenalLegionnaireRenderer::new);
         event.registerEntityRenderer(JUNGLE_FIGHTER.get(), JungleFighterRenderer::new);
         event.registerEntityRenderer(FEUDAL_KNIGHT.get(), FeudalKnightRenderer::new);
+        event.registerEntityRenderer(CITY_COMMANDER.get(), CityCommanderRenderer::new);
     }
 }
 }

@@ -8,7 +8,7 @@
 > mudanças grandes, **verifique o estado real** com `git log --oneline -8`, `git status` e um
 > `Glob` em `src/main/java/com/example/examplemod/*.java` — não confie só neste arquivo.
 
-Última atualização: **2026-06-22** · branch `main` · remoto `github.com/Guaxinim-ui/first-crusade-mod`
+Última atualização: **2026-07-02** · branch `main` · remoto `github.com/Guaxinim-ui/first-crusade-mod`
 
 ---
 
@@ -247,6 +247,36 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 - Mensagens de commit em pt-BR, terminar com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
 ## 7. Changelog (mais recente no topo)
+
+- 2026-07-02: **Lorde Comandante por cidade + esquadrões militares (estilo AoE) — tropas EXISTENTES
+  marcham sob um líder físico**. Pedido do dono (prompt grande de cidades/AoE; o gap real eram líder +
+  squads — o resto já existia na família `Strategic*`). **(1) Lorde Comandante** (`CityCommanderEntity`
+  + `CityCommanderRenderer`, entidade `city_commander`, melee com Chainsword, 70 HP/16 armadura): 1 por
+  cidade imperial, surge de graça quando o assentamento chega à era **Assentamento Fortificado**;
+  se morre, a cidade fica sem ofensivas até um substituto surgir (**respawn 3 min**, via
+  `onCommanderDied` no `StrategicSettlementRecord`). Novo hook `countsTowardGarrisonTally()` no
+  `AbstractImperialTroopEntity` para a morte dele não liberar vaga de recruta. **(2) Squads**
+  (`CitySquad` + `CitySquadType` + `CitySquadOrder`): grupo de UUIDs com ordem (Seguir o Comandante /
+  Reagrupar / Atacar Posição / Defender o Núcleo / Voltar à Base); o squad de ataque persiste em NBT
+  dentro do `StrategicSettlementRecord` (exército em marcha sobrevive a save/load). **(3) Novo
+  `CityMilitaryManager`** (tick a cada **60t** via `StrategicWarAIEvents`): ergue o comandante, avalia a
+  postura — raid ativa OU threat ≥ 25 → **guarnição inteira recolhe num anel de guard posts no Core**
+  (e squad em campo é chamado de volta); em marcha mantém **formação** (guard posts reapontados no
+  comandante; se alguém fica >28 blocos o squad REAGRUPA e o comandante espera; a ≤24 blocos do alvo
+  vira ATACAR POSIÇÃO) — reusa os guard-post goals existentes, **zero goals novos por entidade**.
+  Vitória (camp arrasado) → Voltar à Base; derrota (comandante morto OU squad reduzido a <25%) →
+  recua + **postura defensiva por 8 min** + dominion −2. **(4) Ofensiva estratégica agora MOBILIZA a
+  guarnição existente** (a cidade esvazia ao atacar e precisa retreinar — espelho das war parties Ork):
+  `maybeLaunchImperialAttack` delega a `CityMilitaryManager.tryLaunchAttack` (exige comandante vivo,
+  guarnição ≥ 4 além de 3 que ficam de guarda, **cooldown de ataque 5 min**) e só gasta os recursos se
+  o squad formar; `spawnImperialMarcher` (spawnar Guardsman do nada) foi REMOVIDO. Consequência: cidade
+  na era Outpost não ataca (sem comandante) — combina com o design de estágios. **(5) Patrulhas**
+  (`ImperialPatrolManager`) pulam tropas sob ordem de squad (`CityMilitaryManager.isSquadded`).
+  `/fcstrategy status` agora mostra Comandante (ativo/ausente) + esquadrão de ataque por cidade.
+  Registro completo em ExampleMod (entity + egg + atributos + renderer + creative tab); lang en/pt
+  **425/425**; textura placeholder = cópia de guardsman.png (dono faz a arte). Build/jar OK; **não
+  testado em jogo**. Tunáveis: constantes no topo de `CityMilitaryManager` (cooldowns, distâncias de
+  formação, tamanhos mínimos). ⚠️ `TEST_FIXED_WORLD` continua true e `ORK_WAVES_ENABLED` false.
 
 - 2026-06-22: **Acampamento Ork vira CIDADE Ork (sem tendas/fogueiras/paliçada)**. Pedido do dono
   (print: "nao quero esses acampamentos"). `OrkCampManager`: removidas **tendas** (terracotta),

@@ -44,6 +44,10 @@ public final class StrategicWarAIEvents {
             StrategicConstructionBuilder.tickConstruction(overworld, data);
         }
 
+        if (gameTime % CityMilitaryManager.MILITARY_AI_INTERVAL == 0) {
+            CityMilitaryManager.tickAll(overworld);
+        }
+
         if (gameTime % STRATEGIC_AI_INTERVAL == 0) {
             StrategicWarAIManager.forceStrategicTick(overworld);
         }

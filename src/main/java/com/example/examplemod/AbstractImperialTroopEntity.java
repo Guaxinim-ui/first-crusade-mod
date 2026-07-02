@@ -101,9 +101,18 @@ public abstract class AbstractImperialTroopEntity extends PathfinderMob {
         super.setTarget(target);
     }
 
+    /**
+     * Whether this troop occupies a slot in the city's recruited-military tally (and therefore
+     * frees one on death). Units that are granted rather than recruited (e.g. the City Commander)
+     * override this to false so their death doesn't corrupt the recruit count.
+     */
+    protected boolean countsTowardGarrisonTally() {
+        return true;
+    }
+
     @Override
     public void die(DamageSource damageSource) {
-        if (!this.level().isClientSide && this.commandCorePos != null) {
+        if (!this.level().isClientSide && this.commandCorePos != null && countsTowardGarrisonTally()) {
             BlockEntity blockEntity = this.level().getBlockEntity(this.commandCorePos);
 
             if (blockEntity instanceof ImperialCommandCoreBlockEntity commandCore) {

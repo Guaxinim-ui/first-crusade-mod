@@ -282,6 +282,24 @@ public final class StrategicWarAIManager {
             return;
         }
 
+        // The offensive is no longer conjured out of thin air: the city's EXISTING garrison is
+        // mobilized into an attack squad led by the City Commander (the city empties out to attack
+        // and must retrain, like the Ork war parties). Resources are only spent if the squad
+        // actually formed — no commander / small garrison / cooldown means no attack this cycle.
+        int maxTroops = 4 + age * 3;
+
+        boolean launched = CityMilitaryManager.tryLaunchAttack(
+                level,
+                settlement,
+                core,
+                targetCamp,
+                maxTroops
+        );
+
+        if (!launched) {
+            return;
+        }
+
         settlement.getResources().spend(
                 foodCost,
                 ironCost,
@@ -295,66 +313,7 @@ public final class StrategicWarAIManager {
                 0
         );
 
-        int troops = 4 + age * 3;
-
-        for (int i = 0; i < troops; i++) {
-            spawnImperialMarcher(level, core, targetCamp);
-        }
-
         WarDominionManager.shift(level, 3 + age);
-
-        StrategicCoreMessageBus.sendToOpenCore(
-        level,
-        core.getBlockPos(),
-        Component.literal(
-                "Uma força imperial marchou contra o campo Ork em "
-                        + formatPos(targetCamp)
-                        + "."
-        )
-);
-    }
-
-    private static void spawnImperialMarcher(
-            ServerLevel level,
-            ImperialCommandCoreBlockEntity core,
-            BlockPos targetCamp
-    ) {
-        GuardsmanEntity guardsman = ExampleMod.GUARDSMAN.get().create(level);
-
-        if (guardsman == null) {
-            return;
-        }
-
-        BlockPos spawn = StrategicConstructionPlanner.ground(
-                level,
-                core.getBlockPos().offset(
-                        level.random.nextInt(9) - 4,
-                        0,
-                        level.random.nextInt(9) - 4
-                )
-        );
-
-        guardsman.moveTo(
-                spawn.getX() + 0.5D,
-                spawn.getY(),
-                spawn.getZ() + 0.5D,
-                level.random.nextFloat() * 360.0F,
-                0.0F
-        );
-
-        guardsman.assignToCommandCore(core.getBlockPos());
-        guardsman.assignRandomChapter();
-        guardsman.initializeFromCity(core.getStartingGuardsmanRank(), core.getCityType());
-        guardsman.setPersistenceRequired();
-
-        guardsman.getNavigation().moveTo(
-                targetCamp.getX() + 0.5D,
-                targetCamp.getY(),
-                targetCamp.getZ() + 0.5D,
-                1.05D
-        );
-
-        level.addFreshEntity(guardsman);
     }
 
     private static void tickOrkCamps(
@@ -793,6 +752,22 @@ public final class StrategicWarAIManager {
                             + " | Governador: " + settlement.getGovernor().getName()
                             + " | Plano: " + settlement.getPlan().getDisplayName()
                             + " | " + settlement.getResources().shortText()
+            ));
+
+            CitySquad attackSquad = settlement.getAttackSquad();
+
+            String squadText = attackSquad == null
+                    ? "nenhum"
+                    : attackSquad.getMembers().size()
+                            + " tropas ("
+                            + attackSquad.getOrder().getDisplayName()
+                            + ")";
+
+            lines.add(Component.literal(
+                    "    Comandante: "
+                            + (settlement.getCommanderUUID() != null ? "ativo" : "ausente")
+                            + " | Esquadrão de ataque: "
+                            + squadText
             ));
         }
 
