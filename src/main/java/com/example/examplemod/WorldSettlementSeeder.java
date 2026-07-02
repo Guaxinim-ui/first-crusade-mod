@@ -48,17 +48,22 @@ public final class WorldSettlementSeeder {
         }
     }
 
-    // Test layout (owner request, 2026-06-23): keep ONLY a single Ork structure in the world and
-    // nothing else for now, so it can be looked at and tuned in isolation without a swarm. No
-    // Imperial cities are seeded (place a Command Core by hand to test against it). The lone camp is
-    // given no target, so it simply garrisons its structure instead of marching off to the player.
-    private static final int TEST_BAND_DISTANCE = 220;
-    // Level 4 = the same scale as a seeded Imperial city (radius 30), so the lone Ork city is a peer.
+    // Test layout (owner request, 2026-07-02): a WAR PAIR — one Imperial walled village to the
+    // south and one Ork city to the north, facing each other across spawn, so the commander/squad
+    // systems (march, assault, defense) can be watched from the middle. ~280 blocks apart keeps the
+    // city's threat low enough that its strategic AI still attempts offensives by chance (a camp
+    // closer than 120 blocks pushes threat above the attack gate for non-aggressive governors).
+    // More settlements can be planted at will with /fcstrategy seedcity | seedcamp.
+    private static final int TEST_BAND_DISTANCE = 140;
+    // Level 4 = the same scale as a seeded Imperial city (radius 30), so the Ork city is a peer.
     private static final int TEST_ORK_START_LEVEL = 4;
 
     private static void seedTestLayout(ServerLevel level, BlockPos center) {
-        BlockPos spot = new BlockPos(center.getX(), center.getY(), center.getZ() - TEST_BAND_DISTANCE);
-        BlockPos camp = OrkCampManager.seedWorldCamp(level, spot, null);
+        BlockPos citySpot = new BlockPos(center.getX(), center.getY(), center.getZ() + TEST_BAND_DISTANCE);
+        BlockPos city = foundCity(level, citySpot);
+
+        BlockPos campSpot = new BlockPos(center.getX(), center.getY(), center.getZ() - TEST_BAND_DISTANCE);
+        BlockPos camp = OrkCampManager.seedWorldCamp(level, campSpot, city);
 
         if (camp != null && level.getBlockEntity(camp) instanceof OrkCampBlockEntity orkCity) {
             orkCity.seedAsCity(level, TEST_ORK_START_LEVEL);
@@ -106,8 +111,9 @@ public final class WorldSettlementSeeder {
 
     // Founds an autonomous Imperial city: places an unclaimed Command Core on the surface and asks
     // it to raise a full walled village around itself (Core as central keep, curtain wall, towers
-    // and houses with beds). The Core then governs and grows the settlement on its own.
-    private static BlockPos foundCity(ServerLevel serverLevel, BlockPos spot) {
+    // and houses with beds). The Core then governs and grows the settlement on its own. Public so
+    // the /fcstrategy seedcity command can plant villages on demand in an already-seeded world.
+    public static BlockPos foundCity(ServerLevel serverLevel, BlockPos spot) {
         BlockPos surface = WorldGenPlacement.groundPlacement(serverLevel, spot.getX(), spot.getZ());
         serverLevel.setBlock(surface, ExampleMod.IMPERIAL_COMMAND_CORE.get().defaultBlockState(), 3);
 

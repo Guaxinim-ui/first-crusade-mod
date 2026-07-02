@@ -688,7 +688,7 @@ public final class StrategicWarAIManager {
         return nearest;
     }
 
-    private static BlockPos findNearestCity(WorldWarMapData warMap, BlockPos from) {
+    public static BlockPos findNearestCity(WorldWarMapData warMap, BlockPos from) {
         BlockPos nearest = null;
         double nearestDistance = Double.MAX_VALUE;
 

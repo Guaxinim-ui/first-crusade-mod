@@ -4,9 +4,12 @@ import com.mojang.brigadier.CommandDispatcher;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -155,6 +158,82 @@ public final class StrategicWarAIEvents {
 
                                     return 1;
                                 }))
+
+                        // Plants an autonomous Imperial walled village ~48 blocks in the direction
+                        // the player is looking. Works in any world (ignores the once-per-world
+                        // seeding flag), so tests don't require creating a new world.
+                        .then(Commands.literal("seedcity")
+                                .executes(context -> {
+                                    CommandSourceStack source = context.getSource();
+                                    ServerLevel level = source.getLevel();
+
+                                    BlockPos spot = spotInFrontOf(source, 48);
+                                    BlockPos core = WorldSettlementSeeder.foundCity(level, spot);
+
+                                    source.sendSuccess(
+                                            () -> Component.literal(
+                                                    "Vila imperial fundada em ["
+                                                            + core.getX() + ", "
+                                                            + core.getY() + ", "
+                                                            + core.getZ() + "]."),
+                                            true
+                                    );
+
+                                    return 1;
+                                }))
+
+                        // Plants an Ork city ~48 blocks in the direction the player is looking,
+                        // targeting the nearest Imperial city (natural target for attack squads).
+                        .then(Commands.literal("seedcamp")
+                                .executes(context -> {
+                                    CommandSourceStack source = context.getSource();
+                                    ServerLevel level = source.getLevel();
+
+                                    BlockPos spot = spotInFrontOf(source, 48);
+
+                                    BlockPos target = StrategicWarAIManager.findNearestCity(
+                                            WorldWarMapData.get(level),
+                                            spot
+                                    );
+
+                                    BlockPos camp = OrkCampManager.seedWorldCamp(level, spot, target);
+
+                                    if (camp == null) {
+                                        source.sendFailure(Component.literal(
+                                                "Não foi possível plantar o núcleo Ork aqui."));
+                                        return 0;
+                                    }
+
+                                    if (level.getBlockEntity(camp) instanceof OrkCampBlockEntity orkCity) {
+                                        orkCity.seedAsCity(level, 3);
+                                    }
+
+                                    source.sendSuccess(
+                                            () -> Component.literal(
+                                                    "Cidade Ork plantada em ["
+                                                            + camp.getX() + ", "
+                                                            + camp.getY() + ", "
+                                                            + camp.getZ() + "]."),
+                                            true
+                                    );
+
+                                    return 1;
+                                }))
+        );
+    }
+
+    // A surface spot the given distance ahead of where the command source is looking (horizontal
+    // yaw only), so seeded settlements never land on top of the player.
+    private static BlockPos spotInFrontOf(CommandSourceStack source, int distance) {
+        Vec3 position = source.getPosition();
+        Vec2 rotation = source.getRotation();
+
+        double yawRadians = Math.toRadians(rotation.y);
+
+        return BlockPos.containing(
+                position.x - Math.sin(yawRadians) * distance,
+                position.y,
+                position.z + Math.cos(yawRadians) * distance
         );
     }
 }

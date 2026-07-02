@@ -248,6 +248,18 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-07-02 (2): **Vilas para o teste do Comandante — par de guerra no mundo novo + comandos de
+  semeadura**. Pedido do dono ("adicione as vilas para que eu consiga realizar o teste"). O layout de
+  teste (`TEST_FIXED_WORLD`) plantava só 1 cidade Ork e NENHUMA vila imperial (pedido de 2026-06-23) —
+  impossível testar o Comandante. **(1) Mundo novo:** `seedTestLayout` agora planta um **par de
+  guerra** — vila imperial murada ao SUL (+Z 140) e cidade Ork nível 4 ao NORTE (−Z 140), frente a
+  frente (~280 blocos; distância mantém o threat ≤ +3 para a IA imperial ainda tentar ofensivas por
+  chance). **(2) Mundo existente (sem recriar):** novos comandos **`/fcstrategy seedcity`** (funda vila
+  imperial autônoma ~48 blocos na direção do olhar) e **`/fcstrategy seedcamp`** (planta cidade Ork
+  nível 3 idem, mirando a cidade imperial mais próxima) — ignoram a flag de semeadura única por mundo.
+  `WorldSettlementSeeder.foundCity` e `StrategicWarAIManager.findNearestCity` viraram públicos.
+  Build/jar OK; **não testado em jogo**.
+
 - 2026-07-02: **Lorde Comandante por cidade + esquadrões militares (estilo AoE) — tropas EXISTENTES
   marcham sob um líder físico**. Pedido do dono (prompt grande de cidades/AoE; o gap real eram líder +
   squads — o resto já existia na família `Strategic*`). **(1) Lorde Comandante** (`CityCommanderEntity`
