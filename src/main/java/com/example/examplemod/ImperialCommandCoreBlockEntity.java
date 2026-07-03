@@ -2363,7 +2363,17 @@ public void buildAutonomousVillage(ServerLevel serverLevel) {
 
     this.cityLevel = Math.max(this.cityLevel, AUTONOMOUS_VILLAGE_LEVEL);
 
-    buildSimpleSettlement(serverLevel);
+    // Planned W40k settlement (plaza + avenues + curtain wall + zoned buildings), raised through
+    // the footprint/anti-collision/entity-safety pipeline. The old loose ring of wooden houses
+    // (buildSimpleSettlement) is kept but no longer called.
+    // Register on the war map FIRST: the strategic sync prunes any settlement record whose city
+    // isn't on the map, which would silently drop the layout plan built below.
+    WorldWarMapData.get(serverLevel).recordCity(this.worldPosition);
+    StrategicWarAIData warData = StrategicWarAIData.get(serverLevel);
+    StrategicSettlementRecord record = warData.getOrCreateImperial(serverLevel, this.worldPosition);
+    CityArchitect.buildFoundingSettlement(serverLevel, this, record);
+    warData.setDirty();
+
     spawnStartingPopulation(serverLevel, AUTONOMOUS_START_POPULATION);
     spawnInitialGarrison(serverLevel, AUTONOMOUS_GARRISON);
     setChanged();

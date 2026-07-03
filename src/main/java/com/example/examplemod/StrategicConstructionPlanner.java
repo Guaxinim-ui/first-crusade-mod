@@ -18,7 +18,14 @@ public final class StrategicConstructionPlanner {
     private StrategicConstructionPlanner() {
     }
 
-    public static BlockPos findConstructionSite(
+    /**
+     * Chooses (and reserves) a zone-appropriate, collision-free, entity-safe site for the given
+     * construction using the city's {@link CityLayoutPlan}: habitations go to the residential ring,
+     * industry against the wall, command buildings near the plaza, farms outside the gates. The
+     * returned footprint is already registered in the plan, so no later construction can overlap
+     * it. Returns null when no valid slot exists (the caller simply skips this cycle).
+     */
+    public static CityStructureFootprint reserveConstructionSite(
             ServerLevel level,
             ImperialCommandCoreBlockEntity core,
             StrategicConstructionType type,
@@ -26,96 +33,99 @@ public final class StrategicConstructionPlanner {
     ) {
         BlockPos corePos = core.getBlockPos();
 
-        int borderRadius = Math.max(24, core.getBuildBorderRadius());
-        int footprint = type.getFootprintRadius();
+        StrategicSettlementRecord record = data.getOrCreateImperial(level, corePos);
+        CityLayoutPlan plan = record.getOrCreateLayoutPlan(corePos);
 
-        for (int radius = 12; radius <= borderRadius; radius += 6) {
-            for (int attempt = 0; attempt < 32; attempt++) {
-                double angle = level.random.nextDouble() * Math.PI * 2.0D;
+        int borderRadius = Math.max(plan.getWallRadius() + 12, core.getBuildBorderRadius());
+        int half = type.getFootprintRadius();
 
-                int x = corePos.getX() + (int) Math.round(Math.cos(angle) * radius);
-                int z = corePos.getZ() + (int) Math.round(Math.sin(angle) * radius);
+        CityLayoutPlan.Zone zone = zoneFor(type);
 
-                // Build on the city's ground plane (the Core's Y), NOT the heightmap. The heightmap
-                // returns the top of the tallest block — i.e. the ROOF of a nearby house — so sites
-                // were landing on rooftops. On the ground plane an occupied spot fails the clear check
-                // (its walls aren't replaceable) and is simply skipped, so houses are built around.
-                BlockPos surface = new BlockPos(x, corePos.getY(), z);
+        CityStructureFootprint slot =
+                plan.findSlot(level, type.name(), half, half, 8, 2, zone, borderRadius);
 
-                if (data.hasActiveProjectAt(surface)) {
-                    continue;
-                }
-
-                if (isBuildAreaClear(level, surface, footprint)) {
-                    return surface;
-                }
-            }
+        // Zone full -> the city expands past its walls instead of giving up.
+        if (slot == null && zone != CityLayoutPlan.Zone.EXPANSION) {
+            slot = plan.findSlot(level, type.name(), half, half, 8, 2,
+                    CityLayoutPlan.Zone.EXPANSION, borderRadius);
         }
 
-        return null;
+        if (slot == null || data.hasActiveProjectAt(slot.getOrigin())) {
+            return null;
+        }
+
+        plan.registerFootprint(slot);
+        data.setDirty();
+
+        return slot;
     }
 
-    public static List<ConstructionPlacement> createPlacements(StrategicConstructionType type, BlockPos center) {
+    private static CityLayoutPlan.Zone zoneFor(StrategicConstructionType type) {
+        return switch (type) {
+            case HABITATION, TRADE_DEPOT -> CityLayoutPlan.Zone.INNER;
+            case COMMAND_BASTION -> CityLayoutPlan.Zone.CIVIC;
+            case WALL_BASTION -> CityLayoutPlan.Zone.DEFENSE;
+            case FARM -> CityLayoutPlan.Zone.EXPANSION;
+            default -> CityLayoutPlan.Zone.OUTER;
+        };
+    }
+
+    public static List<ConstructionPlacement> createPlacements(
+            StrategicConstructionType type,
+            BlockPos center,
+            Direction facing
+    ) {
         List<ConstructionPlacement> list = new ArrayList<>();
 
         switch (type) {
-            case HABITATION -> createHabitation(center, list);
-            case FARM -> createFarm(center, list);
+            case HABITATION -> createHabitation(center, list, facing);
+            case FARM -> createFarm(center, list, facing);
             case MINE -> createMine(center, list, ExampleMod.IMPERIAL_MINE.get());
             case GOLD_MINE -> createMine(center, list, ExampleMod.IMPERIAL_GOLD_MINE.get());
-            case SCRAP_YARD -> createScrapYard(center, list);
-            case REFINERY -> createIndustrial(center, list, ExampleMod.IMPERIAL_PROMETHIUM_REFINERY.get());
-            case FORGE -> createIndustrial(center, list, ExampleMod.IMPERIAL_FORGE.get());
-            case BARRACKS -> createBarracks(center, list);
+            case SCRAP_YARD -> createScrapYard(center, list, facing);
+            case REFINERY -> createIndustrial(center, list, facing, ExampleMod.IMPERIAL_PROMETHIUM_REFINERY.get());
+            case FORGE -> createIndustrial(center, list, facing, ExampleMod.IMPERIAL_FORGE.get());
+            case BARRACKS -> createBarracks(center, list, facing);
             case WALL_BASTION -> createWallBastion(center, list);
-            case TRADE_DEPOT -> createTradeDepot(center, list);
-            case COMMAND_BASTION -> createCommandBastion(center, list);
-            default -> createHabitation(center, list);
+            case TRADE_DEPOT -> createTradeDepot(center, list, facing);
+            case COMMAND_BASTION -> createCommandBastion(center, list, facing);
+            default -> createHabitation(center, list, facing);
         }
 
         return list;
     }
 
     public static int countBlocks(StrategicConstructionType type) {
-        return createPlacements(type, BlockPos.ZERO).size();
+        return createPlacements(type, BlockPos.ZERO, Direction.SOUTH).size();
+    }
+
+    /** The direction a building's door must face so it opens toward the city center. */
+    public static Direction facingToward(BlockPos from, BlockPos to) {
+        int dx = to.getX() - from.getX();
+        int dz = to.getZ() - from.getZ();
+
+        if (Math.abs(dx) >= Math.abs(dz)) {
+            return dx >= 0 ? Direction.EAST : Direction.WEST;
+        }
+
+        return dz >= 0 ? Direction.SOUTH : Direction.NORTH;
+    }
+
+    /**
+     * The perimeter column that stays open as the doorway (every closed building gets one, on the
+     * face pointing at the city — so the door always opens onto the structure's access path).
+     */
+    private static boolean isDoorColumn(int x, int z, Direction facing, int halfWidth, int halfDepth) {
+        return switch (facing) {
+            case EAST -> x == halfWidth && z == 0;
+            case WEST -> x == -halfWidth && z == 0;
+            case NORTH -> z == -halfDepth && x == 0;
+            default -> z == halfDepth && x == 0;
+        };
     }
 
     public static BlockPos ground(ServerLevel level, BlockPos pos) {
         return level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pos);
-    }
-
-    private static boolean isBuildAreaClear(ServerLevel level, BlockPos center, int radius) {
-        for (int x = -radius; x <= radius; x++) {
-            for (int z = -radius; z <= radius; z++) {
-                BlockPos floor = center.offset(x, -1, z);
-
-                if (level.isEmptyBlock(floor)) {
-                    return false;
-                }
-
-                for (int y = 0; y <= 7; y++) {
-                    BlockPos check = center.offset(x, y, z);
-
-                    if (!isReplaceable(level, check)) {
-                        return false;
-                    }
-                }
-            }
-        }
-
-        return true;
-    }
-
-    private static boolean isReplaceable(ServerLevel level, BlockPos pos) {
-        BlockState state = level.getBlockState(pos);
-
-        return state.isAir()
-                || state.getCollisionShape(level, pos).isEmpty()
-                || state.is(Blocks.GRASS)
-                || state.is(Blocks.TALL_GRASS)
-                || state.is(Blocks.FERN)
-                || state.is(Blocks.DEAD_BUSH)
-                || state.is(Blocks.SNOW);
     }
 
     private static void createFoundation(BlockPos center, List<ConstructionPlacement> list, int radius, BlockState floor) {
@@ -126,12 +136,13 @@ public final class StrategicConstructionPlanner {
         }
     }
 
-    private static void createHabitation(BlockPos center, List<ConstructionPlacement> list) {
-        createFoundation(center, list, 3, Blocks.POLISHED_ANDESITE.defaultBlockState());
+    private static void createHabitation(BlockPos center, List<ConstructionPlacement> list, Direction facing) {
+        createFoundation(center, list, 3, Blocks.DEEPSLATE_TILES.defaultBlockState());
 
         BlockState wall = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
-        BlockState roof = Blocks.DARK_OAK_PLANKS.defaultBlockState();
-        BlockState glass = Blocks.GLASS_PANE.defaultBlockState();
+        BlockState pillar = Blocks.POLISHED_BLACKSTONE.defaultBlockState();
+        BlockState roof = Blocks.POLISHED_BLACKSTONE.defaultBlockState();
+        BlockState bars = Blocks.IRON_BARS.defaultBlockState();
 
         for (int x = -3; x <= 3; x++) {
             for (int z = -3; z <= 3; z++) {
@@ -141,11 +152,19 @@ public final class StrategicConstructionPlanner {
                     continue;
                 }
 
+                boolean cornerPillar = Math.abs(x) == 3 && Math.abs(z) == 3;
+                boolean doorway = isDoorColumn(x, z, facing, 3, 3);
+
                 for (int y = 0; y <= 3; y++) {
-                    if (y == 1 && (x == 0 || z == 0)) {
-                        list.add(new ConstructionPlacement(center.offset(x, y, z), glass));
+                    // 2-high doorway facing the city — never a sealed box.
+                    if (doorway && y <= 1) {
+                        continue;
+                    }
+
+                    if (!cornerPillar && !doorway && y == 2 && (x == 0 || z == 0)) {
+                        list.add(new ConstructionPlacement(center.offset(x, y, z), bars));
                     } else {
-                        list.add(new ConstructionPlacement(center.offset(x, y, z), wall));
+                        list.add(new ConstructionPlacement(center.offset(x, y, z), cornerPillar ? pillar : wall));
                     }
                 }
             }
@@ -156,6 +175,8 @@ public final class StrategicConstructionPlanner {
                 list.add(new ConstructionPlacement(center.offset(x, 4, z), roof));
             }
         }
+
+        list.add(new ConstructionPlacement(center.offset(0, 0, 2), Blocks.LANTERN.defaultBlockState()));
 
         BlockState bedFoot = Blocks.RED_BED.defaultBlockState()
                 .setValue(BedBlock.PART, BedPart.FOOT)
@@ -173,7 +194,7 @@ public final class StrategicConstructionPlanner {
         list.add(new ConstructionPlacement(center, ExampleMod.IMPERIAL_HABITATION.get().defaultBlockState()));
     }
 
-    private static void createFarm(BlockPos center, List<ConstructionPlacement> list) {
+    private static void createFarm(BlockPos center, List<ConstructionPlacement> list, Direction facing) {
         createFoundation(center, list, 4, Blocks.DIRT.defaultBlockState());
 
         for (int x = -4; x <= 4; x++) {
@@ -183,7 +204,10 @@ public final class StrategicConstructionPlanner {
                 }
 
                 if (Math.abs(x) == 4 || Math.abs(z) == 4) {
-                    list.add(new ConstructionPlacement(center.offset(x, 0, z), Blocks.OAK_FENCE.defaultBlockState()));
+                    // The fence ring opens at the door column so farmers can walk in.
+                    if (!isDoorColumn(x, z, facing, 4, 4)) {
+                        list.add(new ConstructionPlacement(center.offset(x, 0, z), Blocks.OAK_FENCE.defaultBlockState()));
+                    }
                 } else {
                     list.add(new ConstructionPlacement(center.offset(x, 0, z), Blocks.FARMLAND.defaultBlockState()));
                     list.add(new ConstructionPlacement(center.offset(x, 1, z), Blocks.WHEAT.defaultBlockState()));
@@ -220,12 +244,12 @@ public final class StrategicConstructionPlanner {
         list.add(new ConstructionPlacement(center, centralBlock.defaultBlockState()));
     }
 
-    private static void createScrapYard(BlockPos center, List<ConstructionPlacement> list) {
+    private static void createScrapYard(BlockPos center, List<ConstructionPlacement> list, Direction facing) {
         createFoundation(center, list, 3, Blocks.COARSE_DIRT.defaultBlockState());
 
         for (int x = -3; x <= 3; x++) {
             for (int z = -3; z <= 3; z++) {
-                if (Math.abs(x) == 3 || Math.abs(z) == 3) {
+                if ((Math.abs(x) == 3 || Math.abs(z) == 3) && !isDoorColumn(x, z, facing, 3, 3)) {
                     list.add(new ConstructionPlacement(center.offset(x, 0, z), Blocks.IRON_BARS.defaultBlockState()));
                 }
             }
@@ -237,7 +261,7 @@ public final class StrategicConstructionPlanner {
         list.add(new ConstructionPlacement(center, ExampleMod.IMPERIAL_SCRAP_YARD.get().defaultBlockState()));
     }
 
-    private static void createIndustrial(BlockPos center, List<ConstructionPlacement> list, Block centralBlock) {
+    private static void createIndustrial(BlockPos center, List<ConstructionPlacement> list, Direction facing, Block centralBlock) {
         createFoundation(center, list, 4, Blocks.POLISHED_BLACKSTONE.defaultBlockState());
 
         BlockState wall = Blocks.DEEPSLATE_TILES.defaultBlockState();
@@ -251,7 +275,13 @@ public final class StrategicConstructionPlanner {
                     continue;
                 }
 
+                boolean doorway = isDoorColumn(x, z, facing, 4, 4);
+
                 for (int y = 0; y <= 3; y++) {
+                    if (doorway && y <= 1) {
+                        continue;
+                    }
+
                     list.add(new ConstructionPlacement(center.offset(x, y, z), wall));
                 }
             }
@@ -267,11 +297,11 @@ public final class StrategicConstructionPlanner {
         list.add(new ConstructionPlacement(center, centralBlock.defaultBlockState()));
     }
 
-    private static void createBarracks(BlockPos center, List<ConstructionPlacement> list) {
-        createFoundation(center, list, 4, Blocks.POLISHED_ANDESITE.defaultBlockState());
+    private static void createBarracks(BlockPos center, List<ConstructionPlacement> list, Direction facing) {
+        createFoundation(center, list, 4, Blocks.POLISHED_BLACKSTONE.defaultBlockState());
 
-        BlockState wall = Blocks.STONE_BRICKS.defaultBlockState();
-        BlockState roof = Blocks.DARK_OAK_PLANKS.defaultBlockState();
+        BlockState wall = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
+        BlockState roof = Blocks.POLISHED_BLACKSTONE.defaultBlockState();
         BlockState bars = Blocks.IRON_BARS.defaultBlockState();
 
         for (int x = -4; x <= 4; x++) {
@@ -282,8 +312,14 @@ public final class StrategicConstructionPlanner {
                     continue;
                 }
 
+                boolean doorway = isDoorColumn(x, z, facing, 4, 4);
+
                 for (int y = 0; y <= 3; y++) {
-                    if (y == 1 && (x == 0 || z == 0)) {
+                    if (doorway && y <= 1) {
+                        continue;
+                    }
+
+                    if (y == 1 && (x == 0 || z == 0) && !doorway) {
                         list.add(new ConstructionPlacement(center.offset(x, y, z), bars));
                     } else {
                         list.add(new ConstructionPlacement(center.offset(x, y, z), wall));
@@ -329,15 +365,21 @@ public final class StrategicConstructionPlanner {
         list.add(new ConstructionPlacement(center.offset(0, 5, 0), Blocks.BELL.defaultBlockState()));
     }
 
-    private static void createTradeDepot(BlockPos center, List<ConstructionPlacement> list) {
+    private static void createTradeDepot(BlockPos center, List<ConstructionPlacement> list, Direction facing) {
         createFoundation(center, list, 4, Blocks.SMOOTH_STONE.defaultBlockState());
 
-        BlockState wall = Blocks.STONE_BRICKS.defaultBlockState();
+        BlockState wall = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
 
         for (int x = -4; x <= 4; x++) {
             for (int z = -4; z <= 4; z++) {
                 if (Math.abs(x) == 4 || Math.abs(z) == 4) {
+                    boolean doorway = isDoorColumn(x, z, facing, 4, 4);
+
                     for (int y = 0; y <= 2; y++) {
+                        if (doorway && y <= 1) {
+                            continue;
+                        }
+
                         list.add(new ConstructionPlacement(center.offset(x, y, z), wall));
                     }
                 }
@@ -350,7 +392,7 @@ public final class StrategicConstructionPlanner {
         list.add(new ConstructionPlacement(center, ExampleMod.IMPERIAL_EMERALD_TRADE_DEPOT.get().defaultBlockState()));
     }
 
-    private static void createCommandBastion(BlockPos center, List<ConstructionPlacement> list) {
+    private static void createCommandBastion(BlockPos center, List<ConstructionPlacement> list, Direction facing) {
         createFoundation(center, list, 5, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
 
         BlockState ferrocrete = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
@@ -365,7 +407,14 @@ public final class StrategicConstructionPlanner {
                     continue;
                 }
 
+                boolean doorway = isDoorColumn(x, z, facing, 5, 5);
+
                 for (int y = 0; y <= 4; y++) {
+                    // 3-high gothic gateway into the bastion.
+                    if (doorway && y <= 2) {
+                        continue;
+                    }
+
                     list.add(new ConstructionPlacement(center.offset(x, y, z), ferrocrete));
                 }
             }

@@ -28,6 +28,11 @@ public class StrategicSettlementRecord {
     @Nullable
     private CitySquad attackSquad;
 
+    // The city's physical layout memory: registered structure footprints, gates, towers, patrol
+    // points and the road/wall geometry. Created lazily so pre-existing cities pick one up too.
+    @Nullable
+    private CityLayoutPlan layoutPlan;
+
     private final EnumMap<StrategicConstructionType, Integer> builtCounts =
             new EnumMap<>(StrategicConstructionType.class);
 
@@ -117,6 +122,14 @@ public class StrategicSettlementRecord {
 
     public void setAttackSquad(@Nullable CitySquad attackSquad) {
         this.attackSquad = attackSquad;
+    }
+
+    public CityLayoutPlan getOrCreateLayoutPlan(BlockPos center) {
+        if (layoutPlan == null) {
+            layoutPlan = new CityLayoutPlan(center);
+        }
+
+        return layoutPlan;
     }
 
     public int getBuiltCount(StrategicConstructionType type) {
@@ -233,6 +246,10 @@ public class StrategicSettlementRecord {
             tag.put("AttackSquad", attackSquad.save());
         }
 
+        if (layoutPlan != null) {
+            tag.put("LayoutPlan", layoutPlan.save());
+        }
+
         CompoundTag builtTag = new CompoundTag();
 
         for (StrategicConstructionType type : StrategicConstructionType.values()) {
@@ -281,6 +298,10 @@ public class StrategicSettlementRecord {
 
         if (tag.contains("AttackSquad", Tag.TAG_COMPOUND)) {
             record.attackSquad = CitySquad.load(tag.getCompound("AttackSquad"));
+        }
+
+        if (tag.contains("LayoutPlan", Tag.TAG_COMPOUND)) {
+            record.layoutPlan = CityLayoutPlan.load(tag.getCompound("LayoutPlan"));
         }
 
         CompoundTag builtTag = tag.getCompound("BuiltCounts");

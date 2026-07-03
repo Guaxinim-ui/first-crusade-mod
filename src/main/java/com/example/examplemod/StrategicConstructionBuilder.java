@@ -27,6 +27,8 @@ public final class StrategicConstructionBuilder {
             BlockEntity blockEntity = level.getBlockEntity(corePos);
 
             if (!(blockEntity instanceof ImperialCommandCoreBlockEntity core)) {
+                // City is gone — release the reserved ground so nothing stays blocked forever.
+                freeReservedFootprint(data, corePos, sitePos);
                 finishedProjects.add(project);
                 continue;
             }
@@ -40,7 +42,11 @@ public final class StrategicConstructionBuilder {
             }
 
             List<StrategicConstructionPlanner.ConstructionPlacement> placements =
-                    StrategicConstructionPlanner.createPlacements(project.getType(), sitePos);
+                    StrategicConstructionPlanner.createPlacements(
+                            project.getType(),
+                            sitePos,
+                            StrategicConstructionPlanner.facingToward(sitePos, corePos)
+                    );
 
             project.setTotalBlocks(placements.size());
 
@@ -61,8 +67,23 @@ public final class StrategicConstructionBuilder {
                 }
 
                 StrategicConstructionPlanner.ConstructionPlacement placement = placements.get(index);
+                BlockPos blockPos = placement.pos();
 
-                level.setBlock(placement.pos(), placement.state(), 3);
+                // Never overwrite the Core or any block entity (chests, beds, work sites...).
+                if (blockPos.equals(corePos) || level.getBlockState(blockPos).hasBlockEntity()) {
+                    project.addProgress(1);
+                    continue;
+                }
+
+                // Rule number one: never place a block in a living thing's head. NPCs standing in
+                // the cell are walked out; if someone (e.g. a player) still occupies it, the
+                // builders politely wait and retry next cycle without losing progress.
+                if (SafeEntityRelocator.isBlockOccupiedByEntity(level, blockPos)) {
+                    SafeEntityRelocator.nudgeAwayFrom(level, blockPos, corePos);
+                    break;
+                }
+
+                level.setBlock(blockPos, placement.state(), 3);
                 project.addProgress(1);
             }
 
@@ -96,7 +117,10 @@ public final class StrategicConstructionBuilder {
             return false;
         }
 
-        BlockPos site = StrategicConstructionPlanner.findConstructionSite(level, core, type, data);
+        // Zone-planned, collision-checked and entity-safe site; the footprint is registered in the
+        // city's layout plan so nothing else can ever be queued on top of it.
+        CityStructureFootprint site =
+                StrategicConstructionPlanner.reserveConstructionSite(level, core, type, data);
 
         if (site == null) {
             return false;
@@ -106,7 +130,7 @@ public final class StrategicConstructionBuilder {
 
         StrategicConstructionProject project = new StrategicConstructionProject(
                 core.getBlockPos(),
-                site,
+                site.getOrigin(),
                 type,
                 totalBlocks
         );
@@ -121,7 +145,7 @@ public final class StrategicConstructionBuilder {
                 "Construtores imperiais iniciaram: "
                         + type.getDisplayName()
                         + " em "
-                        + formatPos(site)
+                        + formatPos(site.getOrigin())
                         + "."
         )
 );
@@ -163,7 +187,16 @@ public final class StrategicConstructionBuilder {
         data.setDirty();
     }
 
-    private static void assignCompletedBlockEntity(
+    private static void freeReservedFootprint(StrategicWarAIData data, BlockPos corePos, BlockPos sitePos) {
+        StrategicSettlementRecord record = data.getImperial(corePos);
+
+        if (record != null) {
+            record.getOrCreateLayoutPlan(corePos).freeFootprintAt(sitePos);
+        }
+    }
+
+    // Public so the CityArchitect can bind founding worksites to their Core the same way.
+    public static void assignCompletedBlockEntity(
             ServerLevel level,
             BlockPos corePos,
             BlockPos sitePos,

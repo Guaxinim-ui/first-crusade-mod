@@ -248,6 +248,34 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-07-03: **Modelo físico das cidades refeito — layout planejado por zonas, anti-colisão e
+  segurança de entidades (pedido grande do dono; W40k/brutalista)**. **(1) Fundação do sistema:**
+  `CityStructureFootprint` (área reservada: origem, meia-largura/profundidade, altura, margem,
+  entrada, NBT), `CityLayoutPlan` (memória espacial da cidade dentro do `StrategicSettlementRecord`:
+  praça, avenidas cardeais 3-wide geométricas, muralha quadrada, zonas CIVIC/INNER/OUTER/DEFENSE/
+  EXPANSION, footprints, portões/torres/pontos de patrulha; `findSlot` gera candidatos em anéis
+  regulares), `CityPlacementValidator` (nunca sobre praça/avenida/Core/faixa da muralha; sem overlap
+  de footprint; chão sólido; volume só de blocos substituíveis; jogador dentro = rejeita) e
+  `SafeEntityRelocator` (NPCs são teleportados para fora do canteiro para um ponto seguro com chão +
+  2 de ar; jogador nunca é teleportado). **(2) `CityArchitect`** — assentamento fundador W40k no
+  lugar do anel de casinhas de madeira: praça xadrez de blackstone com anel dourado no Core +
+  braseiros, avenidas iluminadas com postes, **muralha de deepslate com contrafortes, ameias, 4
+  portões fortificados (vão 3×3 + lintel) e 4 torres de vigia de canto** (ocas, porta pra dentro da
+  cidade, seteiras, topo ameado), **santuário imperial** (capela gótica com contrafortes, altar
+  dourado, flecha com End Rod), 4 hab-blocks sombrios (camas, lumen interno, porta 2-alta, telhado
+  com parapeito) e worksites por zona (indústria no anel externo, **fazenda fora dos portões**).
+  Tudo registra footprint; caminho pavimentado da porta de cada prédio até a avenida. **(3) Pipeline
+  estratégico seguro:** `reserveConstructionSite` substitui o site aleatório (zona por tipo:
+  HABITATION/TRADE_DEPOT→INNER, COMMAND_BASTION→CIVIC, WALL_BASTION→DEFENSE, FARM→EXPANSION,
+  indústria→OUTER; fallback EXPANSION), footprint reservado no plano ao enfileirar e liberado se a
+  cidade morrer; **todos os templates ganharam porta 2-alta virada pro centro** (eram caixas seladas!)
+  + paleta deepslate/blackstone; o builder progressivo **nunca sobrescreve Core/block entities e
+  nunca coloca bloco em cima de ser vivo** (NPC é afastado; se ainda ocupado — ex. jogador — espera o
+  próximo ciclo sem perder progresso). Core registra a cidade no war map antes de criar o plano (o
+  sync podava o record). Build/jar OK; **não testado em jogo**. Tunáveis: raios/zonas em
+  `CityLayoutPlan.zoneBand`, paleta/medidas em `CityArchitect`. `buildSimpleSettlement` mantido sem
+  uso (código morto, igual aos hive builders).
+
 - 2026-07-02 (2): **Vilas para o teste do Comandante — par de guerra no mundo novo + comandos de
   semeadura**. Pedido do dono ("adicione as vilas para que eu consiga realizar o teste"). O layout de
   teste (`TEST_FIXED_WORLD`) plantava só 1 cidade Ork e NENHUMA vila imperial (pedido de 2026-06-23) —
