@@ -20,10 +20,12 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.OpenDoorGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -50,6 +52,12 @@ public class GuardsmanEntity extends PathfinderMob {
         this.setUsingLasgun();
         this.setPersistenceRequired();
         this.updateRankName();
+
+        // City buildings have real wooden doors — Guardsmen must open and path through them.
+        if (this.getNavigation() instanceof GroundPathNavigation groundNavigation) {
+            groundNavigation.setCanOpenDoors(true);
+            groundNavigation.setCanPassDoors(true);
+        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -64,6 +72,7 @@ public class GuardsmanEntity extends PathfinderMob {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(0, new OpenDoorGoal(this, true));
 
         this.goalSelector.addGoal(1, new GuardsmanKnifeAttackGoal(this, 1.15D, 4.0D));
         this.goalSelector.addGoal(2, new GuardsmanLasgunAttackGoal(this, 1.0D, 35, 18.0F, 4.0F));

@@ -7,7 +7,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.EntityHitResult;
 
 public class LasgunShotEntity extends AbstractArrow {
     public LasgunShotEntity(EntityType<? extends LasgunShotEntity> entityType, Level level) {
@@ -55,19 +54,34 @@ public class LasgunShotEntity extends AbstractArrow {
         }
     }
 
+    // Friendly fire protection: a las-bolt passes CLEAN THROUGH every ally of its shooter's
+    // faction (Guardsman, themed troops, Space Marines, citizens — and Ork shots through Orks)
+    // and keeps flying until it reaches an actual enemy. The projectile therefore can never
+    // damage a friendly body, no matter how bunched up the firing line is.
     @Override
-    protected void onHitEntity(EntityHitResult hitResult) {
-        Entity hitEntity = hitResult.getEntity();
-        Entity shooter = this.getOwner();
-
-        // Friendly fire protection:
-        // Guardsmen shots do not damage other Guardsmen.
-        if (shooter instanceof GuardsmanEntity && hitEntity instanceof GuardsmanEntity) {
-            this.discard();
-            return;
+    protected boolean canHitEntity(Entity target) {
+        if (!super.canHitEntity(target)) {
+            return false;
         }
 
-        super.onHitEntity(hitResult);
+        Entity shooter = this.getOwner();
+
+        if (shooter == null || !(target instanceof LivingEntity living)) {
+            return true;
+        }
+
+        if (FirstCrusadeFactionManager.areAllies(shooter, living)) {
+            return false;
+        }
+
+        // Citizens are faction-NEUTRAL (so nothing targets them), which areAllies treats as
+        // "not allied" — shield them from Imperial guns explicitly.
+        if (living instanceof ImperialCitizenEntity
+                && FirstCrusadeFactionManager.getFaction(shooter) == FirstCrusadeFaction.IMPERIUM) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override

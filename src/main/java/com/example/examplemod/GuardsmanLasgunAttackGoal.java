@@ -87,6 +87,14 @@ public class GuardsmanLasgunAttackGoal extends Goal {
 
         if (this.attackTime <= 0) {
             if (canSeeTarget && distanceSqr <= attackRadiusSqr) {
+                // Hold fire when a comrade stands in the lane: sidestep to open the line and try
+                // again shortly (the las-bolt itself also ignores allies, as a second safety net).
+                if (!FriendlyFireGuard.hasClearShot(this.guardsman, target)) {
+                    FriendlyFireGuard.strafeForClearShot(this.guardsman, target);
+                    this.attackTime = 8;
+                    return;
+                }
+
                 this.guardsman.performLasgunAttack(target);
                 this.attackTime = this.attackInterval;
             } else {

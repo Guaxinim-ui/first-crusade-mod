@@ -49,6 +49,12 @@ public class JungleFighterEntity extends AbstractImperialTroopEntity implements 
             return;
         }
 
+        // Hold fire and sidestep when an ally blocks the lane (the bolt also ignores allies).
+        if (!FriendlyFireGuard.hasClearShot(this, target)) {
+            FriendlyFireGuard.strafeForClearShot(this, target);
+            return;
+        }
+
         LasgunShotEntity projectile = new LasgunShotEntity(this.level(), this);
         projectile.setBaseDamage(6.5D);
         projectile.setKnockback(0);

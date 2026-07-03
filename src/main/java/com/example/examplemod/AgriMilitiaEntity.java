@@ -49,6 +49,12 @@ public class AgriMilitiaEntity extends AbstractImperialTroopEntity implements Ra
             return;
         }
 
+        // Hold fire and sidestep when an ally blocks the lane (the bolt also ignores allies).
+        if (!FriendlyFireGuard.hasClearShot(this, target)) {
+            FriendlyFireGuard.strafeForClearShot(this, target);
+            return;
+        }
+
         LasgunShotEntity projectile = new LasgunShotEntity(this.level(), this);
         projectile.setBaseDamage(4.5D);
         projectile.setKnockback(0);

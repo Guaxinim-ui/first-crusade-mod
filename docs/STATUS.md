@@ -248,6 +248,30 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-07-03 (2): **Vilas mais bonitas/completas + fim do friendly fire (pedido do dono)**.
+  **(1) Anti-friendly-fire em 2 camadas:** novo `FriendlyFireGuard` — `hasClearShot` (checado SÓ na
+  hora do disparo: aliado a ≤0.9 blocos da linha de tiro bloqueia; `strafeForClearShot` dá um passo
+  lateral de 2 blocos alternando o lado pelo id → o bolo vira linha de tiro) aplicado no
+  `GuardsmanLasgunAttackGoal` + nas 5 tropas-tema atiradoras (Kasrkin/Skitarii/Sister/Agri/Jungle);
+  e `LasgunShotEntity.canHitEntity` — **o tiro ATRAVESSA aliados da facção do atirador** (e cidadãos
+  imperiais, que são NEUTRAL) e segue até o inimigo; substituiu a proteção antiga que era só
+  Guardsman→Guardsman e descartava o projétil. Vale simetricamente pros Orks. Tiros não quebram
+  blocos (AbstractArrow) — nada a proteger nas estruturas. **(2) Cidades mais ricas:** muralha r24→26
+  com alvenaria **desgastada determinística** (`weatheredWall`: rachada/telha por hash de posição),
+  **portcullis de barras de ferro** sobre os portões + soleira gilded, **lumens pendurados em
+  correntes na face interna** entre contrafortes; hab pequeno reformado (plinto blackstone, vigas de
+  dark oak nos cantos, janelas de VIDRO, **porta de dark oak funcional**, barril, lumen no teto,
+  **telhado zigurate escalonado** com lanterna) + **hab alto novo** (2 fileiras de janelas, cinta de
+  blackstone, 3 camas); **Depósito** (stone bricks desgastado, vigas spruce, telhado com beiral de
+  laje, barris) e **Campo de Treino** (piso gravel/andesito, mureta com vão, alvos de feno, postes —
+  centro registrado como patrol/rally point) novos; **Quartel na fundação** (treina recrutas desde o
+  dia 1); fallback de zona → subúrbio fora das muralhas quando o anel lota. **(3) Portas funcionais
+  sem prender ninguém:** templates fechados do planner (Habitação/Quartel/Industrial) ganharam porta
+  real (`addDoor`), e Cidadãos/Guardsmen/tropas-tema ganharam `OpenDoorGoal` + `setCanOpenDoors/
+  PassDoors` na navegação. Proteção de estruturas existentes segue pelo pipeline da fatia anterior
+  (footprints + validador + safeSet que não sobrescreve block entities). Build/jar OK; **não testado
+  em jogo**. Tunáveis: `FIRE_LANE_RADIUS` no guard, contagens/paleta no `CityArchitect`.
+
 - 2026-07-03: **Modelo físico das cidades refeito — layout planejado por zonas, anti-colisão e
   segurança de entidades (pedido grande do dono; W40k/brutalista)**. **(1) Fundação do sistema:**
   `CityStructureFootprint` (área reservada: origem, meia-largura/profundidade, altura, margem,

@@ -7,10 +7,12 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.AABB;
 
 /**
@@ -28,11 +30,12 @@ import net.minecraft.world.phys.AABB;
  * the plan for the military AI.
  */
 public final class CityArchitect {
-    private static final int WALL_RADIUS = 24;
+    private static final int WALL_RADIUS = 26;
     private static final int WALL_HEIGHT = 6;
     private static final int TOWER_HALF = 2;
     private static final int TOWER_HEIGHT = 12;
-    private static final int HAB_COUNT = 4;
+    private static final int HAB_COUNT = 5;
+    private static final int TALL_HAB_COUNT = 2;
 
     // The W40k palette.
     private static final BlockState FERROCRETE = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
@@ -45,6 +48,21 @@ public final class CityArchitect {
     private static final BlockState HANGING_LAMP =
             Blocks.SOUL_LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true);
     private static final BlockState BRAZIER = Blocks.SOUL_LANTERN.defaultBlockState();
+
+    // Weathering/detail palette: cracked masonry mixed in deterministically, timber beams for
+    // corners, glass for hab windows, chains for the wall lumens and stone for the depot.
+    private static final BlockState CRACKED = Blocks.CRACKED_DEEPSLATE_BRICKS.defaultBlockState();
+    private static final BlockState STONEWORK = Blocks.STONE_BRICKS.defaultBlockState();
+    private static final BlockState CRACKED_STONE = Blocks.CRACKED_STONE_BRICKS.defaultBlockState();
+    private static final BlockState BEAM = Blocks.DARK_OAK_LOG.defaultBlockState();
+    private static final BlockState BEAM_SPRUCE = Blocks.SPRUCE_LOG.defaultBlockState();
+    private static final BlockState GLASS = Blocks.GLASS_PANE.defaultBlockState();
+    private static final BlockState CHAIN = Blocks.CHAIN.defaultBlockState();
+    private static final BlockState SLAB_OVERHANG = Blocks.SMOOTH_STONE_SLAB.defaultBlockState();
+    private static final BlockState SMOOTH = Blocks.SMOOTH_STONE.defaultBlockState();
+    private static final BlockState YARD_FLOOR = Blocks.GRAVEL.defaultBlockState();
+    private static final BlockState YARD_FLOOR_B = Blocks.POLISHED_ANDESITE.defaultBlockState();
+    private static final BlockState TARGET = Blocks.HAY_BLOCK.defaultBlockState();
 
     private CityArchitect() {
     }
@@ -71,6 +89,8 @@ public final class CityArchitect {
 
         buildShrine(level, plan, center);
         buildHabBlocks(level, core, plan, center);
+        buildStorageDepot(level, plan, center);
+        buildTrainingYard(level, plan, center);
         buildWorksites(level, core, plan);
     }
 
@@ -193,12 +213,17 @@ public final class CityArchitect {
         boolean gateOpening = Math.abs(offsetAlongWall) <= 1;
 
         if (gateOpening) {
-            // Fortified gate: 3-wide, 3-high clear passage, plated lintel and a hanging lumen.
+            // Fortified gate: 3-wide, 3-high clear passage under an iron portcullis, plated
+            // lintel, gilded threshold on the center line.
+            if (offsetAlongWall == 0) {
+                safeSet(level, center, base.below(), GILDED);
+            }
+
             for (int y = 0; y <= 2; y++) {
                 clearBlock(level, center, base.above(y));
             }
 
-            safeSet(level, center, base.above(3), DARK_PLATE);
+            safeSet(level, center, base.above(3), SLIT);
             safeSet(level, center, base.above(4), FERROCRETE);
             safeSet(level, center, base.above(5), FERROCRETE);
 
@@ -213,7 +238,8 @@ public final class CityArchitect {
         boolean gatePillar = Math.abs(offsetAlongWall) == 2;
 
         for (int y = 0; y < WALL_HEIGHT; y++) {
-            safeSet(level, center, base.above(y), gatePillar ? DARK_PLATE : FERROCRETE);
+            BlockPos cell = base.above(y);
+            safeSet(level, center, cell, gatePillar ? DARK_PLATE : weatheredWall(cell));
         }
 
         if (gatePillar) {
@@ -227,11 +253,11 @@ public final class CityArchitect {
             safeSet(level, center, base.above(WALL_HEIGHT), BATTLEMENT);
         }
 
+        int signX = Integer.signum(base.getX() - center.getX());
+        int signZ = Integer.signum(base.getZ() - center.getZ());
+
         // Outward buttress with a lantern, every 6 blocks.
         if (offsetAlongWall % 6 == 0) {
-            int signX = Integer.signum(base.getX() - center.getX());
-            int signZ = Integer.signum(base.getZ() - center.getZ());
-
             BlockPos out = eastWestSide
                     ? base.offset(signX, 0, 0)
                     : base.offset(0, 0, signZ);
@@ -241,6 +267,17 @@ public final class CityArchitect {
             }
 
             safeSet(level, center, out.above(WALL_HEIGHT - 1), LAMP);
+        }
+
+        // Chain-hung lumen on the INNER face, midway between buttresses — lights the street
+        // along the wall for the patrols.
+        if (Math.floorMod(offsetAlongWall + 3, 6) == 0) {
+            BlockPos inner = eastWestSide
+                    ? base.offset(-signX, 0, 0)
+                    : base.offset(0, 0, -signZ);
+
+            safeSet(level, center, inner.above(4), CHAIN);
+            safeSet(level, center, inner.above(3), HANGING_LAMP);
         }
     }
 
@@ -389,7 +426,9 @@ public final class CityArchitect {
                             && (y == 2 || y == 3)
                             && ((Math.abs(x) == 4 && z % 2 == 0) || (Math.abs(z) == 5 && x % 2 == 0));
 
-                    safeSet(level, center, cell, cornerPillar ? DARK_PLATE : (window ? SLIT : FERROCRETE));
+                    // Lancet windows alternate stained glass and iron bars, gothic-chapel style.
+                    BlockState windowPane = ((x + z) & 1) == 0 ? GLASS : SLIT;
+                    safeSet(level, center, cell, cornerPillar ? DARK_PLATE : (window ? windowPane : weatheredWall(cell)));
                 }
 
                 if (cornerPillar) {
@@ -437,9 +476,12 @@ public final class CityArchitect {
             CityLayoutPlan plan,
             BlockPos center
     ) {
+        // Small habs first, then a couple of taller tenements — varied silhouettes instead of a
+        // row of identical boxes. When the residential ring fills up, the overflow becomes a
+        // suburb outside the walls (EXPANSION) instead of being dropped.
         for (int i = 0; i < HAB_COUNT; i++) {
-            CityStructureFootprint slot = plan.findSlot(
-                    level, "HAB_SMALL", 3, 3, 6, 2, CityLayoutPlan.Zone.INNER, plan.getWallRadius());
+            CityStructureFootprint slot = findSlotWithFallback(
+                    level, plan, "HAB_SMALL", 3, 3, 8, 2, CityLayoutPlan.Zone.INNER);
 
             if (slot == null) {
                 return;
@@ -451,8 +493,28 @@ public final class CityArchitect {
             paveAccessPath(level, plan, slot);
             plan.registerFootprint(slot);
         }
+
+        for (int i = 0; i < TALL_HAB_COUNT; i++) {
+            CityStructureFootprint slot = findSlotWithFallback(
+                    level, plan, "HAB_TALL", 3, 3, 10, 2, CityLayoutPlan.Zone.INNER);
+
+            if (slot == null) {
+                return;
+            }
+
+            SafeEntityRelocator.clearFootprint(level, slot);
+            buildTallHab(level, core, center, slot);
+
+            paveAccessPath(level, plan, slot);
+            plan.registerFootprint(slot);
+        }
     }
 
+    /**
+     * A small hab: dark-tile foundation, blackstone plinth course, weathered ferrocrete walls
+     * with dark-oak corner beams and glass windows, a real dark-oak door, and a stepped ziggurat
+     * roof crowned by a lantern. Interior stays 4 blocks clear (y0..3).
+     */
     private static void buildHabBlock(
             ServerLevel level,
             ImperialCommandCoreBlockEntity core,
@@ -472,7 +534,7 @@ public final class CityArchitect {
                     continue;
                 }
 
-                boolean cornerPillar = Math.abs(x) == 3 && Math.abs(z) == 3;
+                boolean cornerBeam = Math.abs(x) == 3 && Math.abs(z) == 3;
                 boolean doorwayColumn = isEntranceColumn(origin, facing, x, z, 3, 3);
 
                 for (int y = 0; y <= 3; y++) {
@@ -483,28 +545,29 @@ public final class CityArchitect {
                         continue;
                     }
 
-                    boolean window = !cornerPillar && !doorwayColumn && y == 2 && (x == 0 || z == 0);
+                    if (cornerBeam) {
+                        safeSet(level, center, cell, BEAM);
+                        continue;
+                    }
 
-                    safeSet(level, center, cell, cornerPillar ? DARK_PLATE : (window ? SLIT : FERROCRETE));
+                    if (y == 0) {
+                        safeSet(level, center, cell, DARK_PLATE);
+                        continue;
+                    }
+
+                    boolean window = !doorwayColumn && y == 2 && (x == 0 || z == 0);
+                    safeSet(level, center, cell, window ? GLASS : weatheredWall(cell));
                 }
             }
         }
 
-        // Flat plated roof with a parapet — interior stays 4 blocks clear (y0..3).
-        for (int x = -3; x <= 3; x++) {
-            for (int z = -3; z <= 3; z++) {
-                safeSet(level, center, origin.offset(x, 4, z), DARK_PLATE);
+        buildSteppedRoof(level, center, origin, 3, 4, DARK_TILE);
+        safeSet(level, center, origin.above(7), LAMP);
 
-                boolean edge = Math.abs(x) == 3 || Math.abs(z) == 3;
+        placeDoor(level, center, doorColumn(origin, facing, 3, 3), facing);
 
-                if (edge && ((x + z) & 1) == 0) {
-                    safeSet(level, center, origin.offset(x, 5, z), BATTLEMENT);
-                }
-            }
-        }
-
-        // Two bunks, an interior lumen, a lamp over the door, and the habitation marker the
-        // morale system reads (bound to the city's Core).
+        // Two bunks, a hanging lumen under the ceiling, a storage barrel, a lit transom over the
+        // door, and the habitation marker the morale system reads (bound to the city's Core).
         BlockState bedFoot = Blocks.RED_BED.defaultBlockState()
                 .setValue(BedBlock.PART, BedPart.FOOT)
                 .setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH);
@@ -516,7 +579,8 @@ public final class CityArchitect {
         safeSet(level, center, origin.offset(-2, 0, 0), bedHead);
         safeSet(level, center, origin.offset(2, 0, -1), bedFoot);
         safeSet(level, center, origin.offset(2, 0, 0), bedHead);
-        safeSet(level, center, origin.offset(0, 0, 2), LAMP);
+        safeSet(level, center, origin.offset(0, 0, -2), Blocks.BARREL.defaultBlockState());
+        safeSet(level, center, origin.above(3), HANGING_LAMP);
         safeSet(level, center, entranceLintel(slot), HANGING_LAMP);
 
         safeSet(level, center, origin, ExampleMod.IMPERIAL_HABITATION.get().defaultBlockState());
@@ -524,6 +588,233 @@ public final class CityArchitect {
         if (level.getBlockEntity(origin) instanceof ImperialHabitationBlockEntity habitation) {
             habitation.assignToCommandCore(core.getBlockPos());
         }
+    }
+
+    /**
+     * A taller two-storey-look tenement: same footprint but higher walls with a blackstone band
+     * course, two rows of windows and a taller stepped roof. Sleeps three.
+     */
+    private static void buildTallHab(
+            ServerLevel level,
+            ImperialCommandCoreBlockEntity core,
+            BlockPos center,
+            CityStructureFootprint slot
+    ) {
+        BlockPos origin = slot.getOrigin();
+        Direction facing = entranceDirection(slot);
+
+        for (int x = -3; x <= 3; x++) {
+            for (int z = -3; z <= 3; z++) {
+                safeSet(level, center, origin.offset(x, -1, z), DARK_TILE);
+
+                boolean perimeter = Math.abs(x) == 3 || Math.abs(z) == 3;
+
+                if (!perimeter) {
+                    continue;
+                }
+
+                boolean cornerBeam = Math.abs(x) == 3 && Math.abs(z) == 3;
+                boolean doorwayColumn = isEntranceColumn(origin, facing, x, z, 3, 3);
+
+                for (int y = 0; y <= 5; y++) {
+                    BlockPos cell = origin.offset(x, y, z);
+
+                    if (doorwayColumn && y <= 1) {
+                        clearBlock(level, center, cell);
+                        continue;
+                    }
+
+                    if (cornerBeam) {
+                        safeSet(level, center, cell, BEAM);
+                        continue;
+                    }
+
+                    if (y == 0) {
+                        safeSet(level, center, cell, DARK_PLATE);
+                        continue;
+                    }
+
+                    // Band course between the two window rows (a "second floor" read).
+                    if (y == 3 && !doorwayColumn) {
+                        safeSet(level, center, cell, DARK_PLATE);
+                        continue;
+                    }
+
+                    boolean window = !doorwayColumn && (y == 2 || y == 4) && (x == 0 || z == 0);
+                    safeSet(level, center, cell, window ? GLASS : weatheredWall(cell));
+                }
+            }
+        }
+
+        buildSteppedRoof(level, center, origin, 3, 6, DARK_TILE);
+        safeSet(level, center, origin.above(9), LAMP);
+
+        placeDoor(level, center, doorColumn(origin, facing, 3, 3), facing);
+
+        BlockState bedFoot = Blocks.RED_BED.defaultBlockState()
+                .setValue(BedBlock.PART, BedPart.FOOT)
+                .setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH);
+        BlockState bedHead = Blocks.RED_BED.defaultBlockState()
+                .setValue(BedBlock.PART, BedPart.HEAD)
+                .setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH);
+
+        safeSet(level, center, origin.offset(-2, 0, -1), bedFoot);
+        safeSet(level, center, origin.offset(-2, 0, 0), bedHead);
+        safeSet(level, center, origin.offset(2, 0, -1), bedFoot);
+        safeSet(level, center, origin.offset(2, 0, 0), bedHead);
+        safeSet(level, center, origin.offset(0, 0, -2), bedFoot.setValue(HorizontalDirectionalBlock.FACING, Direction.EAST));
+        safeSet(level, center, origin.offset(1, 0, -2), bedHead.setValue(HorizontalDirectionalBlock.FACING, Direction.EAST));
+        safeSet(level, center, origin.above(4), HANGING_LAMP);
+        safeSet(level, center, entranceLintel(slot), HANGING_LAMP);
+
+        safeSet(level, center, origin, ExampleMod.IMPERIAL_HABITATION.get().defaultBlockState());
+
+        if (level.getBlockEntity(origin) instanceof ImperialHabitationBlockEntity habitation) {
+            habitation.assignToCommandCore(core.getBlockPos());
+        }
+    }
+
+    /**
+     * The storage depot: stone-brick warehouse with spruce beams, a slab-overhang roof, barrels
+     * inside and a real door. The "supplies" building of the production quarter.
+     */
+    private static void buildStorageDepot(ServerLevel level, CityLayoutPlan plan, BlockPos center) {
+        CityStructureFootprint slot = findSlotWithFallback(
+                level, plan, "STORAGE_DEPOT", 3, 3, 8, 2, CityLayoutPlan.Zone.OUTER);
+
+        if (slot == null) {
+            return;
+        }
+
+        SafeEntityRelocator.clearFootprint(level, slot);
+
+        BlockPos origin = slot.getOrigin();
+        Direction facing = entranceDirection(slot);
+
+        for (int x = -3; x <= 3; x++) {
+            for (int z = -3; z <= 3; z++) {
+                safeSet(level, center, origin.offset(x, -1, z), SMOOTH);
+
+                boolean perimeter = Math.abs(x) == 3 || Math.abs(z) == 3;
+
+                if (!perimeter) {
+                    continue;
+                }
+
+                boolean cornerBeam = Math.abs(x) == 3 && Math.abs(z) == 3;
+                boolean doorwayColumn = isEntranceColumn(origin, facing, x, z, 3, 3);
+
+                for (int y = 0; y <= 3; y++) {
+                    BlockPos cell = origin.offset(x, y, z);
+
+                    if (doorwayColumn && y <= 1) {
+                        clearBlock(level, center, cell);
+                        continue;
+                    }
+
+                    if (cornerBeam) {
+                        safeSet(level, center, cell, BEAM_SPRUCE);
+                        continue;
+                    }
+
+                    boolean window = !doorwayColumn && y == 2 && (x == 0 || z == 0);
+                    safeSet(level, center, cell, window ? SLIT : weatheredStone(cell));
+                }
+            }
+        }
+
+        // Flat smooth-stone roof with a slab overhang all around (visual depth without stairs).
+        for (int x = -3; x <= 3; x++) {
+            for (int z = -3; z <= 3; z++) {
+                safeSet(level, center, origin.offset(x, 4, z), SMOOTH);
+            }
+        }
+
+        for (int x = -4; x <= 4; x++) {
+            for (int z = -4; z <= 4; z++) {
+                if (Math.abs(x) == 4 || Math.abs(z) == 4) {
+                    safeSet(level, center, origin.offset(x, 4, z), SLAB_OVERHANG);
+                }
+            }
+        }
+
+        placeDoor(level, center, doorColumn(origin, facing, 3, 3), facing);
+
+        safeSet(level, center, origin.offset(-2, 0, -2), Blocks.BARREL.defaultBlockState());
+        safeSet(level, center, origin.offset(2, 0, -2), Blocks.BARREL.defaultBlockState());
+        safeSet(level, center, origin.offset(-2, 0, 2), Blocks.BARREL.defaultBlockState());
+        safeSet(level, center, origin.offset(-2, 1, -2), Blocks.BARREL.defaultBlockState());
+        safeSet(level, center, origin.above(3), HANGING_LAMP);
+        safeSet(level, center, entranceLintel(slot), HANGING_LAMP);
+
+        paveAccessPath(level, plan, slot);
+        plan.registerFootprint(slot);
+    }
+
+    /**
+     * The training yard: an open gravel-and-stone drill square ringed by a low wall, with hay
+     * targets, corner lamp posts and a gap toward the city. Its center is registered as a patrol
+     * point — the muster ground where troops can form up without piling into a building.
+     */
+    private static void buildTrainingYard(ServerLevel level, CityLayoutPlan plan, BlockPos center) {
+        CityStructureFootprint slot = findSlotWithFallback(
+                level, plan, "TRAINING_YARD", 4, 4, 4, 2, CityLayoutPlan.Zone.OUTER);
+
+        if (slot == null) {
+            return;
+        }
+
+        SafeEntityRelocator.clearFootprint(level, slot);
+
+        BlockPos origin = slot.getOrigin();
+        Direction facing = entranceDirection(slot);
+
+        for (int x = -4; x <= 4; x++) {
+            for (int z = -4; z <= 4; z++) {
+                boolean checker = ((x + z) & 1) == 0;
+                safeSet(level, center, origin.offset(x, -1, z), checker ? YARD_FLOOR : YARD_FLOOR_B);
+
+                boolean perimeter = Math.abs(x) == 4 || Math.abs(z) == 4;
+
+                if (!perimeter) {
+                    continue;
+                }
+
+                boolean corner = Math.abs(x) == 4 && Math.abs(z) == 4;
+
+                if (corner) {
+                    safeSet(level, center, origin.offset(x, 0, z), BEAM);
+                    safeSet(level, center, origin.offset(x, 1, z), BEAM);
+                    safeSet(level, center, origin.offset(x, 2, z), LAMP);
+                    continue;
+                }
+
+                // Low drill-yard wall with a 3-wide muster gap on the city side.
+                boolean gap = switch (facing) {
+                    case EAST -> x == 4 && Math.abs(z) <= 1;
+                    case WEST -> x == -4 && Math.abs(z) <= 1;
+                    case SOUTH -> z == 4 && Math.abs(x) <= 1;
+                    default -> z == -4 && Math.abs(x) <= 1;
+                };
+
+                if (!gap) {
+                    safeSet(level, center, origin.offset(x, 0, z), BATTLEMENT);
+                }
+            }
+        }
+
+        // Hay targets on the far side from the gap.
+        BlockPos targetRow = origin.relative(facing.getOpposite(), 3);
+        safeSet(level, center, targetRow.offset(facing.getAxis() == Direction.Axis.Z ? -2 : 0, 0,
+                facing.getAxis() == Direction.Axis.Z ? 0 : -2), TARGET);
+        safeSet(level, center, targetRow.offset(facing.getAxis() == Direction.Axis.Z ? 2 : 0, 0,
+                facing.getAxis() == Direction.Axis.Z ? 0 : 2), TARGET);
+
+        // The muster ground doubles as a rally/patrol point for the military AI.
+        plan.getPatrolPoints().add(origin.immutable());
+
+        paveAccessPath(level, plan, slot);
+        plan.registerFootprint(slot);
     }
 
     // ------------------------------------------------------------------
@@ -535,6 +826,9 @@ public final class CityArchitect {
             ImperialCommandCoreBlockEntity core,
             CityLayoutPlan plan
     ) {
+        // The military quarter gets a working Barracks from day one (it trains the recruits).
+        buildWorksite(level, core, plan, StrategicConstructionType.BARRACKS, CityLayoutPlan.Zone.OUTER);
+
         buildWorksite(level, core, plan, StrategicConstructionType.MINE, CityLayoutPlan.Zone.OUTER);
         buildWorksite(level, core, plan, StrategicConstructionType.SCRAP_YARD, CityLayoutPlan.Zone.OUTER);
         buildWorksite(level, core, plan, StrategicConstructionType.FORGE, CityLayoutPlan.Zone.OUTER);
@@ -549,10 +843,16 @@ public final class CityArchitect {
             CityLayoutPlan.Zone zone
     ) {
         int half = type.getFootprintRadius();
+        int border = Math.max(plan.getWallRadius() + 12, core.getBuildBorderRadius());
 
         CityStructureFootprint slot = plan.findSlot(
-                level, type.name(), half, half, 8, 2, zone,
-                Math.max(plan.getWallRadius() + 12, core.getBuildBorderRadius()));
+                level, type.name(), half, half, 8, 2, zone, border);
+
+        // Zone full -> spill over to the expansion belt outside the walls instead of giving up.
+        if (slot == null && zone != CityLayoutPlan.Zone.EXPANSION) {
+            slot = plan.findSlot(level, type.name(), half, half, 8, 2,
+                    CityLayoutPlan.Zone.EXPANSION, border);
+        }
 
         if (slot == null) {
             return;
@@ -661,6 +961,113 @@ public final class CityArchitect {
         if (!level.isEmptyBlock(floor) && level.getFluidState(floor).isEmpty()) {
             safeSet(level, center, floor, DARK_PLATE);
         }
+    }
+
+    /**
+     * Deterministic weathering: most cells are clean ferrocrete, some are cracked, a few are dark
+     * tile — the same position always weathers the same way, so rebuilt walls don't flicker.
+     */
+    private static BlockState weatheredWall(BlockPos pos) {
+        int mix = mixHash(pos);
+
+        if (mix % 7 == 0) {
+            return CRACKED;
+        }
+
+        if (mix % 11 == 0) {
+            return DARK_TILE;
+        }
+
+        return FERROCRETE;
+    }
+
+    /** Stone-brick variant of the weathering, for the depot/production quarter. */
+    private static BlockState weatheredStone(BlockPos pos) {
+        int mix = mixHash(pos);
+
+        if (mix % 6 == 0) {
+            return CRACKED_STONE;
+        }
+
+        if (mix % 13 == 0) {
+            return Blocks.COBBLESTONE.defaultBlockState();
+        }
+
+        return STONEWORK;
+    }
+
+    private static int mixHash(BlockPos pos) {
+        int mix = pos.getX() * 31 + pos.getZ() * 17 + pos.getY() * 13;
+        mix ^= mix >> 7;
+        return mix & 0x7fffffff;
+    }
+
+    /** A functional dark-oak door (lower + upper half) in a doorway column. */
+    private static void placeDoor(ServerLevel level, BlockPos corePos, BlockPos foot, Direction facing) {
+        BlockState lower = Blocks.DARK_OAK_DOOR.defaultBlockState()
+                .setValue(DoorBlock.FACING, facing);
+
+        safeSet(level, corePos, foot, lower);
+        safeSet(level, corePos, foot.above(), lower.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER));
+    }
+
+    /** The base block of the doorway column on the entrance face. */
+    private static BlockPos doorColumn(BlockPos origin, Direction facing, int halfWidth, int halfDepth) {
+        return switch (facing) {
+            case EAST -> origin.offset(halfWidth, 0, 0);
+            case WEST -> origin.offset(-halfWidth, 0, 0);
+            case SOUTH -> origin.offset(0, 0, halfDepth);
+            default -> origin.offset(0, 0, -halfDepth);
+        };
+    }
+
+    /**
+     * A stepped ziggurat roof: full cover at baseY, then each layer one block smaller and higher.
+     * Reads brutalist/gothic, needs no stair block-states, and the bottom layer is the ceiling —
+     * the interior below stays exactly as tall as the walls.
+     */
+    private static void buildSteppedRoof(
+            ServerLevel level,
+            BlockPos corePos,
+            BlockPos origin,
+            int half,
+            int baseY,
+            BlockState material
+    ) {
+        for (int layer = 0; layer < half; layer++) {
+            int r = half - layer;
+
+            for (int x = -r; x <= r; x++) {
+                for (int z = -r; z <= r; z++) {
+                    safeSet(level, corePos, origin.offset(x, baseY + layer, z), material);
+                }
+            }
+        }
+
+        safeSet(level, corePos, origin.offset(0, baseY + half - 1, 0), material);
+    }
+
+    /** A slot in the requested ring, spilling over to the expansion belt when the ring is full. */
+    private static CityStructureFootprint findSlotWithFallback(
+            ServerLevel level,
+            CityLayoutPlan plan,
+            String typeName,
+            int halfWidth,
+            int halfDepth,
+            int height,
+            int margin,
+            CityLayoutPlan.Zone zone
+    ) {
+        CityStructureFootprint slot = plan.findSlot(
+                level, typeName, halfWidth, halfDepth, height, margin,
+                zone, plan.getWallRadius());
+
+        if (slot == null && zone != CityLayoutPlan.Zone.EXPANSION) {
+            slot = plan.findSlot(level, typeName, halfWidth, halfDepth, height, margin,
+                    CityLayoutPlan.Zone.EXPANSION, plan.getWallRadius() + 16);
+        }
+
+        return slot;
     }
 
     /** Places a block, refusing to overwrite the Core or any block entity (chests, beds, cores). */

@@ -9,9 +9,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 public final class StrategicConstructionPlanner {
@@ -128,6 +130,28 @@ public final class StrategicConstructionPlanner {
         return level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pos);
     }
 
+    /** Appends a real dark-oak door (both halves) in the doorway column of the entrance face. */
+    private static void addDoor(
+            BlockPos center,
+            List<ConstructionPlacement> list,
+            Direction facing,
+            int halfWidth,
+            int halfDepth
+    ) {
+        BlockPos foot = switch (facing) {
+            case EAST -> center.offset(halfWidth, 0, 0);
+            case WEST -> center.offset(-halfWidth, 0, 0);
+            case NORTH -> center.offset(0, 0, -halfDepth);
+            default -> center.offset(0, 0, halfDepth);
+        };
+
+        BlockState lower = Blocks.DARK_OAK_DOOR.defaultBlockState()
+                .setValue(DoorBlock.FACING, facing);
+
+        list.add(new ConstructionPlacement(foot, lower));
+        list.add(new ConstructionPlacement(foot.above(), lower.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER)));
+    }
+
     private static void createFoundation(BlockPos center, List<ConstructionPlacement> list, int radius, BlockState floor) {
         for (int x = -radius; x <= radius; x++) {
             for (int z = -radius; z <= radius; z++) {
@@ -191,6 +215,7 @@ public final class StrategicConstructionPlanner {
         list.add(new ConstructionPlacement(center.offset(1, 0, -1), bedFoot));
         list.add(new ConstructionPlacement(center.offset(1, 0, 0), bedHead));
 
+        addDoor(center, list, facing, 3, 3);
         list.add(new ConstructionPlacement(center, ExampleMod.IMPERIAL_HABITATION.get().defaultBlockState()));
     }
 
@@ -294,6 +319,7 @@ public final class StrategicConstructionPlanner {
 
         list.add(new ConstructionPlacement(center.offset(3, 6, 0), Blocks.CAMPFIRE.defaultBlockState()));
         list.add(new ConstructionPlacement(center.offset(-3, 6, 0), Blocks.CAMPFIRE.defaultBlockState()));
+        addDoor(center, list, facing, 4, 4);
         list.add(new ConstructionPlacement(center, centralBlock.defaultBlockState()));
     }
 
@@ -336,6 +362,7 @@ public final class StrategicConstructionPlanner {
 
         list.add(new ConstructionPlacement(center.offset(-2, 0, 0), Blocks.IRON_BARS.defaultBlockState()));
         list.add(new ConstructionPlacement(center.offset(2, 0, 0), Blocks.IRON_BARS.defaultBlockState()));
+        addDoor(center, list, facing, 4, 4);
         list.add(new ConstructionPlacement(center, ExampleMod.IMPERIAL_BARRACKS.get().defaultBlockState()));
     }
 

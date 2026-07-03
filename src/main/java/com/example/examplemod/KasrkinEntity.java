@@ -49,6 +49,12 @@ public class KasrkinEntity extends AbstractImperialTroopEntity implements Ranged
             return;
         }
 
+        // Hold fire and sidestep when an ally blocks the lane (the bolt also ignores allies).
+        if (!FriendlyFireGuard.hasClearShot(this, target)) {
+            FriendlyFireGuard.strafeForClearShot(this, target);
+            return;
+        }
+
         LasgunShotEntity projectile = new LasgunShotEntity(this.level(), this);
         projectile.setBaseDamage(8.0D);
         projectile.setKnockback(1);
