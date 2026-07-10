@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -29,6 +30,14 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.RawAnimation;
+import software.bernie.geckolib.core.object.PlayState;
+import software.bernie.geckolib.util.GeckoLibUtil;
+
 /**
  * The Primarch — the unique, demigod son of the Emperor. Towering far above a normal man, he
  * is the apex of a settlement: he inspires the city merely by his presence, and he personally
@@ -36,10 +45,17 @@ import javax.annotation.Nullable;
  *
  * Only one may live per settlement. If he falls, the city enters mourning (see the manager).
  */
-public class PrimarchEntity extends PathfinderMob {
+public class PrimarchEntity extends PathfinderMob implements GeoEntity {
     // The Primarch ranges far, since he marches out to lead sorties against Ork camps.
     private static final double LEASH_RADIUS_SQR = 128.0D * 128.0D;
     private static final double LEADERSHIP_RADIUS = 24.0D;
+
+    // Names must match the keys in assets/firstcrusade/animations/primarch.animation.json.
+    private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.primarch.idle");
+    private static final RawAnimation WALK = RawAnimation.begin().thenLoop("animation.primarch.walk");
+    private static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("animation.primarch.attack");
+
+    private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
 
     private BlockPos commandCorePos;
 
@@ -153,7 +169,7 @@ public class PrimarchEntity extends PathfinderMob {
         this.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.GOLDEN_CHESTPLATE));
         this.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.GOLDEN_LEGGINGS));
         this.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.GOLDEN_BOOTS));
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.CHAINSWORD.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.POWER_SWORD.get()));
 
         this.setDropChance(EquipmentSlot.HEAD, 0.0F);
         this.setDropChance(EquipmentSlot.CHEST, 0.0F);
@@ -234,5 +250,36 @@ public class PrimarchEntity extends PathfinderMob {
         }
 
         preparePrimarch();
+    }
+
+    // =========================
+    // GeckoLib
+    // =========================
+
+    @Override
+    public boolean doHurtTarget(Entity target) {
+        boolean hit = super.doHurtTarget(target);
+        if (hit && !this.level().isClientSide) {
+            this.triggerAnim("attack", "attack");
+        }
+        return hit;
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "movement", 5, state -> {
+            if (state.isMoving()) {
+                return state.setAndContinue(WALK);
+            }
+            return state.setAndContinue(IDLE);
+        }));
+
+        controllers.add(new AnimationController<>(this, "attack", 0, state -> PlayState.STOP)
+                .triggerableAnim("attack", ATTACK));
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.geoCache;
     }
 }

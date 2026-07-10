@@ -72,6 +72,23 @@ public class ImperialEmeraldTradeDepotManager {
         return count;
     }
 
+    // Places the Emerald Trade Depot at a player-chosen position (Builder Tool). The Core has already
+    // validated ownership/level/border/cost; here we just build, bind and staff it.
+    public static void buildDepotAt(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player, BlockPos pos) {
+        buildDepotStructure(serverLevel, pos);
+
+        if (serverLevel.getBlockEntity(pos) instanceof ImperialEmeraldTradeDepotBlockEntity depotBlockEntity) {
+            depotBlockEntity.assignToCommandCore(commandCore.getBlockPos());
+        }
+
+        ImperialCitizenEntity worker = findAvailableCitizen(serverLevel, commandCore);
+
+        if (worker != null) {
+            worker.assignToCommandCore(commandCore.getBlockPos());
+            worker.assignJob(ImperialCitizenJob.TRADER, pos);
+        }
+    }
+
     private static ImperialCitizenEntity findAvailableCitizen(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore) {
         BlockPos corePos = commandCore.getBlockPos();
 

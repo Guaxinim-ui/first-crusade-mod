@@ -1,0 +1,6 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "firstcrusade:item/guardsman_command_baton"
+  }
+}

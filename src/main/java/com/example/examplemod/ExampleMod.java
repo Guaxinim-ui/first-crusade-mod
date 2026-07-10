@@ -399,6 +399,83 @@ public static final RegistryObject<MenuType<StrategiumMenu>> STRATEGIUM_MENU =
     public static final RegistryObject<Item> CHAINSWORD = ITEMS.register("chainsword",
             () -> new ChainswordItem(CHAINSWORD_TIER, 4, -2.0F, new Item.Properties()));
 
+    // Auramite halberd of the Adeptus Custodes: heavy blade + built-in bolter (see GuardianSpearItem).
+    public static final Tier GUARDIAN_SPEAR_TIER = new Tier() {
+        @Override
+        public int getUses() {
+            return 1200;
+        }
+
+        @Override
+        public float getSpeed() {
+            return 8.0F;
+        }
+
+        @Override
+        public float getAttackDamageBonus() {
+            return 6.0F;
+        }
+
+        @Override
+        public int getLevel() {
+            return 4;
+        }
+
+        @Override
+        public int getEnchantmentValue() {
+            return 16;
+        }
+
+        @Override
+        public Ingredient getRepairIngredient() {
+            return Ingredient.of(CRUSADIUM_PLATE.get());
+        }
+    };
+
+    public static final RegistryObject<Item> GUARDIAN_SPEAR = ITEMS.register("guardian_spear",
+            () -> new GuardianSpearItem(GUARDIAN_SPEAR_TIER, 5, -2.6F, new Item.Properties()));
+
+    // Power sword of the Primarch: a master-crafted blade wreathed in a disruption field.
+    public static final Tier POWER_SWORD_TIER = new Tier() {
+        @Override
+        public int getUses() {
+            return 1500;
+        }
+
+        @Override
+        public float getSpeed() {
+            return 9.0F;
+        }
+
+        @Override
+        public float getAttackDamageBonus() {
+            return 7.0F;
+        }
+
+        @Override
+        public int getLevel() {
+            return 4;
+        }
+
+        @Override
+        public int getEnchantmentValue() {
+            return 18;
+        }
+
+        @Override
+        public Ingredient getRepairIngredient() {
+            return Ingredient.of(CRUSADIUM_PLATE.get());
+        }
+    };
+
+    public static final RegistryObject<Item> POWER_SWORD = ITEMS.register("power_sword",
+            () -> new SwordItem(POWER_SWORD_TIER, 5, -2.4F, new Item.Properties()));
+
+    // The Ferramenta de Construção: taken from a Command Core, places city structures with a ghost
+    // preview (see CityBuilderToolItem). Single-stack, no durability — it's a controller, not a weapon.
+    public static final RegistryObject<Item> CITY_BUILDER_TOOL = ITEMS.register("city_builder_tool",
+            () -> new CityBuilderToolItem(new Item.Properties().stacksTo(1)));
+
     // Crude Ork melee weapon: brutal but poorly made (low durability), repaired with Ork Teeth.
     public static final Tier ORK_MELEE_TIER = new Tier() {
         @Override
@@ -883,6 +960,7 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
                     .icon(() -> IMPERIAL_COMMAND_CORE_ITEM.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(IMPERIAL_COMMAND_CORE_ITEM.get());
+                        output.accept(CITY_BUILDER_TOOL.get());
                         output.accept(IMPERIAL_SCRAP_YARD_ITEM.get());
                         output.accept(IMPERIAL_FORGE_ITEM.get());
                         output.accept(IMPERIAL_PROMETHIUM_REFINERY_ITEM.get());
@@ -912,6 +990,8 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
                         output.accept(PLASMA_GUN.get());
                         output.accept(GUARDSMAN_COMBAT_KNIFE.get());
                         output.accept(CHAINSWORD.get());
+                        output.accept(GUARDIAN_SPEAR.get());
+                        output.accept(POWER_SWORD.get());
                         output.accept(GUARDSMAN_MED_KIT.get());
                         output.accept(GUARDSMAN_COMMAND_BATON.get());
 
@@ -1196,9 +1276,6 @@ public static void onClientSetup(FMLClientSetupEvent event) {
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(RobouteGuillimanModel.LAYER_LOCATION, RobouteGuillimanModel::createBodyLayer);
-        event.registerLayerDefinition(EliteModelLayers.SPACE_MARINE, EliteModelLayers::createSpaceMarineLayer);
-        event.registerLayerDefinition(EliteModelLayers.CUSTODES, EliteModelLayers::createCustodesLayer);
-        event.registerLayerDefinition(EliteModelLayers.PRIMARCH, EliteModelLayers::createPrimarchLayer);
     }
 
     @SubscribeEvent

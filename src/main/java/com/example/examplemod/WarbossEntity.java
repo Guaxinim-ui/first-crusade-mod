@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -22,19 +23,37 @@ import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 
 import javax.annotation.Nullable;
 
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.RawAnimation;
+import software.bernie.geckolib.core.object.PlayState;
+import software.bernie.geckolib.util.GeckoLibUtil;
+
 /**
  * The Warboss — the Ork answer to the Primarch. The biggest, meanest Ork of a camp, he leads the
  * WAAAGH! in person: he buffs and rallies every Ork around him and marches on the Imperial city
  * he was raised to crush. The Ork mirror of {@link PrimarchEntity}.
+ *
+ * <p>Rendered with GeckoLib from the owner's Blockbench model (geo/warboss.geo.json). The choppa,
+ * shoota and boss-pole are bones in that model, so — unlike a vanilla humanoid mob — the weapons
+ * are drawn by the model itself; the held POWER_KLAW item stays for combat/logic only.
  */
-public class WarbossEntity extends PathfinderMob {
+public class WarbossEntity extends PathfinderMob implements GeoEntity {
     private static final double LEADERSHIP_RADIUS = 24.0D;
+
+    // Names must match the keys in assets/firstcrusade/animations/warboss.animation.json.
+    private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.warboss.idle");
+    private static final RawAnimation WALK = RawAnimation.begin().thenLoop("animation.warboss.walk");
+    private static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("animation.warboss.attack");
+
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     private BlockPos targetCorePos;
 
@@ -148,6 +167,15 @@ public class WarbossEntity extends PathfinderMob {
     }
 
     @Override
+    public boolean doHurtTarget(Entity target) {
+        boolean hit = super.doHurtTarget(target);
+        if (hit && !this.level().isClientSide) {
+            this.triggerAnim("attack", "attack");
+        }
+        return hit;
+    }
+
+    @Override
     public boolean canAttack(LivingEntity target) {
         if (!FirstCrusadeFactionManager.canAttack(this, target)) {
             return false;
@@ -206,5 +234,29 @@ public class WarbossEntity extends PathfinderMob {
         }
 
         prepareWarboss();
+    }
+
+    // =========================
+    // GeckoLib
+    // =========================
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        // Movement: walk while moving, idle otherwise.
+        controllers.add(new AnimationController<>(this, "movement", 5, state -> {
+            if (state.isMoving()) {
+                return state.setAndContinue(WALK);
+            }
+            return state.setAndContinue(IDLE);
+        }));
+
+        // Attack: a one-shot, triggered from doHurtTarget above.
+        controllers.add(new AnimationController<>(this, "attack", 0, state -> PlayState.STOP)
+                .triggerableAnim("attack", ATTACK));
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.cache;
     }
 }

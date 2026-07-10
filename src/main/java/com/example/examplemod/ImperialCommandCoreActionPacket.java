@@ -101,6 +101,8 @@ public class ImperialCommandCoreActionPacket {
 
             case BUILD_BARRACKS -> commandCore.tryBuildBarracks(player);
 
+            case GIVE_BUILDER_TOOL -> commandCore.giveBuilderTool(player);
+
             case RECRUIT_GUARDSMAN -> commandCore.tryRecruitGuardsman(player);
 
             case CYCLE_SPECIALIST -> commandCore.cycleSelectedSpecialist(player);

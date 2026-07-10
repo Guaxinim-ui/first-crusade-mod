@@ -34,6 +34,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
     private Button governanceButton;
     private Button surveyBorderButton;
     // Build tab
+    private Button builderToolButton;
     private Button buildMineButton;
     private Button buildGoldMineButton;
     private Button buildScrapYardButton;
@@ -90,6 +91,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
     private void clearButtonReferences() {
         this.upgradeButton = null;
+        this.builderToolButton = null;
         this.buildMineButton = null;
         this.buildGoldMineButton = null;
         this.buildScrapYardButton = null;
@@ -154,15 +156,11 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
     }
 
     private void initBuildTab() {
-        int row = 0;
-        this.buildMineButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_mine", ImperialCommandCoreAction.BUILD_IMPERIAL_MINE);
-        this.buildGoldMineButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_gold_mine", ImperialCommandCoreAction.BUILD_GOLD_MINE);
-        this.buildScrapYardButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_scrap", ImperialCommandCoreAction.BUILD_SCRAP_YARD);
-        this.buildForgeButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_forge", ImperialCommandCoreAction.BUILD_IMPERIAL_FORGE);
-        this.buildRefineryButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_refinery", ImperialCommandCoreAction.BUILD_PROMETHIUM_REFINERY);
-        this.buildFarmButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_farm", ImperialCommandCoreAction.BUILD_FARM);
-        this.buildTradeDepotButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_trade_depot", ImperialCommandCoreAction.BUILD_EMERALD_TRADE_DEPOT);
-        this.buildBarracksButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.build_barracks", ImperialCommandCoreAction.BUILD_BARRACKS);
+        // The eight build buttons are replaced by a single tool: the owner takes the Ferramenta de
+        // Construção out of the Core and places structures anywhere within the border, ghost-preview
+        // and all (see CityBuilderToolItem). The build*Button fields stay null on this tab.
+        this.builderToolButton = addActionButton(buttonX(), buttonY(0), 148, 18,
+                "gui.firstcrusade.button.builder_tool", ImperialCommandCoreAction.GIVE_BUILDER_TOOL);
     }
 
     private void initMilitaryTab() {

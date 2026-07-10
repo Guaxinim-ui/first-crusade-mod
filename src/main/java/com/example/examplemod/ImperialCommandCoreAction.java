@@ -10,6 +10,7 @@ public enum ImperialCommandCoreAction {
     BUILD_FARM,
     BUILD_EMERALD_TRADE_DEPOT,
     BUILD_BARRACKS,
+    GIVE_BUILDER_TOOL,
     WITHDRAW_IRON,
     WITHDRAW_COAL,
     WITHDRAW_SCRAP,

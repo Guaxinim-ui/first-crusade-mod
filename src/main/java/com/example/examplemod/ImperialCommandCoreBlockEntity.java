@@ -4149,6 +4149,74 @@ public void surveyBuildBorder(Player player) {
             Component.translatable("msg.firstcrusade.governor.surveyed", getBuildBorderRadius()), true);
 }
 
+// =========================
+// City Builder Tool
+// =========================
+
+// Hands the owner the Ferramenta de Construção, bound to this Core (see CityBuilderToolItem).
+public void giveBuilderTool(Player player) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.builder.not_owner"), true);
+        return;
+    }
+
+    ItemStack tool = new ItemStack(ExampleMod.CITY_BUILDER_TOOL.get());
+    CityBuilderToolItem.bindToCore(tool, this.worldPosition);
+
+    if (!player.getInventory().add(tool)) {
+        player.drop(tool, false);
+    }
+
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.builder.given"), true);
+}
+
+// Places a structure the owner picked with the Builder Tool at a chosen position: validates
+// ownership, city level, the build border, a clear+solid footprint and the resource cost, then
+// builds/binds/staffs it through the same manager path the Core's auto-build uses.
+public void placeStructureWithTool(Player player, CityStructureType type, BlockPos pos) {
+    if (!isOwner(player)) {
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.builder.not_owner"), true);
+        return;
+    }
+
+    if (!(this.level instanceof ServerLevel serverLevel)) {
+        return;
+    }
+
+    if (this.cityLevel < type.getRequiredLevel()) {
+        player.displayClientMessage(
+                Component.translatable("msg.firstcrusade.builder.need_level", type.getRequiredLevel()), true);
+        return;
+    }
+
+    int border = getBuildBorderRadius();
+    double dx = (pos.getX() + 0.5D) - (this.worldPosition.getX() + 0.5D);
+    double dz = (pos.getZ() + 0.5D) - (this.worldPosition.getZ() + 0.5D);
+
+    if (dx * dx + dz * dz > (double) border * border) {
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.builder.out_of_border", border), true);
+        return;
+    }
+
+    if (!CityBuilderPlacement.isAreaBuildable(serverLevel, pos, type.getFootprintRadius(), type.getFootprintHeight())) {
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.builder.blocked"), true);
+        return;
+    }
+
+    if (!this.resources.has(type.getIronCost(), type.getScrapCost(), type.getCoalCost())) {
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.builder.need_res",
+                type.getIronCost(), type.getScrapCost(), type.getCoalCost()), true);
+        return;
+    }
+
+    type.place(serverLevel, this, player, pos);
+    this.resources.spend(type.getIronCost(), type.getScrapCost(), type.getCoalCost());
+    setChanged();
+
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.builder.built",
+            Component.translatable(type.getNameKey())), true);
+}
+
 // Live threat from actual nearby enemies (quantity x quality), not raid history.
 public int getLiveThreatScore() {
     if (this.level instanceof ServerLevel serverLevel) {

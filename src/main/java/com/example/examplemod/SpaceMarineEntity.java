@@ -6,6 +6,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -31,7 +32,22 @@ import net.minecraft.world.level.ServerLevelAccessor;
 
 import javax.annotation.Nullable;
 
-public class SpaceMarineEntity extends PathfinderMob {
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.RawAnimation;
+import software.bernie.geckolib.core.object.PlayState;
+import software.bernie.geckolib.util.GeckoLibUtil;
+
+public class SpaceMarineEntity extends PathfinderMob implements GeoEntity {
+    // Names must match the keys in assets/firstcrusade/animations/space_marine.animation.json.
+    private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.space_marine.idle");
+    private static final RawAnimation WALK = RawAnimation.begin().thenLoop("animation.space_marine.walk");
+    private static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("animation.space_marine.attack");
+
+    private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
+
     // A Neophyte must be blooded in battle (score a kill) before being made a full Battle-Brother:
     // a short trial after proving itself, or — failing any war — a long autonomous maturation.
     private static final int NEOPHYTE_TRIAL_MIN_TICKS = 1200;   // ~1 min after a confirmed kill
@@ -325,5 +341,36 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
         if (this.neophyte) {
             applyNeophyteStats();
         }
+    }
+
+    // =========================
+    // GeckoLib
+    // =========================
+
+    @Override
+    public boolean doHurtTarget(Entity target) {
+        boolean hit = super.doHurtTarget(target);
+        if (hit && !this.level().isClientSide) {
+            this.triggerAnim("attack", "attack");
+        }
+        return hit;
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "movement", 5, state -> {
+            if (state.isMoving()) {
+                return state.setAndContinue(WALK);
+            }
+            return state.setAndContinue(IDLE);
+        }));
+
+        controllers.add(new AnimationController<>(this, "attack", 0, state -> PlayState.STOP)
+                .triggerableAnim("attack", ATTACK));
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.geoCache;
     }
 }

@@ -96,6 +96,23 @@ public class ImperialGoldMineManager {
         return count;
     }
 
+    // Places the Gold Mine at a player-chosen position (Builder Tool). The Core has already
+    // validated ownership/level/border/cost; here we just build, bind and staff it.
+    public static void buildGoldMineAt(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player, BlockPos pos) {
+        buildGoldMineStructure(serverLevel, pos);
+
+        if (serverLevel.getBlockEntity(pos) instanceof ImperialGoldMineBlockEntity mineBlockEntity) {
+            mineBlockEntity.assignToCommandCore(commandCore.getBlockPos());
+        }
+
+        ImperialCitizenEntity worker = findAvailableCitizen(serverLevel, commandCore);
+
+        if (worker != null) {
+            worker.assignToCommandCore(commandCore.getBlockPos());
+            worker.assignJob(ImperialCitizenJob.GOLD_MINER, pos);
+        }
+    }
+
     private static ImperialCitizenEntity findAvailableCitizen(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore) {
         BlockPos corePos = commandCore.getBlockPos();
 

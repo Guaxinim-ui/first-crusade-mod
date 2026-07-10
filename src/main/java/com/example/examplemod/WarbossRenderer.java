@@ -1,22 +1,13 @@
 package com.example.examplemod;
 
-import net.minecraft.client.model.HumanoidModel;
-import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
-import net.minecraft.resources.ResourceLocation;
 
-public class WarbossRenderer extends HumanoidMobRenderer<WarbossEntity, HumanoidModel<WarbossEntity>> {
-    private static final ResourceLocation TEXTURE =
-            new ResourceLocation(ExampleMod.MODID, "textures/entity/warboss.png");
-
-    // Bigger than a Nob, fitting the biggest Ork of the camp.
+/**
+ * GeckoLib renderer for the Ork Warboss. Binds the "warboss" asset name
+ * (geo/warboss.geo.json, textures/entity/warboss.png, animations/warboss.animation.json).
+ */
+public class WarbossRenderer extends FCGeoRenderer<WarbossEntity> {
     public WarbossRenderer(EntityRendererProvider.Context context) {
-        super(context, new HumanoidModel<>(context.bakeLayer(ModelLayers.ZOMBIE)), 1.2F);
-    }
-
-    @Override
-    public ResourceLocation getTextureLocation(WarbossEntity entity) {
-        return TEXTURE;
+        super(context, "warboss", 0.9F);
     }
 }

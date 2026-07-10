@@ -138,6 +138,16 @@ public class ImperialBarracksManager {
                 || serverLevel.getBlockState(pos).getCollisionShape(serverLevel, pos).isEmpty();
     }
 
+    // Places the Barracks at a player-chosen position (Builder Tool). The Core has already
+    // validated ownership/level/border/cost; here we just build and bind it.
+    public static void buildBarracksAt(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player, BlockPos pos) {
+        buildBarracksStructure(serverLevel, pos);
+
+        if (serverLevel.getBlockEntity(pos) instanceof ImperialBarracksBlockEntity barracksBlockEntity) {
+            barracksBlockEntity.assignToCommandCore(commandCore.getBlockPos());
+        }
+    }
+
     private static void buildBarracksStructure(ServerLevel serverLevel, BlockPos center) {
         for (int x = -2; x <= 2; x++) {
             for (int z = -2; z <= 2; z++) {

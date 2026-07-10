@@ -96,6 +96,23 @@ public class ImperialFarmManager {
         return count;
     }
 
+    // Places the Imperial Farm at a player-chosen position (Builder Tool). The Core has already
+    // validated ownership/level/border/cost; here we just build, bind and staff it.
+    public static void buildFarmAt(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore, Player player, BlockPos pos) {
+        buildFarmStructure(serverLevel, pos);
+
+        if (serverLevel.getBlockEntity(pos) instanceof ImperialFarmBlockEntity farmBlockEntity) {
+            farmBlockEntity.assignToCommandCore(commandCore.getBlockPos());
+        }
+
+        ImperialCitizenEntity worker = findAvailableCitizen(serverLevel, commandCore);
+
+        if (worker != null) {
+            worker.assignToCommandCore(commandCore.getBlockPos());
+            worker.assignJob(ImperialCitizenJob.FARMER, pos);
+        }
+    }
+
     private static ImperialCitizenEntity findAvailableCitizen(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore) {
         BlockPos corePos = commandCore.getBlockPos();
 

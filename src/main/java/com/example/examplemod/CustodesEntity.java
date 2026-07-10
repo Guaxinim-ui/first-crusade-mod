@@ -3,7 +3,10 @@ package com.example.examplemod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -22,16 +25,36 @@ import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.RawAnimation;
+import software.bernie.geckolib.core.object.PlayState;
+import software.bernie.geckolib.util.GeckoLibUtil;
+
 /**
  * Adeptus Custodes — the Emperor's golden guard. Not recruited: ascended from a prosperous
  * city (level 5 + surplus gene-seed + standing Space Marines). They never leave the Core's
  * inner perimeter, standing as its last and most lethal line of defence.
  */
-public class CustodesEntity extends PathfinderMob {
+public class CustodesEntity extends PathfinderMob implements GeoEntity {
     // How far the Custodian may stray from the Core before returning to its vigil.
     private static final double LEASH_RADIUS_SQR = 24.0D * 24.0D;
 
+    // Names must match the keys in assets/firstcrusade/animations/custodes.animation.json.
+    private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.custodes.idle");
+    private static final RawAnimation WALK = RawAnimation.begin().thenLoop("animation.custodes.walk");
+    private static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("animation.custodes.attack");
+
+    private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
+
+    // The guardian spear's built-in bolter: fired at foes too far away to cut down.
+    private static final double SPEAR_SHOT_MIN_DIST_SQR = 6.0D * 6.0D;
+    private static final int SPEAR_SHOT_COOLDOWN_TICKS = 40;
+
     private BlockPos commandCorePos;
+    private int spearShotCooldown;
 
     public CustodesEntity(EntityType<? extends CustodesEntity> entityType, Level level) {
         super(entityType, level);
@@ -75,6 +98,57 @@ public class CustodesEntity extends PathfinderMob {
         if (this.tickCount % 60 == 0) {
             returnToVigilIfStrayed();
         }
+
+        if (this.spearShotCooldown > 0) {
+            this.spearShotCooldown--;
+        }
+
+        fireSpearBoltIfTargetFar();
+    }
+
+    // The spear strikes in melee via MeleeAttackGoal; while closing the distance, its
+    // built-in bolter fires at the target (same bolt pattern as the Sister of Battle).
+    private void fireSpearBoltIfTargetFar() {
+        LivingEntity target = this.getTarget();
+
+        if (target == null || !target.isAlive() || this.spearShotCooldown > 0) {
+            return;
+        }
+
+        if (this.distanceToSqr(target) < SPEAR_SHOT_MIN_DIST_SQR || !this.hasLineOfSight(target)) {
+            return;
+        }
+
+        if (!FriendlyFireGuard.hasClearShot(this, target)) {
+            FriendlyFireGuard.strafeForClearShot(this, target);
+            return;
+        }
+
+        this.spearShotCooldown = SPEAR_SHOT_COOLDOWN_TICKS;
+
+        LasgunShotEntity projectile = new LasgunShotEntity(this.level(), this);
+        projectile.setBaseDamage(12.0D);
+        projectile.setKnockback(1);
+
+        double xPower = target.getX() - this.getX();
+        double yPower = target.getY(0.5D) - projectile.getY();
+        double zPower = target.getZ() - this.getZ();
+        double horizontalDistance = Math.sqrt(xPower * xPower + zPower * zPower);
+
+        projectile.shoot(xPower, yPower + horizontalDistance * 0.05D, zPower, 4.0F, 0.4F);
+
+        this.level().addFreshEntity(projectile);
+
+        this.level().playSound(
+                null,
+                this.getX(),
+                this.getY(),
+                this.getZ(),
+                SoundEvents.BLAZE_SHOOT,
+                SoundSource.HOSTILE,
+                0.8F,
+                0.9F
+        );
     }
 
     // The Custodian holds the Core. If it has no foe and has drifted too far, it returns.
@@ -107,13 +181,14 @@ public class CustodesEntity extends PathfinderMob {
         equipAsCustodes();
     }
 
-    // Vanilla gold armour gives the Custodian his iconic golden silhouette without custom art.
+    // The equipment is invisible on the GeckoLib model (the armour and spear are part of the geo),
+    // but it still counts for the Custodian's armour points and melee damage.
     public void equipAsCustodes() {
         this.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.GOLDEN_HELMET));
         this.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.GOLDEN_CHESTPLATE));
         this.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.GOLDEN_LEGGINGS));
         this.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.GOLDEN_BOOTS));
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_SWORD));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.GUARDIAN_SPEAR.get()));
 
         this.setDropChance(EquipmentSlot.HEAD, 0.0F);
         this.setDropChance(EquipmentSlot.CHEST, 0.0F);
@@ -188,5 +263,36 @@ public class CustodesEntity extends PathfinderMob {
         }
 
         prepareCustodes();
+    }
+
+    // =========================
+    // GeckoLib
+    // =========================
+
+    @Override
+    public boolean doHurtTarget(Entity target) {
+        boolean hit = super.doHurtTarget(target);
+        if (hit && !this.level().isClientSide) {
+            this.triggerAnim("attack", "attack");
+        }
+        return hit;
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "movement", 5, state -> {
+            if (state.isMoving()) {
+                return state.setAndContinue(WALK);
+            }
+            return state.setAndContinue(IDLE);
+        }));
+
+        controllers.add(new AnimationController<>(this, "attack", 0, state -> PlayState.STOP)
+                .triggerableAnim("attack", ATTACK));
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.geoCache;
     }
 }
