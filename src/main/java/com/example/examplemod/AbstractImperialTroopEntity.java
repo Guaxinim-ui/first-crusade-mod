@@ -3,6 +3,9 @@ package com.example.examplemod;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -28,7 +31,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
  * Subclasses only add their attributes, weapon, name and their single attack goal (via
  * {@link #registerCombatGoals()}). The rank/chapter machinery is deliberately left to the Guardsman.
  */
-public abstract class AbstractImperialTroopEntity extends PathfinderMob {
+public abstract class AbstractImperialTroopEntity extends PathfinderMob implements LasgunAimingEntity {
+    private static final EntityDataAccessor<Integer> LASGUN_COMBAT_POSE = SynchedEntityData.defineId(AbstractImperialTroopEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> LASGUN_COMBAT_TICKS = SynchedEntityData.defineId(AbstractImperialTroopEntity.class, EntityDataSerializers.INT);
     private BlockPos commandCorePos;
     private BlockPos guardPostPos;
 
@@ -42,6 +47,30 @@ public abstract class AbstractImperialTroopEntity extends PathfinderMob {
             groundNavigation.setCanOpenDoors(true);
             groundNavigation.setCanPassDoors(true);
         }
+    }
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(LASGUN_COMBAT_POSE, LasgunCombatPose.IDLE.ordinal());
+        this.entityData.define(LASGUN_COMBAT_TICKS, 0);
+    }
+
+    @Override
+    public LasgunCombatPose getLasgunCombatPose() {
+        return LasgunCombatPose.fromId(this.entityData.get(LASGUN_COMBAT_POSE));
+    }
+
+    @Override
+    public int getLasgunCombatTicks() {
+        return this.entityData.get(LASGUN_COMBAT_TICKS);
+    }
+
+    @Override
+    public void setLasgunCombatPose(LasgunCombatPose pose, int poseTicks) {
+        LasgunCombatPose safePose = pose == null ? LasgunCombatPose.IDLE : pose;
+        this.entityData.set(LASGUN_COMBAT_POSE, safePose.ordinal());
+        this.entityData.set(LASGUN_COMBAT_TICKS, Math.max(0, poseTicks));
     }
 
     @Override

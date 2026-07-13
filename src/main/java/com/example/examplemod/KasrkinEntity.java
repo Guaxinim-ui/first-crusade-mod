@@ -40,7 +40,7 @@ public class KasrkinEntity extends AbstractImperialTroopEntity implements Ranged
 
     @Override
     protected void registerCombatGoals() {
-        this.goalSelector.addGoal(2, new RangedAttackGoal(this, 1.0D, 25, 22.0F));
+        this.goalSelector.addGoal(2, new ImperialLasgunAttackGoal<>(this, 1.0D, 25, 22.0F));
     }
 
     @Override

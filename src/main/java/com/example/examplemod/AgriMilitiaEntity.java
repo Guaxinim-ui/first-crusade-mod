@@ -40,7 +40,7 @@ public class AgriMilitiaEntity extends AbstractImperialTroopEntity implements Ra
 
     @Override
     protected void registerCombatGoals() {
-        this.goalSelector.addGoal(2, new RangedAttackGoal(this, 1.1D, 22, 18.0F));
+        this.goalSelector.addGoal(2, new ImperialLasgunAttackGoal<>(this, 1.1D, 22, 18.0F));
     }
 
     @Override

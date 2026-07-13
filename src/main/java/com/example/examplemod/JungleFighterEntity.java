@@ -40,7 +40,7 @@ public class JungleFighterEntity extends AbstractImperialTroopEntity implements 
 
     @Override
     protected void registerCombatGoals() {
-        this.goalSelector.addGoal(2, new RangedAttackGoal(this, 1.15D, 20, 20.0F));
+        this.goalSelector.addGoal(2, new ImperialLasgunAttackGoal<>(this, 1.15D, 20, 20.0F));
     }
 
     @Override

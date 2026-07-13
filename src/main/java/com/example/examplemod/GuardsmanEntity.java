@@ -4,6 +4,9 @@ import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -27,12 +30,15 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-public class GuardsmanEntity extends PathfinderMob {
+public class GuardsmanEntity extends PathfinderMob implements RangedAttackMob, LasgunAimingEntity {
+    private static final EntityDataAccessor<Integer> LASGUN_COMBAT_POSE = SynchedEntityData.defineId(GuardsmanEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> LASGUN_COMBAT_TICKS = SynchedEntityData.defineId(GuardsmanEntity.class, EntityDataSerializers.INT);
     private BlockPos commandCorePos;
     private BlockPos guardPostPos;
 
@@ -70,12 +76,36 @@ public class GuardsmanEntity extends PathfinderMob {
     }
 
     @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(LASGUN_COMBAT_POSE, LasgunCombatPose.IDLE.ordinal());
+        this.entityData.define(LASGUN_COMBAT_TICKS, 0);
+    }
+
+    @Override
+    public LasgunCombatPose getLasgunCombatPose() {
+        return LasgunCombatPose.fromId(this.entityData.get(LASGUN_COMBAT_POSE));
+    }
+
+    @Override
+    public int getLasgunCombatTicks() {
+        return this.entityData.get(LASGUN_COMBAT_TICKS);
+    }
+
+    @Override
+    public void setLasgunCombatPose(LasgunCombatPose pose, int poseTicks) {
+        LasgunCombatPose safePose = pose == null ? LasgunCombatPose.IDLE : pose;
+        this.entityData.set(LASGUN_COMBAT_POSE, safePose.ordinal());
+        this.entityData.set(LASGUN_COMBAT_TICKS, Math.max(0, poseTicks));
+    }
+
+    @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(0, new OpenDoorGoal(this, true));
 
         this.goalSelector.addGoal(1, new GuardsmanKnifeAttackGoal(this, 1.15D, 4.0D));
-        this.goalSelector.addGoal(2, new GuardsmanLasgunAttackGoal(this, 1.0D, 35, 18.0F, 4.0F));
+        this.goalSelector.addGoal(2, new ImperialLasgunAttackGoal<>(this, 1.0D, 35, 18.0F, 4.0F));
 
         this.goalSelector.addGoal(4, new GuardsmanGuardPostGoal(this, 1.0D, 8.0D));
 
@@ -391,6 +421,11 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
 
     public double getLasgunDamageWithBonuses() {
         return Math.max(1.0D, this.guardsmanRank.getLasgunDamage() + this.chapter.getLasgunDamageBonus() + this.specialization.getLasgunDamageBonus() + this.cityType.getLasgunDamageBonus());
+    }
+
+    @Override
+    public void performRangedAttack(LivingEntity target, float velocity) {
+        this.performLasgunAttack(target);
     }
 
     public void performLasgunAttack(LivingEntity target) {
