@@ -60,7 +60,8 @@ public final class WorldSettlementSeeder {
 
     private static void seedTestLayout(ServerLevel level, BlockPos center) {
         BlockPos citySpot = new BlockPos(center.getX(), center.getY(), center.getZ() + TEST_BAND_DISTANCE);
-        BlockPos city = foundCity(level, citySpot);
+        // Fixed TOWN scale so the war-pair stays a balanced peer of the Ork city (radius ~30).
+        BlockPos city = foundCity(level, citySpot, SettlementScale.TOWN);
 
         BlockPos campSpot = new BlockPos(center.getX(), center.getY(), center.getZ() - TEST_BAND_DISTANCE);
         BlockPos camp = OrkCampManager.seedWorldCamp(level, campSpot, city);
@@ -114,10 +115,20 @@ public final class WorldSettlementSeeder {
     // and houses with beds). The Core then governs and grows the settlement on its own. Public so
     // the /fcstrategy seedcity command can plant villages on demand in an already-seeded world.
     public static BlockPos foundCity(ServerLevel serverLevel, BlockPos spot) {
+        return foundCity(serverLevel, spot, SettlementScale.randomSeedable(serverLevel.random));
+    }
+
+    // Founds an autonomous city at the given settlement scale. The scale is a normally-seedable size
+    // (Village/Town/City); HIVE_CAPITAL is deliberately unreachable here — it is raised only by its
+    // own dedicated founding path, never by this world seeder.
+    public static BlockPos foundCity(ServerLevel serverLevel, BlockPos spot, SettlementScale scale) {
+        SettlementScale safeScale = (scale == null || !scale.isSeededNormally()) ? SettlementScale.TOWN : scale;
+
         BlockPos surface = WorldGenPlacement.groundPlacement(serverLevel, spot.getX(), spot.getZ());
-        serverLevel.setBlock(surface, ExampleMod.IMPERIAL_COMMAND_CORE.get().defaultBlockState(), 3);
+        serverLevel.setBlock(surface, FCRegistry.IMPERIAL_COMMAND_CORE.get().defaultBlockState(), 3);
 
         if (serverLevel.getBlockEntity(surface) instanceof ImperialCommandCoreBlockEntity core) {
+            core.setSettlementScale(safeScale);
             core.buildAutonomousVillage(serverLevel);
         }
 

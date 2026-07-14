@@ -25,7 +25,7 @@ public class StrategiumBlockEntity extends BlockEntity {
     private int storedScrap = 0;
 
     public StrategiumBlockEntity(BlockPos pos, BlockState state) {
-        super(ExampleMod.STRATEGIUM_BLOCK_ENTITY.get(), pos, state);
+        super(FCRegistry.STRATEGIUM_BLOCK_ENTITY.get(), pos, state);
     }
 
     public int getStoredIron() {

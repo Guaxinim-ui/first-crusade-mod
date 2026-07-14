@@ -63,7 +63,7 @@ public class OrkCampBlock extends BaseEntityBlock {
 
         return createTickerHelper(
                 blockEntityType,
-                ExampleMod.ORK_CAMP_BLOCK_ENTITY.get(),
+                FCRegistry.ORK_CAMP_BLOCK_ENTITY.get(),
                 OrkCampBlockEntity::serverTick
         );
     }

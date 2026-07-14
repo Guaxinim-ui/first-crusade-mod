@@ -17,7 +17,7 @@ public class ImperialScrapYardBlockEntity extends BlockEntity {
     private int totalScrapProduced;
 
     public ImperialScrapYardBlockEntity(BlockPos pos, BlockState blockState) {
-        super(ExampleMod.IMPERIAL_SCRAP_YARD_BLOCK_ENTITY.get(), pos, blockState);
+        super(FCRegistry.IMPERIAL_SCRAP_YARD_BLOCK_ENTITY.get(), pos, blockState);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialScrapYardBlockEntity scrapYard) {

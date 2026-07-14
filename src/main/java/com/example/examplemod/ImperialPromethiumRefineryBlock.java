@@ -37,7 +37,7 @@ public class ImperialPromethiumRefineryBlock extends BaseEntityBlock {
 
         return createTickerHelper(
                 blockEntityType,
-                ExampleMod.IMPERIAL_PROMETHIUM_REFINERY_BLOCK_ENTITY.get(),
+                FCRegistry.IMPERIAL_PROMETHIUM_REFINERY_BLOCK_ENTITY.get(),
                 ImperialPromethiumRefineryBlockEntity::serverTick
         );
     }

@@ -17,7 +17,7 @@ public class ImperialMineBlockEntity extends BlockEntity {
     private int totalIronProduced;
 
     public ImperialMineBlockEntity(BlockPos pos, BlockState blockState) {
-        super(ExampleMod.IMPERIAL_MINE_BLOCK_ENTITY.get(), pos, blockState);
+        super(FCRegistry.IMPERIAL_MINE_BLOCK_ENTITY.get(), pos, blockState);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialMineBlockEntity mine) {

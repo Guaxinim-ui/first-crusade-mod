@@ -57,7 +57,7 @@ public class ImperialWorkSiteManager {
                 corePos.offset(-radius, -32, -radius),
                 corePos.offset(radius, 64, radius)
         )) {
-            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_MINE.get())) {
+            if (!serverLevel.getBlockState(pos).is(FCRegistry.IMPERIAL_MINE.get())) {
                 continue;
             }
 
@@ -80,7 +80,7 @@ public class ImperialWorkSiteManager {
                 corePos.offset(-radius, -32, -radius),
                 corePos.offset(radius, 64, radius)
         )) {
-            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_MINE.get())) {
+            if (!serverLevel.getBlockState(pos).is(FCRegistry.IMPERIAL_MINE.get())) {
                 continue;
             }
 
@@ -226,7 +226,7 @@ public class ImperialWorkSiteManager {
             }
         }
 
-        serverLevel.setBlock(center, ExampleMod.IMPERIAL_MINE.get().defaultBlockState(), 3);
+        serverLevel.setBlock(center, FCRegistry.IMPERIAL_MINE.get().defaultBlockState(), 3);
 
         for (int y = 0; y <= 2; y++) {
             serverLevel.setBlock(center.offset(2, y, 2), Blocks.OAK_LOG.defaultBlockState(), 3);

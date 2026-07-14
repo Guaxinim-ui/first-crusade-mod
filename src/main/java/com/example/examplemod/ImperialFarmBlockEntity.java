@@ -19,7 +19,7 @@ public class ImperialFarmBlockEntity extends BlockEntity {
     private int totalFoodProduced;
 
     public ImperialFarmBlockEntity(BlockPos pos, BlockState blockState) {
-        super(ExampleMod.IMPERIAL_FARM_BLOCK_ENTITY.get(), pos, blockState);
+        super(FCRegistry.IMPERIAL_FARM_BLOCK_ENTITY.get(), pos, blockState);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialFarmBlockEntity farm) {

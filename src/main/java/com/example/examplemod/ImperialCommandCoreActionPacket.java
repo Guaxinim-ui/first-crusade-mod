@@ -110,7 +110,7 @@ public class ImperialCommandCoreActionPacket {
             case PROMOTE_SPECIALIST -> commandCore.promoteSpecialist(player);
 
             case UPGRADE_CITY -> {
-                ItemStack plateStack = findItemStack(player, ExampleMod.CRUSADIUM_PLATE.get());
+                ItemStack plateStack = findItemStack(player, FCRegistry.CRUSADIUM_PLATE.get());
 
                 if (plateStack.isEmpty()) {
                     player.displayClientMessage(Component.literal("You need Crusadium Plate in your inventory to upgrade the city."), true);
@@ -121,7 +121,7 @@ public class ImperialCommandCoreActionPacket {
             }
 
             case REPAIR_CORE -> {
-                ItemStack plateStack = findItemStack(player, ExampleMod.CRUSADIUM_PLATE.get());
+                ItemStack plateStack = findItemStack(player, FCRegistry.CRUSADIUM_PLATE.get());
 
                 if (plateStack.isEmpty()) {
                     player.displayClientMessage(Component.literal("You need Crusadium Plate in your inventory to repair the Core."), true);

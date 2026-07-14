@@ -583,7 +583,7 @@ public final class CityArchitect {
         safeSet(level, center, origin.above(3), HANGING_LAMP);
         safeSet(level, center, entranceLintel(slot), HANGING_LAMP);
 
-        safeSet(level, center, origin, ExampleMod.IMPERIAL_HABITATION.get().defaultBlockState());
+        safeSet(level, center, origin, FCRegistry.IMPERIAL_HABITATION.get().defaultBlockState());
 
         if (level.getBlockEntity(origin) instanceof ImperialHabitationBlockEntity habitation) {
             habitation.assignToCommandCore(core.getBlockPos());
@@ -667,7 +667,7 @@ public final class CityArchitect {
         safeSet(level, center, origin.above(4), HANGING_LAMP);
         safeSet(level, center, entranceLintel(slot), HANGING_LAMP);
 
-        safeSet(level, center, origin, ExampleMod.IMPERIAL_HABITATION.get().defaultBlockState());
+        safeSet(level, center, origin, FCRegistry.IMPERIAL_HABITATION.get().defaultBlockState());
 
         if (level.getBlockEntity(origin) instanceof ImperialHabitationBlockEntity habitation) {
             habitation.assignToCommandCore(core.getBlockPos());

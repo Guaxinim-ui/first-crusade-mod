@@ -19,7 +19,7 @@ public class ImperialForgeBlockEntity extends BlockEntity {
     private int totalPlatesProduced;
 
     public ImperialForgeBlockEntity(BlockPos pos, BlockState blockState) {
-        super(ExampleMod.IMPERIAL_FORGE_BLOCK_ENTITY.get(), pos, blockState);
+        super(FCRegistry.IMPERIAL_FORGE_BLOCK_ENTITY.get(), pos, blockState);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialForgeBlockEntity forge) {
@@ -99,7 +99,7 @@ public class ImperialForgeBlockEntity extends BlockEntity {
                 this.worldPosition.getX() + 0.5D,
                 this.worldPosition.getY() + 1.2D,
                 this.worldPosition.getZ() + 0.5D,
-                new ItemStack(ExampleMod.CRUSADIUM_PLATE.get())
+                new ItemStack(FCRegistry.CRUSADIUM_PLATE.get())
         );
 
         itemEntity.setDefaultPickUpDelay();

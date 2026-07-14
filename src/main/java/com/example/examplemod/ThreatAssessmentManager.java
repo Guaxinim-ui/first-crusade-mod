@@ -125,27 +125,27 @@ public final class ThreatAssessmentManager {
 
     // Quality weight per unit. Expands as new units (Killa Kan, etc.) are added.
     private static int weightOf(Mob mob) {
-        if (mob.getType() == ExampleMod.WARBOSS.get()) {
+        if (mob.getType() == FCRegistry.WARBOSS.get()) {
             return 30;
         }
 
-        if (mob.getType() == ExampleMod.KILLA_KAN.get()) {
+        if (mob.getType() == FCRegistry.KILLA_KAN.get()) {
             return 20;
         }
 
-        if (mob.getType() == ExampleMod.MEGANOB.get()) {
+        if (mob.getType() == FCRegistry.MEGANOB.get()) {
             return 12;
         }
 
-        if (mob.getType() == ExampleMod.ORK_NOB.get()) {
+        if (mob.getType() == FCRegistry.ORK_NOB.get()) {
             return 6;
         }
 
-        if (mob.getType() == ExampleMod.ORK_BOY.get()) {
+        if (mob.getType() == FCRegistry.ORK_BOY.get()) {
             return 3;
         }
 
-        if (mob.getType() == ExampleMod.GRETCHIN.get()) {
+        if (mob.getType() == FCRegistry.GRETCHIN.get()) {
             return 1;
         }
 

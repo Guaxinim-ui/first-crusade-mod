@@ -35,7 +35,7 @@ public class OrkBoyEntity extends Monster implements GeoEntity {
     public OrkBoyEntity(EntityType<? extends OrkBoyEntity> entityType, Level level) {
         super(entityType, level);
 
-        this.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new net.minecraft.world.item.ItemStack(ExampleMod.CHOPPA.get()));
+        this.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new net.minecraft.world.item.ItemStack(FCRegistry.CHOPPA.get()));
         this.setDropChance(net.minecraft.world.entity.EquipmentSlot.MAINHAND, 0.0F);
     }
 

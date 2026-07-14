@@ -53,9 +53,9 @@ public class GuardsmanArmorEvents {
         ItemStack chestplate = player.getInventory().armor.get(2);
         ItemStack helmet = player.getInventory().armor.get(3);
 
-        return helmet.is(ExampleMod.GUARDSMAN_HELMET.get())
-                && chestplate.is(ExampleMod.GUARDSMAN_CHESTPLATE.get())
-                && leggings.is(ExampleMod.GUARDSMAN_LEGGINGS.get())
-                && boots.is(ExampleMod.GUARDSMAN_BOOTS.get());
+        return helmet.is(FCRegistry.GUARDSMAN_HELMET.get())
+                && chestplate.is(FCRegistry.GUARDSMAN_CHESTPLATE.get())
+                && leggings.is(FCRegistry.GUARDSMAN_LEGGINGS.get())
+                && boots.is(FCRegistry.GUARDSMAN_BOOTS.get());
     }
 }

@@ -20,7 +20,7 @@ public class FeudalKnightEntity extends AbstractImperialTroopEntity {
     public FeudalKnightEntity(EntityType<? extends FeudalKnightEntity> entityType, Level level) {
         super(entityType, level);
 
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.GUARDSMAN_COMBAT_KNIFE.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(FCRegistry.GUARDSMAN_COMBAT_KNIFE.get()));
         this.setCustomName(Component.literal("Feudal Knight"));
         this.setCustomNameVisible(true);
     }

@@ -59,7 +59,7 @@ public class ImperialPopulationManager {
             return;
         }
 
-        ImperialCitizenEntity citizen = ExampleMod.IMPERIAL_CITIZEN.get().create(serverLevel);
+        ImperialCitizenEntity citizen = FCRegistry.IMPERIAL_CITIZEN.get().create(serverLevel);
 
         if (citizen == null) {
             return;
@@ -146,7 +146,7 @@ public class ImperialPopulationManager {
             return false;
         }
 
-        GuardsmanEntity guardsman = ExampleMod.GUARDSMAN.get().create(serverLevel);
+        GuardsmanEntity guardsman = FCRegistry.GUARDSMAN.get().create(serverLevel);
 
         if (guardsman == null) {
             player.displayClientMessage(Component.literal("Failed to create Guardsman."), true);

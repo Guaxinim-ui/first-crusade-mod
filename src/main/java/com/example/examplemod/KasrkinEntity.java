@@ -24,7 +24,7 @@ public class KasrkinEntity extends AbstractImperialTroopEntity implements Ranged
     public KasrkinEntity(EntityType<? extends KasrkinEntity> entityType, Level level) {
         super(entityType, level);
 
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.LASGUN.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(FCRegistry.LASGUN.get()));
         this.setCustomName(Component.literal("Kasrkin"));
         this.setCustomNameVisible(true);
     }

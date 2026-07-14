@@ -45,7 +45,7 @@ public class SpaceportBlock extends Block {
         }
 
         ResourceKey<Level> destinationKey =
-                player.level().dimension() == ExampleMod.PLANET_SECUNDUS ? Level.OVERWORLD : ExampleMod.PLANET_SECUNDUS;
+                player.level().dimension() == FCRegistry.PLANET_SECUNDUS ? Level.OVERWORLD : FCRegistry.PLANET_SECUNDUS;
         ServerLevel destination = server.getLevel(destinationKey);
 
         if (destination == null) {
@@ -60,7 +60,7 @@ public class SpaceportBlock extends Block {
         buildLandingPad(destination, landing);
 
         // The first time anyone reaches the planet, populate it with settlements around the landing.
-        if (destinationKey == ExampleMod.PLANET_SECUNDUS) {
+        if (destinationKey == FCRegistry.PLANET_SECUNDUS) {
             WorldSettlementSeeder.seedPlanet(destination, landing);
         }
 
@@ -127,8 +127,8 @@ public class SpaceportBlock extends Block {
 
         // Return Spaceport beside the centre.
         BlockPos returnPort = landing.offset(2, 0, 0);
-        if (!level.getBlockState(returnPort).is(ExampleMod.SPACEPORT.get())) {
-            level.setBlock(returnPort, ExampleMod.SPACEPORT.get().defaultBlockState(), 3);
+        if (!level.getBlockState(returnPort).is(FCRegistry.SPACEPORT.get())) {
+            level.setBlock(returnPort, FCRegistry.SPACEPORT.get().defaultBlockState(), 3);
         }
     }
 }

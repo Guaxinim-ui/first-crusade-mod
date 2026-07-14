@@ -22,14 +22,14 @@ public class OrkCampMenu extends AbstractContainerMenu {
     private final BlockPos campPos;
 
     public OrkCampMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
-        super(ExampleMod.ORK_CAMP_MENU.get(), containerId);
+        super(FCRegistry.ORK_CAMP_MENU.get(), containerId);
         this.campPos = extraData.readBlockPos();
         this.data = new SimpleContainerData(DATA_COUNT);
         addDataSlots(this.data);
     }
 
     public OrkCampMenu(int containerId, Inventory playerInventory, OrkCampBlockEntity camp) {
-        super(ExampleMod.ORK_CAMP_MENU.get(), containerId);
+        super(FCRegistry.ORK_CAMP_MENU.get(), containerId);
         this.campPos = camp.getBlockPos();
         this.data = createServerData(camp);
         addDataSlots(this.data);

@@ -57,7 +57,7 @@ public class ImperialForgeManager {
                 corePos.offset(-radius, -32, -radius),
                 corePos.offset(radius, 64, radius)
         )) {
-            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_FORGE.get())) {
+            if (!serverLevel.getBlockState(pos).is(FCRegistry.IMPERIAL_FORGE.get())) {
                 continue;
             }
 
@@ -202,7 +202,7 @@ public class ImperialForgeManager {
             }
         }
 
-        serverLevel.setBlock(center, ExampleMod.IMPERIAL_FORGE.get().defaultBlockState(), 3);
+        serverLevel.setBlock(center, FCRegistry.IMPERIAL_FORGE.get().defaultBlockState(), 3);
 
         serverLevel.setBlock(center.offset(1, 0, 0), Blocks.BLAST_FURNACE.defaultBlockState(), 3);
         serverLevel.setBlock(center.offset(-1, 0, 0), Blocks.ANVIL.defaultBlockState(), 3);

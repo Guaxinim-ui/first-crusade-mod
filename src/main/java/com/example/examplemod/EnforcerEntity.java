@@ -20,7 +20,7 @@ public class EnforcerEntity extends AbstractImperialTroopEntity {
     public EnforcerEntity(EntityType<? extends EnforcerEntity> entityType, Level level) {
         super(entityType, level);
 
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.GUARDSMAN_COMMAND_BATON.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(FCRegistry.GUARDSMAN_COMMAND_BATON.get()));
         this.setCustomName(Component.literal("Enforcer"));
         this.setCustomNameVisible(true);
     }

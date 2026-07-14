@@ -21,7 +21,7 @@ public class PenalLegionnaireEntity extends AbstractImperialTroopEntity {
     public PenalLegionnaireEntity(EntityType<? extends PenalLegionnaireEntity> entityType, Level level) {
         super(entityType, level);
 
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.GUARDSMAN_COMBAT_KNIFE.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(FCRegistry.GUARDSMAN_COMBAT_KNIFE.get()));
         this.setCustomName(Component.literal("Penal Legionnaire"));
         this.setCustomNameVisible(true);
     }

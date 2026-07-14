@@ -24,7 +24,7 @@ public class JungleFighterEntity extends AbstractImperialTroopEntity implements 
     public JungleFighterEntity(EntityType<? extends JungleFighterEntity> entityType, Level level) {
         super(entityType, level);
 
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.LASGUN.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(FCRegistry.LASGUN.get()));
         this.setCustomName(Component.literal("Jungle Fighter"));
         this.setCustomNameVisible(true);
     }

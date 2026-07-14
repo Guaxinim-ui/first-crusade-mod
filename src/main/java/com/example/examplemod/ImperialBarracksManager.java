@@ -43,7 +43,7 @@ public class ImperialBarracksManager {
                 corePos.offset(-radius, -32, -radius),
                 corePos.offset(radius, 64, radius)
         )) {
-            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_BARRACKS.get())) {
+            if (!serverLevel.getBlockState(pos).is(FCRegistry.IMPERIAL_BARRACKS.get())) {
                 continue;
             }
 
@@ -66,7 +66,7 @@ public class ImperialBarracksManager {
                 corePos.offset(-radius, -32, -radius),
                 corePos.offset(radius, 64, radius)
         )) {
-            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_BARRACKS.get())) {
+            if (!serverLevel.getBlockState(pos).is(FCRegistry.IMPERIAL_BARRACKS.get())) {
                 continue;
             }
 
@@ -159,7 +159,7 @@ public class ImperialBarracksManager {
             }
         }
 
-        serverLevel.setBlock(center, ExampleMod.IMPERIAL_BARRACKS.get().defaultBlockState(), 3);
+        serverLevel.setBlock(center, FCRegistry.IMPERIAL_BARRACKS.get().defaultBlockState(), 3);
 
         serverLevel.setBlock(center.offset(1, 0, 0), Blocks.BARREL.defaultBlockState(), 3);
         serverLevel.setBlock(center.offset(-1, 0, 0), Blocks.CRAFTING_TABLE.defaultBlockState(), 3);

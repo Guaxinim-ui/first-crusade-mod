@@ -25,7 +25,7 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
     private final ImperialCommandCoreBlockEntity commandCore;
 
     public ImperialCommandCoreMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
-        super(ExampleMod.IMPERIAL_COMMAND_CORE_MENU.get(), containerId);
+        super(FCRegistry.IMPERIAL_COMMAND_CORE_MENU.get(), containerId);
 
         this.commandCorePos = extraData.readBlockPos();
         this.commandCore = null;
@@ -35,7 +35,7 @@ public class ImperialCommandCoreMenu extends AbstractContainerMenu {
     }
 
     public ImperialCommandCoreMenu(int containerId, Inventory playerInventory, ImperialCommandCoreBlockEntity commandCore) {
-        super(ExampleMod.IMPERIAL_COMMAND_CORE_MENU.get(), containerId);
+        super(FCRegistry.IMPERIAL_COMMAND_CORE_MENU.get(), containerId);
 
         this.commandCorePos = commandCore.getBlockPos();
         this.commandCore = commandCore;

@@ -188,7 +188,7 @@ public class CustodesEntity extends PathfinderMob implements GeoEntity {
         this.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.GOLDEN_CHESTPLATE));
         this.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.GOLDEN_LEGGINGS));
         this.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.GOLDEN_BOOTS));
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.GUARDIAN_SPEAR.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(FCRegistry.GUARDIAN_SPEAR.get()));
 
         this.setDropChance(EquipmentSlot.HEAD, 0.0F);
         this.setDropChance(EquipmentSlot.CHEST, 0.0F);

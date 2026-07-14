@@ -37,7 +37,7 @@ public class ImperialScrapYardBlock extends BaseEntityBlock {
 
         return createTickerHelper(
                 blockEntityType,
-                ExampleMod.IMPERIAL_SCRAP_YARD_BLOCK_ENTITY.get(),
+                FCRegistry.IMPERIAL_SCRAP_YARD_BLOCK_ENTITY.get(),
                 ImperialScrapYardBlockEntity::serverTick
         );
     }

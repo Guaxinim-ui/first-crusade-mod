@@ -146,7 +146,7 @@ public final class CityMilitaryManager {
             return;
         }
 
-        CityCommanderEntity commander = ExampleMod.CITY_COMMANDER.get().create(level);
+        CityCommanderEntity commander = FCRegistry.CITY_COMMANDER.get().create(level);
 
         if (commander == null) {
             return;

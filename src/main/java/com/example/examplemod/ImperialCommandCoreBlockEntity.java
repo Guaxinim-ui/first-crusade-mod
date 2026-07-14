@@ -42,6 +42,9 @@ public class ImperialCommandCoreBlockEntity extends BlockEntity {
 
     // Settlement flavour (Hive, Forge, Fortress, ...). Assigned on first server tick.
     private ImperialCityType cityType;
+    // Size axis, independent of cityType (theme). Defaults to TOWN; set at founding by the seeder.
+    // HIVE_CAPITAL is never assigned here — it has its own dedicated founding path.
+    private SettlementScale settlementScale = SettlementScale.TOWN;
 
     private int cityLevel = 1;
 
@@ -377,7 +380,7 @@ public int receiveProducedResource(ImperialResourceType resourceType, int amount
 }
 
     public ImperialCommandCoreBlockEntity(BlockPos pos, BlockState state) {
-        super(ExampleMod.IMPERIAL_COMMAND_CORE_BLOCK_ENTITY.get(), pos, state);
+        super(FCRegistry.IMPERIAL_COMMAND_CORE_BLOCK_ENTITY.get(), pos, state);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialCommandCoreBlockEntity blockEntity) {
@@ -559,7 +562,7 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
                     spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
         }
 
-        GuardsmanEntity guardsman = ExampleMod.GUARDSMAN.get().create(serverLevel);
+        GuardsmanEntity guardsman = FCRegistry.GUARDSMAN.get().create(serverLevel);
         if (guardsman == null) {
             return false;
         }
@@ -1051,7 +1054,7 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
             continue;
         }
 
-        if (stack.is(ExampleMod.SCRAP_METAL.get())) {
+        if (stack.is(FCRegistry.SCRAP_METAL.get())) {
             foundResource = true;
             int accepted = addScrapMetal(stack.getCount());
 
@@ -1087,7 +1090,7 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
             continue;
         }
 
-        if (stack.is(ExampleMod.CRUSADIUM_INGOT.get())) {
+        if (stack.is(FCRegistry.CRUSADIUM_INGOT.get())) {
             foundResource = true;
             int accepted = addCrusadium(stack.getCount());
 
@@ -1139,10 +1142,10 @@ addEmperorGeneSeed((int) daysPassed * getDailyEmperorGeneProduction());
         Item item = switch (type) {
             case IRON -> Items.IRON_INGOT;
             case COAL -> Items.COAL;
-            case SCRAP -> ExampleMod.SCRAP_METAL.get();
+            case SCRAP -> FCRegistry.SCRAP_METAL.get();
             case GOLD -> Items.GOLD_INGOT;
             case EMERALD -> Items.EMERALD;
-            case CRUSADIUM -> ExampleMod.CRUSADIUM_INGOT.get();
+            case CRUSADIUM -> FCRegistry.CRUSADIUM_INGOT.get();
         };
 
         this.resources.remove(type, amount);
@@ -1473,7 +1476,7 @@ private String getFieldedUnitName() {
 }
 
 private boolean spawnTrainedGuardsman(ServerLevel serverLevel, ImperialCitizenEntity recruit) {
-    GuardsmanEntity guardsman = ExampleMod.GUARDSMAN.get().create(serverLevel);
+    GuardsmanEntity guardsman = FCRegistry.GUARDSMAN.get().create(serverLevel);
 
     if (guardsman == null) {
         return false;
@@ -1500,15 +1503,15 @@ private boolean spawnTrainedGuardsman(ServerLevel serverLevel, ImperialCitizenEn
 @Nullable
 private static EntityType<? extends AbstractImperialTroopEntity> getThemedTroopType(ImperialCityType cityType) {
     return switch (cityType) {
-        case FORGE -> ExampleMod.SKITARII_RANGER.get();     // Adeptus Mechanicus
-        case FORTRESS -> ExampleMod.KASRKIN.get();          // Militarum Tempestus
-        case HIVE -> ExampleMod.ENFORCER.get();             // Adeptus Arbites (melee)
-        case MINING -> ExampleMod.MINE_GUARD.get();         // Industrial Enforcers (melee bruiser)
-        case AGRI -> ExampleMod.AGRI_MILITIA.get();         // rural PDF (light skirmisher)
-        case SHRINE -> ExampleMod.SISTER_OF_BATTLE.get();   // Adepta Sororitas (ranged zealot)
-        case PENAL -> ExampleMod.PENAL_LEGIONNAIRE.get();   // Penal Legion (fast fragile melee swarm)
-        case DEATH_WORLD -> ExampleMod.JUNGLE_FIGHTER.get(); // Catachan-style veteran skirmisher
-        case FEUDAL -> ExampleMod.FEUDAL_KNIGHT.get();      // armoured melee shield wall
+        case FORGE -> FCRegistry.SKITARII_RANGER.get();     // Adeptus Mechanicus
+        case FORTRESS -> FCRegistry.KASRKIN.get();          // Militarum Tempestus
+        case HIVE -> FCRegistry.ENFORCER.get();             // Adeptus Arbites (melee)
+        case MINING -> FCRegistry.MINE_GUARD.get();         // Industrial Enforcers (melee bruiser)
+        case AGRI -> FCRegistry.AGRI_MILITIA.get();         // rural PDF (light skirmisher)
+        case SHRINE -> FCRegistry.SISTER_OF_BATTLE.get();   // Adepta Sororitas (ranged zealot)
+        case PENAL -> FCRegistry.PENAL_LEGIONNAIRE.get();   // Penal Legion (fast fragile melee swarm)
+        case DEATH_WORLD -> FCRegistry.JUNGLE_FIGHTER.get(); // Catachan-style veteran skirmisher
+        case FEUDAL -> FCRegistry.FEUDAL_KNIGHT.get();      // armoured melee shield wall
         default -> null;                                    // CIVILISED: baseline Guardsman
     };
 }
@@ -1909,7 +1912,7 @@ public void callImperialReinforcements(Player player) {
             deployed = spawnThemedTroopAt(serverLevel, themedType,
                     spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, player.getYRot(), 0.0F);
         } else {
-            GuardsmanEntity guardsman = ExampleMod.GUARDSMAN.get().create(serverLevel);
+            GuardsmanEntity guardsman = FCRegistry.GUARDSMAN.get().create(serverLevel);
 
             if (guardsman == null) {
                 continue;
@@ -2361,7 +2364,9 @@ public void buildAutonomousVillage(ServerLevel serverLevel) {
         assignCityType(serverLevel);
     }
 
-    this.cityLevel = Math.max(this.cityLevel, AUTONOMOUS_VILLAGE_LEVEL);
+    // The settlement's scale (Village/Town/City) drives its founding level, which the physical
+    // builder maps to a wall radius. HIVE_CAPITAL never reaches here (its own path builds it).
+    this.cityLevel = Math.max(this.cityLevel, this.settlementScale.getStartLevel());
 
     // Planned W40k settlement (plaza + avenues + curtain wall + zoned buildings), raised through
     // the footprint/anti-collision/entity-safety pipeline. The old loose ring of wooden houses
@@ -2377,35 +2382,6 @@ public void buildAutonomousVillage(ServerLevel serverLevel) {
     spawnStartingPopulation(serverLevel, AUTONOMOUS_START_POPULATION);
     spawnInitialGarrison(serverLevel, AUTONOMOUS_GARRISON);
     setChanged();
-}
-
-// Gives an autonomous city real industry so its citizens have work: a Farm, Mine, Forge and Scrap
-// Yard on the plaza, each bound to this Core. The workforce manager then employs idle citizens at
-// them and the buildings produce resources — which in turn fund the city's own recruiting and growth.
-private void placeCityWorksites(ServerLevel serverLevel) {
-    placeWorksite(serverLevel, this.worldPosition.offset(12, 0, 12), ExampleMod.IMPERIAL_FARM.get());
-    placeWorksite(serverLevel, this.worldPosition.offset(-12, 0, 12), ExampleMod.IMPERIAL_MINE.get());
-    placeWorksite(serverLevel, this.worldPosition.offset(12, 0, -12), ExampleMod.IMPERIAL_FORGE.get());
-    placeWorksite(serverLevel, this.worldPosition.offset(-12, 0, -12), ExampleMod.IMPERIAL_SCRAP_YARD.get());
-}
-
-private void placeWorksite(ServerLevel serverLevel, BlockPos pos, net.minecraft.world.level.block.Block block) {
-    serverLevel.setBlock(pos, block.defaultBlockState(), 3);
-
-    BlockEntity blockEntity = serverLevel.getBlockEntity(pos);
-    if (blockEntity instanceof ImperialFarmBlockEntity farm) {
-        farm.assignToCommandCore(this.worldPosition);
-    } else if (blockEntity instanceof ImperialMineBlockEntity mine) {
-        mine.assignToCommandCore(this.worldPosition);
-    } else if (blockEntity instanceof ImperialForgeBlockEntity forge) {
-        forge.assignToCommandCore(this.worldPosition);
-    } else if (blockEntity instanceof ImperialScrapYardBlockEntity scrapYard) {
-        scrapYard.assignToCommandCore(this.worldPosition);
-    }
-
-    // A lit base so the worksite reads as a tended building on the plaza.
-    safePlace(serverLevel, pos.offset(1, 0, 0), Blocks.LANTERN.defaultBlockState());
-    safePlace(serverLevel, pos.offset(-1, 0, 0), Blocks.LANTERN.defaultBlockState());
 }
 
 // Settles a starting population inside a freshly generated town so it reads as inhabited from the
@@ -2432,7 +2408,7 @@ private void spawnStartingPopulation(ServerLevel serverLevel, int count) {
             continue;
         }
 
-        ImperialCitizenEntity citizen = ExampleMod.IMPERIAL_CITIZEN.get().create(serverLevel);
+        ImperialCitizenEntity citizen = FCRegistry.IMPERIAL_CITIZEN.get().create(serverLevel);
         if (citizen == null) {
             break;
         }
@@ -2449,622 +2425,6 @@ private void spawnStartingPopulation(ServerLevel serverLevel, int count) {
         serverLevel.addFreshEntity(citizen);
         spawned++;
     }
-}
-
-// ============================ HIVE CITY (autonomous capitals) ============================
-// A gigantic tiered hive instead of a single walled fort: three concentric ring-districts standing
-// for the social strata of a hive world — the sprawling UNDERHIVE on the outside (short, dense,
-// smoky hab-blocks in rough cobbled deepslate), the HIVE CITY in the middle (taller habs + the
-// manufactorum worksites, deepslate brick), and the SPIRE at the heart (the keep + a colossal
-// central spire, gilded blackstone). Each tier has its own curtain wall, towers and gates, all
-// joined by the lamp-lit central avenues. Uses a wide palette of blocks and scales with city level.
-private int hiveOuterRadius() {
-    return 40 + this.cityLevel * 6;   // L4 -> 64 (a 128-wide city). Tunable; watch login cost.
-}
-
-private void buildHiveCity(ServerLevel serverLevel) {
-    int outer = hiveOuterRadius();
-    int mid = outer * 11 / 16;
-    int inner = outer * 6 / 16;
-    int wallHeight = 6 + this.cityLevel;
-
-    // Clear trees/plants across the whole footprint so nothing pokes through the hive.
-    WorldGenPlacement.clearVegetation(serverLevel, this.worldPosition, outer + 4, 16);
-
-    // Pave the entire interior, with a richer floor toward the centre.
-    buildHiveFloor(serverLevel, outer, mid, inner);
-
-    // Three tier walls: underhive -> hive city -> spire.
-    buildRingWall(serverLevel, outer, wallHeight,
-            Blocks.COBBLED_DEEPSLATE.defaultBlockState(),
-            Blocks.DEEPSLATE_TILES.defaultBlockState(),
-            Blocks.COBBLED_DEEPSLATE_WALL.defaultBlockState());
-    buildRingWall(serverLevel, mid, wallHeight,
-            Blocks.DEEPSLATE_BRICKS.defaultBlockState(),
-            Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState(),
-            Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
-    buildRingWall(serverLevel, inner, Math.max(4, wallHeight - 1),
-            Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState(),
-            Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState(),
-            Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
-
-    // Corner towers on the two outer rings.
-    buildRingTowers(serverLevel, outer, clampHeight(serverLevel, wallHeight + 8));
-    buildRingTowers(serverLevel, mid, clampHeight(serverLevel, wallHeight + 12));
-
-    // Districts: dense, short, smoky underhive; taller hive-city hab-blocks within.
-    buildRingDistrict(serverLevel, mid + 3, outer - 3, 3, 4, 2);
-    buildRingDistrict(serverLevel, inner + 3, mid - 3, 5, 7, 4);
-
-    // The grand lamp-lit avenues crossing the whole hive (aligned with every tier gate).
-    buildCentralRoad(serverLevel, outer);
-
-    // The Spire: the keep around the Core and a colossal central spire towering over everything.
-    buildCentralKeep(serverLevel, CENTRAL_KEEP_HALF, clampHeight(serverLevel, wallHeight + 4));
-    int spireHeight = clampHeight(serverLevel, wallHeight + 40 + this.cityLevel * 6) - this.worldPosition.getY();
-    buildCentralSpire(serverLevel, this.worldPosition.offset(-1, 0, -6), Math.max(20, spireHeight));
-}
-
-// Clamps an absolute build height to stay under the (low) planet build ceiling so spires/towers
-// aren't silently chopped off at the top of the world.
-private int clampHeight(ServerLevel serverLevel, int desiredAboveGround) {
-    int ceiling = serverLevel.getMaxBuildHeight() - 2;
-    return Math.min(this.worldPosition.getY() + desiredAboveGround, ceiling) - this.worldPosition.getY();
-}
-
-// Paves the whole square interior at floor level, choosing a richer palette toward the centre.
-private void buildHiveFloor(ServerLevel serverLevel, int outer, int mid, int inner) {
-    for (int x = -outer; x <= outer; x++) {
-        for (int z = -outer; z <= outer; z++) {
-            int ring = Math.max(Math.abs(x), Math.abs(z));
-            boolean even = ((x + z) & 1) == 0;
-
-            BlockState tile;
-            if (ring <= inner) {
-                tile = even ? Blocks.GILDED_BLACKSTONE.defaultBlockState() : Blocks.POLISHED_BLACKSTONE.defaultBlockState();
-            } else if (ring <= mid) {
-                tile = even ? Blocks.STONE_BRICKS.defaultBlockState() : Blocks.POLISHED_BLACKSTONE.defaultBlockState();
-            } else {
-                tile = even ? Blocks.COBBLED_DEEPSLATE.defaultBlockState() : Blocks.DEEPSLATE_BRICKS.defaultBlockState();
-            }
-
-            BlockPos floor = this.worldPosition.offset(x, -1, z);
-            serverLevel.setBlock(floor, tile, 3);
-
-            BlockPos below = floor.below();
-            if (serverLevel.getBlockState(below).isAir()
-                    || !serverLevel.getBlockState(below).isCollisionShapeFullBlock(serverLevel, below)) {
-                serverLevel.setBlock(below, Blocks.COBBLED_DEEPSLATE.defaultBlockState(), 3);
-            }
-        }
-    }
-}
-
-// A square curtain wall of the given materials, gated on all four avenues, with buttress pillars
-// (lantern-topped) and crenellations.
-private void buildRingWall(ServerLevel serverLevel, int radius, int height, BlockState wall, BlockState pillar, BlockState crenel) {
-    for (int x = -radius; x <= radius; x++) {
-        for (int z = -radius; z <= radius; z++) {
-            boolean isWall = Math.abs(x) == radius || Math.abs(z) == radius;
-            if (!isWall) {
-                continue;
-            }
-
-            boolean gate = (Math.abs(x) <= 1 && Math.abs(z) == radius) || (Math.abs(z) <= 1 && Math.abs(x) == radius);
-            boolean isPillar = (Math.abs(z) == radius && Math.floorMod(x, 6) == 0)
-                    || (Math.abs(x) == radius && Math.floorMod(z, 6) == 0);
-            int top = isPillar ? height + 2 : height;
-
-            for (int y = 0; y < top; y++) {
-                if (gate && y < 5) {
-                    continue;
-                }
-                safePlace(serverLevel, this.worldPosition.offset(x, y, z), isPillar ? pillar : wall);
-            }
-
-            if (isPillar) {
-                safePlace(serverLevel, this.worldPosition.offset(x, top, z), Blocks.LANTERN.defaultBlockState());
-            } else if (!gate && ((x + z) & 1) == 0) {
-                safePlace(serverLevel, this.worldPosition.offset(x, height, z), crenel);
-            }
-        }
-    }
-}
-
-private void buildRingTowers(ServerLevel serverLevel, int radius, int height) {
-    buildTower(serverLevel, this.worldPosition.offset(radius, 0, radius), height);
-    buildTower(serverLevel, this.worldPosition.offset(-radius, 0, radius), height);
-    buildTower(serverLevel, this.worldPosition.offset(radius, 0, -radius), height);
-    buildTower(serverLevel, this.worldPosition.offset(-radius, 0, -radius), height);
-}
-
-// Fills the square annulus between rInner and rOuter with hab-blocks of the given height range,
-// leaving the avenues open and scattering courtyards, subsidiary spires and smoking chimneys.
-private void buildRingDistrict(ServerLevel serverLevel, int rInner, int rOuter, int minHeight, int maxHeight, int smokeChance) {
-    int cell = 9;
-
-    for (int sx = -rOuter; sx + 7 <= rOuter; sx += cell) {
-        for (int sz = -rOuter; sz + 7 <= rOuter; sz += cell) {
-            int cx = sx + 3;
-            int cz = sz + 3;
-            int ring = Math.max(Math.abs(cx), Math.abs(cz));
-
-            // Stay within this tier's band.
-            if (ring < rInner || ring > rOuter) {
-                continue;
-            }
-
-            // Keep the central avenues (and their gates) clear.
-            if (Math.abs(cx) <= 2 || Math.abs(cz) <= 2) {
-                continue;
-            }
-
-            // Open courtyards break up the density.
-            if (serverLevel.random.nextInt(6) == 0) {
-                placeLampPost(serverLevel, this.worldPosition.offset(cx, 0, cz), 4);
-                continue;
-            }
-
-            // The odd subsidiary hive spire for vertical scale.
-            if (serverLevel.random.nextInt(9) == 0) {
-                buildTower(serverLevel, this.worldPosition.offset(sx + 1, 0, sz + 1),
-                        clampHeight(serverLevel, 14 + serverLevel.random.nextInt(14)));
-                continue;
-            }
-
-            int w = 5 + serverLevel.random.nextInt(3);
-            int d = 5 + serverLevel.random.nextInt(3);
-            int height = minHeight + serverLevel.random.nextInt(maxHeight - minHeight + 1);
-
-            buildSimpleHouse(serverLevel, this.worldPosition.offset(sx, 0, sz), w, d, height);
-            placeLampPost(serverLevel, this.worldPosition.offset(sx - 1, 0, sz - 1), 3);
-
-            if (serverLevel.random.nextInt(smokeChance) == 0) {
-                placeSmokestack(serverLevel, this.worldPosition.offset(sx + 1, height, sz + 1), 3 + serverLevel.random.nextInt(3));
-            }
-        }
-    }
-}
-
-// ===================== SIMPLE VILLAGE (lightweight, for testing systems) =====================
-// A plain Minecraft-style village instead of the heavy procedural hive: a loose ring of small
-// timber houses (each with a bed), the manufactorum worksites, and a couple of torches — cheap to
-// generate so the autonomous systems can be tested. The owner will supply a proper city model later;
-// the full hive builder (below) is kept but no longer called.
-private void buildSimpleSettlement(ServerLevel serverLevel) {
-    int radius = 20;
-    WorldGenPlacement.clearVegetation(serverLevel, this.worldPosition, radius + 2, 8);
-
-    int houses = 8;
-    for (int k = 0; k < houses; k++) {
-        double ang = 2.0 * Math.PI * k / houses;
-        int rr = 9 + (k % 2) * 4;
-        int dx = (int) Math.round(Math.cos(ang) * rr);
-        int dz = (int) Math.round(Math.sin(ang) * rr);
-        buildVillagerHouse(serverLevel, this.worldPosition.offset(dx - 2, 0, dz - 2), 5, 5);
-    }
-
-    // The worksites that employ the citizens (kept close to the Core).
-    placeWorksiteAt(serverLevel, this.worldPosition.offset(6, 0, 0), ExampleMod.IMPERIAL_FARM.get());
-    placeWorksiteAt(serverLevel, this.worldPosition.offset(-6, 0, 0), ExampleMod.IMPERIAL_MINE.get());
-    placeWorksiteAt(serverLevel, this.worldPosition.offset(0, 0, 6), ExampleMod.IMPERIAL_FORGE.get());
-    placeWorksiteAt(serverLevel, this.worldPosition.offset(0, 0, -6), ExampleMod.IMPERIAL_SCRAP_YARD.get());
-}
-
-// A small plains-village-style house: cobblestone footing, oak-plank walls with log corners, a glass
-// window, an open doorway, a plank roof, a bed and torches.
-private void buildVillagerHouse(ServerLevel serverLevel, BlockPos start, int width, int depth) {
-    int height = 4;
-    BlockState wall = Blocks.OAK_PLANKS.defaultBlockState();
-    BlockState post = Blocks.OAK_LOG.defaultBlockState();
-    BlockState window = Blocks.GLASS_PANE.defaultBlockState();
-
-    for (int x = 0; x < width; x++) {
-        for (int z = 0; z < depth; z++) {
-            serverLevel.setBlock(start.offset(x, -1, z), Blocks.COBBLESTONE.defaultBlockState(), 3);
-
-            boolean border = x == 0 || z == 0 || x == width - 1 || z == depth - 1;
-            boolean isCorner = (x == 0 || x == width - 1) && (z == 0 || z == depth - 1);
-
-            if (border) {
-                for (int y = 0; y < height; y++) {
-                    boolean doorway = z == 0 && x == width / 2 && y <= 1;
-                    if (doorway) {
-                        continue;
-                    }
-                    boolean win = !isCorner && y == 2 && (x == width / 2 || z == depth / 2);
-                    safePlace(serverLevel, start.offset(x, y, z), isCorner ? post : (win ? window : wall));
-                }
-            }
-        }
-    }
-
-    // Plank roof with a one-block overhang.
-    for (int x = -1; x <= width; x++) {
-        for (int z = -1; z <= depth; z++) {
-            safePlace(serverLevel, start.offset(x, height, z), Blocks.OAK_PLANKS.defaultBlockState());
-        }
-    }
-
-    placeBed(serverLevel, start.offset(1, 0, 1), Direction.SOUTH);
-    safePlace(serverLevel, start.offset(width - 2, 0, depth - 2), Blocks.TORCH.defaultBlockState());
-    safePlace(serverLevel, start.offset(2, 0, 1), Blocks.TORCH.defaultBlockState());
-}
-
-// ======================= VERTICAL HIVE (round, stacked social tiers) =======================
-// A towering round hive of five stacked tiers, each smaller and ~25 blocks higher than the last,
-// climbed by ramped stairs around the central tower:
-//   T1 (ground)  — robust outer wall; the worksites and most hab-blocks.
-//   T2 (+25)     — fewer habs + aerial bridges between the high places.
-//   T3 (+50)     — scholars' tier: libraries and alchemist/witch houses.
-//   T4 (+75)     — an enclosed bastion: the command of expeditions, no homes.
-//   T5 (+100)    — a great cathedral with a throne room, crowned by a spire.
-// Needs the raised planet ceiling (height 256). Heavy to build — seeded sparingly.
-// Radii of the five tier walls (outer -> inner). Gaps are >= the tier step + 2 so a 1:1 staircase
-// climbing one tier always lands exactly on the next floor.
-private static final int[] HIVE_TIER_RADIUS = {120, 93, 66, 39, 12};
-private static final int HIVE_TIER_STEP = 25;
-
-private void buildVerticalHive(ServerLevel serverLevel) {
-    int outer = HIVE_TIER_RADIUS[0];
-    int tiers = HIVE_TIER_RADIUS.length;
-    int[] baseY = new int[tiers];
-    for (int i = 0; i < tiers; i++) {
-        baseY[i] = i * HIVE_TIER_STEP;
-    }
-
-    WorldGenPlacement.clearVegetation(serverLevel, this.worldPosition, outer + 4, 12);
-
-    // Floors: each tier's floor spans only its OWN radius, so the ring of the tier below stays OPEN
-    // to the sky (an open-topped terrace) instead of being roofed over into a dark hall.
-    fillDisc(serverLevel, -1, HIVE_TIER_RADIUS[0],
-            Blocks.COBBLED_DEEPSLATE.defaultBlockState(), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
-    for (int i = 1; i < tiers; i++) {
-        boolean high = i >= 3;
-        fillDisc(serverLevel, baseY[i] - 1, HIVE_TIER_RADIUS[i],
-                high ? Blocks.POLISHED_BLACKSTONE.defaultBlockState() : Blocks.STONE_BRICKS.defaultBlockState(),
-                high ? Blocks.GILDED_BLACKSTONE.defaultBlockState() : Blocks.POLISHED_BLACKSTONE.defaultBlockState());
-    }
-
-    // Outer wall (double, robust) and the nested tower walls rising ever higher.
-    buildCircleWall(serverLevel, 0, HIVE_TIER_STEP + 2, HIVE_TIER_RADIUS[0],
-            Blocks.DEEPSLATE_BRICKS.defaultBlockState(), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState(), true);
-    buildCircleWall(serverLevel, 0, HIVE_TIER_STEP + 2, HIVE_TIER_RADIUS[0] - 1,
-            Blocks.COBBLED_DEEPSLATE.defaultBlockState(), Blocks.COBBLED_DEEPSLATE_WALL.defaultBlockState(), false);
-    for (int i = 1; i < tiers; i++) {
-        buildCircleWall(serverLevel, 0, baseY[i] + HIVE_TIER_STEP + 2, HIVE_TIER_RADIUS[i],
-                Blocks.DEEPSLATE_BRICKS.defaultBlockState(), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState(), true);
-    }
-
-    // Straight 1:1 staircases climbing exactly from each tier floor to the next (landing carved
-    // through the inner wall), on the east face.
-    for (int i = 0; i < tiers - 1; i++) {
-        buildRampStairs(serverLevel, baseY[i], baseY[i + 1], HIVE_TIER_RADIUS[i + 1], HIVE_TIER_RADIUS[i]);
-    }
-
-    // Tier contents.
-    placeHiveWorksites(serverLevel, HIVE_TIER_RADIUS[1] + 4, baseY[0]);
-    placeHousesOnRing(serverLevel, HIVE_TIER_RADIUS[1] + 3, HIVE_TIER_RADIUS[0] - 2, baseY[0], 16, 3, 4);
-    placeHousesOnRing(serverLevel, HIVE_TIER_RADIUS[2] + 3, HIVE_TIER_RADIUS[1] - 2, baseY[1], 8, 4, 5);
-    buildTierBridges(serverLevel, baseY[1], HIVE_TIER_RADIUS[1], HIVE_TIER_RADIUS[0]);
-    placeScholarHouses(serverLevel, HIVE_TIER_RADIUS[3] + 2, HIVE_TIER_RADIUS[2] - 2, baseY[2], 6);
-    decorateBastion(serverLevel, HIVE_TIER_RADIUS[4], HIVE_TIER_RADIUS[3], baseY[3]);
-    buildCathedral(serverLevel, HIVE_TIER_RADIUS[4], baseY[4]);
-
-    // Radial soldier bridges crossing the whole hive (the green spokes), and one grand staircase
-    // climbing straight from outside the walls up to the cathedral tier (the purple stair).
-    buildRadialBridges(serverLevel, baseY[2], 6, HIVE_TIER_RADIUS[0]);
-    buildGrandStaircase(serverLevel, baseY[4]);
-}
-
-// Four elevated railed catwalks (N/S/E/W) for soldiers to cross the hive between the high tiers.
-private void buildRadialBridges(ServerLevel serverLevel, int y, int fromRadius, int toRadius) {
-    BlockState deck = Blocks.POLISHED_BLACKSTONE.defaultBlockState();
-    BlockState rail = Blocks.IRON_BARS.defaultBlockState();
-
-    for (int r = fromRadius; r <= toRadius; r++) {
-        for (int w = -1; w <= 1; w++) {
-            setStruct(serverLevel, r, y - 1, w, deck);
-            setStruct(serverLevel, -r, y - 1, w, deck);
-            setStruct(serverLevel, w, y - 1, r, deck);
-            setStruct(serverLevel, w, y - 1, -r, deck);
-        }
-
-        setStruct(serverLevel, r, y, 2, rail);
-        setStruct(serverLevel, r, y, -2, rail);
-        setStruct(serverLevel, -r, y, 2, rail);
-        setStruct(serverLevel, -r, y, -2, rail);
-        setStruct(serverLevel, 2, y, r, rail);
-        setStruct(serverLevel, -2, y, r, rail);
-        setStruct(serverLevel, 2, y, -r, rail);
-        setStruct(serverLevel, -2, y, -r, rail);
-
-        if (r % 8 == 0) {
-            setStruct(serverLevel, r, y + 1, 0, Blocks.LANTERN.defaultBlockState());
-            setStruct(serverLevel, -r, y + 1, 0, Blocks.LANTERN.defaultBlockState());
-            setStruct(serverLevel, 0, y + 1, r, Blocks.LANTERN.defaultBlockState());
-            setStruct(serverLevel, 0, y + 1, -r, Blocks.LANTERN.defaultBlockState());
-        }
-    }
-}
-
-// A monumental staircase climbing straight from the ground outside the west wall up to the cathedral
-// tier — one block of rise per step, so it is fully walkable, with railings.
-private void buildGrandStaircase(ServerLevel serverLevel, int topY) {
-    BlockState support = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
-    for (int s = 0; s <= topY; s++) {
-        int x = -(topY - s);   // starts well outside the outer wall, climbs in to the centre
-        int y = s;
-
-        for (int w = -1; w <= 1; w++) {
-            setStruct(serverLevel, x, y - 1, w, support);
-            serverLevel.setBlock(this.worldPosition.offset(x, y, w),
-                    Blocks.POLISHED_BLACKSTONE_BRICK_STAIRS.defaultBlockState()
-                            .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST), 3);
-        }
-        setStruct(serverLevel, x, y, -2, Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
-        setStruct(serverLevel, x, y, 2, Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
-    }
-}
-
-// Posts a guard (the city's themed troop) at each cardinal gate of every tier wall.
-private void spawnGateGuards(ServerLevel serverLevel) {
-    int tiers = HIVE_TIER_RADIUS.length;
-    EntityType<? extends AbstractImperialTroopEntity> themedType = getThemedTroopType(getCityType());
-
-    for (int i = 0; i < tiers; i++) {
-        int r = HIVE_TIER_RADIUS[i];
-        int y = i * HIVE_TIER_STEP;
-        spawnGuardAt(serverLevel, themedType, 0, y, r);
-        spawnGuardAt(serverLevel, themedType, 0, y, -r);
-        spawnGuardAt(serverLevel, themedType, r, y, 0);
-        spawnGuardAt(serverLevel, themedType, -r, y, 0);
-    }
-}
-
-private void spawnGuardAt(ServerLevel serverLevel, EntityType<? extends AbstractImperialTroopEntity> themedType, int dx, int y, int dz) {
-    double px = this.worldPosition.getX() + dx + 0.5D;
-    double py = this.worldPosition.getY() + y;
-    double pz = this.worldPosition.getZ() + dz + 0.5D;
-
-    if (themedType != null) {
-        spawnThemedTroopAt(serverLevel, themedType, px, py, pz, 0.0F, 0.0F);
-        return;
-    }
-
-    GuardsmanEntity guardsman = ExampleMod.GUARDSMAN.get().create(serverLevel);
-    if (guardsman == null) {
-        return;
-    }
-    guardsman.moveTo(px, py, pz, 0.0F, 0.0F);
-    guardsman.assignToCommandCore(this.worldPosition);
-    guardsman.assignRandomChapter();
-    guardsman.initializeFromCity(getStartingGuardsmanRank(), getCityType());
-    serverLevel.addFreshEntity(guardsman);
-}
-
-// Forcefully sets a structural block (never the Core), in tier-relative coords.
-private void setStruct(ServerLevel serverLevel, int dx, int y, int dz, BlockState state) {
-    BlockPos pos = this.worldPosition.offset(dx, y, dz);
-    if (!pos.equals(this.worldPosition)) {
-        serverLevel.setBlock(pos, state, 3);
-    }
-}
-
-private void fillDisc(ServerLevel serverLevel, int cy, int radius, BlockState a, BlockState b) {
-    int r2 = radius * radius;
-    for (int dx = -radius; dx <= radius; dx++) {
-        for (int dz = -radius; dz <= radius; dz++) {
-            if (dx * dx + dz * dz <= r2) {
-                setStruct(serverLevel, dx, cy, dz, ((dx + dz) & 1) == 0 ? a : b);
-            }
-        }
-    }
-}
-
-// A round curtain wall (1-thick midpoint circle) from baseY up `height`, with a south gate, crenels
-// and, optionally, lanterns on top.
-private void buildCircleWall(ServerLevel serverLevel, int baseY, int height, int radius, BlockState wall, BlockState crenel, boolean lit) {
-    for (int dx = -radius; dx <= radius; dx++) {
-        for (int dz = -radius; dz <= radius; dz++) {
-            if ((int) Math.round(Math.sqrt(dx * dx + dz * dz)) != radius) {
-                continue;
-            }
-
-            // Four cardinal gates (N/S/E/W) so the radial bridges and gate guards line up.
-            boolean gate = Math.abs(dx) <= 1 || Math.abs(dz) <= 1;
-
-            for (int y = 0; y < height; y++) {
-                if (gate && y < 5) {
-                    continue;
-                }
-                setStruct(serverLevel, dx, baseY + y, dz, wall);
-            }
-
-            if (!gate && ((dx + dz) & 1) == 0) {
-                setStruct(serverLevel, dx, baseY + height, dz, crenel);
-            }
-            if (lit && Math.floorMod(dx * 3 + dz, 9) == 0) {
-                setStruct(serverLevel, dx, baseY + height + 1, dz, Blocks.LANTERN.defaultBlockState());
-            }
-        }
-    }
-}
-
-// A straight 1:1 staircase on the east face climbing exactly from one tier floor (fromY) to the
-// next (toY): it starts just inside the outer wall and rises one block per step moving inward, so it
-// lands precisely at the inner tier's floor. A short landing then carves a doorway through the inner
-// wall so you walk straight onto the next tier.
-private void buildRampStairs(ServerLevel serverLevel, int fromY, int toY, int innerRadius, int outerRadius) {
-    BlockState support = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
-    BlockState rail = Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState();
-    int rise = toY - fromY;
-    int startD = outerRadius - 2;               // just inside the tier's outer wall
-
-    for (int s = 0; s <= rise; s++) {
-        int y = fromY + s;
-        int d = startD - s;                     // move inward as we climb (1 in : 1 up)
-
-        for (int w = -1; w <= 1; w++) {
-            setStruct(serverLevel, d, y - 1, w, support);
-            serverLevel.setBlock(this.worldPosition.offset(d, y, w),
-                    Blocks.DEEPSLATE_TILE_STAIRS.defaultBlockState()
-                            .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST), 3);
-        }
-        setStruct(serverLevel, d, y, -2, rail);
-        setStruct(serverLevel, d, y, 2, rail);
-    }
-
-    // Landing bridging to the inner wall, and a 3-wide doorway carved through it onto the next tier.
-    int topD = startD - rise;
-    for (int d = innerRadius; d <= topD; d++) {
-        for (int w = -1; w <= 1; w++) {
-            setStruct(serverLevel, d, toY - 1, w, support);
-        }
-    }
-    for (int w = -1; w <= 1; w++) {
-        for (int yy = 0; yy <= 3; yy++) {
-            setStruct(serverLevel, innerRadius, toY + yy, w, Blocks.AIR.defaultBlockState());
-        }
-    }
-}
-
-// Places a ring of hab-blocks around the tower at a given height.
-private void placeHousesOnRing(ServerLevel serverLevel, int radiusIn, int radiusOut, int y, int count, int minHeight, int maxHeight) {
-    int rr = (radiusIn + radiusOut) / 2;
-    for (int k = 0; k < count; k++) {
-        double ang = 2.0 * Math.PI * k / count;
-        int dx = (int) Math.round(Math.cos(ang) * rr);
-        int dz = (int) Math.round(Math.sin(ang) * rr);
-        int w = 5 + serverLevel.random.nextInt(2);
-        int d = 5 + serverLevel.random.nextInt(2);
-        int h = minHeight + serverLevel.random.nextInt(maxHeight - minHeight + 1);
-
-        buildSimpleHouse(serverLevel, this.worldPosition.offset(dx - w / 2, y, dz - d / 2), w, d, h);
-    }
-}
-
-private void placeHiveWorksites(ServerLevel serverLevel, int radius, int y) {
-    placeWorksiteAt(serverLevel, this.worldPosition.offset(radius, y, 0), ExampleMod.IMPERIAL_FARM.get());
-    placeWorksiteAt(serverLevel, this.worldPosition.offset(-radius, y, 0), ExampleMod.IMPERIAL_MINE.get());
-    placeWorksiteAt(serverLevel, this.worldPosition.offset(0, y, radius), ExampleMod.IMPERIAL_FORGE.get());
-    placeWorksiteAt(serverLevel, this.worldPosition.offset(0, y, -radius), ExampleMod.IMPERIAL_SCRAP_YARD.get());
-}
-
-private void placeWorksiteAt(ServerLevel serverLevel, BlockPos pos, net.minecraft.world.level.block.Block block) {
-    serverLevel.setBlock(pos, block.defaultBlockState(), 3);
-    BlockEntity be = serverLevel.getBlockEntity(pos);
-    if (be instanceof ImperialFarmBlockEntity farm) {
-        farm.assignToCommandCore(this.worldPosition);
-    } else if (be instanceof ImperialMineBlockEntity mine) {
-        mine.assignToCommandCore(this.worldPosition);
-    } else if (be instanceof ImperialForgeBlockEntity forge) {
-        forge.assignToCommandCore(this.worldPosition);
-    } else if (be instanceof ImperialScrapYardBlockEntity scrapYard) {
-        scrapYard.assignToCommandCore(this.worldPosition);
-    }
-}
-
-// A couple of railed walkways spanning the high terrace.
-private void buildTierBridges(ServerLevel serverLevel, int y, int towerRadius, int outerRadius) {
-    for (int d = towerRadius; d <= outerRadius; d++) {
-        for (int w = -1; w <= 1; w++) {
-            setStruct(serverLevel, d, y - 1, w, Blocks.POLISHED_BLACKSTONE.defaultBlockState());
-            setStruct(serverLevel, -d, y - 1, w, Blocks.POLISHED_BLACKSTONE.defaultBlockState());
-        }
-        setStruct(serverLevel, d, y, 2, Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
-        setStruct(serverLevel, d, y, -2, Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
-        setStruct(serverLevel, -d, y, 2, Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
-        setStruct(serverLevel, -d, y, -2, Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
-    }
-}
-
-// The scholars' tier: alternating libraries (bookshelves + lectern) and alchemist/witch houses
-// (brewing stand, cauldron, anatomy slab) around the ring.
-private void placeScholarHouses(ServerLevel serverLevel, int radiusIn, int radiusOut, int y, int count) {
-    int rr = (radiusIn + radiusOut) / 2;
-    for (int k = 0; k < count; k++) {
-        double ang = 2.0 * Math.PI * k / count;
-        int dx = (int) Math.round(Math.cos(ang) * rr);
-        int dz = (int) Math.round(Math.sin(ang) * rr);
-        int w = 6;
-        int d = 6;
-        BlockPos start = this.worldPosition.offset(dx - w / 2, y, dz - d / 2);
-        buildSimpleHouse(serverLevel, start, w, d, 5);
-
-        if ((k & 1) == 0) {
-            furnishLibrary(serverLevel, start, w, d);
-        } else {
-            furnishWitchHouse(serverLevel, start, w, d);
-        }
-    }
-}
-
-private void furnishLibrary(ServerLevel serverLevel, BlockPos start, int w, int d) {
-    for (int z = 1; z < d - 1; z++) {
-        safePlace(serverLevel, start.offset(1, 0, z), Blocks.BOOKSHELF.defaultBlockState());
-        safePlace(serverLevel, start.offset(1, 1, z), Blocks.BOOKSHELF.defaultBlockState());
-        safePlace(serverLevel, start.offset(w - 2, 0, z), Blocks.BOOKSHELF.defaultBlockState());
-        safePlace(serverLevel, start.offset(w - 2, 1, z), Blocks.BOOKSHELF.defaultBlockState());
-    }
-    safePlace(serverLevel, start.offset(w / 2, 0, d / 2), Blocks.LECTERN.defaultBlockState());
-}
-
-private void furnishWitchHouse(ServerLevel serverLevel, BlockPos start, int w, int d) {
-    safePlace(serverLevel, start.offset(1, 0, 1), Blocks.BREWING_STAND.defaultBlockState());
-    safePlace(serverLevel, start.offset(2, 0, 1), Blocks.CAULDRON.defaultBlockState());
-    safePlace(serverLevel, start.offset(w - 2, 0, 1), Blocks.CRAFTING_TABLE.defaultBlockState());
-    safePlace(serverLevel, start.offset(1, 0, d - 2), Blocks.BONE_BLOCK.defaultBlockState());
-    safePlace(serverLevel, start.offset(2, 0, d - 2), Blocks.SOUL_LANTERN.defaultBlockState());
-}
-
-// The bastion ring (between inner tower and tier-4 wall) lit and dressed as a command level.
-private void decorateBastion(ServerLevel serverLevel, int innerRadius, int outerRadius, int y) {
-    int rr = (innerRadius + outerRadius) / 2;
-    for (int k = 0; k < 8; k++) {
-        double ang = 2.0 * Math.PI * k / 8;
-        int dx = (int) Math.round(Math.cos(ang) * rr);
-        int dz = (int) Math.round(Math.sin(ang) * rr);
-        safePlace(serverLevel, this.worldPosition.offset(dx, y, dz), Blocks.LANTERN.defaultBlockState());
-        safePlace(serverLevel, this.worldPosition.offset(dx, y, dz).above(2), Blocks.LECTERN.defaultBlockState());
-    }
-}
-
-// The crowning cathedral: tall lancet windows punched into the spire wall, a throne on a gilded
-// dais at the north end, and a soaring central spire above.
-private void buildCathedral(ServerLevel serverLevel, int radius, int baseY) {
-    // Tall windows.
-    for (int dx = -radius; dx <= radius; dx++) {
-        for (int dz = -radius; dz <= radius; dz++) {
-            if ((int) Math.round(Math.sqrt(dx * dx + dz * dz)) != radius) {
-                continue;
-            }
-            if (Math.floorMod(dx + dz, 4) == 0) {
-                for (int y = 3; y <= 8; y++) {
-                    setStruct(serverLevel, dx, baseY + y, dz, Blocks.IRON_BARS.defaultBlockState());
-                }
-            }
-        }
-    }
-
-    // Gilded dais + throne at the north end, facing the gate (south).
-    int tz = -(radius - 3);
-    for (int dx = -2; dx <= 2; dx++) {
-        for (int dz = -1; dz <= 1; dz++) {
-            setStruct(serverLevel, dx, baseY - 1, tz + dz, Blocks.GILDED_BLACKSTONE.defaultBlockState());
-        }
-    }
-    serverLevel.setBlock(this.worldPosition.offset(0, baseY, tz),
-            Blocks.POLISHED_BLACKSTONE_BRICK_STAIRS.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH), 3);
-    setStruct(serverLevel, 0, baseY + 1, tz - 1, Blocks.GOLD_BLOCK.defaultBlockState());
-    setStruct(serverLevel, -1, baseY, tz - 1, Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState());
-    setStruct(serverLevel, 1, baseY, tz - 1, Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState());
-    safePlace(serverLevel, this.worldPosition.offset(-2, baseY + 1, tz), Blocks.RED_BANNER.defaultBlockState());
-    safePlace(serverLevel, this.worldPosition.offset(2, baseY + 1, tz), Blocks.RED_BANNER.defaultBlockState());
-
-    // A soaring spire crowns the whole hive.
-    int spireTop = Math.min(this.worldPosition.getY() + baseY + 40, serverLevel.getMaxBuildHeight() - 2);
-    buildCentralSpire(serverLevel, this.worldPosition.offset(-1, baseY, -2), spireTop - (this.worldPosition.getY() + baseY));
 }
 
 private void buildCityStructure(ServerLevel serverLevel) {
@@ -4037,6 +3397,16 @@ public ImperialCityType getCityType() {
     return this.cityType == null ? ImperialCityType.CIVILISED : this.cityType;
 }
 
+// Size axis of this settlement (separate from the theme). Set at founding by the seeder.
+public SettlementScale getSettlementScale() {
+    return this.settlementScale;
+}
+
+public void setSettlementScale(SettlementScale scale) {
+    this.settlementScale = scale == null ? SettlementScale.TOWN : scale;
+    setChanged();
+}
+
 public int getCityTypeOrdinal() {
     return getCityType().ordinal();
 }
@@ -4160,7 +3530,7 @@ public void giveBuilderTool(Player player) {
         return;
     }
 
-    ItemStack tool = new ItemStack(ExampleMod.CITY_BUILDER_TOOL.get());
+    ItemStack tool = new ItemStack(FCRegistry.CITY_BUILDER_TOOL.get());
     CityBuilderToolItem.bindToCore(tool, this.worldPosition);
 
     if (!player.getInventory().add(tool)) {
@@ -4470,6 +3840,8 @@ protected void saveAdditional(CompoundTag tag) {
         tag.putString("CityType", this.cityType.name());
     }
 
+    tag.putString("SettlementScale", this.settlementScale.name());
+
     if (this.ownerUUID != null) {
         tag.putUUID("OwnerUUID", this.ownerUUID);
     }
@@ -4528,6 +3900,7 @@ public void load(CompoundTag tag) {
     this.ownerName = tag.getString("OwnerName");
 
     this.cityType = tag.contains("CityType") ? ImperialCityType.fromName(tag.getString("CityType")) : null;
+    this.settlementScale = SettlementScale.fromName(tag.getString("SettlementScale"));
 
     if (this.baseName == null || this.baseName.isEmpty()) {
         this.baseName = "Imperial Outpost";

@@ -26,7 +26,7 @@ public class CityCommanderEntity extends AbstractImperialTroopEntity {
     public CityCommanderEntity(EntityType<? extends CityCommanderEntity> entityType, Level level) {
         super(entityType, level);
 
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.CHAINSWORD.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(FCRegistry.CHAINSWORD.get()));
         this.setCustomName(Component.literal("Lord Commander"));
         this.setCustomNameVisible(true);
     }

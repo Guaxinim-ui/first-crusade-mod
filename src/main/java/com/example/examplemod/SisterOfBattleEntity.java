@@ -23,7 +23,7 @@ public class SisterOfBattleEntity extends AbstractImperialTroopEntity implements
     public SisterOfBattleEntity(EntityType<? extends SisterOfBattleEntity> entityType, Level level) {
         super(entityType, level);
 
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.LASGUN.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(FCRegistry.LASGUN.get()));
         this.setCustomName(Component.literal("Sister of Battle"));
         this.setCustomNameVisible(true);
     }

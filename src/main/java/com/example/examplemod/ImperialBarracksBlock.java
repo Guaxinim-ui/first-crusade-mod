@@ -37,7 +37,7 @@ public class ImperialBarracksBlock extends BaseEntityBlock {
 
         return createTickerHelper(
                 blockEntityType,
-                ExampleMod.IMPERIAL_BARRACKS_BLOCK_ENTITY.get(),
+                FCRegistry.IMPERIAL_BARRACKS_BLOCK_ENTITY.get(),
                 ImperialBarracksBlockEntity::serverTick
         );
     }

@@ -38,7 +38,7 @@ public class FactionSelectScreen extends Screen {
     }
 
     private void choose(PlayerFaction faction) {
-        ExampleMod.NETWORK_CHANNEL.sendToServer(new SelectFactionPacket(faction));
+        FirstCrusadeNetwork.CHANNEL.sendToServer(new SelectFactionPacket(faction));
 
         if (this.minecraft != null) {
             this.minecraft.setScreen(null);

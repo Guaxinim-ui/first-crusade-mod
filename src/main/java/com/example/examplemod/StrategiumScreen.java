@@ -31,7 +31,7 @@ public class StrategiumScreen extends AbstractContainerScreen<StrategiumMenu> {
         this.researchButton = addRenderableWidget(
                 Button.builder(
                         Component.translatable("gui.firstcrusade.strategium.research"),
-                        button -> ExampleMod.NETWORK_CHANNEL.sendToServer(
+                        button -> FirstCrusadeNetwork.CHANNEL.sendToServer(
                                 new StrategiumActionPacket(this.menu.getBenchPos()))
                 ).bounds(this.leftPos + 10, this.topPos + 130, 180, 20).build()
         );

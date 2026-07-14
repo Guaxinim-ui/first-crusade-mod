@@ -252,7 +252,7 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
         this.setItemSlot(EquipmentSlot.LEGS, ItemStack.EMPTY);
         this.setItemSlot(EquipmentSlot.FEET, ItemStack.EMPTY);
 
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.CHAINSWORD.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(FCRegistry.CHAINSWORD.get()));
 
         this.setDropChance(EquipmentSlot.HEAD, 0.0F);
         this.setDropChance(EquipmentSlot.CHEST, 0.0F);

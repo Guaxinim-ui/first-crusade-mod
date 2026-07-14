@@ -57,7 +57,7 @@ public class ImperialFarmManager {
                 corePos.offset(-radius, -32, -radius),
                 corePos.offset(radius, 64, radius)
         )) {
-            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_FARM.get())) {
+            if (!serverLevel.getBlockState(pos).is(FCRegistry.IMPERIAL_FARM.get())) {
                 continue;
             }
 
@@ -80,7 +80,7 @@ public class ImperialFarmManager {
                 corePos.offset(-radius, -32, -radius),
                 corePos.offset(radius, 64, radius)
         )) {
-            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_FARM.get())) {
+            if (!serverLevel.getBlockState(pos).is(FCRegistry.IMPERIAL_FARM.get())) {
                 continue;
             }
 
@@ -233,7 +233,7 @@ public class ImperialFarmManager {
             }
         }
 
-        serverLevel.setBlock(center, ExampleMod.IMPERIAL_FARM.get().defaultBlockState(), 3);
+        serverLevel.setBlock(center, FCRegistry.IMPERIAL_FARM.get().defaultBlockState(), 3);
 
         // Corner posts with hay accents.
         serverLevel.setBlock(center.offset(2, 0, 2), Blocks.OAK_FENCE.defaultBlockState(), 3);

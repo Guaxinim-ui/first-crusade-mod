@@ -63,7 +63,7 @@ public class LasgunItem extends Item {
         for (int slot = 0; slot < player.getInventory().items.size(); slot++) {
             ItemStack itemStack = player.getInventory().items.get(slot);
 
-            if (itemStack.is(ExampleMod.LASGUN_POWER_CELL.get())) {
+            if (itemStack.is(FCRegistry.LASGUN_POWER_CELL.get())) {
                 int currentDamage = itemStack.getDamageValue();
                 int maxDamage = itemStack.getMaxDamage();
 

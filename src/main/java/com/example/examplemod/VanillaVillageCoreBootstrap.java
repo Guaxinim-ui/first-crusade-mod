@@ -239,7 +239,7 @@ public final class VanillaVillageCoreBootstrap {
                 for (int y = -8; y <= 8; y++) {
                     mutable.set(center.getX() + x, center.getY() + y, center.getZ() + z);
 
-                    if (level.getBlockState(mutable).is(ExampleMod.IMPERIAL_COMMAND_CORE.get())) {
+                    if (level.getBlockState(mutable).is(FCRegistry.IMPERIAL_COMMAND_CORE.get())) {
                         return true;
                     }
                 }
@@ -260,7 +260,7 @@ public final class VanillaVillageCoreBootstrap {
 
         level.setBlock(
                 corePos,
-                ExampleMod.IMPERIAL_COMMAND_CORE.get().defaultBlockState(),
+                FCRegistry.IMPERIAL_COMMAND_CORE.get().defaultBlockState(),
                 3
         );
 
@@ -321,7 +321,7 @@ public final class VanillaVillageCoreBootstrap {
         );
 
         for (Villager villager : villagers) {
-            ImperialCitizenEntity citizen = ExampleMod.IMPERIAL_CITIZEN.get().create(level);
+            ImperialCitizenEntity citizen = FCRegistry.IMPERIAL_CITIZEN.get().create(level);
 
             if (citizen == null) {
                 continue;

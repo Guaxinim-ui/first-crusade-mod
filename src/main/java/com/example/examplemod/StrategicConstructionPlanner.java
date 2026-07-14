@@ -82,11 +82,11 @@ public final class StrategicConstructionPlanner {
         switch (type) {
             case HABITATION -> createHabitation(center, list, facing);
             case FARM -> createFarm(center, list, facing);
-            case MINE -> createMine(center, list, ExampleMod.IMPERIAL_MINE.get());
-            case GOLD_MINE -> createMine(center, list, ExampleMod.IMPERIAL_GOLD_MINE.get());
+            case MINE -> createMine(center, list, FCRegistry.IMPERIAL_MINE.get());
+            case GOLD_MINE -> createMine(center, list, FCRegistry.IMPERIAL_GOLD_MINE.get());
             case SCRAP_YARD -> createScrapYard(center, list, facing);
-            case REFINERY -> createIndustrial(center, list, facing, ExampleMod.IMPERIAL_PROMETHIUM_REFINERY.get());
-            case FORGE -> createIndustrial(center, list, facing, ExampleMod.IMPERIAL_FORGE.get());
+            case REFINERY -> createIndustrial(center, list, facing, FCRegistry.IMPERIAL_PROMETHIUM_REFINERY.get());
+            case FORGE -> createIndustrial(center, list, facing, FCRegistry.IMPERIAL_FORGE.get());
             case BARRACKS -> createBarracks(center, list, facing);
             case WALL_BASTION -> createWallBastion(center, list);
             case TRADE_DEPOT -> createTradeDepot(center, list, facing);
@@ -216,7 +216,7 @@ public final class StrategicConstructionPlanner {
         list.add(new ConstructionPlacement(center.offset(1, 0, 0), bedHead));
 
         addDoor(center, list, facing, 3, 3);
-        list.add(new ConstructionPlacement(center, ExampleMod.IMPERIAL_HABITATION.get().defaultBlockState()));
+        list.add(new ConstructionPlacement(center, FCRegistry.IMPERIAL_HABITATION.get().defaultBlockState()));
     }
 
     private static void createFarm(BlockPos center, List<ConstructionPlacement> list, Direction facing) {
@@ -240,7 +240,7 @@ public final class StrategicConstructionPlanner {
             }
         }
 
-        list.add(new ConstructionPlacement(center, ExampleMod.IMPERIAL_FARM.get().defaultBlockState()));
+        list.add(new ConstructionPlacement(center, FCRegistry.IMPERIAL_FARM.get().defaultBlockState()));
     }
 
     private static void createMine(BlockPos center, List<ConstructionPlacement> list, Block centralBlock) {
@@ -283,7 +283,7 @@ public final class StrategicConstructionPlanner {
         list.add(new ConstructionPlacement(center.offset(2, 0, 1), Blocks.ANVIL.defaultBlockState()));
         list.add(new ConstructionPlacement(center.offset(-2, 0, -1), Blocks.CHAIN.defaultBlockState()));
         list.add(new ConstructionPlacement(center.offset(1, 0, -2), Blocks.IRON_BARS.defaultBlockState()));
-        list.add(new ConstructionPlacement(center, ExampleMod.IMPERIAL_SCRAP_YARD.get().defaultBlockState()));
+        list.add(new ConstructionPlacement(center, FCRegistry.IMPERIAL_SCRAP_YARD.get().defaultBlockState()));
     }
 
     private static void createIndustrial(BlockPos center, List<ConstructionPlacement> list, Direction facing, Block centralBlock) {
@@ -363,7 +363,7 @@ public final class StrategicConstructionPlanner {
         list.add(new ConstructionPlacement(center.offset(-2, 0, 0), Blocks.IRON_BARS.defaultBlockState()));
         list.add(new ConstructionPlacement(center.offset(2, 0, 0), Blocks.IRON_BARS.defaultBlockState()));
         addDoor(center, list, facing, 4, 4);
-        list.add(new ConstructionPlacement(center, ExampleMod.IMPERIAL_BARRACKS.get().defaultBlockState()));
+        list.add(new ConstructionPlacement(center, FCRegistry.IMPERIAL_BARRACKS.get().defaultBlockState()));
     }
 
     private static void createWallBastion(BlockPos center, List<ConstructionPlacement> list) {
@@ -416,7 +416,7 @@ public final class StrategicConstructionPlanner {
         list.add(new ConstructionPlacement(center.offset(2, 0, 2), Blocks.CHEST.defaultBlockState()));
         list.add(new ConstructionPlacement(center.offset(-2, 0, 2), Blocks.CHEST.defaultBlockState()));
         list.add(new ConstructionPlacement(center.offset(2, 0, -2), Blocks.GOLD_BLOCK.defaultBlockState()));
-        list.add(new ConstructionPlacement(center, ExampleMod.IMPERIAL_EMERALD_TRADE_DEPOT.get().defaultBlockState()));
+        list.add(new ConstructionPlacement(center, FCRegistry.IMPERIAL_EMERALD_TRADE_DEPOT.get().defaultBlockState()));
     }
 
     private static void createCommandBastion(BlockPos center, List<ConstructionPlacement> list, Direction facing) {

@@ -37,7 +37,7 @@ public class ImperialEmeraldTradeDepotBlock extends BaseEntityBlock {
 
         return createTickerHelper(
                 blockEntityType,
-                ExampleMod.IMPERIAL_EMERALD_TRADE_DEPOT_BLOCK_ENTITY.get(),
+                FCRegistry.IMPERIAL_EMERALD_TRADE_DEPOT_BLOCK_ENTITY.get(),
                 ImperialEmeraldTradeDepotBlockEntity::serverTick
         );
     }

@@ -30,7 +30,7 @@ public class OrkCampScreen extends AbstractContainerScreen<OrkCampMenu> {
         this.buildLootPitButton = addRenderableWidget(
                 Button.builder(
                         Component.translatable("gui.firstcrusade.ork.build_loot_pit"),
-                        button -> ExampleMod.NETWORK_CHANNEL.sendToServer(
+                        button -> FirstCrusadeNetwork.CHANNEL.sendToServer(
                                 new OrkCampActionPacket(this.menu.getCampPos(), OrkCampActionPacket.Action.BUILD_LOOT_PIT))
                 ).bounds(this.leftPos + 10, this.topPos + 146, 180, 20).build()
         );

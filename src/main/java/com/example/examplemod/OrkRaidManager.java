@@ -27,7 +27,7 @@ public class OrkRaidManager {
         int nobCount = getRaidNobCount(cityLevel, raidCount);
 
         for (int i = 0; i < boyCount; i++) {
-            Mob orkBoy = ExampleMod.ORK_BOY.get().create(serverLevel);
+            Mob orkBoy = FCRegistry.ORK_BOY.get().create(serverLevel);
 
             if (orkBoy != null) {
                 spawnRaidMob(serverLevel, commandCore, orkBoy, cityLevel, i);
@@ -35,7 +35,7 @@ public class OrkRaidManager {
         }
 
         for (int i = 0; i < nobCount; i++) {
-            Mob orkNob = ExampleMod.ORK_NOB.get().create(serverLevel);
+            Mob orkNob = FCRegistry.ORK_NOB.get().create(serverLevel);
 
             if (orkNob != null) {
                 spawnRaidMob(serverLevel, commandCore, orkNob, cityLevel, boyCount + i);
@@ -229,7 +229,7 @@ public class OrkRaidManager {
     }
 
     private static boolean isOrkRaidMob(Mob mob) {
-        if (mob.getType() != ExampleMod.ORK_BOY.get() && mob.getType() != ExampleMod.ORK_NOB.get()) {
+        if (mob.getType() != FCRegistry.ORK_BOY.get() && mob.getType() != FCRegistry.ORK_NOB.get()) {
             return false;
         }
 

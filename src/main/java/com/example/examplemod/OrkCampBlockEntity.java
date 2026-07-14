@@ -87,7 +87,7 @@ public class OrkCampBlockEntity extends BlockEntity {
     private int cachedLootPits = 0;
 
     public OrkCampBlockEntity(BlockPos pos, BlockState state) {
-        super(ExampleMod.ORK_CAMP_BLOCK_ENTITY.get(), pos, state);
+        super(FCRegistry.ORK_CAMP_BLOCK_ENTITY.get(), pos, state);
     }
 
     public void setTargetCore(BlockPos corePos) {
@@ -186,21 +186,21 @@ public class OrkCampBlockEntity extends BlockEntity {
         int startBoyz = this.campLevel <= 1 ? 4 : Math.min(garrisonForLevel(this.campLevel), 6);
 
         for (int i = 0; i < startGrots; i++) {
-            spawnCampUnit(serverLevel, pos, ExampleMod.GRETCHIN.get());
+            spawnCampUnit(serverLevel, pos, FCRegistry.GRETCHIN.get());
         }
         for (int i = 0; i < startBoyz; i++) {
-            spawnCampUnit(serverLevel, pos, ExampleMod.ORK_BOY.get());
+            spawnCampUnit(serverLevel, pos, FCRegistry.ORK_BOY.get());
         }
     }
 
     // The populace scavenges loot — the city's economy, which funds Boyz and war hosts. Built Loot
     // Pits add a steady bonus. This also refreshes the cached counts the Ork Core GUI reads.
     private void produceLoot(ServerLevel serverLevel, BlockPos pos) {
-        int grots = countCampOfType(serverLevel, pos, ExampleMod.GRETCHIN.get());
+        int grots = countCampOfType(serverLevel, pos, FCRegistry.GRETCHIN.get());
         int pits = countLootPits(serverLevel, pos);
 
         this.cachedGrots = grots;
-        this.cachedBoyz = countCampOfType(serverLevel, pos, ExampleMod.ORK_BOY.get());
+        this.cachedBoyz = countCampOfType(serverLevel, pos, FCRegistry.ORK_BOY.get());
         this.cachedLootPits = pits;
 
         // The single Loot Pit scales with the Ork city level (it levels up instead of multiplying).
@@ -216,7 +216,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         for (BlockPos p : BlockPos.betweenClosed(
                 pos.offset(-BUILD_SCAN_RADIUS, -4, -BUILD_SCAN_RADIUS),
                 pos.offset(BUILD_SCAN_RADIUS, 8, BUILD_SCAN_RADIUS))) {
-            if (serverLevel.getBlockState(p).is(ExampleMod.ORK_LOOT_PIT.get())) {
+            if (serverLevel.getBlockState(p).is(FCRegistry.ORK_LOOT_PIT.get())) {
                 count++;
             }
         }
@@ -234,17 +234,17 @@ public class OrkCampBlockEntity extends BlockEntity {
             return;
         }
 
-        int grots = countCampOfType(serverLevel, pos, ExampleMod.GRETCHIN.get());
+        int grots = countCampOfType(serverLevel, pos, FCRegistry.GRETCHIN.get());
         if (grots < populaceForLevel(this.campLevel)) {
-            spawnCampUnit(serverLevel, pos, ExampleMod.GRETCHIN.get());
+            spawnCampUnit(serverLevel, pos, FCRegistry.GRETCHIN.get());
             this.growthCooldown = GROWTH_INTERVAL_CYCLES;
             setChanged();
             return;
         }
 
-        int boyz = countCampOfType(serverLevel, pos, ExampleMod.ORK_BOY.get());
+        int boyz = countCampOfType(serverLevel, pos, FCRegistry.ORK_BOY.get());
         if (boyz < garrisonForLevel(this.campLevel) && this.loot >= BOY_LOOT_COST) {
-            spawnCampUnit(serverLevel, pos, ExampleMod.ORK_BOY.get());
+            spawnCampUnit(serverLevel, pos, FCRegistry.ORK_BOY.get());
             this.loot -= BOY_LOOT_COST;
             this.growthCooldown = GROWTH_INTERVAL_CYCLES;
             setChanged();
@@ -299,7 +299,7 @@ public class OrkCampBlockEntity extends BlockEntity {
 
         // A city only expands when it is prospering: a full populace and a loot surplus to spend on
         // the expansion — the Ork mirror of an Imperial city needing its population at cap to grow.
-        int grots = countCampOfType(serverLevel, pos, ExampleMod.GRETCHIN.get());
+        int grots = countCampOfType(serverLevel, pos, FCRegistry.GRETCHIN.get());
         if (grots < populaceForLevel(this.campLevel) || this.loot < GROWTH_LOOT_COST) {
             return;
         }
@@ -411,7 +411,7 @@ public class OrkCampBlockEntity extends BlockEntity {
             return;
         }
 
-        WarbossEntity warboss = ExampleMod.WARBOSS.get().create(serverLevel);
+        WarbossEntity warboss = FCRegistry.WARBOSS.get().create(serverLevel);
 
         if (warboss == null) {
             return;
@@ -630,7 +630,7 @@ public class OrkCampBlockEntity extends BlockEntity {
             return;
         }
 
-        serverLevel.setBlock(spot, ExampleMod.ORK_LOOT_PIT.get().defaultBlockState(), 3);
+        serverLevel.setBlock(spot, FCRegistry.ORK_LOOT_PIT.get().defaultBlockState(), 3);
         this.loot -= LOOT_PIT_COST;
         this.cachedLootPits++;
         setChanged();

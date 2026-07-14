@@ -19,7 +19,7 @@ public class ImperialEmeraldTradeDepotBlockEntity extends BlockEntity {
     private int totalEmeraldTraded;
 
     public ImperialEmeraldTradeDepotBlockEntity(BlockPos pos, BlockState blockState) {
-        super(ExampleMod.IMPERIAL_EMERALD_TRADE_DEPOT_BLOCK_ENTITY.get(), pos, blockState);
+        super(FCRegistry.IMPERIAL_EMERALD_TRADE_DEPOT_BLOCK_ENTITY.get(), pos, blockState);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialEmeraldTradeDepotBlockEntity depot) {

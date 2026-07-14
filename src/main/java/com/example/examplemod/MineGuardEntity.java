@@ -20,7 +20,7 @@ public class MineGuardEntity extends AbstractImperialTroopEntity {
     public MineGuardEntity(EntityType<? extends MineGuardEntity> entityType, Level level) {
         super(entityType, level);
 
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.GUARDSMAN_COMBAT_KNIFE.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(FCRegistry.GUARDSMAN_COMBAT_KNIFE.get()));
         this.setCustomName(Component.literal("Mine Guard"));
         this.setCustomNameVisible(true);
     }

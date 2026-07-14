@@ -162,7 +162,7 @@ public class WarbossEntity extends PathfinderMob implements GeoEntity {
     }
 
     public void equipAsWarboss() {
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.POWER_KLAW.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(FCRegistry.POWER_KLAW.get()));
         this.setDropChance(EquipmentSlot.MAINHAND, 0.0F);
     }
 

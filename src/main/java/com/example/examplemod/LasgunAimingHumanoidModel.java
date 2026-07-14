@@ -17,7 +17,7 @@ public class LasgunAimingHumanoidModel<T extends LivingEntity & LasgunAimingEnti
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 
-        if (!entity.getMainHandItem().is(ExampleMod.LASGUN.get())) {
+        if (!entity.getMainHandItem().is(FCRegistry.LASGUN.get())) {
             return;
         }
 

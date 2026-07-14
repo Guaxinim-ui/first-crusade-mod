@@ -23,7 +23,7 @@ public class StrategiumMenu extends AbstractContainerMenu {
 
     // Client-side constructor (reads the synced bench position from the open-screen buffer).
     public StrategiumMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
-        super(ExampleMod.STRATEGIUM_MENU.get(), containerId);
+        super(FCRegistry.STRATEGIUM_MENU.get(), containerId);
         this.benchPos = extraData.readBlockPos();
         this.data = new SimpleContainerData(DATA_COUNT);
         addDataSlots(this.data);
@@ -31,7 +31,7 @@ public class StrategiumMenu extends AbstractContainerMenu {
 
     // Server-side constructor (live view of the bench + global research state).
     public StrategiumMenu(int containerId, Inventory playerInventory, StrategiumBlockEntity bench) {
-        super(ExampleMod.STRATEGIUM_MENU.get(), containerId);
+        super(FCRegistry.STRATEGIUM_MENU.get(), containerId);
         this.benchPos = bench.getBlockPos();
         this.data = createServerData(bench);
         addDataSlots(this.data);

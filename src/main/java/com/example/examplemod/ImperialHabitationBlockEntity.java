@@ -9,7 +9,7 @@ public class ImperialHabitationBlockEntity extends BlockEntity {
     private BlockPos commandCorePos;
 
     public ImperialHabitationBlockEntity(BlockPos pos, BlockState blockState) {
-        super(ExampleMod.IMPERIAL_HABITATION_BLOCK_ENTITY.get(), pos, blockState);
+        super(FCRegistry.IMPERIAL_HABITATION_BLOCK_ENTITY.get(), pos, blockState);
     }
 
     public void assignToCommandCore(BlockPos commandCorePos) {

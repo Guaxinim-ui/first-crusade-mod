@@ -37,7 +37,7 @@ public class ImperialForgeBlock extends BaseEntityBlock {
 
         return createTickerHelper(
                 blockEntityType,
-                ExampleMod.IMPERIAL_FORGE_BLOCK_ENTITY.get(),
+                FCRegistry.IMPERIAL_FORGE_BLOCK_ENTITY.get(),
                 ImperialForgeBlockEntity::serverTick
         );
     }

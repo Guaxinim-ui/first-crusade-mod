@@ -64,7 +64,7 @@ public final class AspirantManager {
 
     // A fully implanted aspirant is made a Neophyte and must now prove itself in battle.
     private static void makeNeophyte(ServerLevel serverLevel, ImperialCommandCoreBlockEntity core, ImperialCitizenEntity aspirant) {
-        SpaceMarineEntity marine = ExampleMod.SPACE_MARINE.get().create(serverLevel);
+        SpaceMarineEntity marine = FCRegistry.SPACE_MARINE.get().create(serverLevel);
         if (marine == null) {
             return;
         }

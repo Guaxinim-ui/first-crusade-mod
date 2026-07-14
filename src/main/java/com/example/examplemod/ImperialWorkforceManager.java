@@ -105,37 +105,37 @@ public class ImperialWorkforceManager {
     private static ImperialCitizenJob jobForWorkSite(ServerLevel serverLevel, BlockPos pos, BlockPos corePos) {
         BlockState state = serverLevel.getBlockState(pos);
 
-        if (state.is(ExampleMod.IMPERIAL_MINE.get())) {
+        if (state.is(FCRegistry.IMPERIAL_MINE.get())) {
             return serverLevel.getBlockEntity(pos) instanceof ImperialMineBlockEntity mine
                     && mine.isAssignedToCommandCore(corePos) ? ImperialCitizenJob.MINER : null;
         }
 
-        if (state.is(ExampleMod.IMPERIAL_GOLD_MINE.get())) {
+        if (state.is(FCRegistry.IMPERIAL_GOLD_MINE.get())) {
             return serverLevel.getBlockEntity(pos) instanceof ImperialGoldMineBlockEntity goldMine
                     && goldMine.isAssignedToCommandCore(corePos) ? ImperialCitizenJob.GOLD_MINER : null;
         }
 
-        if (state.is(ExampleMod.IMPERIAL_SCRAP_YARD.get())) {
+        if (state.is(FCRegistry.IMPERIAL_SCRAP_YARD.get())) {
             return serverLevel.getBlockEntity(pos) instanceof ImperialScrapYardBlockEntity scrapYard
                     && scrapYard.isAssignedToCommandCore(corePos) ? ImperialCitizenJob.SCRAPPER : null;
         }
 
-        if (state.is(ExampleMod.IMPERIAL_FORGE.get())) {
+        if (state.is(FCRegistry.IMPERIAL_FORGE.get())) {
             return serverLevel.getBlockEntity(pos) instanceof ImperialForgeBlockEntity forge
                     && forge.isAssignedToCommandCore(corePos) ? ImperialCitizenJob.SMITH : null;
         }
 
-        if (state.is(ExampleMod.IMPERIAL_PROMETHIUM_REFINERY.get())) {
+        if (state.is(FCRegistry.IMPERIAL_PROMETHIUM_REFINERY.get())) {
             return serverLevel.getBlockEntity(pos) instanceof ImperialPromethiumRefineryBlockEntity refinery
                     && refinery.isAssignedToCommandCore(corePos) ? ImperialCitizenJob.STOKER : null;
         }
 
-        if (state.is(ExampleMod.IMPERIAL_FARM.get())) {
+        if (state.is(FCRegistry.IMPERIAL_FARM.get())) {
             return serverLevel.getBlockEntity(pos) instanceof ImperialFarmBlockEntity farm
                     && farm.isAssignedToCommandCore(corePos) ? ImperialCitizenJob.FARMER : null;
         }
 
-        if (state.is(ExampleMod.IMPERIAL_EMERALD_TRADE_DEPOT.get())) {
+        if (state.is(FCRegistry.IMPERIAL_EMERALD_TRADE_DEPOT.get())) {
             return serverLevel.getBlockEntity(pos) instanceof ImperialEmeraldTradeDepotBlockEntity depot
                     && depot.isAssignedToCommandCore(corePos) ? ImperialCitizenJob.TRADER : null;
         }

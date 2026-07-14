@@ -195,7 +195,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         return this.addRenderableWidget(
                 Button.builder(
                         Component.translatable(langKey),
-                        button -> ExampleMod.NETWORK_CHANNEL.sendToServer(
+                        button -> FirstCrusadeNetwork.CHANNEL.sendToServer(
                                 new ImperialCommandCoreActionPacket(this.menu.getCommandCorePos(), action)
                         )
                 ).bounds(x, y, width, height).build()

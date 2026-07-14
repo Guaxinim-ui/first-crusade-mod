@@ -60,7 +60,7 @@ public final class OrkCampManager {
 
         buildCampStructure(serverLevel, surface);
 
-        serverLevel.setBlock(surface, ExampleMod.ORK_CAMP.get().defaultBlockState(), 3);
+        serverLevel.setBlock(surface, FCRegistry.ORK_CAMP.get().defaultBlockState(), 3);
 
         OrkClan clan = OrkClan.random(serverLevel.random);
 
@@ -85,7 +85,7 @@ public final class OrkCampManager {
     }
 
     public static boolean isCampStillThere(ServerLevel serverLevel, BlockPos campPos) {
-        return campPos != null && serverLevel.getBlockState(campPos).is(ExampleMod.ORK_CAMP.get());
+        return campPos != null && serverLevel.getBlockState(campPos).is(FCRegistry.ORK_CAMP.get());
     }
 
     // The starter camp is small (radius CAMP_RADIUS_BASE). As its WAAAGH! grows the camp fortifies

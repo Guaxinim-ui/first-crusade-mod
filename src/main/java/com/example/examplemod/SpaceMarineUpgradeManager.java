@@ -187,7 +187,7 @@ public class SpaceMarineUpgradeManager {
             return;
         }
 
-        SpaceMarineEntity spaceMarine = ExampleMod.SPACE_MARINE.get().create(serverLevel);
+        SpaceMarineEntity spaceMarine = FCRegistry.SPACE_MARINE.get().create(serverLevel);
 
         if (spaceMarine == null) {
             return;

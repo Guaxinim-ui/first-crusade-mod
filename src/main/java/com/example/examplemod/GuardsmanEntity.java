@@ -341,21 +341,21 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
         int equipmentTier = this.guardsmanRank.getEquipmentTier();
 
         if (equipmentTier >= 2) {
-            this.setItemSlot(EquipmentSlot.FEET, new ItemStack(ExampleMod.GUARDSMAN_BOOTS.get()));
-            this.setItemSlot(EquipmentSlot.LEGS, new ItemStack(ExampleMod.GUARDSMAN_LEGGINGS.get()));
+            this.setItemSlot(EquipmentSlot.FEET, new ItemStack(FCRegistry.GUARDSMAN_BOOTS.get()));
+            this.setItemSlot(EquipmentSlot.LEGS, new ItemStack(FCRegistry.GUARDSMAN_LEGGINGS.get()));
         } else {
             this.setItemSlot(EquipmentSlot.FEET, ItemStack.EMPTY);
             this.setItemSlot(EquipmentSlot.LEGS, ItemStack.EMPTY);
         }
 
         if (equipmentTier >= 3) {
-            this.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ExampleMod.GUARDSMAN_CHESTPLATE.get()));
+            this.setItemSlot(EquipmentSlot.CHEST, new ItemStack(FCRegistry.GUARDSMAN_CHESTPLATE.get()));
         } else {
             this.setItemSlot(EquipmentSlot.CHEST, ItemStack.EMPTY);
         }
 
         if (equipmentTier >= 4) {
-            this.setItemSlot(EquipmentSlot.HEAD, new ItemStack(ExampleMod.GUARDSMAN_HELMET.get()));
+            this.setItemSlot(EquipmentSlot.HEAD, new ItemStack(FCRegistry.GUARDSMAN_HELMET.get()));
         } else {
             this.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
         }
@@ -470,16 +470,16 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
     public void setUsingLasgun() {
         ItemStack currentItem = this.getMainHandItem();
 
-        if (!currentItem.is(ExampleMod.LASGUN.get())) {
-            this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.LASGUN.get()));
+        if (!currentItem.is(FCRegistry.LASGUN.get())) {
+            this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(FCRegistry.LASGUN.get()));
         }
     }
 
     public void setUsingKnife() {
         ItemStack currentItem = this.getMainHandItem();
 
-        if (!currentItem.is(ExampleMod.GUARDSMAN_COMBAT_KNIFE.get())) {
-            this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.GUARDSMAN_COMBAT_KNIFE.get()));
+        if (!currentItem.is(FCRegistry.GUARDSMAN_COMBAT_KNIFE.get())) {
+            this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(FCRegistry.GUARDSMAN_COMBAT_KNIFE.get()));
         }
     }
 

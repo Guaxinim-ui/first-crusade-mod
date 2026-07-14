@@ -60,7 +60,7 @@ public final class ImperialCustodesManager {
     }
 
     private static void spawnCustodes(ServerLevel serverLevel, ImperialCommandCoreBlockEntity core) {
-        CustodesEntity custodes = ExampleMod.CUSTODES.get().create(serverLevel);
+        CustodesEntity custodes = FCRegistry.CUSTODES.get().create(serverLevel);
 
         if (custodes == null) {
             return;

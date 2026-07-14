@@ -137,7 +137,7 @@ public final class ImperialCityMoraleManager {
                 corePos.offset(-HABITATION_SCAN_RADIUS, -32, -HABITATION_SCAN_RADIUS),
                 corePos.offset(HABITATION_SCAN_RADIUS, 64, HABITATION_SCAN_RADIUS)
         )) {
-            if (serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_HABITATION.get())) {
+            if (serverLevel.getBlockState(pos).is(FCRegistry.IMPERIAL_HABITATION.get())) {
                 count++;
             }
         }

@@ -435,23 +435,23 @@ public final class StrategicWarAIManager {
         int killaKans = tier >= 3 ? 1 : 0;
 
         for (int i = 0; i < boyz; i++) {
-            spawnOrkMarcher(level, camp, campPos, targetCity, ExampleMod.ORK_BOY.get().create(level), 1.1D);
+            spawnOrkMarcher(level, camp, campPos, targetCity, FCRegistry.ORK_BOY.get().create(level), 1.1D);
         }
 
         for (int i = 0; i < nobz; i++) {
-            spawnOrkMarcher(level, camp, campPos, targetCity, ExampleMod.ORK_NOB.get().create(level), 1.05D);
+            spawnOrkMarcher(level, camp, campPos, targetCity, FCRegistry.ORK_NOB.get().create(level), 1.05D);
         }
 
         for (int i = 0; i < gretchin; i++) {
-            spawnOrkMarcher(level, camp, campPos, targetCity, ExampleMod.GRETCHIN.get().create(level), 1.15D);
+            spawnOrkMarcher(level, camp, campPos, targetCity, FCRegistry.GRETCHIN.get().create(level), 1.15D);
         }
 
         for (int i = 0; i < meganobz; i++) {
-            spawnOrkMarcher(level, camp, campPos, targetCity, ExampleMod.MEGANOB.get().create(level), 0.95D);
+            spawnOrkMarcher(level, camp, campPos, targetCity, FCRegistry.MEGANOB.get().create(level), 0.95D);
         }
 
         for (int i = 0; i < killaKans; i++) {
-            spawnOrkMarcher(level, camp, campPos, targetCity, ExampleMod.KILLA_KAN.get().create(level), 0.85D);
+            spawnOrkMarcher(level, camp, campPos, targetCity, FCRegistry.KILLA_KAN.get().create(level), 0.85D);
         }
 
         WarDominionManager.shift(level, -5 - tier * 2);

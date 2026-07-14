@@ -16,7 +16,7 @@ public class LasgunShotEntity extends AbstractArrow {
     }
 
     public LasgunShotEntity(Level level, LivingEntity shooter) {
-        super(ExampleMod.LASGUN_SHOT.get(), shooter, level);
+        super(FCRegistry.LASGUN_SHOT.get(), shooter, level);
         this.pickup = Pickup.DISALLOWED;
         this.setNoGravity(true);
     }

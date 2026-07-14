@@ -17,7 +17,7 @@ public class ImperialPromethiumRefineryBlockEntity extends BlockEntity {
     private int totalCoalProduced;
 
     public ImperialPromethiumRefineryBlockEntity(BlockPos pos, BlockState blockState) {
-        super(ExampleMod.IMPERIAL_PROMETHIUM_REFINERY_BLOCK_ENTITY.get(), pos, blockState);
+        super(FCRegistry.IMPERIAL_PROMETHIUM_REFINERY_BLOCK_ENTITY.get(), pos, blockState);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialPromethiumRefineryBlockEntity refinery) {

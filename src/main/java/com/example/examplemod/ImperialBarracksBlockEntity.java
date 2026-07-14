@@ -17,7 +17,7 @@ public class ImperialBarracksBlockEntity extends BlockEntity {
     private int totalTrained;
 
     public ImperialBarracksBlockEntity(BlockPos pos, BlockState blockState) {
-        super(ExampleMod.IMPERIAL_BARRACKS_BLOCK_ENTITY.get(), pos, blockState);
+        super(FCRegistry.IMPERIAL_BARRACKS_BLOCK_ENTITY.get(), pos, blockState);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ImperialBarracksBlockEntity barracks) {

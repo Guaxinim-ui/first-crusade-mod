@@ -211,7 +211,7 @@ public final class ImperialPrimarchManager {
     }
 
     private static void spawnPrimarch(ServerLevel serverLevel, ImperialCommandCoreBlockEntity core) {
-        PrimarchEntity primarch = ExampleMod.PRIMARCH.get().create(serverLevel);
+        PrimarchEntity primarch = FCRegistry.PRIMARCH.get().create(serverLevel);
 
         if (primarch == null) {
             return;

@@ -44,7 +44,7 @@ public class ImperialCommandCoreBlock extends BaseEntityBlock {
 
         return createTickerHelper(
                 blockEntityType,
-                ExampleMod.IMPERIAL_COMMAND_CORE_BLOCK_ENTITY.get(),
+                FCRegistry.IMPERIAL_COMMAND_CORE_BLOCK_ENTITY.get(),
                 ImperialCommandCoreBlockEntity::serverTick
         );
     }
@@ -94,12 +94,12 @@ public class ImperialCommandCoreBlock extends BaseEntityBlock {
             return InteractionResult.SUCCESS;
         }
 
-        if (player.isShiftKeyDown() && heldItem.is(ExampleMod.CRUSADIUM_PLATE.get())) {
+        if (player.isShiftKeyDown() && heldItem.is(FCRegistry.CRUSADIUM_PLATE.get())) {
             commandCore.tryUpgradeCity(player, heldItem);
             return InteractionResult.SUCCESS;
         }
 
-        if (!player.isShiftKeyDown() && heldItem.is(ExampleMod.CRUSADIUM_PLATE.get())) {
+        if (!player.isShiftKeyDown() && heldItem.is(FCRegistry.CRUSADIUM_PLATE.get())) {
             commandCore.repairCity(player, heldItem);
             return InteractionResult.SUCCESS;
         }
@@ -120,7 +120,7 @@ public class ImperialCommandCoreBlock extends BaseEntityBlock {
             return InteractionResult.SUCCESS;
         }
 
-        if (heldItem.is(ExampleMod.SCRAP_METAL.get())) {
+        if (heldItem.is(FCRegistry.SCRAP_METAL.get())) {
             commandCore.depositScrapMetal(player, heldItem);
             return InteractionResult.SUCCESS;
         }

@@ -55,7 +55,7 @@ public class StrategiumBlock extends BaseEntityBlock {
             return InteractionResult.SUCCESS;
         }
 
-        if (held.is(ExampleMod.SCRAP_METAL.get())) {
+        if (held.is(FCRegistry.SCRAP_METAL.get())) {
             bench.depositScrap(player, held);
             return InteractionResult.SUCCESS;
         }

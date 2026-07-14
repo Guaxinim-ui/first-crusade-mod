@@ -38,7 +38,7 @@ public class ImperialFarmBlock extends BaseEntityBlock {
 
         return createTickerHelper(
                 blockEntityType,
-                ExampleMod.IMPERIAL_FARM_BLOCK_ENTITY.get(),
+                FCRegistry.IMPERIAL_FARM_BLOCK_ENTITY.get(),
                 ImperialFarmBlockEntity::serverTick
         );
     }

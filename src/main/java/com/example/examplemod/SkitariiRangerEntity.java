@@ -23,7 +23,7 @@ public class SkitariiRangerEntity extends AbstractImperialTroopEntity implements
     public SkitariiRangerEntity(EntityType<? extends SkitariiRangerEntity> entityType, Level level) {
         super(entityType, level);
 
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ExampleMod.LASGUN.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(FCRegistry.LASGUN.get()));
         this.setCustomName(Component.literal("Skitarii Ranger"));
         this.setCustomNameVisible(true);
     }

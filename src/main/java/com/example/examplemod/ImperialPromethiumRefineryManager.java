@@ -57,7 +57,7 @@ public class ImperialPromethiumRefineryManager {
                 corePos.offset(-radius, -32, -radius),
                 corePos.offset(radius, 64, radius)
         )) {
-            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_PROMETHIUM_REFINERY.get())) {
+            if (!serverLevel.getBlockState(pos).is(FCRegistry.IMPERIAL_PROMETHIUM_REFINERY.get())) {
                 continue;
             }
 
@@ -80,7 +80,7 @@ public class ImperialPromethiumRefineryManager {
                 corePos.offset(-radius, -32, -radius),
                 corePos.offset(radius, 64, radius)
         )) {
-            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_PROMETHIUM_REFINERY.get())) {
+            if (!serverLevel.getBlockState(pos).is(FCRegistry.IMPERIAL_PROMETHIUM_REFINERY.get())) {
                 continue;
             }
 
@@ -226,7 +226,7 @@ public class ImperialPromethiumRefineryManager {
             }
         }
 
-        serverLevel.setBlock(center, ExampleMod.IMPERIAL_PROMETHIUM_REFINERY.get().defaultBlockState(), 3);
+        serverLevel.setBlock(center, FCRegistry.IMPERIAL_PROMETHIUM_REFINERY.get().defaultBlockState(), 3);
 
         serverLevel.setBlock(center.offset(1, 0, 0), Blocks.FURNACE.defaultBlockState(), 3);
         serverLevel.setBlock(center.offset(-1, 0, 0), Blocks.FURNACE.defaultBlockState(), 3);

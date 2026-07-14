@@ -57,7 +57,7 @@ public class ImperialEmeraldTradeDepotManager {
                 corePos.offset(-radius, -32, -radius),
                 corePos.offset(radius, 64, radius)
         )) {
-            if (!serverLevel.getBlockState(pos).is(ExampleMod.IMPERIAL_EMERALD_TRADE_DEPOT.get())) {
+            if (!serverLevel.getBlockState(pos).is(FCRegistry.IMPERIAL_EMERALD_TRADE_DEPOT.get())) {
                 continue;
             }
 
@@ -202,7 +202,7 @@ public class ImperialEmeraldTradeDepotManager {
             }
         }
 
-        serverLevel.setBlock(center, ExampleMod.IMPERIAL_EMERALD_TRADE_DEPOT.get().defaultBlockState(), 3);
+        serverLevel.setBlock(center, FCRegistry.IMPERIAL_EMERALD_TRADE_DEPOT.get().defaultBlockState(), 3);
 
         // Market stalls: chests, barrels and lanterns around an emerald-marked depot.
         for (int y = 0; y <= 1; y++) {

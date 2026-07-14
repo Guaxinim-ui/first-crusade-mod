@@ -37,7 +37,7 @@ public class ImperialGoldMineBlock extends BaseEntityBlock {
 
         return createTickerHelper(
                 blockEntityType,
-                ExampleMod.IMPERIAL_GOLD_MINE_BLOCK_ENTITY.get(),
+                FCRegistry.IMPERIAL_GOLD_MINE_BLOCK_ENTITY.get(),
                 ImperialGoldMineBlockEntity::serverTick
         );
     }

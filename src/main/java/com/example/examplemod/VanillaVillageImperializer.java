@@ -259,7 +259,7 @@ public final class VanillaVillageImperializer {
             }
         }
 
-        level.setBlock(corePos, ExampleMod.IMPERIAL_COMMAND_CORE.get().defaultBlockState(), 3);
+        level.setBlock(corePos, FCRegistry.IMPERIAL_COMMAND_CORE.get().defaultBlockState(), 3);
 
         placeCathedralMarkers(level, corePos);
         placePlazaDetails(level, corePos);
