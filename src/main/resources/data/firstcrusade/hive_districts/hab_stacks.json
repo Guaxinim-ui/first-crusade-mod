@@ -2,7 +2,7 @@
   "description": "Hab Stacks + Transit (192x128). Empilha sobre a Manufactorum; rua sai ao norte.",
   "modules": [
     {
-      "module": "firstcrusade:hive/hab/hab_block_01",
+      "module": "firstcrusade:hab/hab_block_01",
       "offset": [
         0,
         0,
@@ -10,7 +10,7 @@
       ]
     },
     {
-      "module": "firstcrusade:hive/hab/transit_nexus_01",
+      "module": "firstcrusade:hab/transit_nexus_01",
       "offset": [
         64,
         0,
@@ -18,7 +18,7 @@
       ]
     },
     {
-      "module": "firstcrusade:hive/hab/market_chapel_01",
+      "module": "firstcrusade:hab/market_chapel_01",
       "offset": [
         128,
         0,
