@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "firstcrusade:scrap_metal"
+    },
+    "T": {
+      "item": "firstcrusade:ork_teeth"
+    }
+  },
+  "pattern": [
+    " ST",
+    " IS",
+    "I  "
+  ],
+  "result": {
+    "item": "firstcrusade:choppa"
+  },
+  "show_notification": true
+}

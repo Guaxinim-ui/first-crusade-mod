@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "firstcrusade:block/warning_beacon"
+  },
+  "render_type": "minecraft:cutout"
+}

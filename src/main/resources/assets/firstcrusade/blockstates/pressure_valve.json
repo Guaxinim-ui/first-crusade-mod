@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/pressure_valve"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/pressure_valve",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/pressure_valve",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

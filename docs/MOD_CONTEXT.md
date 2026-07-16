@@ -587,6 +587,35 @@ src/main/resources/assets/firstcrusade/lang/en_us.json
 ```
 **ERRADO (evitar):** `src/main/resources/assets/assets/firstcrusade/` (assets duplicado).
 
+### Data Generators (`gradlew runData`)
+Pacote `com.example.examplemod.datagen` (`FCDataGenerators` escuta `GatherDataEvent`):
+- `FCBlockStateProvider` — blockstates + modelos de bloco simples + item models de bloco
+  (ork_camp/ork_loot_pit mantêm modelo custom handwritten em `assets/models/block/`).
+- `FCItemModelProvider` — os 22 spawn eggs (template vanilla; cores vêm do `ForgeSpawnEggItem`).
+- `FCBlockLootProvider` — dropSelf para **todos** os blocos (enumera o DeferredRegister:
+  bloco novo sem loot faz o datagen falhar de propósito).
+- `FCEntityLootProvider` — loot dos Orks (teeth/scrap; Killa Kan dropa scrap+iron).
+- `FCBlockTagsProvider` — tags `mineable/*` (necessárias p/ blocos com `requiresCorrectToolForDrops`).
+- `FCRecipeProvider` — todas as receitas (com advancements de unlock no recipe book).
+
+Saída em `src/generated/resources/` (source set no build.gradle; `.cache/` fica fora do jar e do
+git). **Os arquivos gerados devem ser commitados** — o build normal não roda o datagen. Ao criar
+bloco/item/mob novo: adicionar no provider certo e rodar `gradlew runData`. Itens 2D/handheld
+(Blockbench) e lang continuam handwritten em `assets/`.
+
+### Hive City — Fase 2 (blocos)
+Pacote `com.example.examplemod.hive` (registro autocontido, `HiveBlocks.register` no construtor
+do ExampleMod): **29 blocos decorativos/estruturais** sem BlockEntity/tick (regra de performance
+da Hive) — ashcrete reforçado (+ cracked/stairs/slab/wall), aço rebitado (+ rusted/stairs/slab),
+blindagem (armored_hive_plating, exige picareta de ferro), grating/catwalk/railing industriais,
+canos auto-conectáveis (large_hive_pipe/pipe_junction/pressure_valve, tag
+`firstcrusade:pipe_connectable` em `HiveTags`), carcaça de máquina/vent, arquitetura gótica
+(gothic_arch, imperial_column, cathedral_wall, relevos skull/aquila), lumens (strip 15,
+yellow 15, green 13, red 10) e decoração (hazard_stripe_panel, cargo_container). Aba criativa
+própria `hive_tab`. Blockstates/modelos/texturas handwritten em `assets/` (multipart complexo);
+loot + tags vêm do datagen. Spec e checklist de teste: `docs/HIVE_CITY.md`. Fase 3 planejada:
+módulo protótipo 64×64 de rua industrial.
+
 Modelos de elite (`EliteModelLayers`): Space Marine/Custodes/Primarch usam layers customizadas
 (esqueleto humanoide + ombreiras, mochila/vents, crista do Custodes, capa+auréola do Primarch),
 texturas 128×128 geradas por `tools/TextureGen.java` no esquema de cor de cada facção. Renderers

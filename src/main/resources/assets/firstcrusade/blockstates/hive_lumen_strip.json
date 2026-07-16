@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/hive_lumen_strip"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/hive_lumen_strip",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/hive_lumen_strip",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

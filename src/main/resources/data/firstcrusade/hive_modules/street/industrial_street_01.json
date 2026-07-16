@@ -1,0 +1,14 @@
+{
+  "template": "firstcrusade:hive/street/industrial_street_01",
+  "category": "street",
+  "size": [64, 48, 64],
+  "weight": 10,
+  "sockets": {
+    "north": "street",
+    "south": "street",
+    "west": "corridor_l2",
+    "east": "corridor_l2",
+    "up": "canopy",
+    "down": "foundation"
+  }
+}

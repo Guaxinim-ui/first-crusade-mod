@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "firstcrusade:block/saint_bust"
+    },
+    "facing=east": {
+      "model": "firstcrusade:block/saint_bust",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "firstcrusade:block/saint_bust",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "firstcrusade:block/saint_bust",
+      "y": 270
+    }
+  }
+}

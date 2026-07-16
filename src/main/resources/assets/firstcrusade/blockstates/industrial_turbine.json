@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/industrial_turbine"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/industrial_turbine",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/industrial_turbine",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

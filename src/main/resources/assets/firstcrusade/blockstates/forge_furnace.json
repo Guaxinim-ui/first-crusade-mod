@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "firstcrusade:block/forge_furnace"
+    },
+    "facing=east": {
+      "model": "firstcrusade:block/forge_furnace",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "firstcrusade:block/forge_furnace",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "firstcrusade:block/forge_furnace",
+      "y": 270
+    }
+  }
+}

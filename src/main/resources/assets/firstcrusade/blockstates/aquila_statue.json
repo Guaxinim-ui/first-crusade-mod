@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "firstcrusade:block/aquila_statue"
+    },
+    "facing=east": {
+      "model": "firstcrusade:block/aquila_statue",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "firstcrusade:block/aquila_statue",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "firstcrusade:block/aquila_statue",
+      "y": 270
+    }
+  }
+}

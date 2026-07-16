@@ -1,0 +1,18 @@
+{
+  "template": "firstcrusade:hive/hab/market_chapel_01",
+  "category": "hab",
+  "size": [
+    64,
+    64,
+    64
+  ],
+  "weight": 8,
+  "sockets": {
+    "north": "street",
+    "south": "street",
+    "east": "hab_corridor",
+    "west": "hab_corridor",
+    "down": "canopy",
+    "up": "hab_roof"
+  }
+}

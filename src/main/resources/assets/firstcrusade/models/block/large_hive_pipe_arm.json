@@ -1,0 +1,42 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "firstcrusade:block/large_hive_pipe",
+    "pipe": "firstcrusade:block/large_hive_pipe",
+    "end": "firstcrusade:block/large_hive_pipe_end"
+  },
+  "elements": [
+    {
+      "from": [
+        5,
+        5,
+        0
+      ],
+      "to": [
+        11,
+        11,
+        5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#end",
+          "cullface": "north"
+        },
+        "up": {
+          "texture": "#pipe"
+        },
+        "down": {
+          "texture": "#pipe"
+        },
+        "east": {
+          "texture": "#pipe",
+          "rotation": 90
+        },
+        "west": {
+          "texture": "#pipe",
+          "rotation": 90
+        }
+      }
+    }
+  ]
+}

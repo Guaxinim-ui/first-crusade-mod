@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "firstcrusade:block/supply_crate_side",
+    "side": "firstcrusade:block/supply_crate_side",
+    "top": "firstcrusade:block/supply_crate_top"
+  }
+}

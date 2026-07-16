@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "firstcrusade:block/reinforced_ashcrete_slab"
+    },
+    "type=double": {
+      "model": "firstcrusade:block/reinforced_ashcrete"
+    },
+    "type=top": {
+      "model": "firstcrusade:block/reinforced_ashcrete_slab_top"
+    }
+  }
+}

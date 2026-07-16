@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "E": {
+      "item": "minecraft:ender_pearl"
+    },
+    "I": {
+      "item": "minecraft:iron_block"
+    },
+    "P": {
+      "item": "firstcrusade:crusadium_plate"
+    }
+  },
+  "pattern": [
+    "PIP",
+    "IEI",
+    "PIP"
+  ],
+  "result": {
+    "item": "firstcrusade:spaceport"
+  },
+  "show_notification": true
+}

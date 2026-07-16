@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "firstcrusade:block/control_panel",
+    "side": "firstcrusade:block/machine_casing",
+    "top": "firstcrusade:block/machine_casing"
+  }
+}

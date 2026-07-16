@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "B": {
+      "item": "minecraft:iron_block"
+    },
+    "I": {
+      "item": "minecraft:redstone_block"
+    },
+    "S": {
+      "item": "firstcrusade:scrap_metal"
+    },
+    "T": {
+      "item": "firstcrusade:ork_teeth"
+    }
+  },
+  "pattern": [
+    "BTB",
+    "BIB",
+    " S "
+  ],
+  "result": {
+    "item": "firstcrusade:power_klaw"
+  },
+  "show_notification": true
+}

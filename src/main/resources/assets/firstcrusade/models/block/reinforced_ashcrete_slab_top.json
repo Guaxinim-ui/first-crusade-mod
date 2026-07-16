@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "textures": {
+    "bottom": "firstcrusade:block/reinforced_ashcrete",
+    "top": "firstcrusade:block/reinforced_ashcrete",
+    "side": "firstcrusade:block/reinforced_ashcrete"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "P": {
+      "item": "firstcrusade:crusadium_plate"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "S": {
+      "item": "firstcrusade:scrap_metal"
+    }
+  },
+  "pattern": [
+    "IRI",
+    "RPR",
+    "ISI"
+  ],
+  "result": {
+    "item": "firstcrusade:imperial_command_core"
+  },
+  "show_notification": true
+}

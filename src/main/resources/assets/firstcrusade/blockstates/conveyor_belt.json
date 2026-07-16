@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/conveyor_belt"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/conveyor_belt",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/conveyor_belt",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

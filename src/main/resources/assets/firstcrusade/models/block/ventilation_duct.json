@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "firstcrusade:block/ventilation_duct_end",
+    "side": "firstcrusade:block/ventilation_duct_side"
+  }
+}

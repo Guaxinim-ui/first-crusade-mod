@@ -2,15 +2,26 @@ package com.example.examplemod;
 
 import java.util.EnumSet;
 
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 
+/**
+ * Shared lasgun combat goal for Imperial ranged troops.
+ *
+ * <p>The goal deliberately separates weapon raising, aiming, firing and recoil/cooldown. The
+ * current phase is stored in synced entity data through {@link LasgunAimingEntity}, so the client
+ * renderer can animate the arms instead of showing a static weapon attached to the arm.</p>
+ */
 public class ImperialLasgunAttackGoal<T extends PathfinderMob & RangedAttackMob & LasgunAimingEntity> extends Goal {
-    private static final int DRAW_TICKS = 14;
-    private static final int AIM_TICKS = 10;
-    private static final int SHOOT_TICKS = 5;
+    /** 1.4 seconds: long enough for the player to clearly see the weapon being raised. */
+    public static final int DRAW_TICKS = 28;
+    /** Brief aim confirmation before the first shot. */
+    public static final int AIM_TICKS = 12;
+    /** Visible recoil duration. */
+    public static final int SHOOT_TICKS = 6;
 
     private final T shooter;
     private final double speedModifier;
@@ -38,23 +49,13 @@ public class ImperialLasgunAttackGoal<T extends PathfinderMob & RangedAttackMob 
     @Override
     public boolean canUse() {
         LivingEntity target = this.shooter.getTarget();
-
-        if (target == null || !target.isAlive()) {
-            return false;
-        }
-
-        return this.shooter.distanceTo(target) > this.minimumRange;
+        return target != null && target.isAlive() && this.shooter.distanceTo(target) > this.minimumRange;
     }
 
     @Override
     public boolean canContinueToUse() {
         LivingEntity target = this.shooter.getTarget();
-
-        if (target == null || !target.isAlive()) {
-            return false;
-        }
-
-        return this.shooter.distanceTo(target) > this.minimumRange;
+        return target != null && target.isAlive() && this.shooter.distanceTo(target) > this.minimumRange;
     }
 
     @Override
@@ -62,12 +63,14 @@ public class ImperialLasgunAttackGoal<T extends PathfinderMob & RangedAttackMob 
         this.warmupTicks = 0;
         this.cooldownTicks = 0;
         this.shootingTicks = 0;
+        this.shooter.setAggressive(true);
         this.shooter.setLasgunCombatPose(LasgunCombatPose.DRAWING, 0);
     }
 
     @Override
     public void stop() {
         this.shooter.getNavigation().stop();
+        this.shooter.setAggressive(false);
         this.shooter.clearLasgunCombatPose();
         this.warmupTicks = 0;
         this.cooldownTicks = 0;
@@ -84,21 +87,27 @@ public class ImperialLasgunAttackGoal<T extends PathfinderMob & RangedAttackMob 
         LivingEntity target = this.shooter.getTarget();
 
         if (target == null || !target.isAlive()) {
+            this.shooter.setAggressive(false);
             this.shooter.clearLasgunCombatPose();
             return;
         }
+
+        this.shooter.setAggressive(true);
 
         double distanceSqr = this.shooter.distanceToSqr(target);
         double attackRadiusSqr = this.attackRadius * this.attackRadius;
         boolean canSeeTarget = this.shooter.getSensing().hasLineOfSight(target);
 
-        this.shooter.getLookControl().setLookAt(target, 40.0F, 40.0F);
+        this.shooter.getLookControl().setLookAt(target, 60.0F, 60.0F);
 
+        // Do not raise the rifle while running blindly after a target. Once the troop reaches a
+        // clear firing position the full draw animation starts from the beginning.
         if (distanceSqr > attackRadiusSqr || !canSeeTarget) {
             this.shooter.getNavigation().moveTo(target, this.speedModifier);
             this.warmupTicks = 0;
+            this.cooldownTicks = 0;
             this.shootingTicks = 0;
-            this.shooter.setLasgunCombatPose(LasgunCombatPose.DRAWING, 0);
+            this.shooter.clearLasgunCombatPose();
             return;
         }
 
@@ -124,7 +133,7 @@ public class ImperialLasgunAttackGoal<T extends PathfinderMob & RangedAttackMob 
         }
 
         if (this.cooldownTicks > 0) {
-            this.shooter.setLasgunCombatPose(LasgunCombatPose.COOLDOWN, Math.min(this.cooldownTicks, this.attackInterval));
+            this.shooter.setLasgunCombatPose(LasgunCombatPose.COOLDOWN, this.attackInterval - this.cooldownTicks);
             this.cooldownTicks--;
             return;
         }
@@ -137,6 +146,9 @@ public class ImperialLasgunAttackGoal<T extends PathfinderMob & RangedAttackMob 
             return;
         }
 
+        // Swing is a vanilla-synchronised animation event. Besides the custom pose data, this gives
+        // the renderer a second reliable recoil signal on both dedicated and integrated servers.
+        this.shooter.swing(InteractionHand.MAIN_HAND);
         this.shooter.performRangedAttack(target, 1.0F);
         this.shooter.setLasgunCombatPose(LasgunCombatPose.SHOOTING, 0);
         this.shootingTicks = SHOOT_TICKS;

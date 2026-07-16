@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "firstcrusade:block/boiler_tank_end",
+    "side": "firstcrusade:block/boiler_tank_side"
+  }
+}

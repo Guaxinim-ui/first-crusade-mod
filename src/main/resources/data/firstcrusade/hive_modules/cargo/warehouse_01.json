@@ -1,0 +1,17 @@
+{
+  "template": "firstcrusade:hive/cargo/warehouse_01",
+  "category": "cargo",
+  "size": [
+    64,
+    32,
+    64
+  ],
+  "weight": 8,
+  "sockets": {
+    "north": "cargo_ring",
+    "south": "wall_apron",
+    "east": "cargo_bay",
+    "west": "cargo_ring",
+    "down": "foundation"
+  }
+}

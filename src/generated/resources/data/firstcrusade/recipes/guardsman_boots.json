@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "P": {
+      "item": "firstcrusade:crusadium_plate"
+    }
+  },
+  "pattern": [
+    "P P",
+    "P P"
+  ],
+  "result": {
+    "item": "firstcrusade:guardsman_boots"
+  },
+  "show_notification": true
+}

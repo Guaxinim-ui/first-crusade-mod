@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/smoke_stack"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/smoke_stack",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/smoke_stack",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

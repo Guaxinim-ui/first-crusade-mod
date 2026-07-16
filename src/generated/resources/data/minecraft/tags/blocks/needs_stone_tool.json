@@ -1,0 +1,19 @@
+{
+  "values": [
+    "firstcrusade:reinforced_ashcrete",
+    "firstcrusade:cracked_reinforced_ashcrete",
+    "firstcrusade:reinforced_ashcrete_stairs",
+    "firstcrusade:reinforced_ashcrete_slab",
+    "firstcrusade:reinforced_ashcrete_wall",
+    "firstcrusade:riveted_steel_block",
+    "firstcrusade:rusted_riveted_steel",
+    "firstcrusade:riveted_steel_stairs",
+    "firstcrusade:riveted_steel_slab",
+    "firstcrusade:machine_casing",
+    "firstcrusade:cathedral_wall",
+    "firstcrusade:gothic_arch",
+    "firstcrusade:imperial_column",
+    "firstcrusade:skull_wall_relief",
+    "firstcrusade:aquila_wall_relief"
+  ]
+}

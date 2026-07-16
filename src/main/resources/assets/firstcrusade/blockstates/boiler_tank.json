@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/boiler_tank"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/boiler_tank",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/boiler_tank",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

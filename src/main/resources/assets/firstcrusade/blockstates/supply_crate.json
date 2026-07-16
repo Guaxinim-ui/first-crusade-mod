@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "firstcrusade:block/supply_crate"
+    },
+    "facing=east": {
+      "model": "firstcrusade:block/supply_crate",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "firstcrusade:block/supply_crate",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "firstcrusade:block/supply_crate",
+      "y": 270
+    }
+  }
+}

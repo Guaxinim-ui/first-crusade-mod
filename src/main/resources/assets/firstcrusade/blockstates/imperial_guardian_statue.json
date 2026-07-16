@@ -1,0 +1,49 @@
+{
+  "variants": {
+    "facing=north,part=0": {
+      "model": "firstcrusade:block/imperial_guardian_statue_master"
+    },
+    "facing=north,part=1": {
+      "model": "firstcrusade:block/imperial_guardian_statue_empty"
+    },
+    "facing=north,part=2": {
+      "model": "firstcrusade:block/imperial_guardian_statue_empty"
+    },
+    "facing=east,part=0": {
+      "model": "firstcrusade:block/imperial_guardian_statue_master",
+      "y": 90
+    },
+    "facing=east,part=1": {
+      "model": "firstcrusade:block/imperial_guardian_statue_empty",
+      "y": 90
+    },
+    "facing=east,part=2": {
+      "model": "firstcrusade:block/imperial_guardian_statue_empty",
+      "y": 90
+    },
+    "facing=south,part=0": {
+      "model": "firstcrusade:block/imperial_guardian_statue_master",
+      "y": 180
+    },
+    "facing=south,part=1": {
+      "model": "firstcrusade:block/imperial_guardian_statue_empty",
+      "y": 180
+    },
+    "facing=south,part=2": {
+      "model": "firstcrusade:block/imperial_guardian_statue_empty",
+      "y": 180
+    },
+    "facing=west,part=0": {
+      "model": "firstcrusade:block/imperial_guardian_statue_master",
+      "y": 270
+    },
+    "facing=west,part=1": {
+      "model": "firstcrusade:block/imperial_guardian_statue_empty",
+      "y": 270
+    },
+    "facing=west,part=2": {
+      "model": "firstcrusade:block/imperial_guardian_statue_empty",
+      "y": 270
+    }
+  }
+}

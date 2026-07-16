@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/imperial_column"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/imperial_column",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/imperial_column",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

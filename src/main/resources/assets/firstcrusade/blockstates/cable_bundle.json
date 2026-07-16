@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/cable_bundle"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/cable_bundle",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/cable_bundle",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

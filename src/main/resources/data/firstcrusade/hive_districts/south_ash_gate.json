@@ -1,0 +1,53 @@
+{
+  "description": "South Ash Gate + Cargo Ring (192x128). Rua sai ao norte no socket street.",
+  "modules": [
+    {
+      "module": "firstcrusade:cargo/warehouse_01",
+      "offset": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "module": "firstcrusade:cargo/cargo_yard_01",
+      "offset": [
+        64,
+        0,
+        0
+      ]
+    },
+    {
+      "module": "firstcrusade:cargo/military_depot_01",
+      "offset": [
+        128,
+        0,
+        0
+      ]
+    },
+    {
+      "module": "firstcrusade:gates/hive_wall_w_01",
+      "offset": [
+        0,
+        0,
+        64
+      ]
+    },
+    {
+      "module": "firstcrusade:gates/south_ash_gate_01",
+      "offset": [
+        64,
+        0,
+        64
+      ]
+    },
+    {
+      "module": "firstcrusade:gates/hive_wall_e_01",
+      "offset": [
+        128,
+        0,
+        64
+      ]
+    }
+  ]
+}

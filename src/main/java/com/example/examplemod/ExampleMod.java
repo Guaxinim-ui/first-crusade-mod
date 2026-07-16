@@ -64,6 +64,9 @@ public class ExampleMod {
     // armour) and entity attributes live in FCRegistry.
     FCRegistry.register(modEventBus);
 
+    // Hive City block set (FASE 2) — self-contained registry in com.example.examplemod.hive.
+    com.example.examplemod.hive.HiveBlocks.register(modEventBus);
+
     net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
             net.minecraftforge.fml.config.ModConfig.Type.SERVER, FirstCrusadeServerConfig.SPEC);
 

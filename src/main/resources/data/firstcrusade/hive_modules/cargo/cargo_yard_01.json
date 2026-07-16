@@ -1,0 +1,17 @@
+{
+  "template": "firstcrusade:hive/cargo/cargo_yard_01",
+  "category": "cargo",
+  "size": [
+    64,
+    48,
+    64
+  ],
+  "weight": 10,
+  "sockets": {
+    "north": "street",
+    "south": "street",
+    "east": "cargo_bay",
+    "west": "cargo_bay",
+    "down": "foundation"
+  }
+}
