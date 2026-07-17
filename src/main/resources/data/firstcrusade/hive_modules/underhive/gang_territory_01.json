@@ -1,0 +1,18 @@
+{
+  "template": "firstcrusade:hive/underhive/gang_territory_01",
+  "category": "underhive",
+  "size": [
+    64,
+    48,
+    64
+  ],
+  "weight": 8,
+  "sockets": {
+    "north": "tunnel",
+    "south": "tunnel",
+    "east": "cavern",
+    "west": "cavern",
+    "up": "underhive_ceiling",
+    "down": "bedrock"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "description": "Underhive (192x128). A subcidade sob a colmeia; conecta ao po\u00e7o do military_depot.",
+  "modules": [
+    {
+      "module": "firstcrusade:underhive/sump_tunnels_01",
+      "offset": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "module": "firstcrusade:underhive/collapsed_ruins_01",
+      "offset": [
+        64,
+        0,
+        0
+      ]
+    },
+    {
+      "module": "firstcrusade:underhive/gang_territory_01",
+      "offset": [
+        128,
+        0,
+        0
+      ]
+    }
+  ]
+}

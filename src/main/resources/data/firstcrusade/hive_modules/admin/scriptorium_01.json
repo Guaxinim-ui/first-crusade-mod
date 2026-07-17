@@ -1,0 +1,18 @@
+{
+  "template": "firstcrusade:hive/admin/scriptorium_01",
+  "category": "admin",
+  "size": [
+    64,
+    64,
+    64
+  ],
+  "weight": 8,
+  "sockets": {
+    "north": "street",
+    "south": "street",
+    "east": "admin_hall",
+    "west": "admin_hall",
+    "down": "hab_roof",
+    "up": "spire_base"
+  }
+}

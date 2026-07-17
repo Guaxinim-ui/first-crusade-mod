@@ -527,5 +527,13 @@
   "block.firstcrusade.aquila_statue": "Aquila Statue",
   "block.firstcrusade.saint_statue": "Saint Statue",
   "block.firstcrusade.imperial_guardian_statue": "Imperial Guardian Statue",
-  "block.firstcrusade.aquila_banner": "Aquila Banner"
+  "block.firstcrusade.aquila_banner": "Aquila Banner",
+  "block.firstcrusade.rubble": "Rubble",
+  "block.firstcrusade.underhive_concrete": "Underhive Concrete",
+  "block.firstcrusade.scrap_pile": "Scrap Pile",
+  "block.firstcrusade.glow_fungus": "Glow Fungus",
+  "block.firstcrusade.toxic_barrel": "Toxic Barrel",
+  "block.firstcrusade.corrugated_wall": "Corrugated Wall",
+  "block.firstcrusade.gang_fire": "Gang Fire",
+  "block.firstcrusade.gang_marking": "Gang Marking"
 }

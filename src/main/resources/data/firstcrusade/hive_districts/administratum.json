@@ -1,0 +1,29 @@
+{
+  "description": "Administratum + Catedral (192x128). Empilha sobre o Hab Stacks; catedral no centro.",
+  "modules": [
+    {
+      "module": "firstcrusade:admin/scriptorium_01",
+      "offset": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "module": "firstcrusade:admin/cathedral_nave_01",
+      "offset": [
+        64,
+        0,
+        0
+      ]
+    },
+    {
+      "module": "firstcrusade:admin/tribunal_01",
+      "offset": [
+        128,
+        0,
+        0
+      ]
+    }
+  ]
+}

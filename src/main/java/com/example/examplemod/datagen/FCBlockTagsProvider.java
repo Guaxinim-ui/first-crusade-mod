@@ -50,7 +50,9 @@ public class FCBlockTagsProvider extends BlockTagsProvider {
                 HiveBlocks.HIVE_RUG.get());
 
         tag(BlockTags.MINEABLE_WITH_SHOVEL).add(
-                FCRegistry.ORK_LOOT_PIT.get());
+                FCRegistry.ORK_LOOT_PIT.get(),
+                // Underhive rubble (FASE 9) is a gravel-like pile.
+                HiveBlocks.RUBBLE.get());
 
         tag(BlockTags.MINEABLE_WITH_HOE).add(
                 FCRegistry.IMPERIAL_FARM.get());
@@ -61,9 +63,10 @@ public class FCBlockTagsProvider extends BlockTagsProvider {
         Block supplyCrate = HiveBlocks.SUPPLY_CRATE.get();
         Block shelfUnit = HiveBlocks.SHELF_UNIT.get();
         Block hiveRug = HiveBlocks.HIVE_RUG.get();
+        Block rubble = HiveBlocks.RUBBLE.get();
         for (RegistryObject<Block> block : HiveBlocks.BLOCKS.getEntries()) {
             Block b = block.get();
-            if (b == toxicSludge || b == supplyCrate || b == shelfUnit || b == hiveRug) {
+            if (b == toxicSludge || b == supplyCrate || b == shelfUnit || b == hiveRug || b == rubble) {
                 continue;
             }
             tag(BlockTags.MINEABLE_WITH_PICKAXE).add(b);

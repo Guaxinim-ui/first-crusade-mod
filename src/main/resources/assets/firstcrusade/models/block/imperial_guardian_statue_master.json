@@ -1,128 +1,46 @@
 {
+  "credit": "First Crusade — imperial_guardian lower slice (plinth + legs + spear butt). part=0.",
   "parent": "minecraft:block/block",
   "render_type": "minecraft:cutout",
   "textures": {
     "particle": "firstcrusade:block/statue_stone",
     "stone": "firstcrusade:block/statue_stone",
-    "dark": "firstcrusade:block/statue_stone_dark",
-    "face": "firstcrusade:block/guardian_statue_face"
+    "dark": "firstcrusade:block/statue_stone_dark"
   },
   "elements": [
     {
-      "from": [
-        2,
-        0,
-        2
-      ],
-      "to": [
-        14,
-        2,
-        14
-      ],
+      "name": "plinth",
+      "from": [2, 0, 2],
+      "to": [14, 3, 14],
       "faces": {
-        "up": {
-          "texture": "#stone"
-        },
-        "down": {
-          "texture": "#stone"
-        },
-        "north": {
-          "texture": "#stone"
-        },
-        "south": {
-          "texture": "#stone"
-        },
-        "east": {
-          "texture": "#stone"
-        },
-        "west": {
-          "texture": "#stone"
-        }
+        "down":  {"uv": [2, 2, 14, 14], "texture": "#dark", "cullface": "down"},
+        "up":    {"uv": [2, 2, 14, 14], "texture": "#stone"},
+        "north": {"uv": [2, 13, 14, 16], "texture": "#dark"},
+        "south": {"uv": [2, 13, 14, 16], "texture": "#dark"},
+        "west":  {"uv": [2, 13, 14, 16], "texture": "#dark"},
+        "east":  {"uv": [2, 13, 14, 16], "texture": "#dark"}
       }
     },
     {
-      "from": [
-        4,
-        2,
-        4
-      ],
-      "to": [
-        12,
-        45,
-        12
-      ],
+      "name": "legs",
+      "from": [4, 3, 5],
+      "to": [12, 16, 11],
       "faces": {
-        "north": {
-          "texture": "#face",
-          "uv": [
-            0,
-            0,
-            8,
-            12
-          ]
-        },
-        "south": {
-          "texture": "#dark",
-          "uv": [
-            0,
-            0,
-            8,
-            16
-          ]
-        },
-        "east": {
-          "texture": "#dark",
-          "uv": [
-            0,
-            0,
-            8,
-            16
-          ]
-        },
-        "west": {
-          "texture": "#dark",
-          "uv": [
-            0,
-            0,
-            8,
-            16
-          ]
-        },
-        "up": {
-          "texture": "#stone"
-        },
-        "down": {
-          "texture": "#stone"
-        }
+        "north": {"uv": [4, 0, 12, 13], "texture": "#stone"},
+        "south": {"uv": [4, 0, 12, 13], "texture": "#dark"},
+        "west":  {"uv": [5, 0, 11, 13], "texture": "#dark"},
+        "east":  {"uv": [5, 0, 11, 13], "texture": "#dark"}
       }
     },
     {
-      "from": [
-        3,
-        45,
-        3
-      ],
-      "to": [
-        13,
-        48,
-        13
-      ],
+      "name": "spear_shaft",
+      "from": [12, 3, 7],
+      "to": [13.5, 16, 8.5],
       "faces": {
-        "up": {
-          "texture": "#stone"
-        },
-        "north": {
-          "texture": "#stone"
-        },
-        "south": {
-          "texture": "#stone"
-        },
-        "east": {
-          "texture": "#stone"
-        },
-        "west": {
-          "texture": "#stone"
-        }
+        "north": {"uv": [12, 0, 13.5, 13], "texture": "#dark"},
+        "south": {"uv": [12, 0, 13.5, 13], "texture": "#dark"},
+        "west":  {"uv": [7, 0, 8.5, 13], "texture": "#dark"},
+        "east":  {"uv": [7, 0, 8.5, 13], "texture": "#dark"}
       }
     }
   ]

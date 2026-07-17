@@ -1,0 +1,48 @@
+{
+  "credit": "First Crusade — imperial_guardian torso slice (armour + pauldrons + spear). part=1.",
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "particle": "firstcrusade:block/statue_stone",
+    "stone": "firstcrusade:block/statue_stone",
+    "dark": "firstcrusade:block/statue_stone_dark",
+    "face": "firstcrusade:block/guardian_statue_face"
+  },
+  "elements": [
+    {
+      "name": "torso",
+      "from": [4, 0, 4],
+      "to": [12, 12, 12],
+      "faces": {
+        "north": {"uv": [0, 6, 16, 16], "texture": "#face"},
+        "south": {"uv": [4, 0, 12, 12], "texture": "#dark"},
+        "west":  {"uv": [4, 0, 12, 12], "texture": "#dark"},
+        "east":  {"uv": [4, 0, 12, 12], "texture": "#dark"},
+        "up":    {"uv": [4, 4, 12, 12], "texture": "#stone"}
+      }
+    },
+    {
+      "name": "pauldrons",
+      "from": [2, 8, 3],
+      "to": [14, 13, 13],
+      "faces": {
+        "up":    {"uv": [2, 3, 14, 13], "texture": "#stone"},
+        "north": {"uv": [2, 3, 14, 8], "texture": "#stone"},
+        "south": {"uv": [2, 3, 14, 8], "texture": "#dark"},
+        "west":  {"uv": [3, 3, 13, 8], "texture": "#dark"},
+        "east":  {"uv": [3, 3, 13, 8], "texture": "#dark"}
+      }
+    },
+    {
+      "name": "spear_shaft",
+      "from": [12, 0, 7],
+      "to": [13.5, 16, 8.5],
+      "faces": {
+        "north": {"uv": [12, 0, 13.5, 16], "texture": "#dark"},
+        "south": {"uv": [12, 0, 13.5, 16], "texture": "#dark"},
+        "west":  {"uv": [7, 0, 8.5, 16], "texture": "#dark"},
+        "east":  {"uv": [7, 0, 8.5, 16], "texture": "#dark"}
+      }
+    }
+  ]
+}

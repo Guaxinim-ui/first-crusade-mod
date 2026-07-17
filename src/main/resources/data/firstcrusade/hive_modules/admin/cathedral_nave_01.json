@@ -1,0 +1,18 @@
+{
+  "template": "firstcrusade:hive/admin/cathedral_nave_01",
+  "category": "admin",
+  "size": [
+    64,
+    64,
+    64
+  ],
+  "weight": 10,
+  "sockets": {
+    "north": "street",
+    "south": "street",
+    "east": "admin_hall",
+    "west": "admin_hall",
+    "down": "hab_roof",
+    "up": "spire_base"
+  }
+}

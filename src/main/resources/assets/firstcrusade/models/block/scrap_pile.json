@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "firstcrusade:block/scrap_pile",
+    "side": "firstcrusade:block/scrap_pile",
+    "top": "firstcrusade:block/scrap_pile"
+  },
+  "render_type": "minecraft:cutout"
+}

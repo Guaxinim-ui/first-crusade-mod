@@ -61,6 +61,9 @@ public final class HiveCommands {
         event.getDispatcher().register(Commands.literal("fchive")
                 .requires(source -> source.hasPermission(2))
 
+                // FASE 10 — city generation subtree (/fchive city generate|status|cancel|tp).
+                .then(com.example.examplemod.hive.city.HiveCityCommands.build())
+
                 .then(Commands.literal("place")
                         .then(Commands.argument("template", ResourceLocationArgument.id())
                                 .executes(ctx -> placeTemplate(ctx.getSource(),
@@ -407,6 +410,45 @@ public final class HiveCommands {
                 + " módulos colocados em " + origin.toShortString() + " | costuras: " + fSeams
                 + " (" + (fMis == 0 ? "todas encaixam" : fMis + " incompatíveis") + ") | "
                 + summarizeMarkers(captured)), true);
+        return okCount;
+    }
+
+    /**
+     * Reusable district placement, shared by {@code /fchive district place} and the FASE 10 city
+     * generator ({@link com.example.examplemod.hive.city.HiveCityPlacer}). Places every module of the
+     * district at {@code origin} (offsets rotated by {@code districtRotation}), each rotated and run
+     * through {@link HiveMarkerProcessor}. Returns how many modules were placed. No chat output.
+     */
+    public static int placeDistrict(ServerLevel level, ResourceLocation id, BlockPos origin, int districtRotation) {
+        Optional<HiveDistricts.District> district = HiveDistricts.get(id);
+        if (district.isEmpty()) {
+            return 0;
+        }
+        StructureTemplateManager manager = level.getStructureManager();
+        Rotation drot = rotation(districtRotation);
+        HiveMarkers.begin();
+        int okCount = 0;
+        for (HiveDistricts.Entry entry : district.get().entries()) {
+            Optional<HiveModule> module = HiveModuleManager.get(entry.module());
+            if (module.isEmpty()) {
+                continue;
+            }
+            Optional<StructureTemplate> template = manager.get(module.get().template());
+            if (template.isEmpty()) {
+                continue;
+            }
+            Rotation rot = drot.getRotated(rotation(entry.rotation()));
+            Vec3i o = entry.offset();
+            BlockPos rel = new BlockPos(o.getX(), o.getY(), o.getZ()).rotate(drot);
+            BlockPos at = origin.offset(rel.getX(), rel.getY(), rel.getZ());
+            StructurePlaceSettings settings = new StructurePlaceSettings()
+                    .setRotation(rot).setMirror(Mirror.NONE).setIgnoreEntities(true)
+                    .addProcessor(HiveMarkerProcessor.INSTANCE);
+            if (template.get().placeInWorld(level, at, at, settings, level.getRandom(), 2)) {
+                okCount++;
+            }
+        }
+        HiveMarkers.end();
         return okCount;
     }
 

@@ -337,6 +337,63 @@ todo o catálogo das fases 2–6.5).
 
 ---
 
+## 2i. FASE 8 — Distrito ADMINISTRATUM + CATEDRAL (ENTREGUE)
+
+**192×128 em 3 módulos de 64×64×64**, o coroamento cívico-religioso da colmeia — o distrito
+mais monumental. Empilha sobre o Hab Stacks (down=hab_roof). ~102 mil blocos, 43 marcadores.
+
+| Módulo | Conteúdo |
+|---|---|
+| admin/cathedral_nave_01 | **PEÇA CENTRAL: nave monumental** de teto altíssimo (y52) com dupla arcada de colunas e arcobotantes, via processional de tapete vermelho, vitrais gigantes nas duas paredes, **órgão de canos** sobre a entrada, **altar-mor** ao fundo com águia colossal, 2 Santos + 2 Guardiões monumentais, braseiros, bancos da congregação e candelabros pendentes de braseiro em corrente |
+| admin/scriptorium_01 | arquivo/escritório de 4 andares com salas mobiliadas (mesa, cadeira, estantes de arquivo, terminal), **sala de cogitadores** (banco de servidores + telas), arquivo vertical de estantes altas, estátua da águia no saguão, telhado com antenas/balizas |
+| admin/tribunal_01 | **grande salão de justiça** (colunas majestosas, estrado do juiz elevado com 2 Guardiões e águia atrás, bancos do público, balaustrada, vitrais, candelabros) + **bloco de celas** no alto (corredor de vigília com celas gradeadas, catres, luz vermelha) |
+
+**Sockets:** street (N/S), admin_hall (E/W), hab_roof (down, assenta no Hab), spire_base (up
+— gancho para o futuro Spire da Fase final).
+
+**QA reforçado:** além do roundtrip + navegação (túnel livre, ladders, spawns, estátuas
+íntegras), adicionei um **teste automático de referências distrito→módulo→nbt** que roda em
+TODOS os distritos. Ele teria pego na hora o bug da Fase 7 (id do módulo com 'hive/' a mais).
+Auditoria dos 4 distritos: todos válidos. 1 defeito corrigido (escadaria caindo sobre a rua).
+
+**Nota:** a Fase 7 (hab_stacks) teve o id de módulo corrigido no distrito
+(firstcrusade:hab/... em vez de firstcrusade:hive/hab/...) — incluído no pacote COMPLETO.
+
+**Ferramenta:** tools/gen_hive_administratum.py (lib compartilhada; sem blocos novos).
+
+---
+
+## 2j. FASE 9 — Distrito UNDERHIVE (ENTREGUE)
+
+**192×128 em 3 módulos de 64×48×64**, a subcidade escura sob a colmeia — conecta ao poço da
+underhive no military_depot da Fase 5 (up=underhive_ceiling). Ambiente escuro iluminado por
+fungos, fogueiras e lúmens quebrados. **8 blocos novos** (mod agora: 71 blocos + 12 marcadores
++ 1 fluido). 28 marcadores.
+
+**Blocos novos:** rubble (escombros), underhive_concrete (rachado), scrap_pile (sucata),
+glow_fungus (fungo bioluminescente, luz 8), toxic_barrel (tambor vazando), corrugated_wall
+(barricada de gangue), gang_fire (fogueira, luz 15), gang_marking (grafite de caveira).
+
+| Módulo | Conteúdo |
+|---|---|
+| underhive/sump_tunnels_01 | **coletor/esgoto**: grande canal de **água tóxica de verdade** (toxic_sludge, com dano) atravessando, canos despejando, passarela de grade sobre o canal, túneis de manutenção, tambores tóxicos, escada-de-mão subindo ao poço da hive |
+| underhive/collapsed_ruins_01 | **ruínas**: montanha de escombros de um teto desabado, fragmentos de parede de catedral espetados, uma **estátua de Santo tombada**, meias-paredes de habitação exposta (mostrando apês em corte com móveis abandonados), poças de água tóxica infiltrada, caminho serpenteante transitável |
+| underhive/gang_territory_01 | **território de gangue**: barricadas de sucata corrugada com passagens, acampamento central com fogueiras e assentos, pilhas de sucata, **arena de luta** rebaixada com arquibancada, **trono do chefe** numa plataforma, grafites de caveira pelas paredes |
+
+**Sockets:** tunnel (N/S), cavern (E/W), underhive_ceiling (up), bedrock (down).
+
+**QA:** roundtrip + navegação (ladders com suporte — 1 poço corrigido; **spawns fora da água
+tóxica** para não tomarem dano ao nascer; spawns com cabeça livre; blocos existentes). Água
+tóxica é fluido real (393 blocos no sump). **Auditoria de referências rodada nos 5 distritos
+— todos OK.**
+
+**Casco de caverna (`cavern_shell`):** piso irregular de escombros, teto rachado, vigas
+enferrujadas aleatórias, ~40 fungos luminosos por módulo como iluminação principal.
+
+**Ferramenta:** tools/gen_hive_underhive.py.
+
+---
+
 ## 3. Direção visual travada (spec §11/§24)
 
 Paleta central (usada pelo gerador): fuligem `#131417`, ashcrete `#3B3F43`, aço `#454C52`,
@@ -388,6 +445,14 @@ relevos, vents, lumens, hazard e grating.
 
 ## 6. Changelog
 
+- **2026-07-14 — FASE 9:** distrito Underhive (3 módulos, 192×128): coletor com água tóxica
+  real, ruínas colapsadas, território de gangue. 8 blocos novos. 28 marcadores. Auditoria de
+  referências nos 5 distritos OK. FALTA: FASE 10 (Spire + geração automática da cidade) —
+  deixada para conversa nova por ser sistema grande de mundo/geração.
+- **2026-07-14 — FASE 8:** distrito Administratum + Catedral (3 módulos, 192×128): nave
+  monumental com órgão de canos e altar-mor, scriptorium de 4 andares, tribunal com celas.
+  43 marcadores. + teste automático de referências de distrito (auditoria dos 4 OK).
+  Próximo: FASE 9 (Underhive) ou FASE 10 (Spire + geração completa).
 - **2026-07-14 — FASE 7:** distrito Hab Stacks + Transit (3 módulos, 192×128, empilha na
   Manufactorum): habitação mobiliada de 4 andares, nexo de trilhos+elevadores, mercado+capela
   com altar e estátuas. 38 marcadores. Próximo: FASE 8 (Administratum/Catedral) ou FASE 9

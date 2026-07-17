@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/corrugated_wall"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/corrugated_wall",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/corrugated_wall",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

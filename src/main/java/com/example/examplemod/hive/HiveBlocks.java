@@ -310,6 +310,46 @@ public final class HiveBlocks {
     public static final RegistryObject<Block> AQUILA_BANNER = registerBlock("aquila_banner",
             () -> new HiveStatueBlock(2, cathedral().strength(2.5F, 5.0F).noOcclusion()));
 
+    // ---- Underhive (FASE 9) ----
+    /** Escombros/entulho — bloco cheio irregular, base da Underhive. */
+    public static final RegistryObject<Block> RUBBLE = registerBlock("rubble",
+            () -> new Block(ashcrete().strength(2.0F, 4.0F).sound(SoundType.GRAVEL)));
+
+    /** Concreto rachado da Underhive — mais degradado que o cracked_reinforced. */
+    public static final RegistryObject<Block> UNDERHIVE_CONCRETE = registerBlock("underhive_concrete",
+            () -> new Block(ashcrete().strength(3.0F, 6.0F)));
+
+    /** Pilha de sucata — metal retorcido, com face. */
+    public static final RegistryObject<Block> SCRAP_PILE = registerBlock("scrap_pile",
+            () -> new HiveHorizontalBlock(steel().strength(2.0F, 4.0F).sound(SoundType.METAL).noOcclusion()));
+
+    /** Fungo luminoso — cresce nas paredes úmidas, luz esverdeada 8. */
+    public static final RegistryObject<Block> GLOW_FUNGUS = registerBlock("glow_fungus",
+            () -> new HiveGratingBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_CYAN)
+                    .instabreak()
+                    .noCollission()
+                    .sound(SoundType.WART_BLOCK)
+                    .lightLevel(state -> 8)
+                    .noOcclusion()));
+
+    /** Barril tóxico — vazando, com face; decorativo (poças de sludge ao redor colocadas à mão). */
+    public static final RegistryObject<Block> TOXIC_BARREL = registerBlock("toxic_barrel",
+            () -> new HiveHorizontalBlock(steel().strength(2.5F, 4.0F).sound(SoundType.METAL)
+                    .lightLevel(state -> 3).noOcclusion()));
+
+    /** Parede corrugada de sucata — barricadas de gangue. */
+    public static final RegistryObject<Block> CORRUGATED_WALL = registerBlock("corrugated_wall",
+            () -> new RotatedPillarBlock(steel().strength(2.5F, 4.0F).sound(SoundType.METAL)));
+
+    /** Fogueira de gangue — luz laranja 15, para acampamentos. */
+    public static final RegistryObject<Block> GANG_FIRE = registerBlock("gang_fire",
+            () -> new Block(lumen(15).mapColor(MapColor.COLOR_ORANGE).noOcclusion().sound(SoundType.WOOD)));
+
+    /** Grafite/marca de gangue — decoração de parede plana. */
+    public static final RegistryObject<Block> GANG_MARKING = registerBlock("gang_marking",
+            () -> new HiveHorizontalBlock(ashcrete().strength(1.5F, 3.0F)));
+
     // =========================================================================================
     // FASE 6 — MANUFACTORUM (indústria pesada). Decorativos sem tick, exceto onde a luz/
     // partícula justifica lightLevel fixo. Nada de BlockEntity (spec §9.4/§15).
@@ -483,6 +523,15 @@ public final class HiveBlocks {
                         output.accept(SAINT_STATUE.get());
                         output.accept(IMPERIAL_GUARDIAN_STATUE.get());
                         output.accept(AQUILA_BANNER.get());
+                        // Underhive (FASE 9)
+                        output.accept(RUBBLE.get());
+                        output.accept(UNDERHIVE_CONCRETE.get());
+                        output.accept(SCRAP_PILE.get());
+                        output.accept(GLOW_FUNGUS.get());
+                        output.accept(TOXIC_BARREL.get());
+                        output.accept(CORRUGATED_WALL.get());
+                        output.accept(GANG_FIRE.get());
+                        output.accept(GANG_MARKING.get());
                         // Structure markers (dev)
                         for (HiveMarkers.MarkerType type : HiveMarkers.MarkerType.values()) {
                             output.accept(MARKERS.get(type).get());

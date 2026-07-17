@@ -1,0 +1,69 @@
+{
+  "credit": "First Crusade — glow_fungus (3D fungus clumps growing from the floor)",
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:cutout",
+  "ambientocclusion": false,
+  "textures": {
+    "fungus": "firstcrusade:block/glow_fungus",
+    "particle": "firstcrusade:block/glow_fungus"
+  },
+  "elements": [
+    {
+      "name": "ground_patch",
+      "from": [1, 0, 1],
+      "to": [15, 0.5, 15],
+      "faces": {
+        "up":   {"uv": [1, 1, 15, 15], "texture": "#fungus"},
+        "down": {"uv": [1, 1, 15, 15], "texture": "#fungus", "cullface": "down"}
+      }
+    },
+    {
+      "name": "clump_tall",
+      "from": [7, 0, 7],
+      "to": [10, 8, 10],
+      "faces": {
+        "up":    {"uv": [7, 7, 10, 10], "texture": "#fungus"},
+        "north": {"uv": [7, 2, 10, 10], "texture": "#fungus"},
+        "south": {"uv": [7, 2, 10, 10], "texture": "#fungus"},
+        "west":  {"uv": [6, 2, 9, 10], "texture": "#fungus"},
+        "east":  {"uv": [6, 2, 9, 10], "texture": "#fungus"}
+      }
+    },
+    {
+      "name": "clump_mid",
+      "from": [3, 0, 4],
+      "to": [6, 5, 7],
+      "faces": {
+        "up":    {"uv": [3, 4, 6, 7], "texture": "#fungus"},
+        "north": {"uv": [3, 5, 6, 10], "texture": "#fungus"},
+        "south": {"uv": [3, 5, 6, 10], "texture": "#fungus"},
+        "west":  {"uv": [4, 5, 7, 10], "texture": "#fungus"},
+        "east":  {"uv": [4, 5, 7, 10], "texture": "#fungus"}
+      }
+    },
+    {
+      "name": "clump_low",
+      "from": [9, 0, 3],
+      "to": [12, 3, 6],
+      "faces": {
+        "up":    {"uv": [9, 3, 12, 6], "texture": "#fungus"},
+        "north": {"uv": [9, 7, 12, 10], "texture": "#fungus"},
+        "south": {"uv": [9, 7, 12, 10], "texture": "#fungus"},
+        "west":  {"uv": [3, 7, 6, 10], "texture": "#fungus"},
+        "east":  {"uv": [3, 7, 6, 10], "texture": "#fungus"}
+      }
+    },
+    {
+      "name": "clump_sprout",
+      "from": [10, 0, 10],
+      "to": [12, 6, 12],
+      "faces": {
+        "up":    {"uv": [10, 10, 12, 12], "texture": "#fungus"},
+        "north": {"uv": [10, 4, 12, 10], "texture": "#fungus"},
+        "south": {"uv": [10, 4, 12, 10], "texture": "#fungus"},
+        "west":  {"uv": [10, 4, 12, 10], "texture": "#fungus"},
+        "east":  {"uv": [10, 4, 12, 10], "texture": "#fungus"}
+      }
+    }
+  ]
+}

@@ -527,5 +527,13 @@
   "block.firstcrusade.aquila_statue": "Estátua da Águia",
   "block.firstcrusade.saint_statue": "Estátua de Santo",
   "block.firstcrusade.imperial_guardian_statue": "Estátua do Guardião Imperial",
-  "block.firstcrusade.aquila_banner": "Estandarte da Águia"
+  "block.firstcrusade.aquila_banner": "Estandarte da Águia",
+  "block.firstcrusade.rubble": "Escombros",
+  "block.firstcrusade.underhive_concrete": "Concreto da Underhive",
+  "block.firstcrusade.scrap_pile": "Pilha de Sucata",
+  "block.firstcrusade.glow_fungus": "Fungo Luminoso",
+  "block.firstcrusade.toxic_barrel": "Tambor Tóxico",
+  "block.firstcrusade.corrugated_wall": "Parede Corrugada",
+  "block.firstcrusade.gang_fire": "Fogueira de Gangue",
+  "block.firstcrusade.gang_marking": "Marca de Gangue"
 }

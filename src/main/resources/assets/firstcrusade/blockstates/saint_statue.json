@@ -1,49 +1,16 @@
 {
   "variants": {
-    "facing=north,part=0": {
-      "model": "firstcrusade:block/saint_statue_master"
-    },
-    "facing=north,part=1": {
-      "model": "firstcrusade:block/saint_statue_empty"
-    },
-    "facing=north,part=2": {
-      "model": "firstcrusade:block/saint_statue_empty"
-    },
-    "facing=east,part=0": {
-      "model": "firstcrusade:block/saint_statue_master",
-      "y": 90
-    },
-    "facing=east,part=1": {
-      "model": "firstcrusade:block/saint_statue_empty",
-      "y": 90
-    },
-    "facing=east,part=2": {
-      "model": "firstcrusade:block/saint_statue_empty",
-      "y": 90
-    },
-    "facing=south,part=0": {
-      "model": "firstcrusade:block/saint_statue_master",
-      "y": 180
-    },
-    "facing=south,part=1": {
-      "model": "firstcrusade:block/saint_statue_empty",
-      "y": 180
-    },
-    "facing=south,part=2": {
-      "model": "firstcrusade:block/saint_statue_empty",
-      "y": 180
-    },
-    "facing=west,part=0": {
-      "model": "firstcrusade:block/saint_statue_master",
-      "y": 270
-    },
-    "facing=west,part=1": {
-      "model": "firstcrusade:block/saint_statue_empty",
-      "y": 270
-    },
-    "facing=west,part=2": {
-      "model": "firstcrusade:block/saint_statue_empty",
-      "y": 270
-    }
+    "facing=north,part=0": { "model": "firstcrusade:block/saint_statue_master" },
+    "facing=north,part=1": { "model": "firstcrusade:block/saint_statue_mid" },
+    "facing=north,part=2": { "model": "firstcrusade:block/saint_statue_top" },
+    "facing=east,part=0":  { "model": "firstcrusade:block/saint_statue_master", "y": 90 },
+    "facing=east,part=1":  { "model": "firstcrusade:block/saint_statue_mid", "y": 90 },
+    "facing=east,part=2":  { "model": "firstcrusade:block/saint_statue_top", "y": 90 },
+    "facing=south,part=0": { "model": "firstcrusade:block/saint_statue_master", "y": 180 },
+    "facing=south,part=1": { "model": "firstcrusade:block/saint_statue_mid", "y": 180 },
+    "facing=south,part=2": { "model": "firstcrusade:block/saint_statue_top", "y": 180 },
+    "facing=west,part=0":  { "model": "firstcrusade:block/saint_statue_master", "y": 270 },
+    "facing=west,part=1":  { "model": "firstcrusade:block/saint_statue_mid", "y": 270 },
+    "facing=west,part=2":  { "model": "firstcrusade:block/saint_statue_top", "y": 270 }
   }
 }

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "firstcrusade:block/toxic_barrel"
+    },
+    "facing=east": {
+      "model": "firstcrusade:block/toxic_barrel",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "firstcrusade:block/toxic_barrel",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "firstcrusade:block/toxic_barrel",
+      "y": 270
+    }
+  }
+}

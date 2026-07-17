@@ -1,128 +1,47 @@
 {
+  "credit": "First Crusade — saint_statue lower slice (plinth + robe). part=0.",
   "parent": "minecraft:block/block",
   "render_type": "minecraft:cutout",
   "textures": {
     "particle": "firstcrusade:block/statue_stone",
     "stone": "firstcrusade:block/statue_stone",
-    "dark": "firstcrusade:block/statue_stone_dark",
-    "face": "firstcrusade:block/saint_statue_face"
+    "dark": "firstcrusade:block/statue_stone_dark"
   },
   "elements": [
     {
-      "from": [
-        2,
-        0,
-        2
-      ],
-      "to": [
-        14,
-        2,
-        14
-      ],
+      "name": "plinth",
+      "from": [2, 0, 2],
+      "to": [14, 3, 14],
       "faces": {
-        "up": {
-          "texture": "#stone"
-        },
-        "down": {
-          "texture": "#stone"
-        },
-        "north": {
-          "texture": "#stone"
-        },
-        "south": {
-          "texture": "#stone"
-        },
-        "east": {
-          "texture": "#stone"
-        },
-        "west": {
-          "texture": "#stone"
-        }
+        "down":  {"uv": [2, 2, 14, 14], "texture": "#dark", "cullface": "down"},
+        "up":    {"uv": [2, 2, 14, 14], "texture": "#stone"},
+        "north": {"uv": [2, 13, 14, 16], "texture": "#dark"},
+        "south": {"uv": [2, 13, 14, 16], "texture": "#dark"},
+        "west":  {"uv": [2, 13, 14, 16], "texture": "#dark"},
+        "east":  {"uv": [2, 13, 14, 16], "texture": "#dark"}
       }
     },
     {
-      "from": [
-        4,
-        2,
-        4
-      ],
-      "to": [
-        12,
-        45,
-        12
-      ],
+      "name": "robe_hem",
+      "from": [3, 3, 3],
+      "to": [13, 7, 13],
       "faces": {
-        "north": {
-          "texture": "#face",
-          "uv": [
-            0,
-            0,
-            8,
-            12
-          ]
-        },
-        "south": {
-          "texture": "#dark",
-          "uv": [
-            0,
-            0,
-            8,
-            16
-          ]
-        },
-        "east": {
-          "texture": "#dark",
-          "uv": [
-            0,
-            0,
-            8,
-            16
-          ]
-        },
-        "west": {
-          "texture": "#dark",
-          "uv": [
-            0,
-            0,
-            8,
-            16
-          ]
-        },
-        "up": {
-          "texture": "#stone"
-        },
-        "down": {
-          "texture": "#stone"
-        }
+        "up":    {"uv": [3, 3, 13, 13], "texture": "#stone"},
+        "north": {"uv": [3, 9, 13, 13], "texture": "#stone"},
+        "south": {"uv": [3, 9, 13, 13], "texture": "#dark"},
+        "west":  {"uv": [3, 9, 13, 13], "texture": "#dark"},
+        "east":  {"uv": [3, 9, 13, 13], "texture": "#dark"}
       }
     },
     {
-      "from": [
-        3,
-        45,
-        3
-      ],
-      "to": [
-        13,
-        48,
-        13
-      ],
+      "name": "robe_body",
+      "from": [4, 7, 4],
+      "to": [12, 16, 12],
       "faces": {
-        "up": {
-          "texture": "#stone"
-        },
-        "north": {
-          "texture": "#stone"
-        },
-        "south": {
-          "texture": "#stone"
-        },
-        "east": {
-          "texture": "#stone"
-        },
-        "west": {
-          "texture": "#stone"
-        }
+        "north": {"uv": [4, 0, 12, 9], "texture": "#stone"},
+        "south": {"uv": [4, 0, 12, 9], "texture": "#dark"},
+        "west":  {"uv": [4, 0, 12, 9], "texture": "#dark"},
+        "east":  {"uv": [4, 0, 12, 9], "texture": "#dark"}
       }
     }
   ]

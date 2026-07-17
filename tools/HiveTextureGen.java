@@ -127,10 +127,12 @@ public class HiveTextureGen {
         detailingTextures(out);
         // FASE 6.5 Parte B — estátuas
         statueTextures(out);
+        // FASE 9 — Underhive
+        underhiveTextures(out);
         // marcadores de estrutura (FASE 4)
         markerTextures(out);
 
-        System.out.println("HiveTextureGen: 92 texturas escritas em " + new File(out).getAbsolutePath());
+        System.out.println("HiveTextureGen: 102 texturas escritas em " + new File(out).getAbsolutePath());
     }
 
     // ================================================================== 9.1 STRUCTURAL
@@ -1217,6 +1219,152 @@ public class HiveTextureGen {
     static void bannerTop() {
         begin(507); fillNoise(STONE_D(),4);
         rect(2,2,13,13,STEEL_D); for(int x=2;x<=13;x++)px(x,2,STEEL_L);
+    }
+
+
+    // ================================================================== FASE 9 UNDERHIVE
+
+    static void underhiveTextures(String out) throws Exception {
+        rubble();          write(out, "rubble.png");
+        underhiveConcrete(); write(out, "underhive_concrete.png");
+        scrapPile();       write(out, "scrap_pile.png");
+        glowFungus();      write(out, "glow_fungus.png");
+        toxicBarrel();     write(out, "toxic_barrel.png");
+        corrugatedWall();  write(out, "corrugated_wall_side.png");
+        corrugatedEnd();   write(out, "corrugated_wall_end.png");
+        gangFire();        write(out, "gang_fire.png");
+        gangMarking();     write(out, "gang_marking.png");
+        toxicBarrelTop();  write(out, "toxic_barrel_top.png");
+    }
+
+    static void rubble() {
+        begin(600);
+        int[] tones={0xFF5A5248,0xFF6E6456,0xFF4A443A,0xFF7A6E5C,0xFF423C34};
+        for (int y=0;y<16;y++) for(int x=0;x<16;x++) px(x,y,tones[rng.nextInt(tones.length)]);
+        // pedregulhos maiores
+        for (int k=0;k<6;k++){
+            int cx=rng.nextInt(13)+1, cy=rng.nextInt(13)+1, r=rng.nextInt(2)+1, c=tones[rng.nextInt(2)];
+            for(int dy=-r;dy<=r;dy++)for(int dx=-r;dx<=r;dx++) if(dx*dx+dy*dy<=r*r) px(cx+dx,cy+dy,c);
+            px(cx-r,cy-r,0xFF8A7E6A);
+        }
+        // vergalhões expostos
+        for (int k=0;k<3;k++){int x=rng.nextInt(14); vline(x,rng.nextInt(6),rng.nextInt(6)+9,RUST_D);}
+    }
+    static void underhiveConcrete() {
+        begin(601); fillNoise(0xFF6A6258,7);
+        for (int i=0;i<16;i++){px(i,0,0xFF544E44);px(i,15,0xFF44403A);}
+        // rachaduras ramificadas
+        int cx=rng.nextInt(10)+3, cy=0;
+        while(cy<15){ px(cx,cy,0xFF3A362E); if(rng.nextInt(2)==0)px(cx+1,cy,0xFF3A362E);
+            cx+=rng.nextInt(3)-1; cx=Math.max(1,Math.min(14,cx)); cy++; }
+        for (int k=0;k<3;k++){int x=rng.nextInt(14)+1,y=rng.nextInt(14)+1; px(x,y,0xFF3A362E);px(x+1,y,0xFF3A362E);}
+        speckle(0xFF4A443A,5); speckle(RUST_D,2);
+    }
+    static void scrapPile() {
+        begin(602);
+        int[] metal={0xFF6A6E72,0xFF8A5A32,0xFF54585C,0xFF7A4A28,0xFF9AA0A6};
+        for (int y=0;y<16;y++) for(int x=0;x<16;x++) px(x,y,metal[rng.nextInt(metal.length)]);
+        // chapas retorcidas (linhas diagonais)
+        for (int k=0;k<8;k++){
+            int x=rng.nextInt(16),y=rng.nextInt(16),len=rng.nextInt(6)+3,c=metal[rng.nextInt(2)];
+            for(int i=0;i<len;i++){int xx=x+i,yy=y+i/2; if(xx<16&&yy<16){px(xx,yy,c); if(i==0)px(xx,yy,STEEL_HL);}}
+        }
+        // parafusos/rebites
+        for (int k=0;k<5;k++) px(rng.nextInt(16),rng.nextInt(16),0xFF2A2A2E);
+        speckle(RUST_D,4);
+    }
+    static void glowFungus() {
+        beginClear(603);
+        // tufos de fungo bioluminescente
+        int[] glow={0xFF6FE0C8,0xFF4FB0A0,0xFF8FF0D8,0xFF2E7068};
+        for (int k=0;k<14;k++){
+            int cx=rng.nextInt(14)+1, cy=rng.nextInt(14)+1;
+            px(cx,cy,glow[rng.nextInt(glow.length)]);
+            if(rng.nextInt(2)==0)px(cx,cy-1,glow[0]);
+            if(rng.nextInt(3)==0){px(cx+1,cy,glow[1]);px(cx,cy+1,glow[3]);}
+        }
+        // caules
+        for (int k=0;k<5;k++){int x=rng.nextInt(14)+1; px(x,14,0xFF2E7068);px(x,13,0xFF3E8078);}
+        // núcleos brilhantes
+        for (int k=0;k<4;k++) px(rng.nextInt(14)+1,rng.nextInt(10)+1,0xFFBFFFF0);
+    }
+    static void toxicBarrel() {
+        begin(604);
+        // tambor cilíndrico verde enferrujado
+        float[] lum={0.7f,0.82f,0.94f,1.08f,1.2f,1.28f,1.2f,1.08f,0.94f,0.82f,0.72f,0.66f,0.7f,0.8f,0.9f,0.8f};
+        for (int x=0;x<16;x++) for(int y=0;y<16;y++){
+            int base = 0xFF3A6A32;
+            if (rng.nextInt(6)==0) base=0xFF2A5024;
+            if (rng.nextInt(9)==0) base=RUST_D;
+            px(x,y,scale(base,lum[x]));
+        }
+        for (int x=0;x<16;x++){px(x,0,scale(STEEL_D,lum[x]));px(x,3,scale(STEEL_D,lum[x]));
+            px(x,12,scale(STEEL_D,lum[x]));px(x,15,scale(STEEL_D,lum[x]));} // cintas
+        // símbolo tóxico amarelo
+        px(7,7,HAZARD_Y);px(8,7,HAZARD_Y);px(6,9,HAZARD_Y);px(9,9,HAZARD_Y);px(7,8,INK);px(8,8,INK);
+        // vazamento
+        px(4,13,0xFF7FD65A);px(4,14,0xFF7FD65A);px(11,14,0xFF6FC24A);
+    }
+    static void toxicBarrelTop() {
+        begin(605);
+        double cx=7.5,cy=7.5;
+        for (int y=0;y<16;y++) for(int x=0;x<16;x++){
+            double d=Math.hypot(x-cx,y-cy);
+            px(x,y, d>7.4?STEEL_D : d>6?STEEL : d>2?0xFF3A6A32 : 0xFF7FD65A);
+        }
+        px(6,6,0xFFBFFFA0);
+    }
+    static void corrugatedWall() {
+        begin(606);
+        for (int x=0;x<16;x++){
+            int base = (x%3==0)?STEEL_D : (x%3==1)?STEEL : STEEL_HL;
+            for(int y=0;y<16;y++){
+                int c=base;
+                if (rng.nextInt(7)==0) c=RUST;
+                if (rng.nextInt(12)==0) c=RUST_D;
+                px(x,y,c);
+            }
+        }
+        // rebites nas emendas
+        for (int y=2;y<16;y+=5) for(int x=1;x<16;x+=3) px(x,y,0xFF2A2A2E);
+        // remendos soldados
+        for (int k=0;k<2;k++){int x=rng.nextInt(12),y=rng.nextInt(12); rect(x,y,x+2,y+2,RUST_D);}
+    }
+    static void corrugatedEnd() {
+        begin(607); fillNoise(STEEL_D,4);
+        for (int x=0;x<16;x+=3){vline(x,0,15,SHADOW);}
+        for (int i=0;i<16;i++){px(i,0,STEEL_L);px(i,15,INK);}
+    }
+    static void gangFire() {
+        beginClear(608);
+        // pilha de lixo em chamas
+        for (int x=3;x<=12;x++) for(int y=11;y<=14;y++) px(x,y,noise(0xFF3A2E22,4)); // combustível
+        px(4,14,STEEL_D);px(11,13,RUST);
+        int[] fire={0xFFFFF4D0,0xFFFFC040,0xFFFF8020,0xFFE04410,0xFFA02808};
+        for (int y=2;y<=11;y++){
+            int spread=(11-y)/2;
+            for (int x=8-spread;x<=8+spread;x++){
+                if(rng.nextInt(4)==0)continue;
+                double t=(double)(11-y)/9;
+                int gi=Math.min(4,(int)(t*3)+rng.nextInt(2));
+                px(x,y,fire[4-gi]);
+            }
+        }
+        px(8,3,0xFFFFF4D0);px(7,5,0xFFFFC040);
+        // faíscas
+        for (int k=0;k<3;k++) px(rng.nextInt(14)+1,rng.nextInt(4)+1,0xFFFFD060);
+    }
+    static void gangMarking() {
+        begin(609); fillNoise(0xFF5A544A,6);
+        for (int i=0;i<16;i++){px(i,0,0xFF44403A);px(i,15,0xFF44403A);}
+        // caveira-símbolo de gangue em tinta vermelha grosseira
+        int red=0xFFB02818;
+        int[][] skull={{6,4},{7,4},{8,4},{9,4},{5,5},{10,5},{5,6},{10,6},{5,7},{7,7},{8,7},{10,7},
+                       {6,8},{9,8},{6,9},{7,9},{8,9},{9,9},{7,10},{8,10},{6,11},{9,11}};
+        for(int[] p:skull){px(p[0],p[1],red);}
+        px(6,6,INK);px(9,6,INK);       // olhos
+        // respingos
+        for (int k=0;k<4;k++) px(rng.nextInt(14)+1,rng.nextInt(14)+1,0xFF8A2010);
     }
 
     // ================================================================== 13 MARCADORES (FASE 4)

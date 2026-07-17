@@ -72,6 +72,17 @@ CRUCIBLE = S("smelter_crucible")
 PRESS    = S("industrial_press")
 COOLANT  = S("coolant_tank")
 BRAZIER  = S("cathedral_brazier")
+# Underhive (FASE 9)
+RUBBLE   = S("rubble")
+UHCON    = S("underhive_concrete")
+GFUNGUS  = S("glow_fungus")
+GANGFIRE = S("gang_fire")
+SLUDGE   = S("toxic_sludge")
+SLUDGE_S = S("solid_toxic_sludge")
+def SCRAP(f):    return S("scrap_pile", facing=f)
+def TBARREL(f):  return S("toxic_barrel", facing=f)
+def CORRUG(axis="y"): return S("corrugated_wall", axis=axis)
+def GANGMARK(f): return S("gang_marking", facing=f)
 FLOOD    = lambda facing: S("industrial_floodlight", facing=facing)
 HANGLAMP = S("hanging_hive_lamp")
 BEACON   = S("warning_beacon")
@@ -321,6 +332,10 @@ class ModuleBuilder:
             "aquila_banner": (150, 50, 40), "saint_bust": (150, 140, 116),
             "aquila_statue": (168, 137, 63), "hive_rug": (140, 40, 35),
             "hive_table": (110, 118, 126), "hive_chair": (100, 108, 116),
+            "rubble": (96, 88, 76), "underhive_concrete": (106, 98, 88), "scrap_pile": (120, 100, 80),
+            "glow_fungus": (111, 224, 200), "toxic_barrel": (58, 106, 50), "corrugated_wall": (120, 124, 130),
+            "gang_fire": (255, 140, 40), "gang_marking": (176, 40, 24), "toxic_sludge": (95, 191, 58),
+            "solid_toxic_sludge": (76, 138, 62),
         }
         def col(key):
             core = key.split("|")[0]
