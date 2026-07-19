@@ -1,0 +1,251 @@
+{
+  "count": 48,
+  "sets": {
+    "I \u2014 Structure": [
+      {
+        "id": "armored_bulkhead_wall",
+        "name": "Armored Bulkhead Wall",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/armored_bulkhead_wall.bbmodel"
+      },
+      {
+        "id": "recessed_steel_wall_panel",
+        "name": "Recessed Steel Wall Panel",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/recessed_steel_wall_panel.bbmodel"
+      },
+      {
+        "id": "gothic_arch_wall",
+        "name": "Gothic Arch Wall",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/gothic_arch_wall.bbmodel"
+      },
+      {
+        "id": "tall_ribbed_pillar",
+        "name": "Tall Ribbed Pillar",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/tall_ribbed_pillar.bbmodel"
+      },
+      {
+        "id": "buttress_column",
+        "name": "Buttress Column",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/buttress_column.bbmodel"
+      },
+      {
+        "id": "cathedral_cornice",
+        "name": "Cathedral Cornice",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/cathedral_cornice.bbmodel"
+      },
+      {
+        "id": "lower_wall_molding",
+        "name": "Lower Wall Molding",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/lower_wall_molding.bbmodel"
+      },
+      {
+        "id": "spire_cap_block",
+        "name": "Spire Cap Block",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/spire_cap_block.bbmodel"
+      },
+      {
+        "id": "balcony_edge_trim",
+        "name": "Balcony Edge Trim",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/balcony_edge_trim.bbmodel"
+      },
+      {
+        "id": "bridge_support_block",
+        "name": "Bridge Support Block",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/bridge_support_block.bbmodel"
+      },
+      {
+        "id": "giant_door_segment",
+        "name": "Giant Door Segment",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/giant_door_segment.bbmodel"
+      },
+      {
+        "id": "narrow_lancet_recess",
+        "name": "Narrow Lancet Recess",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/narrow_lancet_recess.bbmodel"
+      },
+      {
+        "id": "triangular_relief_panel",
+        "name": "Triangular Relief Panel",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/triangular_relief_panel.bbmodel"
+      },
+      {
+        "id": "window_slot_frame",
+        "name": "Window Slot Frame",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/window_slot_frame.bbmodel"
+      },
+      {
+        "id": "heavy_structural_frame",
+        "name": "Heavy Structural Frame",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/heavy_structural_frame.bbmodel"
+      },
+      {
+        "id": "vertical_seam_strip",
+        "name": "Vertical Seam Strip",
+        "blockbench": "blockbench_sources/hive_city_blocks/i/vertical_seam_strip.bbmodel"
+      }
+    ],
+    "II \u2014 Industrial Systems": [
+      {
+        "id": "straight_pipe",
+        "name": "Straight Pipe",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/straight_pipe.bbmodel"
+      },
+      {
+        "id": "elbow_pipe",
+        "name": "Elbow Pipe",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/elbow_pipe.bbmodel"
+      },
+      {
+        "id": "t_pipe_junction",
+        "name": "T Pipe Junction",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/t_pipe_junction.bbmodel"
+      },
+      {
+        "id": "cross_pipe_junction",
+        "name": "Cross Pipe Junction",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/cross_pipe_junction.bbmodel"
+      },
+      {
+        "id": "pipe_support_clamp",
+        "name": "Pipe Support Clamp",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/pipe_support_clamp.bbmodel"
+      },
+      {
+        "id": "vertical_service_conduit",
+        "name": "Vertical Service Conduit",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/vertical_service_conduit.bbmodel"
+      },
+      {
+        "id": "cable_bundle_block",
+        "name": "Cable Bundle Block",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/cable_bundle_block.bbmodel"
+      },
+      {
+        "id": "vent_outlet",
+        "name": "Vent Outlet",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/vent_outlet.bbmodel"
+      },
+      {
+        "id": "floor_vent",
+        "name": "Floor Vent",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/floor_vent.bbmodel"
+      },
+      {
+        "id": "lift_rail",
+        "name": "Lift Rail",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/lift_rail.bbmodel"
+      },
+      {
+        "id": "gantry_beam",
+        "name": "Gantry Beam",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/gantry_beam.bbmodel"
+      },
+      {
+        "id": "suspended_track_anchor",
+        "name": "Suspended Track Anchor",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/suspended_track_anchor.bbmodel"
+      },
+      {
+        "id": "maintenance_hatch",
+        "name": "Maintenance Hatch",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/maintenance_hatch.bbmodel"
+      },
+      {
+        "id": "machine_casing_block",
+        "name": "Machine Casing",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/machine_casing_block.bbmodel"
+      },
+      {
+        "id": "hazard_grated_floor",
+        "name": "Hazard Grated Floor",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/hazard_grated_floor.bbmodel"
+      },
+      {
+        "id": "reinforced_platform_edge",
+        "name": "Reinforced Platform Edge",
+        "blockbench": "blockbench_sources/hive_city_blocks/ii/reinforced_platform_edge.bbmodel"
+      }
+    ],
+    "III \u2014 Floors, Lighting & Details": [
+      {
+        "id": "glowing_shrine_window",
+        "name": "Glowing Shrine Window",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/glowing_shrine_window.bbmodel"
+      },
+      {
+        "id": "stained_window_variant",
+        "name": "Stained Window Variant",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/stained_window_variant.bbmodel"
+      },
+      {
+        "id": "candle_alcove",
+        "name": "Candle Alcove",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/candle_alcove.bbmodel"
+      },
+      {
+        "id": "wall_sconce",
+        "name": "Wall Sconce",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/wall_sconce.bbmodel"
+      },
+      {
+        "id": "shrine_recess",
+        "name": "Shrine Recess",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/shrine_recess.bbmodel"
+      },
+      {
+        "id": "bloodstained_floor_tile",
+        "name": "Bloodstained Floor Tile",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/bloodstained_floor_tile.bbmodel"
+      },
+      {
+        "id": "cathedral_floor_tile",
+        "name": "Cathedral Floor Tile",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/cathedral_floor_tile.bbmodel"
+      },
+      {
+        "id": "metal_floor_plate",
+        "name": "Metal Floor Plate",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/metal_floor_plate.bbmodel"
+      },
+      {
+        "id": "floor_grate",
+        "name": "Floor Grate",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/floor_grate.bbmodel"
+      },
+      {
+        "id": "cathedral_stair_block",
+        "name": "Cathedral Stair Block",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/cathedral_stair_block.bbmodel"
+      },
+      {
+        "id": "landing_slab",
+        "name": "Landing Slab",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/landing_slab.bbmodel"
+      },
+      {
+        "id": "balustrade_railing",
+        "name": "Balustrade Railing",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/balustrade_railing.bbmodel"
+      },
+      {
+        "id": "skull_relief_panel",
+        "name": "Skull Relief Panel",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/skull_relief_panel.bbmodel"
+      },
+      {
+        "id": "gargoyle_pedestal",
+        "name": "Gargoyle Pedestal",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/gargoyle_pedestal.bbmodel"
+      },
+      {
+        "id": "industrial_crate",
+        "name": "Industrial Crate",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/industrial_crate.bbmodel"
+      },
+      {
+        "id": "brazier_block",
+        "name": "Brazier Block",
+        "blockbench": "blockbench_sources/hive_city_blocks/iii/brazier_block.bbmodel"
+      }
+    ]
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "description": "Corner bastion v2 (192x128x64): L-shaped perimeter fortress with a massive corner tower and support compounds.",
+  "modules": [
+    {
+      "module": "firstcrusade:gates/hive_corner_front_w_01",
+      "offset": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "module": "firstcrusade:gates/hive_corner_front_c_01",
+      "offset": [
+        64,
+        0,
+        0
+      ]
+    },
+    {
+      "module": "firstcrusade:gates/hive_corner_front_e_01",
+      "offset": [
+        128,
+        0,
+        0
+      ]
+    },
+    {
+      "module": "firstcrusade:gates/hive_corner_rear_w_01",
+      "offset": [
+        0,
+        0,
+        64
+      ]
+    },
+    {
+      "module": "firstcrusade:gates/hive_corner_rear_c_01",
+      "offset": [
+        64,
+        0,
+        64
+      ]
+    },
+    {
+      "module": "firstcrusade:gates/hive_corner_rear_e_01",
+      "offset": [
+        128,
+        0,
+        64
+      ]
+    }
+  ]
+}

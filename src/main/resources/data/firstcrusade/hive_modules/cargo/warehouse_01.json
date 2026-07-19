@@ -3,7 +3,7 @@
   "category": "cargo",
   "size": [
     64,
-    32,
+    64,
     64
   ],
   "weight": 8,
@@ -13,5 +13,6 @@
     "east": "cargo_bay",
     "west": "cargo_ring",
     "down": "foundation"
-  }
+  },
+  "description": "Hive City rebuild v2: layered gothic-industrial module with natural stepped silhouette."
 }

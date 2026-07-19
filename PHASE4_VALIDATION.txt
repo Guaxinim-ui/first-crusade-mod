@@ -1,0 +1,18 @@
+First Crusade — Hive City Rebuild Phase 4 Validation
+
+Included phases:
+- Phase 1: 48 Hive City blocks and visual test district
+- Phase 2: Spire V2
+- Phase 3: South Ash Gate, walls and cargo ring V2
+- Phase 4: Manufactorum V2 (foundry, assembly hall, generator hall)
+
+Validation completed:
+- 756 JSON files parsed successfully
+- 21 NBT structure files passed gzip integrity checks
+- All district -> module -> template references resolved
+- Hive layout validator: 51 passed, 0 failed
+- Manufactorum generated as one 192x64x64 district and split into three 64x64x64 modules
+
+Build note:
+- Gradle build was not executed in this environment because the Gradle 8.8 distribution and Forge dependencies were not available offline.
+- Run gradlew runClient on the development computer for the final in-game test.

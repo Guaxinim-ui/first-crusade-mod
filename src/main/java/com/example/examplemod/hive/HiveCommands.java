@@ -157,6 +157,60 @@ public final class HiveCommands {
         };
     }
 
+    /**
+     * Minecraft rotates structure coordinates around local (0,0,0). For 90/180-degree rotations
+     * that pushes part of the template into negative X/Z. This converts a desired world minimum
+     * corner into the placement origin required to keep the rotated template inside that minimum.
+     */
+    private static BlockPos placementOriginForMinimum(BlockPos minimum, Vec3i templateSize,
+                                                       Rotation rotation) {
+        return switch (rotation) {
+            case CLOCKWISE_90 -> minimum.offset(templateSize.getZ() - 1, 0, 0);
+            case CLOCKWISE_180 -> minimum.offset(templateSize.getX() - 1, 0,
+                    templateSize.getZ() - 1);
+            case COUNTERCLOCKWISE_90 -> minimum.offset(0, 0, templateSize.getX() - 1);
+            default -> minimum;
+        };
+    }
+
+    private record DistrictFootprint(int width, int depth) {
+    }
+
+    /** Footprint before the optional whole-district rotation. */
+    private static DistrictFootprint districtFootprint(HiveDistricts.District district) {
+        int width = 0;
+        int depth = 0;
+        for (HiveDistricts.Entry entry : district.entries()) {
+            Optional<HiveModule> module = HiveModuleManager.get(entry.module());
+            if (module.isEmpty()) continue;
+            Vec3i size = module.get().rotatedSize(rotation(entry.rotation()));
+            width = Math.max(width, entry.offset().getX() + size.getX());
+            depth = Math.max(depth, entry.offset().getZ() + size.getZ());
+        }
+        return new DistrictFootprint(width, depth);
+    }
+
+    /**
+     * Rotate one module bounding box inside the normalized district footprint. Unlike rotating only
+     * the offset vector, this keeps every rotated district in positive local coordinates.
+     */
+    private static BlockPos rotatedEntryMinimum(HiveDistricts.Entry entry, HiveModule module,
+                                                 DistrictFootprint footprint, Rotation districtRot) {
+        Vec3i localSize = module.rotatedSize(rotation(entry.rotation()));
+        int x = entry.offset().getX();
+        int y = entry.offset().getY();
+        int z = entry.offset().getZ();
+        return switch (districtRot) {
+            case CLOCKWISE_90 -> new BlockPos(footprint.depth() - (z + localSize.getZ()), y, x);
+            case CLOCKWISE_180 -> new BlockPos(
+                    footprint.width() - (x + localSize.getX()), y,
+                    footprint.depth() - (z + localSize.getZ()));
+            case COUNTERCLOCKWISE_90 -> new BlockPos(z, y,
+                    footprint.width() - (x + localSize.getX()));
+            default -> new BlockPos(x, y, z);
+        };
+    }
+
     private static int placeTemplate(CommandSourceStack source, ResourceLocation templateId,
                                      int rotationIndex, boolean processMarkers) {
         ServerLevel level = source.getLevel();
@@ -167,9 +221,11 @@ public final class HiveCommands {
             return 0;
         }
 
-        BlockPos origin = BlockPos.containing(source.getPosition());
+        BlockPos minimum = BlockPos.containing(source.getPosition());
+        Rotation rot = rotation(rotationIndex);
+        BlockPos origin = placementOriginForMinimum(minimum, template.get().getSize(), rot);
         StructurePlaceSettings settings = new StructurePlaceSettings()
-                .setRotation(rotation(rotationIndex))
+                .setRotation(rot)
                 .setMirror(Mirror.NONE)
                 .setIgnoreEntities(true);
         if (processMarkers) {
@@ -187,7 +243,7 @@ public final class HiveCommands {
         Vec3i size = template.get().getSize();
         source.sendSuccess(() -> Component.literal(
                 "[fchive] " + templateId + " (" + size.getX() + "x" + size.getY() + "x" + size.getZ()
-                        + ") em " + origin.toShortString() + ", rot " + (rotationIndex * 90) + "°"
+                        + ") em " + minimum.toShortString() + ", rot " + (rotationIndex * 90) + "°"
                         + (processMarkers ? " | " + summarizeMarkers(captured) : " | marcadores mantidos")),
                 true);
         return 1;
@@ -425,7 +481,8 @@ public final class HiveCommands {
             return 0;
         }
         StructureTemplateManager manager = level.getStructureManager();
-        Rotation drot = rotation(districtRotation);
+        Rotation districtRot = rotation(districtRotation);
+        DistrictFootprint footprint = districtFootprint(district.get());
         HiveMarkers.begin();
         int okCount = 0;
         for (HiveDistricts.Entry entry : district.get().entries()) {
@@ -437,14 +494,19 @@ public final class HiveCommands {
             if (template.isEmpty()) {
                 continue;
             }
-            Rotation rot = drot.getRotated(rotation(entry.rotation()));
-            Vec3i o = entry.offset();
-            BlockPos rel = new BlockPos(o.getX(), o.getY(), o.getZ()).rotate(drot);
-            BlockPos at = origin.offset(rel.getX(), rel.getY(), rel.getZ());
+
+            Rotation finalRot = districtRot.getRotated(rotation(entry.rotation()));
+            BlockPos localMinimum = rotatedEntryMinimum(entry, module.get(), footprint, districtRot);
+            BlockPos worldMinimum = origin.offset(
+                    localMinimum.getX(), localMinimum.getY(), localMinimum.getZ());
+            BlockPos placementOrigin = placementOriginForMinimum(
+                    worldMinimum, template.get().getSize(), finalRot);
+
             StructurePlaceSettings settings = new StructurePlaceSettings()
-                    .setRotation(rot).setMirror(Mirror.NONE).setIgnoreEntities(true)
+                    .setRotation(finalRot).setMirror(Mirror.NONE).setIgnoreEntities(true)
                     .addProcessor(HiveMarkerProcessor.INSTANCE);
-            if (template.get().placeInWorld(level, at, at, settings, level.getRandom(), 2)) {
+            if (template.get().placeInWorld(level, placementOrigin, placementOrigin,
+                    settings, level.getRandom(), 2)) {
                 okCount++;
             }
         }

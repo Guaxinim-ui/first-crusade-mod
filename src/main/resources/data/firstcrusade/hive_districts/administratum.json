@@ -1,5 +1,5 @@
 {
-  "description": "Administratum + Catedral (192x128). Empilha sobre o Hab Stacks; catedral no centro.",
+  "description": "Administratum v2 complete (192x128x64): original monumental front row plus a connected processional bridge court with aligned vertical transit.",
   "modules": [
     {
       "module": "firstcrusade:admin/scriptorium_01",
@@ -23,6 +23,30 @@
         128,
         0,
         0
+      ]
+    },
+    {
+      "module": "firstcrusade:connectors/admin_processional_w_01",
+      "offset": [
+        0,
+        0,
+        64
+      ]
+    },
+    {
+      "module": "firstcrusade:connectors/admin_processional_c_01",
+      "offset": [
+        64,
+        0,
+        64
+      ]
+    },
+    {
+      "module": "firstcrusade:connectors/admin_processional_e_01",
+      "offset": [
+        128,
+        0,
+        64
       ]
     }
   ]

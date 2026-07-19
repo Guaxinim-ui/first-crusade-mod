@@ -336,6 +336,33 @@ class ModuleBuilder:
             "glow_fungus": (111, 224, 200), "toxic_barrel": (58, 106, 50), "corrugated_wall": (120, 124, 130),
             "gang_fire": (255, 140, 40), "gang_marking": (176, 40, 24), "toxic_sludge": (95, 191, 58),
             "solid_toxic_sludge": (76, 138, 62),
+            # Hive City concept block set I — structure
+            "armored_bulkhead_wall": (47, 51, 58), "recessed_steel_wall_panel": (58, 62, 69),
+            "gothic_arch_wall": (84, 78, 88), "tall_ribbed_pillar": (66, 62, 72),
+            "buttress_column": (76, 70, 80), "cathedral_cornice": (96, 82, 70),
+            "lower_wall_molding": (88, 76, 67), "spire_cap_block": (74, 68, 82),
+            "balcony_edge_trim": (102, 90, 75), "bridge_support_block": (66, 70, 78),
+            "giant_door_segment": (50, 54, 62), "narrow_lancet_recess": (72, 67, 79),
+            "triangular_relief_panel": (105, 91, 73), "window_slot_frame": (230, 115, 52),
+            "heavy_structural_frame": (56, 60, 68), "vertical_seam_strip": (87, 69, 55),
+            # set II — industrial systems
+            "straight_pipe": (88, 82, 77), "elbow_pipe": (93, 85, 78),
+            "t_pipe_junction": (97, 88, 78), "cross_pipe_junction": (101, 90, 77),
+            "pipe_support_clamp": (117, 93, 62), "vertical_service_conduit": (70, 73, 80),
+            "cable_bundle_block": (50, 45, 51), "vent_outlet": (74, 78, 84),
+            "floor_vent": (62, 66, 73), "lift_rail": (78, 72, 64),
+            "gantry_beam": (67, 71, 79), "suspended_track_anchor": (91, 78, 65),
+            "maintenance_hatch": (82, 70, 61), "machine_casing_block": (72, 76, 71),
+            "hazard_grated_floor": (142, 105, 36), "reinforced_platform_edge": (88, 76, 63),
+            # set III — floor, lighting and details
+            "glowing_shrine_window": (244, 137, 58), "stained_window_variant": (137, 67, 159),
+            "candle_alcove": (226, 133, 62), "wall_sconce": (245, 151, 68),
+            "shrine_recess": (88, 78, 88), "bloodstained_floor_tile": (103, 45, 44),
+            "cathedral_floor_tile": (83, 77, 84), "metal_floor_plate": (74, 78, 85),
+            "floor_grate": (59, 62, 68), "cathedral_stair_block": (88, 82, 90),
+            "landing_slab": (79, 74, 81), "balustrade_railing": (102, 91, 77),
+            "skull_relief_panel": (151, 137, 112), "gargoyle_pedestal": (104, 99, 102),
+            "industrial_crate": (116, 76, 48), "brazier_block": (245, 116, 42),
         }
         def col(key):
             core = key.split("|")[0]

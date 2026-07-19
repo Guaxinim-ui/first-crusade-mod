@@ -1,0 +1,19 @@
+{
+  "template": "firstcrusade:hive/underhive/forgotten_catacombs_01",
+  "category": "underhive",
+  "size": [
+    64,
+    64,
+    64
+  ],
+  "weight": 10,
+  "sockets": {
+    "north": "underhive_corridor",
+    "south": "underhive_corridor",
+    "west": "underhive_corridor",
+    "east": "underhive_corridor",
+    "up": "underhive_ceiling",
+    "down": "foundation"
+  },
+  "description": "Underhive v2: irregular buried city with monumental sewers, ruins, slums, catacombs and aligned vertical transit."
+}

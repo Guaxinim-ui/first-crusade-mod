@@ -1,0 +1,212 @@
+========================================================================
+ PASS  775 JSONs válidos
+ PASS  módulo firstcrusade:admin/cathedral_nave_01: template namespaced
+ PASS  módulo firstcrusade:admin/cathedral_nave_01: NBT existe
+ PASS  módulo firstcrusade:admin/cathedral_nave_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:admin/scriptorium_01: template namespaced
+ PASS  módulo firstcrusade:admin/scriptorium_01: NBT existe
+ PASS  módulo firstcrusade:admin/scriptorium_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:admin/tribunal_01: template namespaced
+ PASS  módulo firstcrusade:admin/tribunal_01: NBT existe
+ PASS  módulo firstcrusade:admin/tribunal_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:cargo/cargo_yard_01: template namespaced
+ PASS  módulo firstcrusade:cargo/cargo_yard_01: NBT existe
+ PASS  módulo firstcrusade:cargo/cargo_yard_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:cargo/military_depot_01: template namespaced
+ PASS  módulo firstcrusade:cargo/military_depot_01: NBT existe
+ PASS  módulo firstcrusade:cargo/military_depot_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:cargo/warehouse_01: template namespaced
+ PASS  módulo firstcrusade:cargo/warehouse_01: NBT existe
+ PASS  módulo firstcrusade:cargo/warehouse_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:gates/hive_wall_e_01: template namespaced
+ PASS  módulo firstcrusade:gates/hive_wall_e_01: NBT existe
+ PASS  módulo firstcrusade:gates/hive_wall_e_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:gates/hive_wall_w_01: template namespaced
+ PASS  módulo firstcrusade:gates/hive_wall_w_01: NBT existe
+ PASS  módulo firstcrusade:gates/hive_wall_w_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:gates/south_ash_gate_01: template namespaced
+ PASS  módulo firstcrusade:gates/south_ash_gate_01: NBT existe
+ PASS  módulo firstcrusade:gates/south_ash_gate_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:gates/hive_wall_line_w_01: template namespaced
+ PASS  módulo firstcrusade:gates/hive_wall_line_w_01: NBT existe
+ PASS  módulo firstcrusade:gates/hive_wall_line_w_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:gates/hive_wall_line_c_01: template namespaced
+ PASS  módulo firstcrusade:gates/hive_wall_line_c_01: NBT existe
+ PASS  módulo firstcrusade:gates/hive_wall_line_c_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:gates/hive_wall_line_e_01: template namespaced
+ PASS  módulo firstcrusade:gates/hive_wall_line_e_01: NBT existe
+ PASS  módulo firstcrusade:gates/hive_wall_line_e_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:gates/hive_corner_front_w_01: template namespaced
+ PASS  módulo firstcrusade:gates/hive_corner_front_w_01: NBT existe
+ PASS  módulo firstcrusade:gates/hive_corner_front_w_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:gates/hive_corner_front_c_01: template namespaced
+ PASS  módulo firstcrusade:gates/hive_corner_front_c_01: NBT existe
+ PASS  módulo firstcrusade:gates/hive_corner_front_c_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:gates/hive_corner_front_e_01: template namespaced
+ PASS  módulo firstcrusade:gates/hive_corner_front_e_01: NBT existe
+ PASS  módulo firstcrusade:gates/hive_corner_front_e_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:gates/hive_corner_rear_w_01: template namespaced
+ PASS  módulo firstcrusade:gates/hive_corner_rear_w_01: NBT existe
+ PASS  módulo firstcrusade:gates/hive_corner_rear_w_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:gates/hive_corner_rear_c_01: template namespaced
+ PASS  módulo firstcrusade:gates/hive_corner_rear_c_01: NBT existe
+ PASS  módulo firstcrusade:gates/hive_corner_rear_c_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:gates/hive_corner_rear_e_01: template namespaced
+ PASS  módulo firstcrusade:gates/hive_corner_rear_e_01: NBT existe
+ PASS  módulo firstcrusade:gates/hive_corner_rear_e_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:hab/hab_block_01: template namespaced
+ PASS  módulo firstcrusade:hab/hab_block_01: NBT existe
+ PASS  módulo firstcrusade:hab/hab_block_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:hab/market_chapel_01: template namespaced
+ PASS  módulo firstcrusade:hab/market_chapel_01: NBT existe
+ PASS  módulo firstcrusade:hab/market_chapel_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:hab/transit_nexus_01: template namespaced
+ PASS  módulo firstcrusade:hab/transit_nexus_01: NBT existe
+ PASS  módulo firstcrusade:hab/transit_nexus_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:spire/spire_crown_01: template namespaced
+ PASS  módulo firstcrusade:spire/spire_crown_01: NBT existe
+ PASS  módulo firstcrusade:spire/spire_crown_01: size JSON=[96, 128, 96] NBT=[96, 128, 96]
+ PASS  módulo firstcrusade:street/industrial_street_01: template namespaced
+ PASS  módulo firstcrusade:street/industrial_street_01: NBT existe
+ PASS  módulo firstcrusade:street/industrial_street_01: size JSON=[64, 48, 64] NBT=[64, 48, 64]
+ PASS  módulo firstcrusade:underhive/collapsed_ruins_01: template namespaced
+ PASS  módulo firstcrusade:underhive/collapsed_ruins_01: NBT existe
+ PASS  módulo firstcrusade:underhive/collapsed_ruins_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:underhive/gang_territory_01: template namespaced
+ PASS  módulo firstcrusade:underhive/gang_territory_01: NBT existe
+ PASS  módulo firstcrusade:underhive/gang_territory_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:underhive/sump_tunnels_01: template namespaced
+ PASS  módulo firstcrusade:underhive/sump_tunnels_01: NBT existe
+ PASS  módulo firstcrusade:underhive/sump_tunnels_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:underhive/forgotten_catacombs_01: template namespaced
+ PASS  módulo firstcrusade:underhive/forgotten_catacombs_01: NBT existe
+ PASS  módulo firstcrusade:underhive/forgotten_catacombs_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:underhive/sump_market_01: template namespaced
+ PASS  módulo firstcrusade:underhive/sump_market_01: NBT existe
+ PASS  módulo firstcrusade:underhive/sump_market_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:underhive/reactor_abyss_01: template namespaced
+ PASS  módulo firstcrusade:underhive/reactor_abyss_01: NBT existe
+ PASS  módulo firstcrusade:underhive/reactor_abyss_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:test/hive_visual_test_01: template namespaced
+ PASS  módulo firstcrusade:test/hive_visual_test_01: NBT existe
+ PASS  módulo firstcrusade:test/hive_visual_test_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:industrial/foundry_01: template namespaced
+ PASS  módulo firstcrusade:industrial/foundry_01: NBT existe
+ PASS  módulo firstcrusade:industrial/foundry_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:industrial/assembly_hall_01: template namespaced
+ PASS  módulo firstcrusade:industrial/assembly_hall_01: NBT existe
+ PASS  módulo firstcrusade:industrial/assembly_hall_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:industrial/generator_hall_01: template namespaced
+ PASS  módulo firstcrusade:industrial/generator_hall_01: NBT existe
+ PASS  módulo firstcrusade:industrial/generator_hall_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:connectors/manufactorum_service_w_01: template namespaced
+ PASS  módulo firstcrusade:connectors/manufactorum_service_w_01: NBT existe
+ PASS  módulo firstcrusade:connectors/manufactorum_service_w_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:connectors/manufactorum_service_c_01: template namespaced
+ PASS  módulo firstcrusade:connectors/manufactorum_service_c_01: NBT existe
+ PASS  módulo firstcrusade:connectors/manufactorum_service_c_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:connectors/manufactorum_service_e_01: template namespaced
+ PASS  módulo firstcrusade:connectors/manufactorum_service_e_01: NBT existe
+ PASS  módulo firstcrusade:connectors/manufactorum_service_e_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:connectors/hab_transit_w_01: template namespaced
+ PASS  módulo firstcrusade:connectors/hab_transit_w_01: NBT existe
+ PASS  módulo firstcrusade:connectors/hab_transit_w_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:connectors/hab_transit_c_01: template namespaced
+ PASS  módulo firstcrusade:connectors/hab_transit_c_01: NBT existe
+ PASS  módulo firstcrusade:connectors/hab_transit_c_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:connectors/hab_transit_e_01: template namespaced
+ PASS  módulo firstcrusade:connectors/hab_transit_e_01: NBT existe
+ PASS  módulo firstcrusade:connectors/hab_transit_e_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:connectors/admin_processional_w_01: template namespaced
+ PASS  módulo firstcrusade:connectors/admin_processional_w_01: NBT existe
+ PASS  módulo firstcrusade:connectors/admin_processional_w_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:connectors/admin_processional_c_01: template namespaced
+ PASS  módulo firstcrusade:connectors/admin_processional_c_01: NBT existe
+ PASS  módulo firstcrusade:connectors/admin_processional_c_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  módulo firstcrusade:connectors/admin_processional_e_01: template namespaced
+ PASS  módulo firstcrusade:connectors/admin_processional_e_01: NBT existe
+ PASS  módulo firstcrusade:connectors/admin_processional_e_01: size JSON=[64, 64, 64] NBT=[64, 64, 64]
+ PASS  distrito firstcrusade:administratum: módulo firstcrusade:admin/scriptorium_01 existe
+ PASS  distrito firstcrusade:administratum: módulo firstcrusade:admin/cathedral_nave_01 existe
+ PASS  distrito firstcrusade:administratum: módulo firstcrusade:admin/tribunal_01 existe
+ PASS  distrito firstcrusade:administratum: módulo firstcrusade:connectors/admin_processional_w_01 existe
+ PASS  distrito firstcrusade:administratum: módulo firstcrusade:connectors/admin_processional_c_01 existe
+ PASS  distrito firstcrusade:administratum: módulo firstcrusade:connectors/admin_processional_e_01 existe
+ PASS  distrito firstcrusade:hab_stacks: módulo firstcrusade:hab/hab_block_01 existe
+ PASS  distrito firstcrusade:hab_stacks: módulo firstcrusade:hab/transit_nexus_01 existe
+ PASS  distrito firstcrusade:hab_stacks: módulo firstcrusade:hab/market_chapel_01 existe
+ PASS  distrito firstcrusade:hab_stacks: módulo firstcrusade:connectors/hab_transit_w_01 existe
+ PASS  distrito firstcrusade:hab_stacks: módulo firstcrusade:connectors/hab_transit_c_01 existe
+ PASS  distrito firstcrusade:hab_stacks: módulo firstcrusade:connectors/hab_transit_e_01 existe
+ PASS  distrito firstcrusade:south_ash_gate: módulo firstcrusade:cargo/warehouse_01 existe
+ PASS  distrito firstcrusade:south_ash_gate: módulo firstcrusade:cargo/cargo_yard_01 existe
+ PASS  distrito firstcrusade:south_ash_gate: módulo firstcrusade:cargo/military_depot_01 existe
+ PASS  distrito firstcrusade:south_ash_gate: módulo firstcrusade:gates/hive_wall_w_01 existe
+ PASS  distrito firstcrusade:south_ash_gate: módulo firstcrusade:gates/south_ash_gate_01 existe
+ PASS  distrito firstcrusade:south_ash_gate: módulo firstcrusade:gates/hive_wall_e_01 existe
+ PASS  distrito firstcrusade:spire: módulo firstcrusade:spire/spire_crown_01 existe
+ PASS  distrito firstcrusade:underhive: módulo firstcrusade:underhive/sump_tunnels_01 existe
+ PASS  distrito firstcrusade:underhive: módulo firstcrusade:underhive/collapsed_ruins_01 existe
+ PASS  distrito firstcrusade:underhive: módulo firstcrusade:underhive/gang_territory_01 existe
+ PASS  distrito firstcrusade:underhive: módulo firstcrusade:underhive/forgotten_catacombs_01 existe
+ PASS  distrito firstcrusade:underhive: módulo firstcrusade:underhive/sump_market_01 existe
+ PASS  distrito firstcrusade:underhive: módulo firstcrusade:underhive/reactor_abyss_01 existe
+ PASS  distrito firstcrusade:visual_test: módulo firstcrusade:test/hive_visual_test_01 existe
+ PASS  distrito firstcrusade:manufactorum: módulo firstcrusade:industrial/foundry_01 existe
+ PASS  distrito firstcrusade:manufactorum: módulo firstcrusade:industrial/assembly_hall_01 existe
+ PASS  distrito firstcrusade:manufactorum: módulo firstcrusade:industrial/generator_hall_01 existe
+ PASS  distrito firstcrusade:manufactorum: módulo firstcrusade:connectors/manufactorum_service_w_01 existe
+ PASS  distrito firstcrusade:manufactorum: módulo firstcrusade:connectors/manufactorum_service_c_01 existe
+ PASS  distrito firstcrusade:manufactorum: módulo firstcrusade:connectors/manufactorum_service_e_01 existe
+ PASS  distrito firstcrusade:hive_wall_line: módulo firstcrusade:cargo/warehouse_01 existe
+ PASS  distrito firstcrusade:hive_wall_line: módulo firstcrusade:cargo/cargo_yard_01 existe
+ PASS  distrito firstcrusade:hive_wall_line: módulo firstcrusade:cargo/military_depot_01 existe
+ PASS  distrito firstcrusade:hive_wall_line: módulo firstcrusade:gates/hive_wall_line_w_01 existe
+ PASS  distrito firstcrusade:hive_wall_line: módulo firstcrusade:gates/hive_wall_line_c_01 existe
+ PASS  distrito firstcrusade:hive_wall_line: módulo firstcrusade:gates/hive_wall_line_e_01 existe
+ PASS  distrito firstcrusade:hive_corner_bastion: módulo firstcrusade:gates/hive_corner_front_w_01 existe
+ PASS  distrito firstcrusade:hive_corner_bastion: módulo firstcrusade:gates/hive_corner_front_c_01 existe
+ PASS  distrito firstcrusade:hive_corner_bastion: módulo firstcrusade:gates/hive_corner_front_e_01 existe
+ PASS  distrito firstcrusade:hive_corner_bastion: módulo firstcrusade:gates/hive_corner_rear_w_01 existe
+ PASS  distrito firstcrusade:hive_corner_bastion: módulo firstcrusade:gates/hive_corner_rear_c_01 existe
+ PASS  distrito firstcrusade:hive_corner_bastion: módulo firstcrusade:gates/hive_corner_rear_e_01 existe
+ PASS  distrito obrigatório south_ash_gate existe
+ PASS  distrito obrigatório hive_wall_line existe
+ PASS  distrito obrigatório hive_corner_bastion existe
+ PASS  distrito obrigatório manufactorum existe
+ PASS  distrito obrigatório hab_stacks existe
+ PASS  distrito obrigatório administratum existe
+ PASS  distrito obrigatório underhive existe
+ PASS  distrito obrigatório spire existe
+ PASS  distrito south_ash_gate: footprint completo >=192x128 ([192, 64, 128])
+ PASS  distrito hive_wall_line: footprint completo >=192x128 ([192, 64, 128])
+ PASS  distrito hive_corner_bastion: footprint completo >=192x128 ([192, 64, 128])
+ PASS  distrito manufactorum: footprint completo >=192x128 ([192, 64, 128])
+ PASS  distrito hab_stacks: footprint completo >=192x128 ([192, 64, 128])
+ PASS  distrito administratum: footprint completo >=192x128 ([192, 64, 128])
+ PASS  distrito underhive: footprint completo >=192x128 ([192, 64, 128])
+ PASS  HiveCityLayout referencia south_ash_gate
+ PASS  HiveCityLayout referencia hive_wall_line
+ PASS  HiveCityLayout referencia hive_corner_bastion
+ PASS  HiveCityLayout referencia manufactorum
+ PASS  HiveCityLayout referencia hab_stacks
+ PASS  HiveCityLayout referencia administratum
+ PASS  HiveCityLayout referencia underhive
+ PASS  HiveCityLayout referencia spire
+ PASS  HiveCityLayout: chaves balanceadas
+ PASS  HiveCityLayout: rotação de bastião implementada
+========================================================================
+196 passed, 0 warnings, 0 failed
+
+District extents:
+  firstcrusade:administratum               modules= 6 extent=[192, 64, 128]
+  firstcrusade:hab_stacks                  modules= 6 extent=[192, 64, 128]
+  firstcrusade:hive_corner_bastion         modules= 6 extent=[192, 64, 128]
+  firstcrusade:hive_wall_line              modules= 6 extent=[192, 64, 128]
+  firstcrusade:manufactorum                modules= 6 extent=[192, 64, 128]
+  firstcrusade:south_ash_gate              modules= 6 extent=[192, 64, 128]
+  firstcrusade:spire                       modules= 1 extent=[144, 128, 112]
+  firstcrusade:underhive                   modules= 6 extent=[192, 64, 128]
+  firstcrusade:visual_test                 modules= 1 extent=[64, 64, 64]
+
+Modules: 42 | NBT size headers parsed: 42

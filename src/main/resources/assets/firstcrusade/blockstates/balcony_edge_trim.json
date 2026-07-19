@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "firstcrusade:block/balcony_edge_trim"
+    },
+    "facing=east": {
+      "model": "firstcrusade:block/balcony_edge_trim",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "firstcrusade:block/balcony_edge_trim",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "firstcrusade:block/balcony_edge_trim",
+      "y": 270
+    }
+  }
+}

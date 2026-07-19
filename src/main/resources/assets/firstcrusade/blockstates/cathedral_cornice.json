@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "firstcrusade:block/cathedral_cornice"
+    },
+    "facing=east": {
+      "model": "firstcrusade:block/cathedral_cornice",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "firstcrusade:block/cathedral_cornice",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "firstcrusade:block/cathedral_cornice",
+      "y": 270
+    }
+  }
+}

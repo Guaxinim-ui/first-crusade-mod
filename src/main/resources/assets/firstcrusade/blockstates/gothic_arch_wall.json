@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "firstcrusade:block/gothic_arch_wall"
+    },
+    "facing=east": {
+      "model": "firstcrusade:block/gothic_arch_wall",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "firstcrusade:block/gothic_arch_wall",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "firstcrusade:block/gothic_arch_wall",
+      "y": 270
+    }
+  }
+}

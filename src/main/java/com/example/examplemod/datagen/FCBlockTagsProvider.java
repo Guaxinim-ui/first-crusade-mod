@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import com.example.examplemod.ExampleMod;
 import com.example.examplemod.FCRegistry;
 import com.example.examplemod.hive.HiveBlocks;
+import com.example.examplemod.hive.HiveCityConceptBlocks;
 import com.example.examplemod.hive.HiveTags;
 
 import net.minecraft.core.HolderLookup;
@@ -56,6 +57,15 @@ public class FCBlockTagsProvider extends BlockTagsProvider {
 
         tag(BlockTags.MINEABLE_WITH_HOE).add(
                 FCRegistry.IMPERIAL_FARM.get());
+
+        // Concept-sheet Hive City blocks: all metal/stone assets use a pickaxe; the crate uses an axe.
+        tag(BlockTags.MINEABLE_WITH_AXE).add(HiveCityConceptBlocks.INDUSTRIAL_CRATE.get());
+        for (RegistryObject<Block> block : HiveCityConceptBlocks.BLOCKS.getEntries()) {
+            if (block.get() != HiveCityConceptBlocks.INDUSTRIAL_CRATE.get()) {
+                tag(BlockTags.MINEABLE_WITH_PICKAXE).add(block.get());
+                tag(BlockTags.NEEDS_STONE_TOOL).add(block.get());
+            }
+        }
 
         // --- Hive City set: pickaxe-mined by default. The toxic_sludge liquid (no item) and the
         // three axe-mined furniture blocks are the only exceptions. ---

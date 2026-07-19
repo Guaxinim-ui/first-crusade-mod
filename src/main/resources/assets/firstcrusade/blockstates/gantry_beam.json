@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "firstcrusade:block/gantry_beam"
+    },
+    "facing=east": {
+      "model": "firstcrusade:block/gantry_beam",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "firstcrusade:block/gantry_beam",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "firstcrusade:block/gantry_beam",
+      "y": 270
+    }
+  }
+}

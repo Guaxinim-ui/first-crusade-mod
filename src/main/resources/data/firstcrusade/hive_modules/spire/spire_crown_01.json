@@ -1,8 +1,8 @@
 {
-  "_comment": "FASE 10 (1A) — módulo do Spire, o pináculo cerimonial que assenta no socket up=spire_base do administratum. STUB: o campo 'template' aponta para o .nbt que deve ser construído no tools/ (gen_hive_spire.py, análogo aos geradores das fases 5-9) e salvo em structures/hive/spire/spire_crown_01.nbt. Note a convenção: o ID deste módulo (o caminho do arquivo sob hive_modules/, i.e. firstcrusade:spire/spire_crown_01) NAO tem prefixo 'hive/'; o 'template' abaixo TEM (bug da Fase 7).",
+  "_comment": "Spire crown v2: base cruciforme/octogonal 96x128x96, massas escalonadas, torres integradas e coroa larga.",
   "template": "firstcrusade:hive/spire/spire_crown_01",
   "category": "spire",
-  "size": [192, 128, 128],
+  "size": [96, 128, 96],
   "weight": 1,
   "sockets": {
     "down": "spire_base",

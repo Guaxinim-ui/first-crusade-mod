@@ -26,9 +26,9 @@ import java.util.List;
  * <h2>Ring assignment (Chebyshev distance)</h2>
  * Ring r = max(|gx-c|, |gz-c|) from the center cell c.
  * <ul>
- *   <li>Ring == radius (outer perimeter) → {@code south_ash_gate} (the wall+gate district). Gates
- *       (the module with the actual archway) face outward on the four axis midpoints; the rest of
- *       the perimeter is wall.</li>
+ *   <li>Ring == radius (outer perimeter) → four {@code south_ash_gate} districts on the axis
+ *       midpoints, gate-free {@code hive_wall_line} sectors on straight edges, and
+ *       {@code hive_corner_bastion} districts on the four corners.</li>
  *   <li>Ring &lt; radius (interior) → an interior stack: cargo base is implied by the gate district's
  *       cargo ring on the perimeter, and interior cells stack manufactorum → hab → admin.</li>
  *   <li>Center cell → also gets the {@code spire} on top of its administratum.</li>
@@ -51,7 +51,9 @@ public final class HiveCityLayout {
     public static final int CELL_PITCH = 192;
 
     // District IDs exactly as registered in data/firstcrusade/hive_districts/*.json (no "hive/" prefix).
-    public static final String D_GATE        = "firstcrusade:south_ash_gate";
+    public static final String D_GATE         = "firstcrusade:south_ash_gate";
+    public static final String D_WALL         = "firstcrusade:hive_wall_line";
+    public static final String D_CORNER       = "firstcrusade:hive_corner_bastion";
     public static final String D_MANUFACTORUM = "firstcrusade:manufactorum";
     public static final String D_HAB         = "firstcrusade:hab_stacks";
     public static final String D_ADMIN       = "firstcrusade:administratum";
@@ -120,16 +122,34 @@ public final class HiveCityLayout {
                 if (ring != radius) continue;
                 int ox = gx * CELL_PITCH - half;
                 int oz = gz * CELL_PITCH - half;
-                int rot = perimeterRotation(gx, gz, c);
-                out.add(new PlacedDistrict(D_GATE,
+                int dx = gx - c;
+                int dz = gz - c;
+                String perimeterId;
+                int rot;
+                if ((gx == c) ^ (gz == c)) {
+                    // Exactly four ceremonial gates: one at the midpoint of each outer edge.
+                    perimeterId = D_GATE;
+                    rot = perimeterRotation(gx, gz, c);
+                } else if (Math.abs(dx) == radius && Math.abs(dz) == radius) {
+                    // Massive L-shaped bastions close the four corners.
+                    perimeterId = D_CORNER;
+                    rot = cornerRotation(dx, dz);
+                } else {
+                    // Every remaining perimeter cell is a gate-free wall sector.
+                    perimeterId = D_WALL;
+                    rot = perimeterRotation(gx, gz, c);
+                }
+                out.add(new PlacedDistrict(perimeterId,
                         new BlockPos(ox, HiveWorld.GROUND_Y, oz), rot));
             }
         }
 
         // ---- 3. INTERIOR STACK: manufactorum → hab → admin, per interior cell ----
-        int yMan   = HiveWorld.GROUND_Y + HiveWorld.LEVEL_HEIGHT;   // +64
-        int yHab   = yMan + HiveWorld.LEVEL_HEIGHT;                 // +128
-        int yAdmin = yHab + HiveWorld.LEVEL_HEIGHT;                 // +192
+        // The manufactorum is the actual interior ground level. The previous +64 start left
+        // every interior super-cell floating over an empty 64-block void.
+        int yMan   = HiveWorld.GROUND_Y;                             // ground / cargo level
+        int yHab   = yMan + HiveWorld.LEVEL_HEIGHT;                  // +64
+        int yAdmin = yHab + HiveWorld.LEVEL_HEIGHT;                  // +128
         for (int gx = 0; gx < edge; gx++) {
             for (int gz = 0; gz < edge; gz++) {
                 int ring = Math.max(Math.abs(gx - c), Math.abs(gz - c));
@@ -147,7 +167,7 @@ public final class HiveCityLayout {
         if (includeSpire && spireRegistered) {
             int ox = c * CELL_PITCH - half;
             int oz = c * CELL_PITCH - half;
-            int ySpire = yAdmin + HiveWorld.LEVEL_HEIGHT;           // +256
+            int ySpire = yAdmin + HiveWorld.LEVEL_HEIGHT;           // +192
             out.add(new PlacedDistrict(D_SPIRE, new BlockPos(ox, ySpire, oz), 0));
         }
 
@@ -169,6 +189,15 @@ public final class HiveCityLayout {
         } else {
             return dx < 0 ? 3 : 1; // west edge → 3, east edge → 1
         }
+    }
+
+
+    /** Rotation for the base corner-bastion model, whose local exterior faces west + south. */
+    private static int cornerRotation(int dx, int dz) {
+        if (dx < 0 && dz > 0) return 0; // south-west
+        if (dx < 0 && dz < 0) return 1; // north-west
+        if (dx > 0 && dz < 0) return 2; // north-east
+        return 3;                       // south-east
     }
 
     /**

@@ -1,0 +1,10 @@
+{
+  "description": "Setor visual de teste 64x64 usando os 48 blocos novos: nave gótica-industrial, galerias, canos, elevadores, santuário e rotas seguras para mobs.",
+  "modules": [
+    {
+      "module": "firstcrusade:test/hive_visual_test_01",
+      "offset": [0, 0, 0],
+      "rotation": 0
+    }
+  ]
+}

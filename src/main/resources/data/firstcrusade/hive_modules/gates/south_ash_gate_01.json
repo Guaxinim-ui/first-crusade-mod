@@ -13,5 +13,6 @@
     "east": "hive_wall",
     "west": "hive_wall",
     "down": "foundation"
-  }
+  },
+  "description": "Hive City rebuild v2: layered gothic-industrial module with natural stepped silhouette."
 }

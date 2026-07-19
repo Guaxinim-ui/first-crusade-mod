@@ -1,5 +1,5 @@
 {
-  "description": "Underhive (192x128). A subcidade sob a colmeia; conecta ao po\u00e7o do military_depot.",
+  "description": "Underhive v2 (192x128x64): six connected subdistricts forming a natural buried city beneath the center of the hive.",
   "modules": [
     {
       "module": "firstcrusade:underhive/sump_tunnels_01",
@@ -23,6 +23,30 @@
         128,
         0,
         0
+      ]
+    },
+    {
+      "module": "firstcrusade:underhive/forgotten_catacombs_01",
+      "offset": [
+        0,
+        0,
+        64
+      ]
+    },
+    {
+      "module": "firstcrusade:underhive/sump_market_01",
+      "offset": [
+        64,
+        0,
+        64
+      ]
+    },
+    {
+      "module": "firstcrusade:underhive/reactor_abyss_01",
+      "offset": [
+        128,
+        0,
+        64
       ]
     }
   ]

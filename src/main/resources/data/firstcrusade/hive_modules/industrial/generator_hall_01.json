@@ -1,0 +1,19 @@
+{
+  "template": "firstcrusade:hive/industrial/generator_hall_01",
+  "category": "industrial",
+  "size": [
+    64,
+    64,
+    64
+  ],
+  "weight": 8,
+  "sockets": {
+    "north": "street",
+    "south": "street",
+    "east": "industrial_hall",
+    "west": "industrial_hall",
+    "down": "foundation",
+    "up": "power_canopy"
+  },
+  "description": "Manufactorum rebuild v2: layered gothic-industrial hall, continuous galleries, thick roofs and irregular massing."
+}

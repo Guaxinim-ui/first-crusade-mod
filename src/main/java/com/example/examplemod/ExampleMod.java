@@ -66,6 +66,7 @@ public class ExampleMod {
 
     // Hive City block set (FASE 2) — self-contained registry in com.example.examplemod.hive.
     com.example.examplemod.hive.HiveBlocks.register(modEventBus);
+        com.example.examplemod.hive.HiveCityConceptBlocks.register(modEventBus);
 
     net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
             net.minecraftforge.fml.config.ModConfig.Type.SERVER, FirstCrusadeServerConfig.SPEC);

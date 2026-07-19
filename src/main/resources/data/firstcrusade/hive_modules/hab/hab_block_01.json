@@ -14,5 +14,6 @@
     "west": "hab_corridor",
     "down": "canopy",
     "up": "hab_roof"
-  }
+  },
+  "description": "Hab Stacks rebuild v2: staggered vertical city, occupied skybridges, transit basilica and broad market-chapel complex."
 }

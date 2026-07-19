@@ -3,16 +3,17 @@
   "category": "underhive",
   "size": [
     64,
-    48,
+    64,
     64
   ],
-  "weight": 8,
+  "weight": 10,
   "sockets": {
-    "north": "tunnel",
-    "south": "tunnel",
-    "east": "cavern",
-    "west": "cavern",
+    "north": "underhive_corridor",
+    "south": "underhive_corridor",
+    "west": "underhive_corridor",
+    "east": "underhive_corridor",
     "up": "underhive_ceiling",
-    "down": "bedrock"
-  }
+    "down": "foundation"
+  },
+  "description": "Underhive v2: irregular buried city with monumental sewers, ruins, slums, catacombs and aligned vertical transit."
 }

@@ -36,6 +36,8 @@ DISTRICT_D = 128
 CELL_PITCH = 192
 
 D_GATE = "firstcrusade:south_ash_gate"
+D_WALL = "firstcrusade:hive_wall_line"
+D_CORNER = "firstcrusade:hive_corner_bastion"
 D_MANUFACTORUM = "firstcrusade:manufactorum"
 D_HAB = "firstcrusade:hab_stacks"
 D_ADMIN = "firstcrusade:administratum"
@@ -101,6 +103,12 @@ def perimeter_rotation(gx, gz, c):
         return 0 if dz < 0 else 2
     return 3 if dx < 0 else 1
 
+def corner_rotation(dx, dz):
+    if dx < 0 and dz > 0: return 0
+    if dx < 0 and dz < 0: return 1
+    if dx > 0 and dz < 0: return 2
+    return 3
+
 def plan(seed, radius, include_spire, spire_registered):
     """Byte-for-byte mirror of HiveCityLayout.plan() (square pitch, separate spire pass)."""
     out = []
@@ -121,10 +129,16 @@ def plan(seed, radius, include_spire, spire_registered):
                 continue
             ox = gx * CELL_PITCH - half
             oz = gz * CELL_PITCH - half
-            out.append((D_GATE, (ox, GROUND_Y, oz), perimeter_rotation(gx, gz, c)))
+            dx, dz = gx - c, gz - c
+            if (gx == c) ^ (gz == c):
+                out.append((D_GATE, (ox, GROUND_Y, oz), perimeter_rotation(gx, gz, c)))
+            elif abs(dx) == radius and abs(dz) == radius:
+                out.append((D_CORNER, (ox, GROUND_Y, oz), corner_rotation(dx, dz)))
+            else:
+                out.append((D_WALL, (ox, GROUND_Y, oz), perimeter_rotation(gx, gz, c)))
 
     # interior stacks
-    yMan = GROUND_Y + LEVEL_HEIGHT
+    yMan = GROUND_Y
     yHab = yMan + LEVEL_HEIGHT
     yAdmin = yHab + LEVEL_HEIGHT
     for gx in range(edge):
@@ -163,10 +177,14 @@ def validate_layout():
     # Interior (ring<2) = 3x3 = 9 cells -> 9*(man+hab+admin)=27, +1 spire, +1 underhive.
     p = plan(42, 2, True, True)
     gates = [t for t in p if t[0] == D_GATE]
+    walls = [t for t in p if t[0] == D_WALL]
+    corners = [t for t in p if t[0] == D_CORNER]
     interior_stack = [t for t in p if t[0] in (D_MANUFACTORUM, D_HAB, D_ADMIN)]
     spires = [t for t in p if t[0] == D_SPIRE]
     unders = [t for t in p if t[0] == D_UNDERHIVE]
-    check(len(gates) == 16, f"radius-2 perimeter has 16 gate districts (got {len(gates)})")
+    check(len(gates) == 4, f"radius-2 perimeter has four ceremonial gates (got {len(gates)})")
+    check(len(walls) == 8, f"radius-2 perimeter has eight straight wall sectors (got {len(walls)})")
+    check(len(corners) == 4, f"radius-2 perimeter has four corner bastions (got {len(corners)})")
     check(len(interior_stack) == 27, f"radius-2 interior has 27 stacked districts (got {len(interior_stack)})")
     check(len(spires) == 1, f"exactly one spire on center (got {len(spires)})")
     check(len(unders) == 1, f"exactly one underhive (got {len(unders)})")
@@ -191,8 +209,8 @@ def validate_layout():
 
     # every Y in the stack is a clean multiple offset from ground (contiguous 64s)
     interior_ys = sorted({o[1] for d, o, r in interior_stack})
-    check(interior_ys == [64, 128, 192],
-          f"interior stack Ys are contiguous 64-steps [64,128,192] (got {interior_ys})")
+    check(interior_ys == [0, 64, 128],
+          f"interior stack Ys are contiguous 64-steps [0,64,128] (got {interior_ys})")
 
     # bottom-up emission: underhive first, spire last
     check(p[0][0] == D_UNDERHIVE, "plan emits underhive first (bottom-up)")
@@ -236,13 +254,15 @@ def validate_java_sync():
     check(intval(layout, "DISTRICT_D") == DISTRICT_D, "Java HiveCityLayout.DISTRICT_D matches")
     check(intval(layout, "CELL_PITCH") == CELL_PITCH, "Java HiveCityLayout.CELL_PITCH matches")
     check(strval(layout, "D_GATE") == D_GATE, "Java D_GATE id matches")
+    check(strval(layout, "D_WALL") == D_WALL, "Java D_WALL id matches")
+    check(strval(layout, "D_CORNER") == D_CORNER, "Java D_CORNER id matches")
     check(strval(layout, "D_MANUFACTORUM") == D_MANUFACTORUM, "Java D_MANUFACTORUM id matches")
     check(strval(layout, "D_HAB") == D_HAB, "Java D_HAB id matches")
     check(strval(layout, "D_ADMIN") == D_ADMIN, "Java D_ADMIN id matches")
     check(strval(layout, "D_UNDERHIVE") == D_UNDERHIVE, "Java D_UNDERHIVE id matches")
 
     # District IDs must NOT carry the "hive/" prefix (the Phase-7 bug).
-    for did in (D_GATE, D_MANUFACTORUM, D_HAB, D_ADMIN, D_UNDERHIVE, D_SPIRE):
+    for did in (D_GATE, D_WALL, D_CORNER, D_MANUFACTORUM, D_HAB, D_ADMIN, D_UNDERHIVE, D_SPIRE):
         check("hive/" not in did, f"district id '{did}' has no 'hive/' prefix (Phase-7 bug guard)")
 
 # ------------------------------------------------------------------- runner

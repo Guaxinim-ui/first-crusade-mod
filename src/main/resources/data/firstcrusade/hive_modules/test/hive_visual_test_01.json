@@ -1,0 +1,14 @@
+{
+  "template": "firstcrusade:hive/test/hive_visual_test_01",
+  "category": "test",
+  "size": [64, 64, 64],
+  "weight": 1,
+  "sockets": {
+    "north": "cathedral_axis",
+    "south": "street",
+    "east": "service_gallery",
+    "west": "service_gallery",
+    "down": "foundation",
+    "up": "canopy"
+  }
+}

@@ -532,6 +532,8 @@ public final class HiveBlocks {
                         output.accept(CORRUGATED_WALL.get());
                         output.accept(GANG_FIRE.get());
                         output.accept(GANG_MARKING.get());
+                        // New concept-sheet Hive City blocks
+                        com.example.examplemod.hive.HiveCityConceptBlocks.addToCreativeTab(output);
                         // Structure markers (dev)
                         for (HiveMarkers.MarkerType type : HiveMarkers.MarkerType.values()) {
                             output.accept(MARKERS.get(type).get());

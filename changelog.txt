@@ -1059,3 +1059,8 @@
             Co-authored-by: Curle <curle@gemwire.uk>
             Co-authored-by: sciwhiz12 <arnoldnunag12@gmail.com>
 
+
+Hive City Rebuild Phase 4 — Manufactorum V2
+- Rebuilt foundry, assembly hall and generator hall as one continuous 192x64x64 district.
+- Added stepped silhouettes, thick roofs, irregular annexes, galleries, cranes, furnaces, reactor systems and shared roof infrastructure.
+- Preserved existing module and district IDs for compatibility.

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "firstcrusade:block/vent_outlet"
+    },
+    "facing=east": {
+      "model": "firstcrusade:block/vent_outlet",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "firstcrusade:block/vent_outlet",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "firstcrusade:block/vent_outlet",
+      "y": 270
+    }
+  }
+}

@@ -42,12 +42,16 @@ public final class HiveCityCommands {
     /** Spawn position inside the hive: center street level, a couple blocks up. */
     private static final BlockPos HIVE_SPAWN = new BlockPos(0, HiveWorld.GROUND_Y + 4, 0);
 
+    /** Isolated development pad for the 64x64 visual test sector. */
+    private static final BlockPos PREVIEW_ORIGIN = new BlockPos(384, HiveWorld.GROUND_Y, 0);
+
     public static LiteralArgumentBuilder<CommandSourceStack> build() {
         return Commands.literal("city")
                 .requires(src -> src.hasPermission(2))
                 .then(Commands.literal("tp").executes(HiveCityCommands::cmdTp))
                 .then(Commands.literal("status").executes(HiveCityCommands::cmdStatus))
                 .then(Commands.literal("cancel").executes(HiveCityCommands::cmdCancel))
+                .then(Commands.literal("preview").executes(HiveCityCommands::cmdPreview))
                 .then(Commands.literal("generate")
                         .executes(ctx -> cmdGenerate(ctx, ctx.getSource().getLevel().getSeed()))
                         .then(arg("seed", LongArgumentType.longArg())
@@ -81,6 +85,40 @@ public final class HiveCityCommands {
                 HIVE_SPAWN.getX() + 0.5, HIVE_SPAWN.getY(), HIVE_SPAWN.getZ() + 0.5,
                 player.getYRot(), player.getXRot());
         src.sendSuccess(() -> Component.literal("Teleported to the Hive."), true);
+        return 1;
+    }
+
+
+    // ---- visual test sector ----
+    private static int cmdPreview(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack src = ctx.getSource();
+        ServerLevel hive = src.getServer().getLevel(HiveWorld.LEVEL);
+        if (hive == null) {
+            src.sendFailure(Component.literal("hive_world dimension not found — datapack not loaded."));
+            return 0;
+        }
+
+        boolean ok = HiveCityPlacer.place(hive, "firstcrusade:visual_test", PREVIEW_ORIGIN, 0);
+        if (!ok) {
+            src.sendFailure(Component.literal(
+                    "Could not place firstcrusade:visual_test. Run /reload and check the module/template logs."));
+            return 0;
+        }
+
+        try {
+            ServerPlayer player = src.getPlayerOrException();
+            player.teleportTo(hive,
+                    PREVIEW_ORIGIN.getX() + 31.5,
+                    PREVIEW_ORIGIN.getY() + 3,
+                    PREVIEW_ORIGIN.getZ() - 10.5,
+                    0.0F, 0.0F);
+        } catch (Exception ignored) {
+            // Console execution still places the sector; there is simply no player to teleport.
+        }
+
+        src.sendSuccess(() -> Component.literal(
+                "Hive visual test placed at " + PREVIEW_ORIGIN.toShortString()
+                + ". This sector uses all 48 new block concepts."), true);
         return 1;
     }
 

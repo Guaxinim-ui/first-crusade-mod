@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "firstcrusade:block/giant_door_segment"
+    },
+    "facing=east": {
+      "model": "firstcrusade:block/giant_door_segment",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "firstcrusade:block/giant_door_segment",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "firstcrusade:block/giant_door_segment",
+      "y": 270
+    }
+  }
+}

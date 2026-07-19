@@ -1,0 +1,19 @@
+{
+  "template": "firstcrusade:hive/connectors/admin_processional_c_01",
+  "category": "connector",
+  "size": [
+    64,
+    64,
+    64
+  ],
+  "weight": 10,
+  "sockets": {
+    "north": "street",
+    "south": "street",
+    "west": "corridor_l2",
+    "east": "corridor_l2",
+    "up": "vertical_transit",
+    "down": "vertical_transit"
+  },
+  "description": "Hive City v2 transition module with aligned lift/stair core, bridges and level-specific architecture."
+}

@@ -1,0 +1,19 @@
+{
+  "template": "firstcrusade:hive/industrial/foundry_01",
+  "category": "industrial",
+  "size": [
+    64,
+    64,
+    64
+  ],
+  "weight": 10,
+  "sockets": {
+    "north": "street",
+    "south": "street",
+    "east": "industrial_hall",
+    "west": "industrial_hall",
+    "down": "foundation",
+    "up": "service_canopy"
+  },
+  "description": "Manufactorum rebuild v2: layered gothic-industrial hall, continuous galleries, thick roofs and irregular massing."
+}

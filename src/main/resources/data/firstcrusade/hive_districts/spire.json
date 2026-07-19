@@ -1,6 +1,10 @@
 {
-  "_comment": "FASE 10 (1A) — distrito Spire (opcional). STUB de 1 módulo. Só será incluído na geração automática quando HiveDistricts.exists('firstcrusade:spire') retornar true (ver HiveCityCommands.HiveCityPlacer_DistrictExists). Enquanto o .nbt do módulo nao existir, deixe este arquivo fora da pasta de datapack OU faça o gerador de .nbt primeiro. Modulo referenciado pelo id SEM prefixo 'hive/'.",
+  "description": "Spire v2 central: base larga, terraços, transeptos, torres secundárias e coroa monumental.",
   "modules": [
-    { "module": "firstcrusade:spire/spire_crown_01", "offset": [0, 0, 0], "rotation": 0 }
+    {
+      "module": "firstcrusade:spire/spire_crown_01",
+      "offset": [48, 0, 16],
+      "rotation": 0
+    }
   ]
 }

@@ -480,3 +480,7 @@ relevos, vents, lumens, hazard e grating.
 - **2026-07-14 — FASE 1+2:** diagnóstico completo; 29 blocos + 29 texturas originais +
   105 JSONs + tags + lang; ferramentas HiveTextureGen/gen_hive_assets; integração de 2 linhas
   no ExampleMod. Próximo: FASE 3 (módulo protótipo 64×64).
+
+### 2026-07-19 — Administratum V2 rebuild
+
+The production Administratum templates were rebuilt as a continuous 192×64×64 district and split back into the existing module IDs. The new version adds thick stepped masses, unequal archive towers, a cross-shaped cathedral with clustered roof crown, flying buttresses, a broad tribunal palace, elevated galleries and detailed occupied interiors. Generator: `tools/gen_hive_administratum_v2.py`.
