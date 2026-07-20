@@ -52,6 +52,12 @@ public final class HiveClientEvents {
             ItemBlockRenderTypes.setRenderLayer(HiveBlocks.CABLE_BUNDLE.get(), RenderType.cutout());
             ItemBlockRenderTypes.setRenderLayer(HiveBlocks.HUGE_HIVE_PIPE.get(), RenderType.cutout());
             ItemBlockRenderTypes.setRenderLayer(HiveBlocks.MAIN_PIPE_TRUNK.get(), RenderType.cutout());
+
+            // Hive City concept blocks whose textures use real transparent holes (open grating /
+            // balustrade). They must render on the cutout layer or the holes turn opaque black.
+            ItemBlockRenderTypes.setRenderLayer(HiveCityConceptBlocks.FLOOR_GRATE.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(HiveCityConceptBlocks.HAZARD_GRATED_FLOOR.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(HiveCityConceptBlocks.BALUSTRADE_RAILING.get(), RenderType.cutout());
         });
     }
 

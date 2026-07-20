@@ -21,9 +21,16 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.StandingSignBlock;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignText;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
@@ -114,6 +121,12 @@ public final class HiveCommands {
                                                 .suggestResource(HiveDistricts.ids(), b))
                                         .executes(ctx -> districtPlace(ctx.getSource(),
                                                 ResourceLocationArgument.getId(ctx, "district"))))))
+
+                // FASE 11 — bloco de teste visual: coloca os 48 blocos da Hive City em uma
+                // plataforma organizada (3 conjuntos), com placas identificadoras.
+                .then(Commands.literal("blocks")
+                        .then(Commands.literal("test")
+                                .executes(ctx -> blocksTest(ctx.getSource()))))
 
                 .then(Commands.literal("markers")
                         .executes(ctx -> listMarkers(ctx.getSource())))
@@ -321,6 +334,114 @@ public final class HiveCommands {
             source.sendSuccess(() -> Component.literal(sb.toString()), false);
         }
         return result;
+    }
+
+    // ------------------------------------------------------------------ FASE 11 — bloco de teste
+
+    /** Os 48 blocos da Hive City, na ordem dos 3 conjuntos (estruturas / industrial / detalhe). */
+    private static final String[] TEST_BLOCKS = {
+        "armored_bulkhead_wall", "recessed_steel_wall_panel", "gothic_arch_wall", "tall_ribbed_pillar",
+        "buttress_column", "cathedral_cornice", "lower_wall_molding", "spire_cap_block",
+        "balcony_edge_trim", "bridge_support_block", "giant_door_segment", "narrow_lancet_recess",
+        "triangular_relief_panel", "window_slot_frame", "heavy_structural_frame", "vertical_seam_strip",
+        "straight_pipe", "elbow_pipe", "t_pipe_junction", "cross_pipe_junction",
+        "pipe_support_clamp", "vertical_service_conduit", "cable_bundle_block", "vent_outlet",
+        "floor_vent", "lift_rail", "gantry_beam", "suspended_track_anchor",
+        "maintenance_hatch", "machine_casing_block", "hazard_grated_floor", "reinforced_platform_edge",
+        "glowing_shrine_window", "stained_window_variant", "candle_alcove", "wall_sconce",
+        "shrine_recess", "bloodstained_floor_tile", "cathedral_floor_tile", "metal_floor_plate",
+        "floor_grate", "cathedral_stair_block", "landing_slab", "balustrade_railing",
+        "skull_relief_panel", "gargoyle_pedestal", "industrial_crate", "brazier_block"
+    };
+
+    /**
+     * Coloca os 48 blocos numa plataforma organizada em 3 conjuntos de 16 (2 fileiras de 8 cada),
+     * com uma placa identificadora à frente de cada bloco e os blocos direcionais virados para o
+     * jogador. Permite comparar o bloco colocado com o item do inventário.
+     */
+    private static int blocksTest(CommandSourceStack source) {
+        ServerLevel level = source.getLevel();
+        BlockPos origin = BlockPos.containing(source.getPosition());
+        int ox = origin.getX() + 2;
+        int oy = origin.getY();
+        int oz = origin.getZ() + 2;
+        int placed = 0, missing = 0;
+        StringBuilder miss = new StringBuilder();
+
+        for (int idx = 0; idx < TEST_BLOCKS.length; idx++) {
+            int set = idx / 16;          // 0,1,2 — conjuntos
+            int within = idx % 16;
+            int row = within / 8;        // 0 ou 1 — fileira dentro do conjunto
+            int col = within % 8;        // 0..7 — coluna
+            int x = ox + col * 2;
+            int z = oz + set * 7 + row * 3;
+            BlockPos bpos = new BlockPos(x, oy, z);
+            BlockPos spos = bpos.north();   // placa entre o jogador e o bloco
+
+            // piso sob bloco e placa
+            level.setBlock(bpos.below(), Blocks.POLISHED_ANDESITE.defaultBlockState(), 2);
+            level.setBlock(spos.below(), Blocks.POLISHED_ANDESITE.defaultBlockState(), 2);
+            level.setBlock(bpos.above(), Blocks.AIR.defaultBlockState(), 2);
+
+            Block block = ForgeRegistries.BLOCKS.getValue(
+                    new ResourceLocation(ExampleMod.MODID, TEST_BLOCKS[idx]));
+            if (block == null || block == Blocks.AIR) {
+                missing++;
+                miss.append(' ').append(TEST_BLOCKS[idx]);
+                continue;
+            }
+            BlockState state = block.defaultBlockState();
+            if (state.hasProperty(HorizontalDirectionalBlock.FACING)) {
+                state = state.setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH);
+            }
+            level.setBlock(bpos, state, 3);
+            placed++;
+
+            // placa identificadora, virada para o jogador (rotação 8 = norte)
+            BlockState sign = Blocks.OAK_SIGN.defaultBlockState();
+            if (sign.hasProperty(StandingSignBlock.ROTATION)) {
+                sign = sign.setValue(StandingSignBlock.ROTATION, 8);
+            }
+            level.setBlock(spos, sign, 3);
+            if (level.getBlockEntity(spos) instanceof SignBlockEntity sbe) {
+                String[] lines = labelLines(TEST_BLOCKS[idx]);
+                SignText txt = sbe.getFrontText();
+                for (int i = 0; i < 4; i++) {
+                    txt = txt.setMessage(i, Component.literal(i < lines.length ? lines[i] : ""));
+                }
+                sbe.setText(txt, true);
+                sbe.setChanged();
+                level.sendBlockUpdated(spos, sign, sign, 3);
+            }
+        }
+
+        final int fPlaced = placed, fMissing = missing;
+        final String fMiss = miss.toString();
+        source.sendSuccess(() -> Component.literal("[fchive] blocos de teste: " + fPlaced
+                + " colocados em " + origin.toShortString()
+                + (fMissing == 0 ? " | todos registrados"
+                        : " | " + fMissing + " ausentes:" + fMiss)), true);
+        return placed;
+    }
+
+    /** Quebra "armored_bulkhead_wall" em até 4 linhas de <=15 chars para caber na placa. */
+    private static String[] labelLines(String name) {
+        String[] words = name.split("_");
+        List<String> lines = new java.util.ArrayList<>();
+        StringBuilder cur = new StringBuilder();
+        for (String w : words) {
+            if (cur.length() == 0) {
+                cur.append(w);
+            } else if (cur.length() + 1 + w.length() <= 15) {
+                cur.append(' ').append(w);
+            } else {
+                lines.add(cur.toString());
+                cur = new StringBuilder(w);
+            }
+            if (lines.size() == 4) break;
+        }
+        if (cur.length() > 0 && lines.size() < 4) lines.add(cur.toString());
+        return lines.toArray(new String[0]);
     }
 
     // ------------------------------------------------------------------ marcadores / bounds

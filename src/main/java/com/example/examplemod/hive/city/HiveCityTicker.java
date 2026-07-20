@@ -48,6 +48,19 @@ public final class HiveCityTicker {
         if (!(event.level instanceof ServerLevel level)) return;
         if (!level.dimension().equals(HiveWorld.LEVEL)) return;
 
+        // Batched full-city-test clear runs on the same level; drain it first so a clear started
+        // right before a rebuild finishes before districts start pasting.
+        HiveClearQueue clear = HiveClearQueue.get(level);
+        if (clear.isActive()) {
+            clear.process(level);
+            if (!clear.isActive()) {
+                level.getServer().getPlayerList().broadcastSystemMessage(
+                        Component.literal("[Hive City] Área de teste limpa ("
+                                + clear.cleared() + " blocos)."), false);
+            }
+            return; // não colar distritos no mesmo tick em que se está limpando
+        }
+
         HiveGenerationQueue queue = HiveGenerationQueue.get(level);
         if (queue.isEmpty()) return;
 

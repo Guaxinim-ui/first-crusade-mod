@@ -1,11 +1,13 @@
 package com.example.examplemod.hive.city;
 
 import com.mojang.brigadier.arguments.LongArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -56,7 +58,20 @@ public final class HiveCityCommands {
                         .executes(ctx -> cmdGenerate(ctx, ctx.getSource().getLevel().getSeed()))
                         .then(arg("seed", LongArgumentType.longArg())
                                 .executes(ctx -> cmdGenerate(ctx,
-                                        LongArgumentType.getLong(ctx, "seed")))));
+                                        LongArgumentType.getLong(ctx, "seed")))))
+
+                // FASE 8/13 — cidade completa de teste (validação integrada).
+                .then(Commands.literal("build_full_test").executes(HiveCityCommands::cmdBuildFullTest))
+                .then(Commands.literal("full_test_status").executes(HiveCityCommands::cmdStatus))
+                .then(Commands.literal("full_test_cancel").executes(HiveCityCommands::cmdCancel))
+                .then(Commands.literal("full_test_clear").executes(HiveCityCommands::cmdFullTestClear))
+                .then(Commands.literal("full_test_tp")
+                        .executes(ctx -> cmdFullTestTp(ctx, "aerial"))
+                        .then(Commands.argument("point", StringArgumentType.word())
+                                .suggests((c, b) -> SharedSuggestionProvider.suggest(
+                                        HiveFullCityTest.TP_POINTS, b))
+                                .executes(ctx -> cmdFullTestTp(ctx,
+                                        StringArgumentType.getString(ctx, "point")))));
     }
 
     private static RequiredArgumentBuilder<CommandSourceStack, Long> arg(
@@ -196,6 +211,106 @@ public final class HiveCityCommands {
         src.sendSuccess(() -> Component.literal("Cancelled — cleared " + remaining
                 + " pending districts. (Already-placed blocks remain.)"), true);
         return 1;
+    }
+
+    // ---- FASE 8/13 — cidade completa de teste ----
+
+    private static int cmdBuildFullTest(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack src = ctx.getSource();
+        ServerLevel hive = src.getServer().getLevel(HiveWorld.LEVEL);
+        if (hive == null) {
+            src.sendFailure(Component.literal("hive_world dimension not found — datapack not loaded."));
+            return 0;
+        }
+        HiveGenerationQueue queue = HiveGenerationQueue.get(hive);
+        if (!queue.isEmpty()) {
+            src.sendFailure(Component.literal("Já há uma cidade sendo construída ("
+                    + queue.percent() + "%). Use /fchive city full_test_cancel primeiro."));
+            return 0;
+        }
+        if (HiveClearQueue.get(hive).isActive()) {
+            src.sendFailure(Component.literal("Um clear está em andamento. Aguarde ou use full_test_cancel."));
+            return 0;
+        }
+
+        List<HiveCityLayout.PlacedDistrict> plan = HiveFullCityTest.plan();
+        int[] box = HiveFullCityTest.cityBox();
+        // Dry-run: registra o plano inteiro antes de colocar qualquer bloco (spec: não esconder erros).
+        for (HiveCityLayout.PlacedDistrict pd : plan) {
+            src.sendSystemMessage(Component.literal("  " + pd));
+        }
+        HiveFullCityTest.enqueue(hive);
+
+        // Teleporta para a plataforma de observação aérea.
+        tpTo(src, hive, HiveFullCityTest.tpPoint("aerial"));
+
+        int wx = box[3] - box[0] + 1, hy = box[4] - box[1] + 1, wz = box[5] - box[2] + 1;
+        src.sendSuccess(() -> Component.literal(
+                "Cidade completa de teste enfileirada: " + plan.size() + " distritos (seed "
+                + HiveFullCityTest.TEST_SEED + ", raio " + HiveFullCityTest.TEST_RADIUS + ")."
+                + " Área " + wx + "×" + hy + "×" + wz + " em [" + box[0] + "," + box[1] + "," + box[2]
+                + "]..[" + box[3] + "," + box[4] + "," + box[5] + "]."
+                + " Construindo " + HiveCityTicker.DISTRICTS_PER_TICK + " distrito/tick —"
+                + " /fchive city full_test_status para progresso."), true);
+        return 1;
+    }
+
+    private static int cmdFullTestClear(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack src = ctx.getSource();
+        ServerLevel hive = src.getServer().getLevel(HiveWorld.LEVEL);
+        if (hive == null) {
+            src.sendFailure(Component.literal("hive_world dimension not found."));
+            return 0;
+        }
+        if (!HiveGenerationQueue.get(hive).isEmpty()) {
+            src.sendFailure(Component.literal(
+                    "Uma construção está em andamento. Use full_test_cancel antes de limpar."));
+            return 0;
+        }
+        HiveClearQueue clear = HiveClearQueue.get(hive);
+        if (clear.isActive()) {
+            src.sendFailure(Component.literal("Já há um clear em andamento (" + clear.percent() + "%)."));
+            return 0;
+        }
+        int[] b = HiveFullCityTest.startClear(hive);
+        src.sendSuccess(() -> Component.literal(
+                "Limpando a cidade de teste em lotes: box [" + b[0] + "," + b[1] + "," + b[2]
+                + "]..[" + b[3] + "," + b[4] + "," + b[5] + "] a "
+                + HiveClearQueue.BLOCKS_PER_TICK + " blocos/tick."), true);
+        return 1;
+    }
+
+    private static int cmdFullTestTp(CommandContext<CommandSourceStack> ctx, String point) {
+        CommandSourceStack src = ctx.getSource();
+        ServerLevel hive = src.getServer().getLevel(HiveWorld.LEVEL);
+        if (hive == null) {
+            src.sendFailure(Component.literal("hive_world dimension not found."));
+            return 0;
+        }
+        float[] p = HiveFullCityTest.tpPoint(point);
+        if (p == null) {
+            src.sendFailure(Component.literal("Ponto desconhecido: " + point
+                    + ". Válidos: " + String.join(", ", HiveFullCityTest.TP_POINTS)));
+            return 0;
+        }
+        if (!tpTo(src, hive, p)) {
+            src.sendFailure(Component.literal("Apenas um jogador pode teleportar."));
+            return 0;
+        }
+        src.sendSuccess(() -> Component.literal("Teleportado para: " + point), false);
+        return 1;
+    }
+
+    /** Teleporta o jogador (se houver) para {x,y,z,yRot,xRot}. Retorna false sem jogador. */
+    private static boolean tpTo(CommandSourceStack src, ServerLevel hive, float[] p) {
+        if (p == null) return false;
+        try {
+            ServerPlayer player = src.getPlayerOrException();
+            player.teleportTo(hive, p[0] + 0.5, p[1], p[2] + 0.5, p[3], p[4]);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

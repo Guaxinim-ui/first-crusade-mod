@@ -1,674 +1,670 @@
 {
-  "credit": "First Crusade Hive City Block Set \u2014 generated Blockbench source",
-  "ambientocclusion": true,
-  "texture_size": [
-    64,
-    64
-  ],
-  "textures": {
-    "0": "firstcrusade:block/hive_city/balustrade_railing",
-    "particle": "firstcrusade:block/hive_city/balustrade_railing"
-  },
-  "elements": [
-    {
-      "name": "base",
-      "from": [
-        0.0,
-        0.0,
-        4.0
-      ],
-      "to": [
-        16.0,
-        2.0,
-        12.0
-      ],
-      "shade": true,
-      "faces": {
-        "north": {
-          "uv": [
-            32,
-            32,
-            48,
-            48
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            32,
-            32,
-            48,
-            48
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            32,
-            32,
-            48,
-            48
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            32,
-            32,
-            48,
-            48
-          ],
-          "texture": "#0"
-        },
-        "up": {
-          "uv": [
-            32,
-            32,
-            48,
-            48
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            32,
-            32,
-            48,
-            48
-          ],
-          "texture": "#0"
-        }
-      }
-    },
-    {
-      "name": "top",
-      "from": [
-        0.0,
-        13.0,
-        4.0
-      ],
-      "to": [
-        16.0,
-        15.0,
-        12.0
-      ],
-      "shade": true,
-      "faces": {
-        "north": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "up": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        }
-      }
-    },
-    {
-      "name": "post_0",
-      "from": [
-        0.0,
-        2.0,
-        5.0
-      ],
-      "to": [
-        1.5,
-        13.0,
-        11.0
-      ],
-      "shade": true,
-      "faces": {
-        "north": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "up": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        }
-      }
-    },
-    {
-      "name": "post_1",
-      "from": [
-        5.0,
-        2.0,
-        5.0
-      ],
-      "to": [
-        6.5,
-        13.0,
-        11.0
-      ],
-      "shade": true,
-      "faces": {
-        "north": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "up": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        }
-      }
-    },
-    {
-      "name": "post_2",
-      "from": [
-        10.0,
-        2.0,
-        5.0
-      ],
-      "to": [
-        11.5,
-        13.0,
-        11.0
-      ],
-      "shade": true,
-      "faces": {
-        "north": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "up": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        }
-      }
-    },
-    {
-      "name": "post_3",
-      "from": [
-        14.0,
-        2.0,
-        5.0
-      ],
-      "to": [
-        15.5,
-        13.0,
-        11.0
-      ],
-      "shade": true,
-      "faces": {
-        "north": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "up": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            48,
-            0,
-            64,
-            16
-          ],
-          "texture": "#0"
-        }
-      }
-    },
-    {
-      "name": "arch_l_0",
-      "from": [
-        1.0,
-        7.0,
-        5.0
-      ],
-      "to": [
-        6.0,
-        9.0,
-        11.0
-      ],
-      "shade": true,
-      "faces": {
-        "north": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "up": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        }
-      },
-      "rotation": {
-        "origin": [
-          2,
-          6,
-          8
-        ],
-        "axis": "z",
-        "angle": -45,
-        "rescale": true
-      }
-    },
-    {
-      "name": "arch_l_1",
-      "from": [
-        6.0,
-        7.0,
-        5.0
-      ],
-      "to": [
-        11.0,
-        9.0,
-        11.0
-      ],
-      "shade": true,
-      "faces": {
-        "north": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "up": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        }
-      },
-      "rotation": {
-        "origin": [
-          7,
-          6,
-          8
-        ],
-        "axis": "z",
-        "angle": -45,
-        "rescale": true
-      }
-    },
-    {
-      "name": "arch_l_2",
-      "from": [
-        11.0,
-        7.0,
-        5.0
-      ],
-      "to": [
-        16.0,
-        9.0,
-        11.0
-      ],
-      "shade": true,
-      "faces": {
-        "north": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "up": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        },
-        "down": {
-          "uv": [
-            0,
-            32,
-            16,
-            48
-          ],
-          "texture": "#0"
-        }
-      },
-      "rotation": {
-        "origin": [
-          12,
-          6,
-          8
-        ],
-        "axis": "z",
-        "angle": -45,
-        "rescale": true
-      }
-    }
-  ]
+    "credit": "First Crusade Hive City Block Set - Blockbench source",
+    "ambientocclusion":  true,
+    "textures":  {
+                     "0":  "firstcrusade:block/hive_city/balustrade_railing",
+                     "particle":  "firstcrusade:block/hive_city/balustrade_railing"
+                 },
+    "elements":  [
+                     {
+                         "name":  "base",
+                         "from":  [
+                                      0.0,
+                                      0.0,
+                                      4.0
+                                  ],
+                         "to":  [
+                                    16.0,
+                                    2.0,
+                                    12.0
+                                ],
+                         "shade":  true,
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                8,
+                                                                8,
+                                                                12,
+                                                                12
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               8,
+                                                               8,
+                                                               12,
+                                                               12
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                8,
+                                                                8,
+                                                                12,
+                                                                12
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               8,
+                                                               8,
+                                                               12,
+                                                               12
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             8,
+                                                             8,
+                                                             12,
+                                                             12
+                                                         ],
+                                                  "texture":  "#0"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               8,
+                                                               8,
+                                                               12,
+                                                               12
+                                                           ],
+                                                    "texture":  "#0"
+                                                }
+                                   }
+                     },
+                     {
+                         "name":  "top",
+                         "from":  [
+                                      0.0,
+                                      13.0,
+                                      4.0
+                                  ],
+                         "to":  [
+                                    16.0,
+                                    15.0,
+                                    12.0
+                                ],
+                         "shade":  true,
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                12,
+                                                                0,
+                                                                16,
+                                                                4
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                12,
+                                                                0,
+                                                                16,
+                                                                4
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             12,
+                                                             0,
+                                                             16,
+                                                             4
+                                                         ],
+                                                  "texture":  "#0"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                }
+                                   }
+                     },
+                     {
+                         "name":  "post_0",
+                         "from":  [
+                                      0.0,
+                                      2.0,
+                                      5.0
+                                  ],
+                         "to":  [
+                                    1.5,
+                                    13.0,
+                                    11.0
+                                ],
+                         "shade":  true,
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                12,
+                                                                0,
+                                                                16,
+                                                                4
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                12,
+                                                                0,
+                                                                16,
+                                                                4
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             12,
+                                                             0,
+                                                             16,
+                                                             4
+                                                         ],
+                                                  "texture":  "#0"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                }
+                                   }
+                     },
+                     {
+                         "name":  "post_1",
+                         "from":  [
+                                      5.0,
+                                      2.0,
+                                      5.0
+                                  ],
+                         "to":  [
+                                    6.5,
+                                    13.0,
+                                    11.0
+                                ],
+                         "shade":  true,
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                12,
+                                                                0,
+                                                                16,
+                                                                4
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                12,
+                                                                0,
+                                                                16,
+                                                                4
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             12,
+                                                             0,
+                                                             16,
+                                                             4
+                                                         ],
+                                                  "texture":  "#0"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                }
+                                   }
+                     },
+                     {
+                         "name":  "post_2",
+                         "from":  [
+                                      10.0,
+                                      2.0,
+                                      5.0
+                                  ],
+                         "to":  [
+                                    11.5,
+                                    13.0,
+                                    11.0
+                                ],
+                         "shade":  true,
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                12,
+                                                                0,
+                                                                16,
+                                                                4
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                12,
+                                                                0,
+                                                                16,
+                                                                4
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             12,
+                                                             0,
+                                                             16,
+                                                             4
+                                                         ],
+                                                  "texture":  "#0"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                }
+                                   }
+                     },
+                     {
+                         "name":  "post_3",
+                         "from":  [
+                                      14.0,
+                                      2.0,
+                                      5.0
+                                  ],
+                         "to":  [
+                                    15.5,
+                                    13.0,
+                                    11.0
+                                ],
+                         "shade":  true,
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                12,
+                                                                0,
+                                                                16,
+                                                                4
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                12,
+                                                                0,
+                                                                16,
+                                                                4
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             12,
+                                                             0,
+                                                             16,
+                                                             4
+                                                         ],
+                                                  "texture":  "#0"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               12,
+                                                               0,
+                                                               16,
+                                                               4
+                                                           ],
+                                                    "texture":  "#0"
+                                                }
+                                   }
+                     },
+                     {
+                         "name":  "arch_l_0",
+                         "from":  [
+                                      1.0,
+                                      7.0,
+                                      5.0
+                                  ],
+                         "to":  [
+                                    6.0,
+                                    9.0,
+                                    11.0
+                                ],
+                         "shade":  true,
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                0,
+                                                                8,
+                                                                4,
+                                                                12
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               0,
+                                                               8,
+                                                               4,
+                                                               12
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                0,
+                                                                8,
+                                                                4,
+                                                                12
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               0,
+                                                               8,
+                                                               4,
+                                                               12
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             0,
+                                                             8,
+                                                             4,
+                                                             12
+                                                         ],
+                                                  "texture":  "#0"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               0,
+                                                               8,
+                                                               4,
+                                                               12
+                                                           ],
+                                                    "texture":  "#0"
+                                                }
+                                   },
+                         "rotation":  {
+                                          "origin":  [
+                                                         2,
+                                                         6,
+                                                         8
+                                                     ],
+                                          "axis":  "z",
+                                          "angle":  -45,
+                                          "rescale":  true
+                                      }
+                     },
+                     {
+                         "name":  "arch_l_1",
+                         "from":  [
+                                      6.0,
+                                      7.0,
+                                      5.0
+                                  ],
+                         "to":  [
+                                    11.0,
+                                    9.0,
+                                    11.0
+                                ],
+                         "shade":  true,
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                0,
+                                                                8,
+                                                                4,
+                                                                12
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               0,
+                                                               8,
+                                                               4,
+                                                               12
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                0,
+                                                                8,
+                                                                4,
+                                                                12
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               0,
+                                                               8,
+                                                               4,
+                                                               12
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             0,
+                                                             8,
+                                                             4,
+                                                             12
+                                                         ],
+                                                  "texture":  "#0"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               0,
+                                                               8,
+                                                               4,
+                                                               12
+                                                           ],
+                                                    "texture":  "#0"
+                                                }
+                                   },
+                         "rotation":  {
+                                          "origin":  [
+                                                         7,
+                                                         6,
+                                                         8
+                                                     ],
+                                          "axis":  "z",
+                                          "angle":  -45,
+                                          "rescale":  true
+                                      }
+                     },
+                     {
+                         "name":  "arch_l_2",
+                         "from":  [
+                                      11.0,
+                                      7.0,
+                                      5.0
+                                  ],
+                         "to":  [
+                                    16.0,
+                                    9.0,
+                                    11.0
+                                ],
+                         "shade":  true,
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                0,
+                                                                8,
+                                                                4,
+                                                                12
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               0,
+                                                               8,
+                                                               4,
+                                                               12
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                0,
+                                                                8,
+                                                                4,
+                                                                12
+                                                            ],
+                                                     "texture":  "#0"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               0,
+                                                               8,
+                                                               4,
+                                                               12
+                                                           ],
+                                                    "texture":  "#0"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             0,
+                                                             8,
+                                                             4,
+                                                             12
+                                                         ],
+                                                  "texture":  "#0"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               0,
+                                                               8,
+                                                               4,
+                                                               12
+                                                           ],
+                                                    "texture":  "#0"
+                                                }
+                                   },
+                         "rotation":  {
+                                          "origin":  [
+                                                         12,
+                                                         6,
+                                                         8
+                                                     ],
+                                          "axis":  "z",
+                                          "angle":  -45,
+                                          "rescale":  true
+                                      }
+                     }
+                 ]
 }
