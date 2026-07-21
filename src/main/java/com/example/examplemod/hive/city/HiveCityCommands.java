@@ -169,6 +169,13 @@ public final class HiveCityCommands {
             src.sendSystemMessage(Component.literal(line));
         }
 
+        // Reset the persistent marker store (spec §11 process step 6) so a fresh build starts
+        // clean — otherwise a re-generate with a new seed would leave stale instances/markers from
+        // whatever city was here before.
+        int[] box = HiveCityLayout.planBoundingBox(plan);
+        BlockPos center = new BlockPos((box[0] + box[3]) / 2, (box[1] + box[4]) / 2, (box[2] + box[5]) / 2);
+        HiveCityMarkerData.get(hive).resetForNewCity(seed, center, box);
+
         queue.enqueuePlan(seed, plan);
         src.sendSuccess(() -> Component.literal(
                 "Queued " + plan.size() + " districts (seed " + seed
@@ -239,6 +246,11 @@ public final class HiveCityCommands {
         for (HiveCityLayout.PlacedDistrict pd : plan) {
             src.sendSystemMessage(Component.literal("  " + pd));
         }
+
+        // Reset the persistent marker store (spec §11) for this fresh test-city build.
+        BlockPos center = new BlockPos((box[0] + box[3]) / 2, (box[1] + box[4]) / 2, (box[2] + box[5]) / 2);
+        HiveCityMarkerData.get(hive).resetForNewCity(HiveFullCityTest.TEST_SEED, center, box);
+
         HiveFullCityTest.enqueue(hive);
 
         // Teleporta para a plataforma de observação aérea.

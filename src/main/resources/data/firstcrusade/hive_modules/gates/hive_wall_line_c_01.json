@@ -8,12 +8,12 @@
   ],
   "weight": 10,
   "sockets": {
-    "north": "hive_wall",
-    "south": "hive_wall",
+    "north": "street",
+    "south": "ash_wastes",
     "west": "hive_wall",
     "east": "hive_wall",
     "up": "wall_walk",
     "down": "foundation"
   },
-  "description": "Hive perimeter v2: gate-free wall or corner bastion with layered towers and internal circulation."
+  "description": "Hive perimeter v2: gate-free wall segment matching the established cargo apron (see hive_wall_w_01)."
 }

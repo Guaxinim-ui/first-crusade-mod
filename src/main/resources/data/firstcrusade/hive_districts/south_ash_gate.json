@@ -1,5 +1,5 @@
 {
-  "description": "South Ash Gate + Cargo Ring (192x128). Rua sai ao norte no socket street.",
+  "description": "South Ash Gate v2 complete (192x128x64): established cargo support row (warehouse, yard, military depot with the underhive shaft) behind the monumental south gate + flanking wall segments; the street runs north-to-south straight through the gate.",
   "modules": [
     {
       "module": "firstcrusade:cargo/warehouse_01",

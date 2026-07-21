@@ -394,6 +394,282 @@ enferrujadas aleatórias, ~40 fungos luminosos por módulo como iluminação pri
 
 ---
 
+## 2k. FASE 10 — Geração completa da cidade (dimensão, layout, fila, ticker)
+
+**Documentação retroativa** — este sistema já existia no código (`hive/city/`) antes desta
+entrega, mas nunca tinha sido registrado aqui. Descrito abaixo pelo comportamento real do
+código (fonte de verdade), não por suposição.
+
+**Dimensão própria:** `firstcrusade:hive_world` (`HiveWorld.java`) — min_y −64, altura 576
+(Y −64..511). Constantes: `UNDERHIVE_Y=-64`, `GROUND_Y=0`, `LEVEL_HEIGHT=64`.
+
+**Layout determinístico (`HiveCityLayout.java`):** grade quadrada `(2·raio+1)²` de super-células
+de `CELL_PITCH=192`. Anel de Chebyshev decide o papel de cada célula: anel externo = 4 portões
+(`south_ash_gate`) nos eixos + `hive_wall_line` nos setores retos + `hive_corner_bastion` nos 4
+cantos; interior = pilha `manufactorum → hab_stacks → administratum`; centro = + `underhive`
+(abaixo) e `spire` (no topo). RNG seedado reservado para variação futura — sem `Math.random`,
+sem ordem de `HashMap`, contrato determinístico documentado no arquivo.
+
+**Fila persistida (`HiveGenerationQueue`, `SavedData` em `hive_world`):** plano vira uma fila de
+tarefas (distrito, origem, rotação); sobrevive save/quit/reload. `HiveCityTicker` drena 1
+distrito/tick (`DISTRICTS_PER_TICK`), force-loading só os chunks do footprint sendo colado e
+liberando-os no mesmo tick — nenhum chunk fica forçado permanentemente. Falha de um distrito loga
+e `pop()` avança mesmo assim (a fila nunca trava por um distrito ruim). `HiveClearQueue` faz o
+mesmo padrão para limpar em lotes (96k blocos/tick).
+
+**Comandos (`/fchive city ...`):** `generate [seed]`, `status`, `cancel`, `preview`,
+`build_full_test`/`full_test_status`/`full_test_cancel`/`full_test_clear`/`full_test_tp <ponto>`,
+`tp`. `HiveFullCityTest` fixa seed=40000/raio=2 (grade 5×5, ~45 distritos) para validação
+integrada repetível.
+
+---
+
+## 2l. Rebuild V2 dos distritos (Administratum, Hab Stacks, Manufactorum, Underhive, Perímetro, Spire)
+
+**Documentação retroativa.** Todos os 8 distritos reais passaram por um rebuild "v2" usando os
+geradores `tools/gen_hive_*_v2.py` (+ `gen_hive_spire.py`) sobre a biblioteca compartilhada
+`tools/hive_module_lib.py` — não estava registrado no changelog (só a entrada de 2026-07-19 do
+Administratum mencionava "v2"). Confirmado por inspeção real dos módulos, distritos e prévias
+PNG de QA (`tools/previews_*_v2/`), não por suposição:
+
+- **Administratum, Hab Stacks, Manufactorum:** cada um ganhou uma **segunda fileira de módulos
+  "connector"** (`connectors/admin_processional_*`, `connectors/hab_transit_*`,
+  `connectors/manufactorum_service_*`) atrás da fileira original — o distrito inteiro passou de
+  3 para 6 módulos (192×128×64 completo), com trânsito vertical alinhado entre as duas fileiras.
+  Isso é exatamente o tipo de trabalho de integração horizontal que a spec pede (nenhuma rua
+  terminando em parede cega).
+- **Underhive:** de 3 para 6 módulos (`forgotten_catacombs_01`, `sump_market_01`,
+  `reactor_abyss_01` somam-se aos 3 originais).
+- **Perímetro (`hive_wall_line`, `hive_corner_bastion`):** reconstruídos com 6 módulos cada
+  (torres desiguais, contraforte, passadiço de 3 níveis) — `hive_wall_line` reaproveita a
+  fileira de cargo já estabelecida (`cargo/warehouse_01` etc.); `hive_corner_bastion` é uma
+  fortaleza em L com fileira frontal+traseira simétrica.
+- **Spire:** um único módulo monumental `spire/spire_crown_01` (96×128×96 — base cruciforme
+  escalonada, torres gêmeas, coroa) centralizado na célula central 192×128, com prévia
+  isométrica dedicada (`tools/previews_spire_v2/`).
+- **`south_ash_gate`** permanece na configuração original da Fase 5 (conteúdo dos módulos já é
+  "v2" — ver `description` de `south_ash_gate_01.json` — mas sem a fileira connector extra; um
+  portão real precisa de uma brecha na muralha, não de uma fileira de serviço duplicada, então
+  a assimetria com os outros dois distritos de perímetro é uma decisão de design, não um bug).
+
+**Validação visual** feita nesta entrega por inspeção real das prévias PNG (planta/corte/
+isométrica) — não por leitura de nome de arquivo: nave gótica com telhado em clerestório
+(Administratum), muralha com 3 níveis de passadiço e luz repetida (perímetro), base
+cruciforme escalonada com torres gêmeas (Spire). Nenhuma reconstrução do zero foi necessária.
+
+---
+
+## 2m. FASE 11 — Marcadores persistentes + validação estática (ESTA ENTREGA)
+
+**Problema (spec §11):** `HiveMarkers` (o buffer de captura usado durante `placeInWorld`) só
+guardava a **última** colocação num campo estático em memória — numa cidade de ~45 distritos,
+todos os marcadores exceto os do último distrito colado eram perdidos, e nada sobrevivia a
+salvar/fechar/recarregar o mundo.
+
+**`HiveCityMarkerData`** (novo, `hive/city/`) — `SavedData` em `hive_world` (mesmo padrão de
+`HiveGenerationQueue`/`HiveClearQueue`, `computeIfAbsent` de 3 argumentos do Forge 47.x). Guarda,
+por cidade: id, seed, centro, bounding box, estado de conclusão; por **instância de distrito**
+(cada cópia física colocada — um distrito pode repetir várias vezes na cidade): id, distrito,
+origem, rotação, `SectorState` (NORMAL/CONTESTED/ENEMY_CONTROLLED); por **marcador**: id,
+instância dona, distrito, tipo, posição, ativo/inativo, UUID de entidade vinculada, próximo
+horário de respawn, loot coletado. `PATROL_POINT`s da mesma instância formam a rota de patrulha
+implícita dessa instância (`patrolRoute(instanceId)`).
+
+Só o caminho REAL de geração de cidade (`HiveCommands.placeDistrict`, usado por
+`HiveCityPlacer`→`HiveCityTicker`) grava nesse store — o comando de dev `/fchive district place
+<id>` (teste isolado de um distrito, sem contexto de cidade) continua usando só o buffer efêmero
+`HiveMarkers.last()`, para não misturar testes ad-hoc com a cidade real. `resetForNewCity` zera
+o store a cada `/fchive city generate` ou `build_full_test` novo; `markComplete()` marca a cidade
+como concluída quando a fila de geração esvazia.
+
+**Comandos novos:** `/fchive validate markers` (resumo: cidade/seed/contagens por tipo),
+`/fchive debug marker <tipo>` (partículas + contagem de todo marcador persistido daquele tipo).
+
+**Validação estática distrito→módulo→template→assets (spec §19):** nenhum validador reusável
+existia (o "teste automático" citado no changelog da Fase 8 foi um script avulso, não
+commitado). Dois validadores equivalentes foram escritos — `tools/hive_city_validate.py`
+(Python) e `tools/HiveCityValidate.java` (porta sem dependências, usada nesta sessão porque o
+ambiente não tinha Python instalado, só o stub da Microsoft Store). Ambos rodam 100% offline:
+
+- Resolve toda referência distrito→módulo e módulo→template NBT (convenção real de
+  `SimpleJsonResourceReloadListener`/`StructureTemplateManager`, não reinventada).
+- Lê o NBT gzip de cada template (parser NBT genérico, tags 1–12) e confere o `size` declarado
+  no JSON contra o tamanho real.
+- Coleta cada bloco `firstcrusade:*` usado em qualquer paleta e confere blockstate → modelo(s)
+  → textura(s) existem no disco (pega exatamente as 3 causas reais de crash: blockstate/modelo/
+  textura ausente).
+- Reimplementa `HiveCommands.touchingFace` + `HiveModule.socketAt`/`fits` para conferir toda
+  costura interna de todo distrito, à rotação 0 (rotação global da cidade gira um distrito
+  inteiro rigidamente — não afeta o encaixe interno entre seus próprios módulos).
+- Lista módulos/templates órfãos (não referenciados) como aviso, não erro.
+
+**Resultado da primeira execução real:** 9 distritos, 42 módulos, 42 templates, 121 blocos
+`firstcrusade:*` únicos em uso, 49 costuras conferidas. **Zero** erros de blockstate/modelo/
+textura/referência ausente. **3 incompatibilidades de socket reais encontradas e corrigidas**
+(ver abaixo) — depois da correção, 49/49 costuras OK.
+
+**Bug real encontrado:** `gates/hive_wall_line_{w,c,e}_01.json` declaravam `north=south=east=
+west="hive_wall"` uniformemente — copiado do par simétrico frente/fundo do `hive_corner_bastion`
+(onde isso é correto), mas o `hive_wall_line` na verdade encosta na mesma fileira de cargo
+estabelecida (`cargo/warehouse_01`/`cargo_yard_01`/`military_depot_01`, offset z=0) que o portão
+original (`hive_wall_w_01`/`hive_wall_e_01`/`south_ash_gate_01`) já usa com sucesso — essa
+fileira espera `wall_apron` (w/e) ou `street` (centro) na face voltada pra dentro, não
+`hive_wall`. Corrigido nos 3 JSONs de módulo **e** na fonte do gerador
+(`tools/gen_hive_perimeter_v2.py`, que antes escrevia o mesmo dicionário de sockets pros 9
+módulos do arquivo — wall-line e corner-bastion — num único loop) para não regredir na próxima
+geração. Inspecionei a geometria real do gerador (`straight_wall_builder()`): a massa da
+muralha fica recuada de ambas as bordas do módulo (chão livre nos dois lados, portas só na face
+sul) — o que dá confiança de que a correção reflete compatibilidade física real, não só um
+rótulo. **Confirmação final ainda depende de teste em jogo** (`/fchive district place
+firstcrusade:hive_wall_line`, andar da fileira de cargo até a muralha).
+
+**Ferramentas:** `tools/hive_city_validate.py`, `tools/HiveCityValidate.java`. Rodar (raiz do
+repo): `javac tools/HiveCityValidate.java -d <tmp> && java -cp <tmp> HiveCityValidate` — escreve
+`tools/generated/HIVE_CITY_VALIDATION_REPORT.md`.
+
+### Duas pontas investigadas (resolvidas por inspeção das prévias reais, não por suposição)
+
+1. **`south_ash_gate` "sem paridade":** era um erro de leitura meu — o distrito **sempre** foi
+   6 módulos (fileira de cargo em z=0 + fileira de portão/muralha em z=64, 192×128 completo), tem
+   rebuild v2 real (prévia completa em `tools/previews_south_gate_v2/`, plano mostra galpão +
+   depósito militar com o poço da underhive + rua atravessando o portão de norte a sul) e passa a
+   validação de costuras (0 mismatch). A **única** coisa desatualizada era o campo `description`
+   do JSON do distrito, ainda no texto Fase-5 em português — o gerador v2 reescreve os JSONs de
+   MÓDULO mas nunca tocou no JSON do DISTRITO. **Corrigido** para descrição v2 precisa. Nenhum
+   trabalho estrutural era necessário.
+
+2. **"Vazio" da espinha do Underhive:** é atmosfera de caverna **proposital**, não um buraco de
+   continuidade. O plano de chão mostra uma subcidade rica e conectada (canais de lodo tóxico,
+   arena de luta, poço do reator com passarelas, corredor de largura total em ~z=30). As três
+   seções norte-sul (`section_sump_x31`, `section_ruins_market_x95`, `section_gang_reactor_x159`)
+   mostram, todas, **chão de escombros contínuo ao longo dos 128 de profundidade**, incluindo a
+   costura entre as duas fileiras de módulos (z=63) — as duas fileiras se conectam no nível do
+   piso. O grande volume escuro acima é o "abismo industrial" que a spec pede; o poço do reator
+   (x159) tem circulação vertical real (passarelas + escadas descendo pelo vão). **Nenhum
+   conserto necessário.** Ressalva honesta: continuidade de piso confirmada por 3 cortes
+   independentes das prévias (que são projeções da mesma grade que o gerador construiu, então
+   confiáveis), mas a *caminhabilidade* garantida (sem degrau de 2 blocos nem gargalo bloqueado
+   por lodo) só um validador em nível de NBT ou um teste em jogo fecham de vez — anotado como
+   próximo passo opcional.
+
+---
+
+## 2n. Colisão do concept set: só a escada vira colisão real; os "pisos" continuam cheios
+
+**História completa (importante pra não repetir o erro):**
+
+1. **Tentativa 1 (revertida):** o dono relatou que "slabs e escadas eram tratados como blocos
+   inteiros". Medi os modelos com um extrator de bounding-box: os 7 pisos (`landing_slab`,
+   `floor_grate`, `hazard_grated_floor`, `floor_vent`, `metal_floor_plate`, `cathedral_floor_tile`,
+   `bloodstained_floor_tile`) têm modelos de 2–4px, e `cathedral_stair_block` é uma escada de 4
+   degraus — todos registrados como cubo cheio. Fiz uma `HiveShapeBlocks.Plate` (colisão fina) pros
+   7 pisos + `HiveStairShapeBlock` (colisão em degraus) pra escada.
+
+2. **Regressão relatada:** os trilhos passaram a **flutuar** e o piso ficou **desnivelado**.
+   Causa raiz (confirmada lendo os geradores): esses "pisos" **não são slabs** — os templates os
+   colocam como a **superfície estrutural do chão** (ex.: `gen_hive_south_gate_v2.py`: base cheia
+   `ASH_CR` em y=0, tile em y=1, **trilho vanilla em y=2 apoiado no tile**; e o chão mistura tile
+   fino com blocos cheios `ASH` na MESMA camada). Deixar o tile fino (a) rebaixou a superfície
+   ~0.87 bloco onde tile encosta em bloco cheio → chão em degraus, e (b) tirou a face de topo
+   sólida → o trilho perdeu suporte e flutuou. `landing_slab` também é usado como piso
+   (`gen_hive_manufactorum_v2.py:284`, xadrez com grate), mesmo problema.
+
+3. **Correção final (ESTA ENTREGA):** revertidos os **7 pisos** para cubo cheio (estado que
+   funcionava — chão nivelado, trilhos apoiados). Mantida **só** a `HiveStairShapeBlock` em
+   `cathedral_stair_block`, que é uma **escada de verdade** (usada com `FACING`, subindo, nos
+   geradores — nunca como piso plano) e portanto não quebra chão/trilho. `HiveShapeBlocks.Plate`
+   removida (sem uso). Slabs/escadas das FASES 2–9 nunca foram afetados (já são `SlabBlock`/
+   `StairBlock` reais).
+
+**Lição:** no ambiente atual **não há Python funcional** (só o stub da Store), então **não dá pra
+regenerar os templates NBT** (os geradores são Python). O visual "piso fino/rebaixado" que o dono
+queria só é alcançável regenerando os templates (base cheia + superfície fina no y certo + trilho
+rebaixado) — isso é trabalho do pipeline Python, não um ajuste de bloco. O mesmo vale pro **"trilho
+que vai pra lugar nenhum / falta um portão de verdade"**: abrir uma passagem de trilho na muralha é
+conteúdo baked no NBT do módulo de portão → precisa do gerador. Ferramenta de apoio descartável:
+`ModelExtent` (extrator de bounding-box, no scratchpad).
+
+---
+
+## 2o. FASE 12 — População viva (primeira fatia — ESTA ENTREGA)
+
+Primeira fatia do §12, construída sobre a fundação de marcadores persistentes (§2m). O objetivo:
+a cidade deixa de ser cenário e passa a ser habitada, sem varredura global (§16) e sem quebrar as
+cidades normais do overworld.
+
+**`HivePopulationManager`** (novo, `hive/city/`, auto-registrado no event bus, só roda em
+`hive_world`). Cada `TICK_INTERVAL` (40 ticks/2s), sem varrer a cidade inteira:
+- **Reconcilia** cada marcador de spawn com entidade vinculada: se o chunk está carregado e a
+  entidade sumiu (`getEntity(uuid)==null`), libera o marcador e inicia o cooldown de respawn
+  (`RESPAWN_COOLDOWN_TICKS`, 60s). Vinculado em chunk descarregado = assumido vivo (não
+  duplica).
+- **Spawna** em marcadores livres que estejam (a) com chunk carregado, (b) com jogador a ≤
+  `ACTIVATION_DISTANCE` (72 blocos), (c) num piso válido (pés+cabeça livres, chão sólido embaixo,
+  **fora de fluido** — não nasce no lodo tóxico), (d) abaixo dos limites. Limites: global
+  (`GLOBAL_CAP` 200) + por tipo (civil 120, worker 60, guardsman 60), contando marcadores
+  ocupados (inclusive os de chunk descarregado, pra roaming não estourar o teto). No máximo
+  `SPAWNS_PER_PASS` (6) novos por avaliação → a primeira ativação sobe em rampa, não de uma vez.
+- Reusa as entidades existentes exatamente como o `ImperialPopulationManager` faz (create →
+  moveTo → addFreshEntity) + `setPersistenceRequired` (o manager, não o despawn vanilla, controla
+  o ciclo de vida). O UUID vai pro `HiveCityMarkerData` (persistido), então sobrevive
+  save/reload e não re-spawna duplicado.
+
+**Mapa desta fatia (conservador de propósito):** `CIVIL_SPAWN`/`WORKER_SPAWN` → `imperial_citizen`,
+`GUARDSMAN_SPAWN` → `guardsman`. **Adiado para a próxima fatia** (pra manter revisável e não
+mis-spawnar): `ENEMY_SPAWN` (precisa do gate de invasão/estado de setor), `COMMANDER_POINT`
+(comandante único), mapeamento Skitarii/Enforcer, e as patrulhas realmente andando pelas rotas de
+`PATROL_POINT`. Os NPCs desta fatia nascem sem command core (estado válido — `isUnemployed` já é
+tratado) e usam a IA padrão deles; afinar comportamento por distrito é trabalho da próxima fatia.
+
+**Comandos novos (§18):** `/fchive population status` (contagem viva por tipo + manager on/off),
+`/fchive population enable|disable`, `/fchive population clear` (remove **só** os NPCs vinculados a
+marcadores da Hive — nunca mobs do jogador).
+
+**Verificado estaticamente:** compila (`BUILD SUCCESSFUL`). **Falta teste em jogo:**
+`/fchive city build_full_test`, ir até um distrito, ver civis/trabalhadores/guardas nascerem perto
+(e parar nos limites), matar um e ver respawn após 60s, `/fchive population status`, salvar/recarregar
+e confirmar que não duplicam.
+
+---
+
+## 2p. Trilho pelo portão principal + Python no ambiente (ESTA ENTREGA)
+
+**Contexto:** o fix de colisão (§2n) flutuou os trilhos (o `metal_floor_plate` que servia de leito
+do trilho virou fino) — **isso foi resolvido só revertendo o bloco** (leito cheio de novo, trilho
+apoiado). Sobrou a 2ª queixa do dono: *"a linha do trilho vai para lugar nenhum, não tem um portão
+de verdade"* — o trilho de carga E-O corria pelo pátio e não tinha destino.
+
+**Python instalado no ambiente:** antes só havia o stub da Microsoft Store. Instalei o Python
+3.12.10 (`winget install Python.Python.3.12`, user scope) em
+`%LOCALAPPDATA%\Programs\Python\Python312\python.exe` + Pillow (previews). Isso destrava a
+regeneração dos templates NBT (os geradores são Python). **Verificação de segurança:** rodei o
+gerador sem mudanças e comparei o conteúdo (via `NbtInfo` — tamanho/paleta/contagem/hash de
+conteúdo) contra o commitado → **idêntico**; a única diferença de bytes é o timestamp do gzip. Ou
+seja, regenerar é seguro e determinístico — só muda o que eu editar.
+
+**Fix (escolha do dono: "passar pelo portão principal — rua+trilho"):** editei
+`tools/gen_hive_south_gate_v2.py` — uma linha principal N-S de trilho desce pelo centro da rua
+(x=95, na faixa de `metal_floor_plate`, não na grade) e **sai pela cidade atravessando o portão
+principal**, cruzando as duas linhas E-O do pátio (passagem de nível). Colocada por último no
+builder (depois do túnel do portão ser escavado), com guarda que só preenche células livres do
+chão/túnel — nunca apaga estrutura. Como o builder vai de z=0 a 127, o slice põe o conector no
+`cargo_yard_01` (z 0–63) e o trilho-através-do-portão no `south_ash_gate_01` (z 64–127).
+
+**Verificado:** regenerado, **validação estática 49/49 costuras OK, 0 erros**; a prévia
+`section_gate_x95` (o próprio plano x=95 do trilho) mostra o trilho contínuo em y=2 atravessando o
+túnel do portão e saindo ao sul. Conteúdo confere: `cargo_yard_01` +62 células, `south_ash_gate_01`
++64. **Diff limpo:** só esses 2 NBTs + o gerador (os outros 4 módulos foram restaurados — só tinham
+ruído de gzip). **Falta teste em jogo.**
+
+**Ressalva (reuso de módulo):** `cargo_yard_01` também é usado pelo distrito `hive_wall_line`
+(mesmo NBT). Lá, a nova linha N-S corre até a borda sul do módulo de cargo (z=63) e para no pátio
+do módulo de muralha (a massa da muralha fica mais ao sul, z≈88+, então **não** encosta numa parede
+sólida — termina num pátio). É um toco menor, consequência do módulo compartilhado; o dono pediu
+"só o portão principal", então não abri portões de trilho nas muralhas. Se incomodar, dá pra pôr um
+batente de fim de linha (buffer) ou um módulo de cargo separado pro gate — anotado.
+
+---
+
 ## 3. Direção visual travada (spec §11/§24)
 
 Paleta central (usada pelo gerador): fuligem `#131417`, ashcrete `#3B3F43`, aço `#454C52`,
@@ -445,6 +721,35 @@ relevos, vents, lumens, hazard e grating.
 
 ## 6. Changelog
 
+- **2026-07-20 — Trilho pelo portão + Python:** Python 3.12 instalado no ambiente (destrava
+  regenerar templates NBT; round-trip confirmado idêntico ao commitado exceto timestamp gzip).
+  `gen_hive_south_gate_v2.py`: linha N-S de trilho desce a rua central e sai pelo portão principal
+  (rua+trilho), regenerado `cargo_yard_01`+`south_ash_gate_01`, 49/49 costuras OK. Ver §2p.
+- **2026-07-20 — FASE 12 (fatia 1):** `HivePopulationManager` — cidade viva a partir dos
+  marcadores persistentes: civis/trabalhadores (`imperial_citizen`) e guardas (`guardsman`)
+  nascem perto do jogador, com limites global+por tipo, cooldown de respawn, validação de piso
+  (fora do lodo) e vínculo de UUID persistido (sem duplicar no reload). Só roda em `hive_world`,
+  sem varredura global. Comandos `/fchive population status|enable|disable|clear`. Adiado:
+  inimigos/comandante/patrulhas andando. Ver §2o.
+- **2026-07-20 — Colisão concept set:** só `cathedral_stair_block` virou colisão real
+  (`HiveStairShapeBlock`, degraus por FACING — é escada de verdade). A tentativa de afinar os 7
+  "pisos" (metal_floor_plate, cathedral_floor_tile, etc.) foi **revertida**: eles são a superfície
+  estrutural do chão (não slabs) e afiná-los flutuava os trilhos + desnivelava o chão. Piso fino de
+  verdade exige regenerar os templates (pipeline Python, indisponível aqui). Ver §2n.
+- **2026-07-20 — FASE 11:** marcadores persistentes (`HiveCityMarkerData`, `SavedData` em
+  `hive_world` — antes só a última colocação sobrevivia, agora toda a cidade) + 2 comandos
+  novos (`validate markers`, `debug marker <tipo>`) + 2 validadores estáticos independentes
+  (`tools/hive_city_validate.py` e a porta Java `tools/HiveCityValidate.java`, usada nesta
+  entrega por falta de Python no ambiente) cobrindo referências distrito→módulo→template,
+  blockstate/modelo/textura e costuras de socket. Primeira execução real achou e corrigiu um
+  bug genuíno: os 3 módulos de `hive_wall_line` tinham sockets uniformes copiados do
+  `hive_corner_bastion` em vez de casar com a fileira de cargo estabelecida — 49/49 costuras OK
+  depois da correção (JSONs + fonte do gerador). Documentação retroativa de FASE 10 (geração
+  completa da cidade — dimensão/layout/fila/ticker, já existia mas nunca tinha sido registrada
+  aqui) e do rebuild V2 de todos os 8 distritos (Administratum, Hab Stacks, Manufactorum,
+  Underhive, perímetro, Spire — confirmado por inspeção real das prévias PNG de QA, não só por
+  nome de arquivo). Ver §2k/§2l/§2m.
+- **2026-07-19 — Administratum V2 rebuild:** ver nota original abaixo; contexto completo em §2l.
 - **2026-07-14 — FASE 9:** distrito Underhive (3 módulos, 192×128): coletor com água tóxica
   real, ruínas colapsadas, território de gangue. 8 blocos novos. 28 marcadores. Auditoria de
   referências nos 5 distritos OK. FALTA: FASE 10 (Spire + geração automática da cidade) —

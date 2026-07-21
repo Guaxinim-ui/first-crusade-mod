@@ -99,6 +99,7 @@ public final class HiveCityTicker {
         }
         if (queue.isEmpty()) {
             lastReportedPercent = -1;
+            HiveCityMarkerData.get(level).markComplete(); // process step 19
             server.getPlayerList().broadcastSystemMessage(
                     Component.literal("[Hive City] Generation complete — "
                             + queue.totalPlanned() + " districts placed."),

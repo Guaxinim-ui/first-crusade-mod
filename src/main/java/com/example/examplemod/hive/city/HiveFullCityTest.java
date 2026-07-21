@@ -2,7 +2,6 @@ package com.example.examplemod.hive.city;
 
 import com.example.examplemod.hive.HiveDistricts;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 
@@ -36,19 +35,7 @@ public final class HiveFullCityTest {
 
     /** Bounding box inclusivo {minX,minY,minZ,maxX,maxY,maxZ} calculado do plano real (clampeado ao mundo). */
     public static int[] cityBox() {
-        List<HiveCityLayout.PlacedDistrict> plan = plan();
-        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
-        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
-        for (HiveCityLayout.PlacedDistrict pd : plan) {
-            BlockPos o = pd.origin();
-            minX = Math.min(minX, o.getX());          maxX = Math.max(maxX, o.getX() + FOOT);
-            minZ = Math.min(minZ, o.getZ());          maxZ = Math.max(maxZ, o.getZ() + FOOT);
-            minY = Math.min(minY, o.getY());          maxY = Math.max(maxY, o.getY() + HiveWorld.LEVEL_HEIGHT);
-        }
-        // Clampeia ao envelope do hive_world.
-        minY = Math.max(minY, HiveWorld.MIN_Y);
-        maxY = Math.min(maxY, HiveWorld.MAX_Y);
-        return new int[]{minX, minY, minZ, maxX - 1, maxY - 1, maxZ - 1};
+        return HiveCityLayout.planBoundingBox(plan());
     }
 
     // ---- pontos de observação / teleporte (Fase 13) ----

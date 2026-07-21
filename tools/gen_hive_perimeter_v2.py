@@ -179,10 +179,26 @@ for z0,tag in ((0,"front"),(64,"rear")):
         nonair,pal,size=sub.write_nbt(str(OUT/f"{rel}.nbt")); results.append((rel,nonair,pal,size))
 
 module_root=ROOT/"src/main/resources/data/firstcrusade/hive_modules"
-for rel,_,*rest in [(r,x) for r,x in wall_rels]+corner_rels:
+# Wall-line rear row pairs directly against the established cargo support row (warehouse_01 /
+# cargo_yard_01 / military_depot_01 — see wall_d below), which expects "wall_apron" (w/e) or
+# "street" (center) on its south face: the SAME contract the proven hive_wall_w_01 /
+# hive_wall_e_01 / south_ash_gate_01 modules from the Phase-5 gate already use successfully.
+# A uniform "hive_wall" here (copy-pasted from the corner bastion's front/rear pairing below,
+# which IS meant to be symmetric) silently failed that seam — caught by
+# tools/hive_city_validate.py / tools/HiveCityValidate.java (socket-mismatch, 3x).
+wall_north={"gates/hive_wall_line_w_01":"wall_apron","gates/hive_wall_line_c_01":"street",
+            "gates/hive_wall_line_e_01":"wall_apron"}
+for rel,_ in wall_rels:
+    meta={"template":f"firstcrusade:hive/{rel}","category":"gate","size":[64,64,64],"weight":10,
+          "sockets":{"north":wall_north[rel],"south":"ash_wastes","west":"hive_wall","east":"hive_wall",
+                     "up":"wall_walk","down":"foundation"},
+          "description":"Hive perimeter v2: gate-free wall segment matching the established cargo apron (see hive_wall_w_01)."}
+    p=module_root/f"{rel}.json"; p.parent.mkdir(parents=True,exist_ok=True); p.write_text(json.dumps(meta,indent=2)+"\n")
+# Corner bastion front/rear rows are symmetric by design (both wall mass, no cargo-row pairing).
+for rel,x0,z0 in corner_rels:
     meta={"template":f"firstcrusade:hive/{rel}","category":"gate","size":[64,64,64],"weight":10,
           "sockets":{"north":"hive_wall","south":"hive_wall","west":"hive_wall","east":"hive_wall","up":"wall_walk","down":"foundation"},
-          "description":"Hive perimeter v2: gate-free wall or corner bastion with layered towers and internal circulation."}
+          "description":"Hive perimeter v2: corner bastion with symmetric front/rear wall mass and layered towers."}
     p=module_root/f"{rel}.json"; p.parent.mkdir(parents=True,exist_ok=True); p.write_text(json.dumps(meta,indent=2)+"\n")
 
 # Districts. Wall line reuses the established cargo support row.

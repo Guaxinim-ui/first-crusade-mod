@@ -516,6 +516,18 @@ markers = [
 for x, y, z, m in markers:
     b.put(x, y, z, MK(m))
 
+# ---------------------------------------------------------------- Combined road+rail main gate
+# Owner's choice ("passar pelo portão principal"): the cargo line runs north-south down the
+# central road (x=95, on the road's METALF strip — not a floor grate) and out through the main
+# gate, so it no longer dead-ends. Placed LAST, after the gatehouse tunnel is carved, so nothing
+# overwrites it; the guard only fills clear road/tunnel cells and crosses the two E-W yard sidings
+# as level crossings — it never deletes a structure. Spans z 0..127, so the slice puts the connector
+# in cargo_yard_01 (z 0..63) and the through-gate rail in south_ash_gate_01 (z 64..127).
+for z in range(0, SZ):
+    if b.get(95, 2, z) in (AIR, RAIL_TRACK_EW):
+        b.put(95, 1, z, METALF)     # solid rail bed (road already provides METALF here; explicit is safe)
+        b.put(95, 2, z, RAIL_TRACK_NS)
+
 # ---------------------------------------------------------------- Slice into the six existing module ids.
 def slice_module(x0, z0, sx=64, sy=64, sz=64):
     sub = ModuleBuilder(sx, sy, sz, seed=83003 + x0 + z0)

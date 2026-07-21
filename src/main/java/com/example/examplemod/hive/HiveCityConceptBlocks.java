@@ -61,7 +61,11 @@ public final class HiveCityConceptBlocks {
     public static final RegistryObject<Block> CATHEDRAL_FLOOR_TILE = registerBlock("cathedral_floor_tile", () -> new Block(stone()));
     public static final RegistryObject<Block> METAL_FLOOR_PLATE = registerBlock("metal_floor_plate", () -> new Block(metal()));
     public static final RegistryObject<Block> FLOOR_GRATE = registerBlock("floor_grate", () -> new Block(metal().noOcclusion()));
-    public static final RegistryObject<Block> CATHEDRAL_STAIR_BLOCK = registerBlock("cathedral_stair_block", () -> new HiveHorizontalBlock(stone().noOcclusion()));
+    // cathedral_stair_block IS a real climbing stair (used with facing in the generators), so it
+    // keeps the stepped collision. The floor tiles above/below are NOT slabs — the templates lay
+    // them as the structural floor surface (flush with full blocks, rails on top), so a thin
+    // collision lowered the whole floor and floated the rails; they stay full-cube blocks.
+    public static final RegistryObject<Block> CATHEDRAL_STAIR_BLOCK = registerBlock("cathedral_stair_block", () -> new HiveStairShapeBlock(stone().noOcclusion()));
     public static final RegistryObject<Block> LANDING_SLAB = registerBlock("landing_slab", () -> new Block(stone()));
     public static final RegistryObject<Block> BALUSTRADE_RAILING = registerBlock("balustrade_railing", () -> new HiveHorizontalBlock(stone().noOcclusion()));
     public static final RegistryObject<Block> SKULL_RELIEF_PANEL = registerBlock("skull_relief_panel", () -> new HiveHorizontalBlock(stone()));

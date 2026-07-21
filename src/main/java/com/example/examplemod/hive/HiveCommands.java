@@ -131,6 +131,28 @@ public final class HiveCommands {
                 .then(Commands.literal("markers")
                         .executes(ctx -> listMarkers(ctx.getSource())))
 
+                // Diagnostics over the PERSISTENT marker store (spec §11/§18) — distinct from
+                // "markers" above, which only replays the last ephemeral placement.
+                .then(Commands.literal("validate")
+                        .then(Commands.literal("markers")
+                                .executes(ctx -> validateMarkers(ctx.getSource()))))
+
+                .then(Commands.literal("debug")
+                        .then(Commands.literal("marker")
+                                .then(Commands.argument("type", StringArgumentType.word())
+                                        .suggests((ctx, b) -> SharedSuggestionProvider.suggest(
+                                                java.util.Arrays.stream(HiveMarkers.MarkerType.values())
+                                                        .map(Enum::name), b))
+                                        .executes(ctx -> debugMarker(ctx.getSource(),
+                                                StringArgumentType.getString(ctx, "type"))))))
+
+                // Living-population controls (spec §12/§18).
+                .then(Commands.literal("population")
+                        .then(Commands.literal("status").executes(ctx -> populationStatus(ctx.getSource())))
+                        .then(Commands.literal("enable").executes(ctx -> populationToggle(ctx.getSource(), true)))
+                        .then(Commands.literal("disable").executes(ctx -> populationToggle(ctx.getSource(), false)))
+                        .then(Commands.literal("clear").executes(ctx -> populationClear(ctx.getSource()))))
+
                 .then(Commands.literal("show_bounds")
                         .then(Commands.argument("module", ResourceLocationArgument.id())
                                 .suggests((ctx, b) -> SharedSuggestionProvider
@@ -470,6 +492,94 @@ public final class HiveCommands {
         return total;
     }
 
+    /** {@code /fchive validate markers} — summary of the persistent Hive City marker store. */
+    private static int validateMarkers(CommandSourceStack source) {
+        ServerLevel level = source.getLevel();
+        com.example.examplemod.hive.city.HiveCityMarkerData store =
+                com.example.examplemod.hive.city.HiveCityMarkerData.get(level);
+        if (store.instances().isEmpty()) {
+            source.sendFailure(Component.literal(
+                    "[fchive] Nenhuma cidade persistida ainda — rode /fchive city generate ou build_full_test."));
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal("[fchive] cidade '" + store.cityId() + "' seed "
+                + store.seed() + " | " + store.instances().size() + " distritos | "
+                + store.markers().size() + " marcadores | "
+                + (store.isComplete() ? "construção completa" : "em construção")), false);
+        for (Map.Entry<HiveMarkers.MarkerType, Integer> e : store.countsByType().entrySet()) {
+            source.sendSuccess(() -> Component.literal("  " + e.getValue() + "x " + e.getKey().display()), false);
+        }
+        return store.markers().size();
+    }
+
+    /** {@code /fchive population status} — live hive population by type + manager on/off. */
+    private static int populationStatus(CommandSourceStack source) {
+        ServerLevel hive = source.getServer().getLevel(com.example.examplemod.hive.city.HiveWorld.LEVEL);
+        if (hive == null) {
+            source.sendFailure(Component.literal("[fchive] hive_world não encontrado."));
+            return 0;
+        }
+        Map<HiveMarkers.MarkerType, Integer> census =
+                com.example.examplemod.hive.city.HivePopulationManager.census(hive);
+        int total = census.values().stream().mapToInt(Integer::intValue).sum();
+        boolean on = com.example.examplemod.hive.city.HivePopulationManager.isEnabled();
+        source.sendSuccess(() -> Component.literal("[fchive] população hive: " + total
+                + " ativa | manager " + (on ? "LIGADO" : "DESLIGADO")), false);
+        for (Map.Entry<HiveMarkers.MarkerType, Integer> e : census.entrySet()) {
+            source.sendSuccess(() -> Component.literal("  " + e.getValue() + "x " + e.getKey().display()), false);
+        }
+        return total;
+    }
+
+    /** {@code /fchive population enable|disable}. */
+    private static int populationToggle(CommandSourceStack source, boolean enable) {
+        com.example.examplemod.hive.city.HivePopulationManager.setEnabled(enable);
+        source.sendSuccess(() -> Component.literal("[fchive] população hive "
+                + (enable ? "LIGADA" : "DESLIGADA") + "."), true);
+        return 1;
+    }
+
+    /** {@code /fchive population clear} — remove só os NPCs vinculados a marcadores da Hive. */
+    private static int populationClear(CommandSourceStack source) {
+        ServerLevel hive = source.getServer().getLevel(com.example.examplemod.hive.city.HiveWorld.LEVEL);
+        if (hive == null) {
+            source.sendFailure(Component.literal("[fchive] hive_world não encontrado."));
+            return 0;
+        }
+        int removed = com.example.examplemod.hive.city.HivePopulationManager.clearPopulation(hive);
+        source.sendSuccess(() -> Component.literal("[fchive] " + removed
+                + " NPC(s) da Hive removidos e marcadores liberados."), true);
+        return removed;
+    }
+
+    /** {@code /fchive debug marker <tipo>} — particles + list for every PERSISTED marker of a type. */
+    private static int debugMarker(CommandSourceStack source, String typeName) {
+        HiveMarkers.MarkerType type;
+        try {
+            type = HiveMarkers.MarkerType.valueOf(typeName.toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            source.sendFailure(Component.literal("[fchive] Tipo desconhecido: " + typeName));
+            return 0;
+        }
+        ServerLevel level = source.getLevel();
+        List<com.example.examplemod.hive.city.HiveCityMarkerData.MarkerRecord> list =
+                com.example.examplemod.hive.city.HiveCityMarkerData.get(level).markersOfType(type);
+        if (list.isEmpty()) {
+            source.sendFailure(Component.literal(
+                    "[fchive] Nenhum marcador persistido do tipo " + type.display()));
+            return 0;
+        }
+        for (com.example.examplemod.hive.city.HiveCityMarkerData.MarkerRecord m : list) {
+            level.sendParticles(ParticleTypes.END_ROD,
+                    m.pos.getX() + 0.5, m.pos.getY() + 0.5, m.pos.getZ() + 0.5,
+                    8, 0.1, 0.1, 0.1, 0.0);
+        }
+        int total = list.size();
+        source.sendSuccess(() -> Component.literal("[fchive] " + total + " marcadores persistidos do tipo "
+                + type.display() + " (partículas por alguns segundos)"), true);
+        return total;
+    }
+
     private static int showBounds(CommandSourceStack source, ResourceLocation id, int rotationIndex) {
         Optional<HiveModule> module = HiveModuleManager.get(id);
         if (module.isEmpty()) {
@@ -631,7 +741,12 @@ public final class HiveCommands {
                 okCount++;
             }
         }
-        HiveMarkers.end();
+        List<HiveMarkers.Captured> captured = HiveMarkers.end();
+        // Persist into the durable Hive City marker store (spec §11) — this is the real city-build
+        // path (HiveCityPlacer → HiveCityTicker), unlike the interactive /fchive district place
+        // command below, which stays scoped to the ephemeral HiveMarkers.last() buffer.
+        com.example.examplemod.hive.city.HiveCityMarkerData.get(level)
+                .recordPlacement(id.toString(), origin, districtRotation, captured);
         return okCount;
     }
 

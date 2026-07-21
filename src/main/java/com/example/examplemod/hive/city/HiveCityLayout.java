@@ -201,6 +201,27 @@ public final class HiveCityLayout {
     }
 
     /**
+     * Inclusive world-space bounding box {minX,minY,minZ,maxX,maxY,maxZ} of a plan, clamped to the
+     * hive_world vertical envelope. Uses the conservative per-district footprint ({@link
+     * #DISTRICT_W}, the larger edge) so 90°-rotated districts are still covered. Shared by {@code
+     * /fchive city generate} (for {@link HiveCityMarkerData#resetForNewCity}) and {@link
+     * HiveFullCityTest#cityBox()}.
+     */
+    public static int[] planBoundingBox(List<PlacedDistrict> plan) {
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
+        for (PlacedDistrict pd : plan) {
+            BlockPos o = pd.origin();
+            minX = Math.min(minX, o.getX());          maxX = Math.max(maxX, o.getX() + DISTRICT_W);
+            minZ = Math.min(minZ, o.getZ());          maxZ = Math.max(maxZ, o.getZ() + DISTRICT_W);
+            minY = Math.min(minY, o.getY());          maxY = Math.max(maxY, o.getY() + HiveWorld.LEVEL_HEIGHT);
+        }
+        minY = Math.max(minY, HiveWorld.MIN_Y);
+        maxY = Math.min(maxY, HiveWorld.MAX_Y);
+        return new int[]{minX, minY, minZ, maxX - 1, maxY - 1, maxZ - 1};
+    }
+
+    /**
      * Human-readable dry-run of the plan for {@code /fchive city generate} step-2 logging
      * (before a single block is placed).
      */
