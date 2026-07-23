@@ -1,5 +1,7 @@
 package com.example.examplemod;
 
+import com.example.examplemod.client.render.GuardsmanRiflemanRenderer;
+import com.example.examplemod.client.render.GuardsmanSergeantRenderer;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -37,6 +39,8 @@ public final class FirstCrusadeClientEvents {
         event.registerEntityRenderer(FCRegistry.IMPERIAL_CITIZEN.get(), ImperialCitizenRenderer::new);
         event.registerEntityRenderer(FCRegistry.LASGUN_SHOT.get(), LasgunShotRenderer::new);
         event.registerEntityRenderer(FCRegistry.GUARDSMAN.get(), GuardsmanRenderer::new);
+        event.registerEntityRenderer(FCRegistry.GUARDSMAN_RIFLEMAN.get(), GuardsmanRiflemanRenderer::new);
+        event.registerEntityRenderer(FCRegistry.GUARDSMAN_SERGEANT.get(), GuardsmanSergeantRenderer::new);
         event.registerEntityRenderer(FCRegistry.SPACE_MARINE.get(), SpaceMarineRenderer::new);
         event.registerEntityRenderer(FCRegistry.CUSTODES.get(), CustodesRenderer::new);
         event.registerEntityRenderer(FCRegistry.PRIMARCH.get(), PrimarchRenderer::new);

@@ -68,6 +68,12 @@ public class ExampleMod {
     com.example.examplemod.hive.HiveBlocks.register(modEventBus);
         com.example.examplemod.hive.HiveCityConceptBlocks.register(modEventBus);
 
+    // Imperial Battle Tank vehicle pack — self-contained registry in .registry.
+    com.example.examplemod.registry.ModVehicleEntities.register(modEventBus);
+
+    // Valkyrie Gunship + Sentinel Walker combat-vehicle mobs — self-contained registry in .registry.
+    com.example.examplemod.registry.ModCombatVehicleContent.register(modEventBus);
+
     net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
             net.minecraftforge.fml.config.ModConfig.Type.SERVER, FirstCrusadeServerConfig.SPEC);
 

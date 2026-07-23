@@ -1,5 +1,7 @@
 package com.example.examplemod;
 
+import com.example.examplemod.unit.imperium.GuardsmanRiflemanEntity;
+import com.example.examplemod.unit.imperium.GuardsmanSergeantEntity;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.resources.ResourceLocation;
@@ -583,6 +585,30 @@ public static final RegistryObject<MenuType<StrategiumMenu>> STRATEGIUM_MENU =
 
     public static final RegistryObject<Item> GUARDSMAN_SPAWN_EGG = ITEMS.register("guardsman_spawn_egg",
             () -> new ForgeSpawnEggItem(GUARDSMAN, 0x3A3A3A, 0xB0A060, new Item.Properties()));
+
+    // --- Fase C: squad-capable Guardsman variants (GeckoLib). See unit/imperium/. ---
+    public static final RegistryObject<EntityType<GuardsmanRiflemanEntity>> GUARDSMAN_RIFLEMAN =
+            ENTITY_TYPES.register("guardsman_rifleman",
+                    () -> EntityType.Builder.of(GuardsmanRiflemanEntity::new, MobCategory.CREATURE)
+                            .sized(0.6F, 1.95F)
+                            .clientTrackingRange(8)
+                            .build(ExampleMod.MODID + ":guardsman_rifleman"));
+
+    public static final RegistryObject<Item> GUARDSMAN_RIFLEMAN_SPAWN_EGG =
+            ITEMS.register("guardsman_rifleman_spawn_egg",
+                    () -> new ForgeSpawnEggItem(GUARDSMAN_RIFLEMAN, 0x3A3A3A, 0x8FA050, new Item.Properties()));
+
+    public static final RegistryObject<EntityType<GuardsmanSergeantEntity>> GUARDSMAN_SERGEANT =
+            ENTITY_TYPES.register("guardsman_sergeant",
+                    () -> EntityType.Builder.of(GuardsmanSergeantEntity::new, MobCategory.CREATURE)
+                            .sized(0.6F, 1.95F)
+                            .clientTrackingRange(8)
+                            .build(ExampleMod.MODID + ":guardsman_sergeant"));
+
+    public static final RegistryObject<Item> GUARDSMAN_SERGEANT_SPAWN_EGG =
+            ITEMS.register("guardsman_sergeant_spawn_egg",
+                    () -> new ForgeSpawnEggItem(GUARDSMAN_SERGEANT, 0x2A2A2A, 0xC0A030, new Item.Properties()));
+
             public static final RegistryObject<EntityType<SpaceMarineEntity>> SPACE_MARINE =
         ENTITY_TYPES.register("space_marine",
                 () -> EntityType.Builder.of(SpaceMarineEntity::new, MobCategory.CREATURE)
@@ -997,6 +1023,8 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
                         output.accept(SPACE_MARINE_BOOTS.get());
 
                        output.accept(GUARDSMAN_SPAWN_EGG.get());
+                       output.accept(GUARDSMAN_RIFLEMAN_SPAWN_EGG.get());
+                       output.accept(GUARDSMAN_SERGEANT_SPAWN_EGG.get());
 output.accept(SPACE_MARINE_SPAWN_EGG.get());
 output.accept(CUSTODES_SPAWN_EGG.get());
 output.accept(PRIMARCH_SPAWN_EGG.get());
@@ -1033,6 +1061,8 @@ output.accept(CITY_COMMANDER_SPAWN_EGG.get());
 
 public static void registerAttributes(EntityAttributeCreationEvent event) {
     event.put(GUARDSMAN.get(), GuardsmanEntity.createAttributes().build());
+    event.put(GUARDSMAN_RIFLEMAN.get(), GuardsmanRiflemanEntity.createAttributes().build());
+    event.put(GUARDSMAN_SERGEANT.get(), GuardsmanSergeantEntity.createAttributes().build());
     event.put(IMPERIAL_CITIZEN.get(), ImperialCitizenEntity.createAttributes().build());
     event.put(SPACE_MARINE.get(), SpaceMarineEntity.createAttributes().build());
     event.put(CUSTODES.get(), CustodesEntity.createAttributes().build());

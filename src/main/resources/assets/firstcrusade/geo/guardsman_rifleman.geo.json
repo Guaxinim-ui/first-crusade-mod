@@ -1,0 +1,655 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.guardsman_rifleman",
+        "texture_width": 64,
+        "texture_height": 128,
+        "visible_bounds_width": 3,
+        "visible_bounds_height": 3,
+        "visible_bounds_offset": [
+          0,
+          1.2,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "root",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "pelvis",
+          "parent": "root",
+          "pivot": [
+            0.0,
+            14.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                4.0,
+                4.0
+              ],
+              "uv": [
+                15,
+                41
+              ]
+            }
+          ]
+        },
+        {
+          "name": "body",
+          "parent": "pelvis",
+          "pivot": [
+            0.0,
+            16.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                16.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                4.0,
+                4.0
+              ],
+              "uv": [
+                40,
+                41
+              ]
+            }
+          ]
+        },
+        {
+          "name": "chest",
+          "parent": "body",
+          "pivot": [
+            0.0,
+            20.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                20.0,
+                -2.5
+              ],
+              "size": [
+                8.0,
+                5.0,
+                5.0
+              ],
+              "uv": [
+                37,
+                17
+              ]
+            }
+          ]
+        },
+        {
+          "name": "head",
+          "parent": "chest",
+          "pivot": [
+            0.0,
+            25.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                25.0,
+                -4.0
+              ],
+              "size": [
+                8.0,
+                8.0,
+                8.0
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "name": "right_arm",
+          "parent": "chest",
+          "pivot": [
+            -4.0,
+            23.5,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -7.0,
+                18.5,
+                -2.0
+              ],
+              "size": [
+                3.0,
+                5.0,
+                4.0
+              ],
+              "uv": [
+                38,
+                30
+              ]
+            }
+          ]
+        },
+        {
+          "name": "right_forearm",
+          "parent": "right_arm",
+          "pivot": [
+            -5.5,
+            18.5,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -7.0,
+                13.5,
+                -2.0
+              ],
+              "size": [
+                3.0,
+                5.0,
+                4.0
+              ],
+              "uv": [
+                0,
+                41
+              ]
+            }
+          ]
+        },
+        {
+          "name": "right_hand",
+          "parent": "right_forearm",
+          "pivot": [
+            -5.5,
+            13.5,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -7.0,
+                10.5,
+                -2.0
+              ],
+              "size": [
+                3.0,
+                3.0,
+                4.0
+              ],
+              "uv": [
+                36,
+                51
+              ]
+            }
+          ]
+        },
+        {
+          "name": "left_arm",
+          "parent": "chest",
+          "pivot": [
+            4.0,
+            23.5,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                4.0,
+                18.5,
+                -2.0
+              ],
+              "size": [
+                3.0,
+                5.0,
+                4.0
+              ],
+              "uv": [
+                38,
+                30
+              ]
+            }
+          ]
+        },
+        {
+          "name": "left_forearm",
+          "parent": "left_arm",
+          "pivot": [
+            5.5,
+            18.5,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                4.0,
+                13.5,
+                -2.0
+              ],
+              "size": [
+                3.0,
+                5.0,
+                4.0
+              ],
+              "uv": [
+                0,
+                41
+              ]
+            }
+          ]
+        },
+        {
+          "name": "left_hand",
+          "parent": "left_forearm",
+          "pivot": [
+            5.5,
+            13.5,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                4.0,
+                10.5,
+                -2.0
+              ],
+              "size": [
+                3.0,
+                3.0,
+                4.0
+              ],
+              "uv": [
+                36,
+                51
+              ]
+            }
+          ]
+        },
+        {
+          "name": "right_leg",
+          "parent": "pelvis",
+          "pivot": [
+            -2.0,
+            12.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                6.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                6.0,
+                4.0
+              ],
+              "uv": [
+                0,
+                30
+              ]
+            }
+          ]
+        },
+        {
+          "name": "right_shin",
+          "parent": "right_leg",
+          "pivot": [
+            -2.0,
+            6.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                2.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                4.0,
+                4.0
+              ],
+              "uv": [
+                0,
+                51
+              ]
+            }
+          ]
+        },
+        {
+          "name": "right_foot",
+          "parent": "right_shin",
+          "pivot": [
+            -2.0,
+            2.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                0.0,
+                -3.0
+              ],
+              "size": [
+                4.0,
+                2.0,
+                5.0
+              ],
+              "uv": [
+                17,
+                51
+              ]
+            }
+          ]
+        },
+        {
+          "name": "left_leg",
+          "parent": "pelvis",
+          "pivot": [
+            2.0,
+            12.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                0.0,
+                6.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                6.0,
+                4.0
+              ],
+              "uv": [
+                0,
+                30
+              ]
+            }
+          ]
+        },
+        {
+          "name": "left_shin",
+          "parent": "left_leg",
+          "pivot": [
+            2.0,
+            6.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                0.0,
+                2.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                4.0,
+                4.0
+              ],
+              "uv": [
+                0,
+                51
+              ]
+            }
+          ]
+        },
+        {
+          "name": "left_foot",
+          "parent": "left_shin",
+          "pivot": [
+            2.0,
+            2.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -3.0
+              ],
+              "size": [
+                4.0,
+                2.0,
+                5.0
+              ],
+              "uv": [
+                17,
+                51
+              ]
+            }
+          ]
+        },
+        {
+          "name": "backpack",
+          "parent": "chest",
+          "pivot": [
+            0.0,
+            22.0,
+            2.5
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -3.5,
+                17.0,
+                2.5
+              ],
+              "size": [
+                7.0,
+                6.0,
+                3.0
+              ],
+              "uv": [
+                17,
+                30
+              ]
+            }
+          ]
+        },
+        {
+          "name": "helmet",
+          "parent": "head",
+          "pivot": [
+            0.0,
+            25.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.5,
+                30.5,
+                -4.5
+              ],
+              "size": [
+                9.0,
+                3.0,
+                9.0
+              ],
+              "uv": [
+                0,
+                17
+              ]
+            }
+          ]
+        },
+        {
+          "name": "weapon_root",
+          "parent": "chest",
+          "pivot": [
+            0.0,
+            20.0,
+            -2.0
+          ]
+        },
+        {
+          "name": "lasgun",
+          "parent": "weapon_root",
+          "pivot": [
+            0.0,
+            20.0,
+            -2.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -1.0,
+                19.5,
+                -12.0
+              ],
+              "size": [
+                2.0,
+                2.0,
+                12.0
+              ],
+              "uv": [
+                33,
+                0
+              ]
+            },
+            {
+              "origin": [
+                -1.0,
+                17.5,
+                -3.0
+              ],
+              "size": [
+                2.0,
+                2.0,
+                3.0
+              ],
+              "uv": [
+                53,
+                30
+              ]
+            },
+            {
+              "origin": [
+                -0.75,
+                19.25,
+                0.0
+              ],
+              "size": [
+                1.5,
+                3.0,
+                2.0
+              ],
+              "uv": [
+                0,
+                60
+              ]
+            }
+          ]
+        },
+        {
+          "name": "main_grip",
+          "parent": "lasgun",
+          "pivot": [
+            0.0,
+            19.0,
+            -2.0
+          ]
+        },
+        {
+          "name": "offhand_grip",
+          "parent": "lasgun",
+          "pivot": [
+            0.0,
+            20.5,
+            -8.0
+          ]
+        },
+        {
+          "name": "muzzle",
+          "parent": "lasgun",
+          "pivot": [
+            0.0,
+            20.5,
+            -12.0
+          ]
+        },
+        {
+          "name": "casing_eject",
+          "parent": "lasgun",
+          "pivot": [
+            1.0,
+            21.0,
+            -4.0
+          ]
+        },
+        {
+          "name": "magazine",
+          "parent": "lasgun",
+          "pivot": [
+            0.0,
+            18.0,
+            -5.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -0.75,
+                16.0,
+                -6.0
+              ],
+              "size": [
+                1.5,
+                2.0,
+                3.0
+              ],
+              "uv": [
+                51,
+                51
+              ]
+            }
+          ]
+        },
+        {
+          "name": "effect_origin",
+          "parent": "lasgun",
+          "pivot": [
+            0.0,
+            20.5,
+            -12.5
+          ]
+        }
+      ]
+    }
+  ]
+}

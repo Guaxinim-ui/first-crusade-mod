@@ -1,0 +1,13 @@
+Pacote com os 2 modelos para adicionar no mod:
+
+1) valkyrie_gunship/
+   - valkyrie_gunship.bbmodel
+   - valkyrie_gunship.png
+
+2) sentinel_walker/
+   - sentinel_walker.bbmodel
+   - sentinel_walker.png
+
+Observação:
+- A sentinela está na versão mais recente texturizada.
+- A nave está na versão corrigida sem o muzzle flash aparecendo parado.
