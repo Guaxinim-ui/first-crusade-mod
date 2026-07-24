@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/cube_column",
-  "textures": {
-    "end": "firstcrusade:block/imperial_column_end",
-    "side": "firstcrusade:block/imperial_column_side"
-  }
-}

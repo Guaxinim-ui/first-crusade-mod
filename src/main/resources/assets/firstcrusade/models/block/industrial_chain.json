@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/cube_column",
-  "textures": {
-    "end": "firstcrusade:block/industrial_chain_tex",
-    "side": "firstcrusade:block/industrial_chain_tex"
-  },
-  "render_type": "minecraft:cutout"
-}

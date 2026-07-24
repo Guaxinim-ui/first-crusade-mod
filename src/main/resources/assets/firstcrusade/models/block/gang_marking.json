@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/orientable",
-  "textures": {
-    "front": "firstcrusade:block/gang_marking",
-    "side": "firstcrusade:block/gang_marking",
-    "top": "firstcrusade:block/gang_marking"
-  }
-}

@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/orientable",
-  "textures": {
-    "front": "firstcrusade:block/industrial_vent",
-    "side": "firstcrusade:block/riveted_steel_block",
-    "top": "firstcrusade:block/riveted_steel_block"
-  }
-}

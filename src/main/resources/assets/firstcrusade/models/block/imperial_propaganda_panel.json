@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/orientable",
-  "textures": {
-    "front": "firstcrusade:block/imperial_propaganda_panel",
-    "side": "firstcrusade:block/cathedral_wall",
-    "top": "firstcrusade:block/cathedral_wall"
-  }
-}

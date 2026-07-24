@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/cube_column",
-  "textures": {
-    "end": "firstcrusade:block/conveyor_belt_end",
-    "side": "firstcrusade:block/conveyor_belt_side"
-  }
-}

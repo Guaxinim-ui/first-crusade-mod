@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/cube_column",
-  "textures": {
-    "end": "firstcrusade:block/hive_lumen_strip_end",
-    "side": "firstcrusade:block/hive_lumen_strip_side"
-  }
-}

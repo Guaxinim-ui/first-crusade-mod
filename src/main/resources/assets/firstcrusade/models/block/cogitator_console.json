@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/orientable",
-  "textures": {
-    "front": "firstcrusade:block/cogitator_console",
-    "side": "firstcrusade:block/machine_casing",
-    "top": "firstcrusade:block/machine_casing"
-  }
-}

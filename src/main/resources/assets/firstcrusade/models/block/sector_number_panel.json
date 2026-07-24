@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/orientable",
-  "textures": {
-    "front": "firstcrusade:block/sector_number_panel",
-    "side": "firstcrusade:block/riveted_steel_block",
-    "top": "firstcrusade:block/riveted_steel_block"
-  }
-}

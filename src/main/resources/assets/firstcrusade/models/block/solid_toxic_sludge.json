@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "firstcrusade:block/solid_toxic_sludge"
-  },
-  "render_type": "minecraft:cutout"
-}

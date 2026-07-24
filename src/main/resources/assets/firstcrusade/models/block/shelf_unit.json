@@ -1,9 +1,0 @@
-{
-  "parent": "minecraft:block/orientable",
-  "textures": {
-    "front": "firstcrusade:block/shelf_unit",
-    "side": "firstcrusade:block/shelf_unit",
-    "top": "firstcrusade:block/shelf_unit"
-  },
-  "render_type": "minecraft:cutout"
-}

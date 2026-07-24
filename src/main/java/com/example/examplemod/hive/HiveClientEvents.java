@@ -36,28 +36,11 @@ public final class HiveClientEvents {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
+            // Only the surviving toxic-sludge fluid + placed liquid block need a render layer; the
+            // old decorative block set (which had the other translucent/cutout entries) was removed.
             ItemBlockRenderTypes.setRenderLayer(HiveFluids.TOXIC_SLUDGE.get(), RenderType.translucent());
             ItemBlockRenderTypes.setRenderLayer(HiveFluids.TOXIC_SLUDGE_FLOWING.get(), RenderType.translucent());
             ItemBlockRenderTypes.setRenderLayer(HiveBlocks.TOXIC_SLUDGE_BLOCK.get(), RenderType.translucent());
-            ItemBlockRenderTypes.setRenderLayer(HiveBlocks.SOLID_TOXIC_SLUDGE.get(), RenderType.translucent());
-            ItemBlockRenderTypes.setRenderLayer(HiveBlocks.COOLANT_TANK.get(), RenderType.translucent());
-            ItemBlockRenderTypes.setRenderLayer(HiveBlocks.HIVE_CHAIR.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(HiveBlocks.HIVE_BENCH.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(HiveBlocks.HIVE_RUG.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(HiveBlocks.SHELF_UNIT.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(HiveBlocks.HANGING_HIVE_LAMP.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(HiveBlocks.CATHEDRAL_BRAZIER.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(HiveBlocks.WARNING_BEACON.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(HiveBlocks.INDUSTRIAL_CHAIN.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(HiveBlocks.CABLE_BUNDLE.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(HiveBlocks.HUGE_HIVE_PIPE.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(HiveBlocks.MAIN_PIPE_TRUNK.get(), RenderType.cutout());
-
-            // Hive City concept blocks whose textures use real transparent holes (open grating /
-            // balustrade). They must render on the cutout layer or the holes turn opaque black.
-            ItemBlockRenderTypes.setRenderLayer(HiveCityConceptBlocks.FLOOR_GRATE.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(HiveCityConceptBlocks.HAZARD_GRATED_FLOOR.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(HiveCityConceptBlocks.BALUSTRADE_RAILING.get(), RenderType.cutout());
         });
     }
 

@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "firstcrusade:block/hanging_hive_lamp"
-  },
-  "render_type": "minecraft:cutout"
-}

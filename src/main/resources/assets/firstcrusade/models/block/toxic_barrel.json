@@ -1,9 +1,0 @@
-{
-  "parent": "minecraft:block/orientable",
-  "render_type": "minecraft:cutout",
-  "textures": {
-    "front": "firstcrusade:block/toxic_barrel",
-    "side": "firstcrusade:block/toxic_barrel",
-    "top": "firstcrusade:block/toxic_barrel_top"
-  }
-}

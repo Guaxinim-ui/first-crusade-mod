@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/orientable",
-  "textures": {
-    "front": "firstcrusade:block/cargo_container_front",
-    "side": "firstcrusade:block/cargo_container_side",
-    "top": "firstcrusade:block/cargo_container_top"
-  }
-}

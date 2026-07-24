@@ -64,9 +64,9 @@ public class ExampleMod {
     // armour) and entity attributes live in FCRegistry.
     FCRegistry.register(modEventBus);
 
-    // Hive City block set (FASE 2) — self-contained registry in com.example.examplemod.hive.
+    // Hive fluids + structure markers registry (com.example.examplemod.hive). The old decorative
+    // block set was removed; the new decorative kit will register itself separately.
     com.example.examplemod.hive.HiveBlocks.register(modEventBus);
-        com.example.examplemod.hive.HiveCityConceptBlocks.register(modEventBus);
 
     // Imperial Battle Tank vehicle pack — self-contained registry in .registry.
     com.example.examplemod.registry.ModVehicleEntities.register(modEventBus);
