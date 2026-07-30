@@ -1,0 +1,88 @@
+{
+  "temperature": 0.9,
+  "downfall": 0.2,
+  "has_precipitation": true,
+  "effects": {
+    "sky_color": 9418460,
+    "fog_color": 12631976,
+    "water_color": 4481146,
+    "water_fog_color": 4481146,
+    "grass_color": 8293461,
+    "foliage_color": 7240776
+  },
+  "spawners": {
+    "monster": [],
+    "creature": [],
+    "ambient": [],
+    "axolotls": [],
+    "underground_water_creature": [],
+    "water_creature": [],
+    "water_ambient": [],
+    "misc": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": [
+      "minecraft:cave",
+      "minecraft:cave_extra_underground",
+      "minecraft:canyon"
+    ]
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:ore_dirt",
+      "minecraft:ore_gravel",
+      "minecraft:ore_granite_upper",
+      "minecraft:ore_granite_lower",
+      "minecraft:ore_diorite_upper",
+      "minecraft:ore_diorite_lower",
+      "minecraft:ore_andesite_upper",
+      "minecraft:ore_andesite_lower",
+      "minecraft:ore_tuff",
+      "minecraft:ore_coal_upper",
+      "minecraft:ore_coal_lower",
+      "minecraft:ore_iron_upper",
+      "minecraft:ore_iron_middle",
+      "minecraft:ore_iron_small",
+      "minecraft:ore_gold",
+      "minecraft:ore_gold_lower",
+      "minecraft:ore_redstone",
+      "minecraft:ore_redstone_lower",
+      "minecraft:ore_diamond",
+      "minecraft:ore_diamond_large",
+      "minecraft:ore_diamond_buried",
+      "minecraft:ore_lapis",
+      "minecraft:ore_lapis_buried",
+      "minecraft:ore_copper"
+    ],
+    [
+      "minecraft:monster_room",
+      "minecraft:monster_room_deep",
+      "minecraft:glow_lichen",
+      "minecraft:amethyst_geode"
+    ],
+    [],
+    [
+      "firstcrusade:tree_scrub_oak_n1_r2",
+      "firstcrusade:tree_imperial_pine_n1_r5",
+      "firstcrusade:patch_withered_scrub_n9",
+      "firstcrusade:patch_imperial_grass_n7",
+      "firstcrusade:patch_roadside_thistle",
+      "firstcrusade:patch_ash_grass_n2",
+      "firstcrusade:tall_tall_imperial_grass_n3",
+      "firstcrusade:patch_scattered_twigs_n2",
+      "firstcrusade:rock_stone_n1_r2",
+      "firstcrusade:tree_rationfruit_n1_r3",
+      "firstcrusade:tree_feed_pod"
+    ],
+    [
+      "minecraft:freeze_top_layer"
+    ]
+  ]
+}

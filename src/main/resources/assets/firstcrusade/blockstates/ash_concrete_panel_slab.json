@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "firstcrusade:block/ash_concrete_panel_slab"
+    },
+    "type=top": {
+      "model": "firstcrusade:block/ash_concrete_panel_slab_top"
+    },
+    "type=double": {
+      "model": "firstcrusade:block/ash_concrete_panel"
+    }
+  }
+}

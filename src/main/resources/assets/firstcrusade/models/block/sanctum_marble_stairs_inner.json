@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/inner_stairs",
+  "textures": {
+    "particle": "firstcrusade:block/sanctum_marble",
+    "bottom": "firstcrusade:block/sanctum_marble",
+    "top": "firstcrusade:block/sanctum_marble",
+    "side": "firstcrusade:block/sanctum_marble"
+  }
+}

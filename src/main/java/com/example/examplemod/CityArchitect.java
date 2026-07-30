@@ -79,6 +79,12 @@ public final class CityArchitect {
 
         WorldGenPlacement.clearVegetation(level, center, WALL_RADIUS + 6, 10);
 
+        // The ground this city now stands on has a new identity: its vegetation should be the
+        // city's, not the wilderness it displaced. Flagging reaches past the wall so the fringe
+        // blends outward instead of stopping at the footprint. Only loaded chunks are queued.
+        com.example.examplemod.flora.runtime.FloraTransitionManager.onTerritoryCaptured(
+                level, center, WALL_RADIUS + 48);
+
         sweepNpcsFromGroundWorks(level, plan);
 
         pavePlaza(level, plan, center);

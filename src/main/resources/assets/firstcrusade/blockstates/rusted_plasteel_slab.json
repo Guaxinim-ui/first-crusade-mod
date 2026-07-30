@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "firstcrusade:block/rusted_plasteel_slab"
+    },
+    "type=top": {
+      "model": "firstcrusade:block/rusted_plasteel_slab_top"
+    },
+    "type=double": {
+      "model": "firstcrusade:block/rusted_plasteel"
+    }
+  }
+}

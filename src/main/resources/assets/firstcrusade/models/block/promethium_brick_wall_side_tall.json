@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/template_wall_side_tall",
+  "textures": {
+    "particle": "firstcrusade:block/promethium_brick",
+    "wall": "firstcrusade:block/promethium_brick"
+  }
+}

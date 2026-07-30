@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/template_wall_side_tall",
+  "textures": {
+    "particle": "firstcrusade:block/sanctum_marble_brick",
+    "wall": "firstcrusade:block/sanctum_marble_brick"
+  }
+}

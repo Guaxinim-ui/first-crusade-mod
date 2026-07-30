@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "particle": "firstcrusade:block/hive_ashcrete",
+    "bottom": "firstcrusade:block/hive_ashcrete",
+    "top": "firstcrusade:block/hive_ashcrete",
+    "side": "firstcrusade:block/hive_ashcrete"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "firstcrusade:slag_lichen",
+    "firstcrusade:rust_moss",
+    "firstcrusade:sump_moss",
+    "firstcrusade:gutter_lichen",
+    "firstcrusade:gob_moss",
+    "firstcrusade:chaos_lichen",
+    "firstcrusade:resin_moss",
+    "firstcrusade:mud_lichen",
+    "firstcrusade:frost_lichen"
+  ]
+}

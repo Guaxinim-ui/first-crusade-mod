@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "firstcrusade:block/slate_concrete_slab"
+    },
+    "type=top": {
+      "model": "firstcrusade:block/slate_concrete_slab_top"
+    },
+    "type=double": {
+      "model": "firstcrusade:block/slate_concrete"
+    }
+  }
+}

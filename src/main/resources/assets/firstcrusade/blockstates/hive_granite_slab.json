@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "firstcrusade:block/hive_granite_slab"
+    },
+    "type=top": {
+      "model": "firstcrusade:block/hive_granite_slab_top"
+    },
+    "type=double": {
+      "model": "firstcrusade:block/hive_granite"
+    }
+  }
+}

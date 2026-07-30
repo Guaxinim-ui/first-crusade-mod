@@ -34,15 +34,28 @@ public final class FirstCrusadeForgeEvents {
     public static void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("First Crusade server starting.");
 
+        // A borda vai nos PLANETAS, nunca no overworld. Encolher o overworld era aceitavel
+        // enquanto o mod era dono dele; agora que o jogador comeca num mundo vanilla, apertar a
+        // borda dele seria o mod estragando um save que nao lhe pertence.
         if (ExampleMod.WORLD_BORDER_SIZE > 0.0D) {
-            net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
-            overworld.getWorldBorder().setSize(ExampleMod.WORLD_BORDER_SIZE);
-            LOGGER.info("First Crusade: overworld border clamped to {} blocks.", ExampleMod.WORLD_BORDER_SIZE);
+            int bordered = 0;
+            for (net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> planet
+                    : com.example.examplemod.planet.FCPlanets.ALL) {
+                net.minecraft.server.level.ServerLevel level = event.getServer().getLevel(planet);
+                if (level != null) {
+                    level.getWorldBorder().setSize(ExampleMod.WORLD_BORDER_SIZE);
+                    bordered++;
+                }
+            }
+            LOGGER.info("First Crusade: {} planet border(s) clamped to {} blocks.",
+                    bordered, ExampleMod.WORLD_BORDER_SIZE);
         }
     }
 
-    // The Crusade is fought on the surface world: the Nether and the End are sealed off. Travel to
-    // either is cancelled, so portals never take anyone there. Works on any world (no worldgen change).
+    // O Nether e o End so sao selados quando a config pede. O padrao mudou junto com a
+    // arquitetura: enquanto o mod era dono do overworld, fechar os dois era coerente — o mundo
+    // inteiro era a Cruzada. Agora o jogador comeca num Minecraft normal, e um Minecraft normal
+    // sem Nether nao e normal. Quem quiser o mundo fechado ainda liga a config.
     @SubscribeEvent
     public static void onTravelToDimension(EntityTravelToDimensionEvent event) {
         net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> target = event.getDimension();
@@ -74,22 +87,12 @@ public final class FirstCrusadeForgeEvents {
         }
     }
 
-    // The Ork corruption feeds on death: wherever an Ork falls (or fells something), a patch of sculk
-    // scabs over the ground. Combined with the camps' steady halo, the green tide leaves a visible
-    // stain that grows with every battle and every step of their expansion. See OrkCorruptionManager.
+    // Ground the war has been fought over is now recorded by the flora system, which ages a fresh
+    // battlefield into an old one (see FloraEvents.onLivingDeath). The sculk that used to scab over
+    // a death site is gone with the rest of the corruption system.
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
-        if (!(event.getEntity().level() instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
-            return;
-        }
-
         net.minecraft.world.entity.Entity killer = event.getSource().getEntity();
-        boolean orkInvolved = FirstCrusadeFactionManager.getFaction(event.getEntity()) == FirstCrusadeFaction.ORKS
-                || (killer != null && FirstCrusadeFactionManager.getFaction(killer) == FirstCrusadeFaction.ORKS);
-
-        if (orkInvolved) {
-            OrkCorruptionManager.corruptDeathSite(serverLevel, event.getEntity().blockPosition(), 3);
-        }
 
         // The Neophyte's battle test: a kill in real combat bloods him for ascension to a full Marine.
         if (killer instanceof SpaceMarineEntity marine && marine.isNeophyte()) {
@@ -97,8 +100,12 @@ public final class FirstCrusadeForgeEvents {
         }
     }
 
-    // The Ork corruption is hostile ground for the Imperium: any Imperial unit standing on sculk is
-    // slowed, while the green tide regenerates upon it. Checked every 40 ticks per unit (cheap).
+    // Ork growth is hostile ground for the Imperium: any Imperial unit standing in it is slowed and
+    // eaten at, while the green tide thrives on it. Checked every 40 ticks per unit (cheap).
+    //
+    // The trigger used to be vanilla sculk. It is now the Ork vegetation itself — fungus, squig
+    // grass, spore pods — which is both what the fiction always described and something the flora
+    // decorator already spreads across held territory.
     @SubscribeEvent
     public static void onLivingTick(LivingEvent.LivingTickEvent event) {
         net.minecraft.world.entity.LivingEntity entity = event.getEntity();
@@ -107,7 +114,13 @@ public final class FirstCrusadeForgeEvents {
             return;
         }
 
-        if (!entity.level().getBlockState(entity.blockPosition().below()).is(net.minecraft.world.level.block.Blocks.SCULK)) {
+        net.minecraft.core.BlockPos feet = entity.blockPosition();
+
+        boolean onOrkGrowth =
+                entity.level().getBlockState(feet).is(com.example.examplemod.flora.FloraTags.ORK_GROWTH)
+                        || entity.level().getBlockState(feet.below()).is(com.example.examplemod.flora.FloraTags.ORK_GROWTH);
+
+        if (!onOrkGrowth) {
             return;
         }
 

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/wall_inventory",
+  "textures": {
+    "particle": "firstcrusade:block/slate_concrete",
+    "wall": "firstcrusade:block/slate_concrete"
+  }
+}

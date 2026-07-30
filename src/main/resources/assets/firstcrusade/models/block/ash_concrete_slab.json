@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "particle": "firstcrusade:block/ash_concrete",
+    "bottom": "firstcrusade:block/ash_concrete",
+    "top": "firstcrusade:block/ash_concrete",
+    "side": "firstcrusade:block/ash_concrete"
+  }
+}

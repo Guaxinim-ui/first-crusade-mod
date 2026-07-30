@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/frostnut_pine_log"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/frostnut_pine_log",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/frostnut_pine_log",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

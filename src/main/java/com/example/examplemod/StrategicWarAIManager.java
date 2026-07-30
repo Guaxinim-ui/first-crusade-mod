@@ -576,6 +576,12 @@ public final class StrategicWarAIManager {
             warMap.recordCamp(newCamp);
         }
 
+        // The ground has changed hands. Flag the fallen city's whole territory so the Imperial
+        // grass, memorial blooms and thistle give way to trampled grass, fungus and gob moss.
+        // Only the flora tag is ever removed — buildings and player blocks are untouched — and only
+        // loaded chunks are queued now; the rest transform when they next load.
+        com.example.examplemod.flora.runtime.FloraTransitionManager.onTerritoryCaptured(level, cityPos, 160);
+
         WarDominionManager.shift(level, -20);
 
         StrategicCoreMessageBus.sendToNearestOpenCore(

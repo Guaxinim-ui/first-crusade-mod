@@ -29,12 +29,18 @@ public final class StrategicWarAIEvents {
             return;
         }
 
-        ServerLevel overworld = event.getServer().getLevel(Level.OVERWORLD);
-
-        if (overworld == null) {
-            return;
+        // A guerra acontece nos planetas do mod. Era o overworld enquanto o mod era dono dele;
+        // hoje o overworld e vanilla e nao deve receber cidade nem acampamento nenhum.
+        for (net.minecraft.resources.ResourceKey<Level> planet
+                : com.example.examplemod.planet.FCPlanets.ALL) {
+            ServerLevel level = event.getServer().getLevel(planet);
+            if (level != null) {
+                tickWorld(level);
+            }
         }
+    }
 
+    private static void tickWorld(ServerLevel overworld) {
         long gameTime = overworld.getGameTime();
 
         if (!ExampleMod.TEST_FIXED_WORLD) {

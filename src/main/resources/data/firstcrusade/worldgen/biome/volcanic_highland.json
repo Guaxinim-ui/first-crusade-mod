@@ -1,0 +1,84 @@
+{
+  "temperature": 1.8,
+  "downfall": 0.0,
+  "has_precipitation": false,
+  "effects": {
+    "sky_color": 10386018,
+    "fog_color": 9071190,
+    "water_color": 4864562,
+    "water_fog_color": 4864562,
+    "grass_color": 7233624,
+    "foliage_color": 6180936
+  },
+  "spawners": {
+    "monster": [],
+    "creature": [],
+    "ambient": [],
+    "axolotls": [],
+    "underground_water_creature": [],
+    "water_creature": [],
+    "water_ambient": [],
+    "misc": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": [
+      "minecraft:cave",
+      "minecraft:cave_extra_underground",
+      "minecraft:canyon"
+    ]
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:ore_dirt",
+      "minecraft:ore_gravel",
+      "minecraft:ore_granite_upper",
+      "minecraft:ore_granite_lower",
+      "minecraft:ore_diorite_upper",
+      "minecraft:ore_diorite_lower",
+      "minecraft:ore_andesite_upper",
+      "minecraft:ore_andesite_lower",
+      "minecraft:ore_tuff",
+      "minecraft:ore_coal_upper",
+      "minecraft:ore_coal_lower",
+      "minecraft:ore_iron_upper",
+      "minecraft:ore_iron_middle",
+      "minecraft:ore_iron_small",
+      "minecraft:ore_gold",
+      "minecraft:ore_gold_lower",
+      "minecraft:ore_redstone",
+      "minecraft:ore_redstone_lower",
+      "minecraft:ore_diamond",
+      "minecraft:ore_diamond_large",
+      "minecraft:ore_diamond_buried",
+      "minecraft:ore_lapis",
+      "minecraft:ore_lapis_buried",
+      "minecraft:ore_copper"
+    ],
+    [
+      "minecraft:monster_room",
+      "minecraft:monster_room_deep",
+      "minecraft:glow_lichen",
+      "minecraft:amethyst_geode"
+    ],
+    [],
+    [
+      "firstcrusade:tree_charred_snag",
+      "firstcrusade:patch_soot_grass_n4",
+      "firstcrusade:patch_ash_layer_n5",
+      "firstcrusade:patch_burnt_stubble_n3",
+      "firstcrusade:patch_rubble_pebbles_n5",
+      "firstcrusade:rock_blackstone_n2",
+      "firstcrusade:log_charred"
+    ],
+    [
+      "minecraft:freeze_top_layer"
+    ]
+  ]
+}

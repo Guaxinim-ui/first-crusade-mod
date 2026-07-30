@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "half=lower": {
+      "model": "firstcrusade:block/tall_marsh_reed_bottom"
+    },
+    "half=upper": {
+      "model": "firstcrusade:block/tall_marsh_reed_top"
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "temperature": 0.0,
+  "downfall": 0.5,
+  "has_precipitation": true,
+  "effects": {
+    "sky_color": 10271444,
+    "fog_color": 13161176,
+    "water_color": 4020850,
+    "water_fog_color": 4020850,
+    "grass_color": 9082502,
+    "foliage_color": 7766639
+  },
+  "spawners": {
+    "monster": [],
+    "creature": [],
+    "ambient": [],
+    "axolotls": [],
+    "underground_water_creature": [],
+    "water_creature": [],
+    "water_ambient": [],
+    "misc": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": [
+      "minecraft:cave",
+      "minecraft:cave_extra_underground",
+      "minecraft:canyon"
+    ]
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:ore_dirt",
+      "minecraft:ore_gravel",
+      "minecraft:ore_granite_upper",
+      "minecraft:ore_granite_lower",
+      "minecraft:ore_diorite_upper",
+      "minecraft:ore_diorite_lower",
+      "minecraft:ore_andesite_upper",
+      "minecraft:ore_andesite_lower",
+      "minecraft:ore_tuff",
+      "minecraft:ore_coal_upper",
+      "minecraft:ore_coal_lower",
+      "minecraft:ore_iron_upper",
+      "minecraft:ore_iron_middle",
+      "minecraft:ore_iron_small",
+      "minecraft:ore_gold",
+      "minecraft:ore_gold_lower",
+      "minecraft:ore_redstone",
+      "minecraft:ore_redstone_lower",
+      "minecraft:ore_diamond",
+      "minecraft:ore_diamond_large",
+      "minecraft:ore_diamond_buried",
+      "minecraft:ore_lapis",
+      "minecraft:ore_lapis_buried",
+      "minecraft:ore_copper"
+    ],
+    [
+      "minecraft:monster_room",
+      "minecraft:monster_room_deep",
+      "minecraft:glow_lichen",
+      "minecraft:amethyst_geode"
+    ],
+    [],
+    [
+      "firstcrusade:tree_frostnut_pine",
+      "firstcrusade:tree_frozen_dead_tree",
+      "firstcrusade:patch_snow_scrub",
+      "firstcrusade:patch_withered_scrub_n4",
+      "firstcrusade:patch_tundra_moss",
+      "firstcrusade:patch_bone_fragments_n3",
+      "firstcrusade:patch_ossuary_lily",
+      "firstcrusade:patch_scattered_twigs_n2",
+      "firstcrusade:rock_packed_ice",
+      "firstcrusade:rock_stone_n1_r4",
+      "firstcrusade:tree_frostnut_pine_bearing"
+    ],
+    [
+      "minecraft:freeze_top_layer"
+    ]
+  ]
+}

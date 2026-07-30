@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "firstcrusade:block/salt_thorn_log_top",
+    "side": "firstcrusade:block/salt_thorn_log"
+  }
+}

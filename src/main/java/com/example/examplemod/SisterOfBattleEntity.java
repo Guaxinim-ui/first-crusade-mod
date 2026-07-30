@@ -1,7 +1,6 @@
 package com.example.examplemod;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -57,6 +56,7 @@ public class SisterOfBattleEntity extends AbstractImperialTroopEntity implements
         LasgunShotEntity projectile = new LasgunShotEntity(this.level(), this);
         projectile.setBaseDamage(7.0D);
         projectile.setKnockback(1);
+        projectile.setMicroExplosive(true);
 
         double xPower = target.getX() - this.getX();
         double yPower = target.getY(0.5D) - projectile.getY();
@@ -72,7 +72,7 @@ public class SisterOfBattleEntity extends AbstractImperialTroopEntity implements
                 this.getX(),
                 this.getY(),
                 this.getZ(),
-                SoundEvents.BLAZE_SHOOT,
+                FCWeaponSounds.BOLTER_FIRE.get(),
                 SoundSource.HOSTILE,
                 0.6F,
                 1.4F

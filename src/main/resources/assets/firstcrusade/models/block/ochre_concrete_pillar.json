@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "firstcrusade:block/ochre_concrete_pillar",
+    "end": "firstcrusade:block/ochre_concrete_pillar_top"
+  }
+}

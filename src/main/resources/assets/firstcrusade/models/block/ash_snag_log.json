@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "firstcrusade:block/ash_snag_log_top",
+    "side": "firstcrusade:block/ash_snag_log"
+  }
+}

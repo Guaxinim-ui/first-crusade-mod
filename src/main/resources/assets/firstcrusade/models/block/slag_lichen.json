@@ -1,0 +1,6 @@
+{
+  "parent": "firstcrusade:block/flora_lichen_face",
+  "textures": {
+    "lichen": "firstcrusade:block/slag_lichen"
+  }
+}

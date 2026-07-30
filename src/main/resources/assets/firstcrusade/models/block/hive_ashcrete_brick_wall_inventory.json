@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/wall_inventory",
+  "textures": {
+    "particle": "firstcrusade:block/hive_ashcrete_brick",
+    "wall": "firstcrusade:block/hive_ashcrete_brick"
+  }
+}

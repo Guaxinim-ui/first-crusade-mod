@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/ork_fungal_stalk"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/ork_fungal_stalk",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/ork_fungal_stalk",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

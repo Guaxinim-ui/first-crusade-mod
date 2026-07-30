@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/slate_concrete_pillar"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/slate_concrete_pillar",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/slate_concrete_pillar",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "textures": {
+    "particle": "firstcrusade:block/rust_concrete_panel",
+    "bottom": "firstcrusade:block/rust_concrete_panel",
+    "top": "firstcrusade:block/rust_concrete_panel",
+    "side": "firstcrusade:block/rust_concrete_panel"
+  }
+}

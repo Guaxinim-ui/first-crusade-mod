@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "firstcrusade:block/dark_concrete_panel"
+  }
+}

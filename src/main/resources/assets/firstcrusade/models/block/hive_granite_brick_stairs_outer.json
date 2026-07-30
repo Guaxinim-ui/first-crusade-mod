@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "particle": "firstcrusade:block/hive_granite_brick",
+    "bottom": "firstcrusade:block/hive_granite_brick",
+    "top": "firstcrusade:block/hive_granite_brick",
+    "side": "firstcrusade:block/hive_granite_brick"
+  }
+}

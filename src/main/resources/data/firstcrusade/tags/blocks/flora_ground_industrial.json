@@ -1,0 +1,41 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:base_stone_overworld",
+    "#minecraft:stone_bricks",
+    "minecraft:gravel",
+    "minecraft:blackstone",
+    "minecraft:basalt",
+    "minecraft:smooth_basalt",
+    "minecraft:tuff",
+    "minecraft:iron_block",
+    {
+      "id": "firstcrusade:dark_concrete",
+      "required": false
+    },
+    {
+      "id": "firstcrusade:ash_concrete",
+      "required": false
+    },
+    {
+      "id": "firstcrusade:hive_ashcrete",
+      "required": false
+    },
+    {
+      "id": "firstcrusade:corroded_iron",
+      "required": false
+    },
+    {
+      "id": "firstcrusade:hazard_plating",
+      "required": false
+    },
+    {
+      "id": "firstcrusade:gothic_basalt",
+      "required": false
+    },
+    {
+      "id": "firstcrusade:hive_granite",
+      "required": false
+    }
+  ]
+}

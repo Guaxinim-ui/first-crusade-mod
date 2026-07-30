@@ -1,0 +1,9 @@
+SPACE MARINE — BLOCKBENCH
+
+Abra space_marine_weapons.bbmodel.
+O arquivo contém três loadouts e as animações idle/walk/attack/fire:
+- chainsword;
+- bolter segurado com as duas mãos;
+- dois bolters, um em cada mão.
+
+No jogo, 20% dos Space Marines usam a variante de duas armas.

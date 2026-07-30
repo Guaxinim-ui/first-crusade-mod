@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/blighted_oak_log"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/blighted_oak_log",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/blighted_oak_log",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "textures": {
+    "particle": "firstcrusade:block/promethium_brick",
+    "bottom": "firstcrusade:block/promethium_brick",
+    "top": "firstcrusade:block/promethium_brick",
+    "side": "firstcrusade:block/promethium_brick"
+  }
+}

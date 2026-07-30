@@ -1,0 +1,15 @@
+{
+  "replace": false,
+  "values": [
+    "firstcrusade:ork_fungus",
+    "firstcrusade:ork_spore_cap",
+    "firstcrusade:ork_spore_pod",
+    "firstcrusade:squig_grass",
+    "firstcrusade:tall_squig_grass",
+    "firstcrusade:trampled_grass",
+    "firstcrusade:oil_stained_grass",
+    "firstcrusade:gob_moss",
+    "firstcrusade:ork_fungal_stalk",
+    "firstcrusade:ork_fungal_cap"
+  ]
+}

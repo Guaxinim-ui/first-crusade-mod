@@ -1,0 +1,20 @@
+FIRST CRUSADE — ARMAS GRANDES / BLOCKBENCH
+
+Cada pasta possui:
+- <arma>.bbmodel: modelo Java Item com pivot/grupos e Display configurado para o jogo.
+- <arma>_animated.bbmodel: rig editável com animações na aba Animate do Blockbench.
+- <arma>.png: textura 128x128 exclusiva.
+
+Animações incluídas:
+- Bolter: idle, aim, fire e reload.
+- Chainsword: idle, rev e slash.
+- Choppa: idle e slash.
+- Power Klaw: idle e crush.
+
+O modelo usado pelo item no Minecraft continua sendo o JSON em src/main/resources. A pose de duas mãos do jogador é controlada pelo código do mod, enquanto as animações do Space Marine ficam em space_marine.animation.json e também no .bbmodel de referência.
+
+ATUALIZAÇÃO — SONS E CHAINWORD EM COMBATE
+- Os modelos *_animated.bbmodel possuem keyframes de som nas animações de ação.
+- A chainsword do item possui quatro fases de dentes móveis no jogo.
+- O motor permanece ativo por 3 segundos depois do fim do combate.
+- Os sons .ogg usados pelo mod estão em assets/firstcrusade/sounds/weapon.

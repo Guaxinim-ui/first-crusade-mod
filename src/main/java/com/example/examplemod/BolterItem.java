@@ -1,6 +1,5 @@
 package com.example.examplemod;
 
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
@@ -9,6 +8,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.client.extensions.common.IClientItemExtensions;
+
+import java.util.function.Consumer;
 
 /**
  * Bolter — the iconic Adeptus Astartes ranged weapon. Heavier and far stronger than the Lasgun:
@@ -24,6 +26,11 @@ public class BolterItem extends Item {
     }
 
     @Override
+    public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+        consumer.accept(TwoHandedGunClientExtensions.INSTANCE);
+    }
+
+    @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack bolter = player.getItemInHand(hand);
         boolean isCreative = player.getAbilities().instabuild;
@@ -36,7 +43,7 @@ public class BolterItem extends Item {
                 player.getX(),
                 player.getY(),
                 player.getZ(),
-                SoundEvents.BLAZE_SHOOT,
+                FCWeaponSounds.BOLTER_FIRE.get(),
                 SoundSource.PLAYERS,
                 0.9F,
                 0.7F
@@ -46,6 +53,7 @@ public class BolterItem extends Item {
             LasgunShotEntity projectile = new LasgunShotEntity(level, player);
             projectile.setBaseDamage(BOLT_DAMAGE);
             projectile.setKnockback(1);
+            projectile.setMicroExplosive(true);
             projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 4.4F, 0.6F);
 
             level.addFreshEntity(projectile);

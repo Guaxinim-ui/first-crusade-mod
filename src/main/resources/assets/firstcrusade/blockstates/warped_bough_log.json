@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/warped_bough_log"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/warped_bough_log",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/warped_bough_log",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

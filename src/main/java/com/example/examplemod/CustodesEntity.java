@@ -3,7 +3,6 @@ package com.example.examplemod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -129,6 +128,7 @@ public class CustodesEntity extends PathfinderMob implements GeoEntity {
         LasgunShotEntity projectile = new LasgunShotEntity(this.level(), this);
         projectile.setBaseDamage(12.0D);
         projectile.setKnockback(1);
+        projectile.setMicroExplosive(true);
 
         double xPower = target.getX() - this.getX();
         double yPower = target.getY(0.5D) - projectile.getY();
@@ -144,7 +144,7 @@ public class CustodesEntity extends PathfinderMob implements GeoEntity {
                 this.getX(),
                 this.getY(),
                 this.getZ(),
-                SoundEvents.BLAZE_SHOOT,
+                FCWeaponSounds.BOLTER_FIRE.get(),
                 SoundSource.HOSTILE,
                 0.8F,
                 0.9F

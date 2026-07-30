@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "textures": {
+    "particle": "firstcrusade:block/corroded_iron",
+    "bottom": "firstcrusade:block/corroded_iron",
+    "top": "firstcrusade:block/corroded_iron",
+    "side": "firstcrusade:block/corroded_iron"
+  }
+}

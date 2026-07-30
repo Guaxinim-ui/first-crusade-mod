@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/template_wall_side_tall",
+  "textures": {
+    "particle": "firstcrusade:block/pale_concrete",
+    "wall": "firstcrusade:block/pale_concrete"
+  }
+}

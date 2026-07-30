@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "firstcrusade:block/rust_concrete_panel_slab"
+    },
+    "type=top": {
+      "model": "firstcrusade:block/rust_concrete_panel_slab_top"
+    },
+    "type=double": {
+      "model": "firstcrusade:block/rust_concrete_panel"
+    }
+  }
+}

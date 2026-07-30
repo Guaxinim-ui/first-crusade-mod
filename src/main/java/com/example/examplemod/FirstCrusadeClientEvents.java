@@ -3,6 +3,8 @@ package com.example.examplemod;
 import com.example.examplemod.client.render.GuardsmanRiflemanRenderer;
 import com.example.examplemod.client.render.GuardsmanSergeantRenderer;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -26,6 +28,27 @@ public final class FirstCrusadeClientEvents {
             MenuScreens.register(FCRegistry.IMPERIAL_COMMAND_CORE_MENU.get(), ImperialCommandCoreScreen::new);
             MenuScreens.register(FCRegistry.STRATEGIUM_MENU.get(), StrategiumScreen::new);
             MenuScreens.register(FCRegistry.ORK_CAMP_MENU.get(), OrkCampScreen::new);
+
+            // Chainsword teeth: cycles the four phase item-models while the motor is running, so the
+            // held weapon physically moves its teeth (predicate read by chainsword.json's overrides).
+            ItemProperties.register(
+                    FCRegistry.CHAINSWORD.get(),
+                    new ResourceLocation(ExampleMod.MODID, "chainsword_phase"),
+                    (stack, level, entity, seed) -> {
+                        net.minecraft.world.level.Level resolvedLevel = level != null
+                                ? level
+                                : (entity != null ? entity.level() : null);
+                        if (resolvedLevel == null || !ChainswordItem.isRunning(stack, resolvedLevel)) {
+                            return 0.0F;
+                        }
+                        int phase = (int) ((resolvedLevel.getGameTime() / 2L) & 3L);
+                        return switch (phase) {
+                            case 0 -> 0.25F;
+                            case 1 -> 0.50F;
+                            case 2 -> 0.75F;
+                            default -> 1.0F;
+                        };
+                    });
         });
     }
 

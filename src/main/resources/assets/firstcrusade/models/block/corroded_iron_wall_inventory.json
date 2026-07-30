@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/wall_inventory",
+  "textures": {
+    "particle": "firstcrusade:block/corroded_iron",
+    "wall": "firstcrusade:block/corroded_iron"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/inner_stairs",
+  "textures": {
+    "particle": "firstcrusade:block/ochre_concrete",
+    "bottom": "firstcrusade:block/ochre_concrete",
+    "top": "firstcrusade:block/ochre_concrete",
+    "side": "firstcrusade:block/ochre_concrete"
+  }
+}

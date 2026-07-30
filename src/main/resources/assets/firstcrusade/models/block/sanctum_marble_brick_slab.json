@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "particle": "firstcrusade:block/sanctum_marble_brick",
+    "bottom": "firstcrusade:block/sanctum_marble_brick",
+    "top": "firstcrusade:block/sanctum_marble_brick",
+    "side": "firstcrusade:block/sanctum_marble_brick"
+  }
+}

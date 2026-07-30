@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/wall_inventory",
+  "textures": {
+    "particle": "firstcrusade:block/imperial_tile",
+    "wall": "firstcrusade:block/imperial_tile"
+  }
+}

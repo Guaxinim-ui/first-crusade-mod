@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "firstcrusade:block/corroded_iron_slab"
+    },
+    "type=top": {
+      "model": "firstcrusade:block/corroded_iron_slab_top"
+    },
+    "type=double": {
+      "model": "firstcrusade:block/corroded_iron"
+    }
+  }
+}

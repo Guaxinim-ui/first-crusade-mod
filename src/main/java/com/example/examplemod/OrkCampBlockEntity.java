@@ -77,7 +77,9 @@ public class OrkCampBlockEntity extends BlockEntity {
     private int warPartiesLaunched = 0;
     private boolean warbossSpawned = false;
     private boolean hasSpread = false;
-    private int corruptionRadius = 0;
+    // How far this camp's spores reach, in blocks. Published to WorldWarMapData so the flora
+    // decorator knows how much ground to turn Ork.
+    private int sporeRadius = 0;
     private int tickCounter = 0;
 
     // Cached populace/garrison/structure counts for the Ork Core GUI (refreshed each economy cycle so
@@ -136,11 +138,16 @@ public class OrkCampBlockEntity extends BlockEntity {
         camp.tryGrowCamp(serverLevel, pos);
         camp.trySpreadWaaagh(serverLevel, pos);
 
-        // The camp scabs the land around it with sculk; its reach grows with the WAAAGH! tier.
+        // The camp's spore field widens with the WAAAGH!. This is only a number: the actual Ork
+        // ground cover is placed by the flora decorator, inside this radius, on chunks that happen
+        // to be loaded. Nothing is written to the world here.
         int tier = WaaaghOverlordManager.getTier(serverLevel);
-        camp.corruptionRadius = OrkCorruptionManager.spreadFromCamp(serverLevel, pos, tier, camp.corruptionRadius);
-        // The plague also creeps outward on its own, block by block, beyond that halo.
-        OrkCorruptionManager.creepSpread(serverLevel, pos, camp.corruptionRadius + 6, 10);
+        camp.sporeRadius = OrkSporeManager.grow(tier, camp.sporeRadius);
+
+        // Publish the camp's territorial attributes for the flora decorator. The corruption radius
+        // is the one that just grew, so Ork vegetation follows the sculk halo outward by itself.
+        WorldWarMapData.get(serverLevel).recordCampInfo(pos, camp.clan, camp.campLevel, camp.sporeRadius);
+
         camp.setChanged();
     }
 
@@ -671,7 +678,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         tag.putInt("WarPartiesLaunched", this.warPartiesLaunched);
         tag.putBoolean("WarbossSpawned", this.warbossSpawned);
         tag.putBoolean("HasSpread", this.hasSpread);
-        tag.putInt("CorruptionRadius", this.corruptionRadius);
+        tag.putInt("SporeRadius", this.sporeRadius);
         tag.putString("Clan", this.clan.name());
 
         if (this.targetCorePos != null) {
@@ -692,7 +699,11 @@ public class OrkCampBlockEntity extends BlockEntity {
         this.warPartiesLaunched = tag.getInt("WarPartiesLaunched");
         this.warbossSpawned = tag.getBoolean("WarbossSpawned");
         this.hasSpread = tag.getBoolean("HasSpread");
-        this.corruptionRadius = tag.getInt("CorruptionRadius");
+        // "CorruptionRadius" is the old key, kept so camps saved before the sculk system was
+        // removed keep the reach they had grown.
+        this.sporeRadius = tag.contains("SporeRadius")
+                ? tag.getInt("SporeRadius")
+                : tag.getInt("CorruptionRadius");
         this.clan = OrkClan.fromName(tag.getString("Clan"));
 
         if (tag.contains("TargetCorePos")) {

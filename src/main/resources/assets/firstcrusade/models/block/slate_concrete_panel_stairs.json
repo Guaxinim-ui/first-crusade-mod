@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/stairs",
+  "textures": {
+    "particle": "firstcrusade:block/slate_concrete_panel",
+    "bottom": "firstcrusade:block/slate_concrete_panel",
+    "top": "firstcrusade:block/slate_concrete_panel",
+    "side": "firstcrusade:block/slate_concrete_panel"
+  }
+}

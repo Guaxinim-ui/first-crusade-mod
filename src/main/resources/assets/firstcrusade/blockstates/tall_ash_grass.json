@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "half=lower": {
+      "model": "firstcrusade:block/tall_ash_grass_bottom"
+    },
+    "half=upper": {
+      "model": "firstcrusade:block/tall_ash_grass_top"
+    }
+  }
+}

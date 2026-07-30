@@ -1,0 +1,6 @@
+{
+  "parent": "firstcrusade:block/flora_ground_detail",
+  "textures": {
+    "detail": "firstcrusade:block/bone_fragments"
+  }
+}

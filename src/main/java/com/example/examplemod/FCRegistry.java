@@ -167,8 +167,8 @@ public static final RegistryObject<Item> IMPERIAL_MINE_ITEM =
                 () -> new BlockItem(IMPERIAL_MINE.get(), new Item.Properties()));
 
 // Planetary travel (Fase E / C6): a second planet as its own dimension, reached via the Spaceport.
-public static final net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> PLANET_SECUNDUS =
-        net.minecraft.resources.ResourceKey.create(Registries.DIMENSION, new ResourceLocation(ExampleMod.MODID, "planet_secundus"));
+// PLANET_SECUNDUS foi removido: era um planeta stub com bioma do Nether, substituido pelos
+// quatro planetas de verdade em com.example.examplemod.planet.FCPlanets.
 
 public static final RegistryObject<Block> SPACEPORT =
         BLOCKS.register("spaceport",
@@ -503,7 +503,7 @@ public static final RegistryObject<MenuType<StrategiumMenu>> STRATEGIUM_MENU =
     };
 
     public static final RegistryObject<Item> CHOPPA = ITEMS.register("choppa",
-            () -> new SwordItem(ORK_MELEE_TIER, 0, -2.4F, new Item.Properties()));
+            () -> new ChoppaItem(ORK_MELEE_TIER, 0, -2.4F, new Item.Properties()));
 
     public static final RegistryObject<Item> SHOOTA = ITEMS.register("shoota",
             () -> new ShootaItem(new Item.Properties().stacksTo(1).durability(220)));
@@ -542,7 +542,7 @@ public static final RegistryObject<MenuType<StrategiumMenu>> STRATEGIUM_MENU =
     };
 
     public static final RegistryObject<Item> POWER_KLAW = ITEMS.register("power_klaw",
-            () -> new SwordItem(POWER_KLAW_TIER, 2, -2.8F, new Item.Properties()));
+            () -> new PowerKlawItem(POWER_KLAW_TIER, 2, -2.8F, new Item.Properties()));
 
     // =========================
     // GUARDSMEN SUPPORT ITEMS

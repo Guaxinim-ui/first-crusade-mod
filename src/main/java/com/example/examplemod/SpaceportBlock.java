@@ -1,5 +1,11 @@
 package com.example.examplemod;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import com.example.examplemod.planet.FCPlanets;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -16,9 +22,19 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
 /**
- * The Spaceport: right-click to travel between worlds. From the home world it launches the traveller
- * to the planet {@link ExampleMod#PLANET_SECUNDUS}; from the planet it brings them home. Each landing
- * builds a small pad with a return Spaceport, so a round trip never strands or drops anyone.
+ * The Spaceport: the door between an ordinary Minecraft world and the Crusade.
+ *
+ * <p><b>Right-click</b> travels. From the overworld it launches to the currently selected planet;
+ * from a planet it brings the traveller home. <b>Sneak + right-click</b> picks a different
+ * destination, walking {@link FCPlanets#ALL} in travel order and naming the choice.
+ *
+ * <p>The selection is deliberately per-player rather than per-block. A Spaceport is a piece of
+ * Imperial infrastructure a player may well build a dozen of; making each one remember its own
+ * heading would mean a block entity on every pad and a player who has to walk back to the right one
+ * to change their mind.
+ *
+ * <p>Every landing builds a small pad with a return Spaceport, so a round trip never strands or
+ * drops anyone — the planets are generated worlds with no guarantee of friendly ground.
  */
 public class SpaceportBlock extends Block {
     public SpaceportBlock(Properties properties) {
@@ -32,10 +48,34 @@ public class SpaceportBlock extends Block {
         }
 
         if (player instanceof ServerPlayer serverPlayer) {
-            travel(serverPlayer);
+            if (player.isShiftKeyDown()) {
+                cycleDestination(serverPlayer);
+            } else {
+                travel(serverPlayer);
+            }
         }
 
         return InteractionResult.CONSUME;
+    }
+
+    /**
+     * Where each player is currently headed. Not persisted on purpose: a heading is a intention for
+     * the next few seconds, and a player who reconnects and finds their ship aimed somewhere they
+     * chose three sessions ago has been surprised, not helped. It falls back to
+     * {@link FCPlanets#DEFAULT}.
+     */
+    private static final Map<UUID, ResourceKey<Level>> HEADING = new HashMap<>();
+
+    private static ResourceKey<Level> headingOf(ServerPlayer player) {
+        return HEADING.getOrDefault(player.getUUID(), FCPlanets.DEFAULT);
+    }
+
+    private void cycleDestination(ServerPlayer player) {
+        ResourceKey<Level> next = FCPlanets.next(headingOf(player));
+        HEADING.put(player.getUUID(), next);
+        player.displayClientMessage(Component.translatable(
+                "msg.firstcrusade.spaceport.heading",
+                Component.translatable(FCPlanets.nameKey(next))), true);
     }
 
     private void travel(ServerPlayer player) {
@@ -44,8 +84,10 @@ public class SpaceportBlock extends Block {
             return;
         }
 
-        ResourceKey<Level> destinationKey =
-                player.level().dimension() == FCRegistry.PLANET_SECUNDUS ? Level.OVERWORLD : FCRegistry.PLANET_SECUNDUS;
+        // Leaving a planet always means going home. Only the outbound leg has a choice to make,
+        // which is why the heading is only consulted here.
+        boolean onPlanet = FCPlanets.isCrusadeWorld(player.level().dimension());
+        ResourceKey<Level> destinationKey = onPlanet ? Level.OVERWORLD : headingOf(player);
         ServerLevel destination = server.getLevel(destinationKey);
 
         if (destination == null) {
@@ -59,13 +101,18 @@ public class SpaceportBlock extends Block {
 
         buildLandingPad(destination, landing);
 
-        // The first time anyone reaches the planet, populate it with settlements around the landing.
-        if (destinationKey == FCRegistry.PLANET_SECUNDUS) {
+        // The first time anyone reaches a planet, populate it with settlements around the landing.
+        if (FCPlanets.isCrusadeWorld(destinationKey)) {
             WorldSettlementSeeder.seedPlanet(destination, landing);
         }
 
         player.teleportTo(destination, x + 0.5D, landing.getY(), z + 0.5D, player.getYRot(), player.getXRot());
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.spaceport.arrived"), true);
+
+        Component where = onPlanet
+                ? Component.translatable("msg.firstcrusade.spaceport.home")
+                : Component.translatable(FCPlanets.nameKey(destinationKey));
+        player.displayClientMessage(
+                Component.translatable("msg.firstcrusade.spaceport.arrived_at", where), true);
     }
 
     // Finds a dry surface spot near (x,z) so the pad and Spaceport land on solid ground, not under a

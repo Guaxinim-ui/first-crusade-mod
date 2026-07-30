@@ -103,6 +103,11 @@ public final class OrkCampManager {
         // Strip surrounding trees/leaves/plants so the settlement isn't buried in forest canopy.
         WorldGenPlacement.clearVegetation(serverLevel, center, r + 2, 8);
 
+        // Ork ground grows Ork things. The halo reaches well past the camp so the fungus creeps
+        // outward with the corruption rather than stopping at the palisade.
+        com.example.examplemod.flora.runtime.FloraTransitionManager.onTerritoryCaptured(
+                serverLevel, center, r + 48);
+
         // Clear the interior to the sky and pave a crude plaza, leaving the central block alone.
         for (int x = -r; x <= r; x++) {
             for (int z = -r; z <= r; z++) {
@@ -156,6 +161,10 @@ public final class OrkCampManager {
         int r = cityRadiusForLevel(campLevel);
 
         WorldGenPlacement.clearVegetation(serverLevel, center, r + 2, 12);
+
+        // A fortified camp claims more ground than a raw one; push the Ork vegetation out with it.
+        com.example.examplemod.flora.runtime.FloraTransitionManager.onTerritoryCaptured(
+                serverLevel, center, r + 48);
 
         BlockState wallBase = Blocks.COBBLED_DEEPSLATE.defaultBlockState();
 

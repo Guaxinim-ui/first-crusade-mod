@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "particle": "firstcrusade:block/rust_concrete",
+    "bottom": "firstcrusade:block/rust_concrete",
+    "top": "firstcrusade:block/rust_concrete",
+    "side": "firstcrusade:block/rust_concrete"
+  }
+}

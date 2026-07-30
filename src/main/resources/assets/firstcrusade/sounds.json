@@ -1,0 +1,110 @@
+{
+  "bolter_fire": {
+    "subtitle": "subtitle.firstcrusade.bolter_fire",
+    "sounds": [
+      {
+        "name": "firstcrusade:weapon/bolter_fire",
+        "stream": false
+      }
+    ]
+  },
+  "bolter_impact": {
+    "subtitle": "subtitle.firstcrusade.bolter_impact",
+    "sounds": [
+      {
+        "name": "firstcrusade:weapon/bolter_impact",
+        "stream": false
+      }
+    ]
+  },
+  "chainsword_start": {
+    "subtitle": "subtitle.firstcrusade.chainsword_start",
+    "sounds": [
+      {
+        "name": "firstcrusade:weapon/chainsword_start",
+        "stream": false
+      }
+    ]
+  },
+  "chainsword_loop": {
+    "subtitle": "subtitle.firstcrusade.chainsword_loop",
+    "sounds": [
+      {
+        "name": "firstcrusade:weapon/chainsword_loop",
+        "stream": false
+      }
+    ]
+  },
+  "chainsword_stop": {
+    "subtitle": "subtitle.firstcrusade.chainsword_stop",
+    "sounds": [
+      {
+        "name": "firstcrusade:weapon/chainsword_stop",
+        "stream": false
+      }
+    ]
+  },
+  "chainsword_hit": {
+    "subtitle": "subtitle.firstcrusade.chainsword_hit",
+    "sounds": [
+      {
+        "name": "firstcrusade:weapon/chainsword_hit",
+        "stream": false
+      }
+    ]
+  },
+  "choppa_swing": {
+    "subtitle": "subtitle.firstcrusade.choppa_swing",
+    "sounds": [
+      {
+        "name": "firstcrusade:weapon/choppa_swing",
+        "stream": false
+      }
+    ]
+  },
+  "choppa_hit": {
+    "subtitle": "subtitle.firstcrusade.choppa_hit",
+    "sounds": [
+      {
+        "name": "firstcrusade:weapon/choppa_hit",
+        "stream": false
+      }
+    ]
+  },
+  "power_klaw_charge": {
+    "subtitle": "subtitle.firstcrusade.power_klaw_charge",
+    "sounds": [
+      {
+        "name": "firstcrusade:weapon/power_klaw_charge",
+        "stream": false
+      }
+    ]
+  },
+  "power_klaw_crush": {
+    "subtitle": "subtitle.firstcrusade.power_klaw_crush",
+    "sounds": [
+      {
+        "name": "firstcrusade:weapon/power_klaw_crush",
+        "stream": false
+      }
+    ]
+  },
+  "bolter_aim": {
+    "subtitle": "subtitle.firstcrusade.bolter_aim",
+    "sounds": [
+      {
+        "name": "firstcrusade:weapon/bolter_aim",
+        "stream": false
+      }
+    ]
+  },
+  "bolter_reload": {
+    "subtitle": "subtitle.firstcrusade.bolter_reload",
+    "sounds": [
+      {
+        "name": "firstcrusade:weapon/bolter_reload",
+        "stream": false
+      }
+    ]
+  }
+}

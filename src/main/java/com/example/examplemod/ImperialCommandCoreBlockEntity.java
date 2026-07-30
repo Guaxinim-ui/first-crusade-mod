@@ -413,7 +413,16 @@ public int receiveProducedResource(ImperialResourceType resourceType, int amount
         }
 
        blockEntity.tickCounter = 0;
-WorldWarMapData.get(serverLevel).recordCity(blockEntity.worldPosition);
+WorldWarMapData warMap = WorldWarMapData.get(serverLevel);
+warMap.recordCity(blockEntity.worldPosition);
+// Publish the territorial attributes the flora decorator resolves palettes from. Writing the
+// same values twice is free and does not mark the map dirty (see WorldWarMapData.recordCityInfo).
+warMap.recordCityInfo(
+        blockEntity.worldPosition,
+        blockEntity.getCityType(),
+        blockEntity.getSettlementScale(),
+        blockEntity.cityLevel,
+        blockEntity.getBuildBorderRadius());
 ImperialCityMoraleManager.tickMorale(serverLevel, blockEntity);
 ImperialPatrolManager.tickPatrols(serverLevel, blockEntity);
 ImperialWorkforceManager.autoManageWorkforce(serverLevel, blockEntity);
@@ -430,7 +439,8 @@ blockEntity.trySeedOrkCamp(serverLevel);
 blockEntity.trySpawnOrkRaid(serverLevel);
 blockEntity.checkActiveOrkRaid(serverLevel);
 blockEntity.tickAutonomousGovernance(serverLevel);
-OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockEntity.getTerritoryRadius(), 6);
+// The Imperium pushing corruption back is now the flora system's job: retaking ground marks the
+// chunks and the decorator replaces Ork growth with the Imperial palette. Nothing to scrub here.
     }
 
     // An unclaimed, world-generated city governs itself: it keeps a standing garrison and grows in
@@ -850,7 +860,7 @@ OrkCorruptionManager.purifyAround(serverLevel, blockEntity.worldPosition, blockE
 
         // Ork corruption within the city's territory chokes its industry.
         if (level instanceof ServerLevel serverLevel) {
-            double corruptionMultiplier = OrkCorruptionManager.productionMultiplier(serverLevel, this.worldPosition, getTerritoryRadius());
+            double corruptionMultiplier = OrkSporeManager.productionMultiplier(serverLevel, this.worldPosition, getTerritoryRadius());
             ironProduction = (int) Math.round(ironProduction * corruptionMultiplier);
             scrapProduction = (int) Math.round(scrapProduction * corruptionMultiplier);
             coalProduction = (int) Math.round(coalProduction * corruptionMultiplier);
@@ -2434,6 +2444,11 @@ private void buildCityStructure(ServerLevel serverLevel) {
     // Clear the whole footprint (plus a perimeter margin) of trees, leaves, plants and snow first,
     // so ambient terrain never pokes through or blocks the town.
     WorldGenPlacement.clearVegetation(serverLevel, this.worldPosition, radius + 4, wallHeight + 16);
+
+    // The town just grew, so its footprint, its exclusion zones and the reach of its vegetation all
+    // moved. Flag the area for redecoration; unloaded chunks are handled when they next load.
+    com.example.examplemod.flora.runtime.FloraTransitionManager.onTerritoryCaptured(
+            serverLevel, this.worldPosition, radius + 48);
 
     // Curtain wall around the whole town, corner towers, and a paved cross of main streets.
     buildFoundation(serverLevel, radius);

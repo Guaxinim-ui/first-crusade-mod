@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "firstcrusade:block/fossilized_trunk"
+    },
+    "axis=z": {
+      "model": "firstcrusade:block/fossilized_trunk",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "firstcrusade:block/fossilized_trunk",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

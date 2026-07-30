@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/wall_inventory",
+  "textures": {
+    "particle": "firstcrusade:block/sanctum_marble",
+    "wall": "firstcrusade:block/sanctum_marble"
+  }
+}

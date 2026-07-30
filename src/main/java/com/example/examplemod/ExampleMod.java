@@ -63,10 +63,16 @@ public class ExampleMod {
     // All registrations (blocks, items, entities, block entities, menus, creative tab, tiers,
     // armour) and entity attributes live in FCRegistry.
     FCRegistry.register(modEventBus);
+    FCWeaponSounds.register(modEventBus);
 
     // Hive fluids + structure markers registry (com.example.examplemod.hive). The old decorative
-    // block set was removed; the new decorative kit will register itself separately.
+    // block set was removed; the new decorative kit registers itself via the three classes below.
     com.example.examplemod.hive.HiveBlocks.register(modEventBus);
+
+    // New Hive decorative kit (133 blocks across three self-contained registries + creative tabs).
+    com.example.examplemod.hive.HiveEssentialBlocks.register(modEventBus);
+    com.example.examplemod.hive.HiveConcreteBlocks.register(modEventBus);
+    com.example.examplemod.hive.HiveConstructionBlocks.register(modEventBus);
 
     // Imperial Battle Tank vehicle pack — self-contained registry in .registry.
     com.example.examplemod.registry.ModVehicleEntities.register(modEventBus);
@@ -74,8 +80,27 @@ public class ExampleMod {
     // Valkyrie Gunship + Sentinel Walker combat-vehicle mobs — self-contained registry in .registry.
     com.example.examplemod.registry.ModCombatVehicleContent.register(modEventBus);
 
+    // Vegetation set (phase 2: base flora) — self-contained registry in .flora, no existing IDs moved.
+    // The runtime, per-chunk decorator that actually places this flora lives in .flora.runtime and
+    // needs no registration here: it is driven by Forge events (see FloraEvents).
+    com.example.examplemod.flora.FCFlora.register(modEventBus);
+
+    // Trees: log + canopy per species, placed both by worldgen features and by the decorator.
+    com.example.examplemod.flora.tree.FCFloraTrees.register(modEventBus);
+
+    // The two natural soils (sump mud, salt crust). Placed by the overworld surface rule, so they
+    // exist the moment a chunk is carved rather than being painted on afterwards.
+    com.example.examplemod.flora.FCFloraGround.register(modEventBus);
+
+    // Phase D: fruit trees, their fruit, and the nodes it hangs from.
+    com.example.examplemod.flora.fruit.FCFruits.register(modEventBus);
+
     net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
             net.minecraftforge.fml.config.ModConfig.Type.SERVER, FirstCrusadeServerConfig.SPEC);
+
+    net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
+            net.minecraftforge.fml.config.ModConfig.Type.COMMON,
+            com.example.examplemod.flora.FloraConfig.SPEC, "firstcrusade-flora-common.toml");
 
     // Forge game events live in FirstCrusadeForgeEvents (auto-registered via @EventBusSubscriber);
     // client wiring in FirstCrusadeClientEvents; networking in FirstCrusadeNetwork.

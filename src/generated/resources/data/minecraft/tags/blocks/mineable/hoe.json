@@ -1,5 +1,19 @@
 {
   "values": [
-    "firstcrusade:imperial_farm"
+    "firstcrusade:imperial_farm",
+    "firstcrusade:imperial_pine_leaves",
+    "firstcrusade:blighted_oak_leaves",
+    "firstcrusade:ork_fungal_cap",
+    "firstcrusade:venom_bough_leaves",
+    "firstcrusade:orchard_leaves",
+    "firstcrusade:warped_bough_leaves",
+    "firstcrusade:ironwood_leaves",
+    "firstcrusade:sump_mangrove_leaves",
+    "firstcrusade:toxic_willow_leaves",
+    "firstcrusade:frostnut_pine_leaves",
+    "firstcrusade:rationfruit_leaves",
+    "firstcrusade:lumenfruit_leaves",
+    "firstcrusade:feed_pod_leaves",
+    "firstcrusade:venom_pear_leaves"
   ]
 }

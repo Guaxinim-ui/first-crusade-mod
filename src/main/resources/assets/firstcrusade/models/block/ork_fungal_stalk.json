@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "firstcrusade:block/ork_fungal_stalk_top",
+    "side": "firstcrusade:block/ork_fungal_stalk"
+  }
+}

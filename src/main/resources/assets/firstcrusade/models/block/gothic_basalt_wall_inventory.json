@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/wall_inventory",
+  "textures": {
+    "particle": "firstcrusade:block/gothic_basalt",
+    "wall": "firstcrusade:block/gothic_basalt"
+  }
+}

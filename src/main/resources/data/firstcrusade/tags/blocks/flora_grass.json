@@ -1,0 +1,31 @@
+{
+  "replace": false,
+  "values": [
+    "firstcrusade:imperial_grass",
+    "firstcrusade:dark_fern",
+    "firstcrusade:ash_grass",
+    "firstcrusade:soot_grass",
+    "firstcrusade:burnt_stubble",
+    "firstcrusade:crack_weed",
+    "firstcrusade:vent_grass",
+    "firstcrusade:hab_fern",
+    "firstcrusade:sludge_algae",
+    "firstcrusade:squig_grass",
+    "firstcrusade:trampled_grass",
+    "firstcrusade:oil_stained_grass",
+    "firstcrusade:writhing_grass",
+    "firstcrusade:venom_frond",
+    "firstcrusade:mire_reed",
+    "firstcrusade:field_grass",
+    "firstcrusade:irrigation_reed",
+    "firstcrusade:tall_imperial_grass",
+    "firstcrusade:tall_ash_grass",
+    "firstcrusade:tall_squig_grass",
+    "firstcrusade:tall_mire_reed",
+    "firstcrusade:iron_fern",
+    "firstcrusade:marsh_grass",
+    "firstcrusade:snow_scrub",
+    "firstcrusade:brine_grass",
+    "firstcrusade:tall_marsh_reed"
+  ]
+}

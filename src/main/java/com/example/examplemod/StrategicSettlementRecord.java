@@ -124,6 +124,17 @@ public class StrategicSettlementRecord {
         this.attackSquad = attackSquad;
     }
 
+    /**
+     * The city's layout, or null when it has never planned one. Read-only counterpart to
+     * {@link #getOrCreateLayoutPlan(BlockPos)}: callers that only want to <i>consult</i> the layout
+     * — the flora decorator, working out where it must not plant — must not bring an empty plan
+     * into existence as a side effect of asking.
+     */
+    @Nullable
+    public CityLayoutPlan getLayoutPlan() {
+        return layoutPlan;
+    }
+
     public CityLayoutPlan getOrCreateLayoutPlan(BlockPos center) {
         if (layoutPlan == null) {
             layoutPlan = new CityLayoutPlan(center);

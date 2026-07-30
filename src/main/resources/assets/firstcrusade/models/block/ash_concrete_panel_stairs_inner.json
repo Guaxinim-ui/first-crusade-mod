@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/inner_stairs",
+  "textures": {
+    "particle": "firstcrusade:block/ash_concrete_panel",
+    "bottom": "firstcrusade:block/ash_concrete_panel",
+    "top": "firstcrusade:block/ash_concrete_panel",
+    "side": "firstcrusade:block/ash_concrete_panel"
+  }
+}

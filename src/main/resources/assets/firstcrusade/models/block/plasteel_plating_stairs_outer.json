@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "particle": "firstcrusade:block/plasteel_plating",
+    "bottom": "firstcrusade:block/plasteel_plating",
+    "top": "firstcrusade:block/plasteel_plating",
+    "side": "firstcrusade:block/plasteel_plating"
+  }
+}

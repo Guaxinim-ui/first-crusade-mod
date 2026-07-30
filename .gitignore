@@ -16,3 +16,7 @@ bin/
 .DS_Store
 Thumbs.db
 scratch_backups/
+
+# Folhas de contato / previas geradas por tools/*.py (regeneraveis com --sheet)
+tools/*_sheet.png
+tools/*_preview.png

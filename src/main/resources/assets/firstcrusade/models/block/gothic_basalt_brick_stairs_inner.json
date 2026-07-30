@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/inner_stairs",
+  "textures": {
+    "particle": "firstcrusade:block/gothic_basalt_brick",
+    "bottom": "firstcrusade:block/gothic_basalt_brick",
+    "top": "firstcrusade:block/gothic_basalt_brick",
+    "side": "firstcrusade:block/gothic_basalt_brick"
+  }
+}

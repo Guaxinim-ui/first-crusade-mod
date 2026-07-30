@@ -1,0 +1,91 @@
+{
+  "temperature": 0.8,
+  "downfall": 0.9,
+  "has_precipitation": true,
+  "effects": {
+    "sky_color": 6979728,
+    "fog_color": 5857354,
+    "water_color": 2172959,
+    "water_fog_color": 2172959,
+    "grass_color": 6187834,
+    "foliage_color": 5200946
+  },
+  "spawners": {
+    "monster": [],
+    "creature": [],
+    "ambient": [],
+    "axolotls": [],
+    "underground_water_creature": [],
+    "water_creature": [],
+    "water_ambient": [],
+    "misc": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": [
+      "minecraft:cave",
+      "minecraft:cave_extra_underground",
+      "minecraft:canyon"
+    ]
+  },
+  "features": [
+    [],
+    [
+      "firstcrusade:lake_marsh_pool"
+    ],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:ore_dirt",
+      "minecraft:ore_gravel",
+      "minecraft:ore_granite_upper",
+      "minecraft:ore_granite_lower",
+      "minecraft:ore_diorite_upper",
+      "minecraft:ore_diorite_lower",
+      "minecraft:ore_andesite_upper",
+      "minecraft:ore_andesite_lower",
+      "minecraft:ore_tuff",
+      "minecraft:ore_coal_upper",
+      "minecraft:ore_coal_lower",
+      "minecraft:ore_iron_upper",
+      "minecraft:ore_iron_middle",
+      "minecraft:ore_iron_small",
+      "minecraft:ore_gold",
+      "minecraft:ore_gold_lower",
+      "minecraft:ore_redstone",
+      "minecraft:ore_redstone_lower",
+      "minecraft:ore_diamond",
+      "minecraft:ore_diamond_large",
+      "minecraft:ore_diamond_buried",
+      "minecraft:ore_lapis",
+      "minecraft:ore_lapis_buried",
+      "minecraft:ore_copper"
+    ],
+    [
+      "minecraft:monster_room",
+      "minecraft:monster_room_deep",
+      "minecraft:glow_lichen",
+      "minecraft:amethyst_geode"
+    ],
+    [],
+    [
+      "firstcrusade:tree_sump_mangrove",
+      "firstcrusade:tree_toxic_willow",
+      "firstcrusade:tree_rotting_sump_tree",
+      "firstcrusade:patch_marsh_grass",
+      "firstcrusade:patch_mire_reed_n7",
+      "firstcrusade:patch_bog_fungus",
+      "firstcrusade:patch_gas_bladder",
+      "firstcrusade:patch_sludge_algae",
+      "firstcrusade:tall_tall_marsh_reed",
+      "firstcrusade:patch_small_roots_n3",
+      "firstcrusade:log_ironwood_n1_r4",
+      "firstcrusade:tree_lumenfruit"
+    ],
+    [
+      "minecraft:freeze_top_layer"
+    ]
+  ]
+}

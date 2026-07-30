@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/template_glass_pane_post",
+  "textures": {
+    "particle": "firstcrusade:block/hive_glass",
+    "pane": "firstcrusade:block/hive_glass",
+    "edge": "firstcrusade:block/hive_glass_pane_top"
+  }
+}

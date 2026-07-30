@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "textures": {
+    "particle": "firstcrusade:block/hive_granite",
+    "bottom": "firstcrusade:block/hive_granite",
+    "top": "firstcrusade:block/hive_granite",
+    "side": "firstcrusade:block/hive_granite"
+  }
+}

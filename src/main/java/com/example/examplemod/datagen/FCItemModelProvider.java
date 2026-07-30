@@ -40,6 +40,15 @@ public class FCItemModelProvider extends ItemModelProvider {
         spawnEgg("meganob_spawn_egg");
         spawnEgg("gretchin_spawn_egg");
         spawnEgg("killa_kan_spawn_egg");
+
+        // Registrados fora do FCRegistry (unit.imperium e os dois registros de veiculo),
+        // e por isso faltavam nesta lista: os modelos existiam em src/generated de uma
+        // geracao antiga e sumiam na primeira vez que o datagen rodasse de novo.
+        spawnEgg("guardsman_rifleman_spawn_egg");
+        spawnEgg("guardsman_sergeant_spawn_egg");
+        spawnEgg("imperial_battle_tank_spawn_egg");
+        spawnEgg("valkyrie_gunship_spawn_egg");
+        spawnEgg("sentinel_walker_spawn_egg");
     }
 
     private void spawnEgg(String name) {

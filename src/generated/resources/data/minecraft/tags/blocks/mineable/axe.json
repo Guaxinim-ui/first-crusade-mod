@@ -2,9 +2,21 @@
   "values": [
     "firstcrusade:imperial_emerald_trade_depot",
     "firstcrusade:strategium",
-    "firstcrusade:supply_crate",
-    "firstcrusade:shelf_unit",
-    "firstcrusade:hive_rug",
-    "firstcrusade:industrial_crate"
+    "firstcrusade:imperial_pine_log",
+    "firstcrusade:blighted_oak_log",
+    "firstcrusade:ash_snag_log",
+    "firstcrusade:charred_snag_log",
+    "firstcrusade:ork_fungal_stalk",
+    "firstcrusade:venom_bough_log",
+    "firstcrusade:orchard_log",
+    "firstcrusade:warped_bough_log",
+    "firstcrusade:ironwood_log",
+    "firstcrusade:resin_ironwood_log",
+    "firstcrusade:sump_mangrove_log",
+    "firstcrusade:toxic_willow_log",
+    "firstcrusade:frostnut_pine_log",
+    "firstcrusade:salt_thorn_log",
+    "firstcrusade:rationfruit_log",
+    "firstcrusade:lumenfruit_log"
   ]
 }

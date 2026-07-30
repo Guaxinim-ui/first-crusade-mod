@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/stairs",
+  "textures": {
+    "particle": "firstcrusade:block/hazard_plating",
+    "bottom": "firstcrusade:block/hazard_plating",
+    "top": "firstcrusade:block/hazard_plating",
+    "side": "firstcrusade:block/hazard_plating"
+  }
+}

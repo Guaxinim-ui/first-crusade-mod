@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "firstcrusade:block/venom_bough_log_top",
+    "side": "firstcrusade:block/venom_bough_log"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "particle": "firstcrusade:block/dark_concrete_panel",
+    "bottom": "firstcrusade:block/dark_concrete_panel",
+    "top": "firstcrusade:block/dark_concrete_panel",
+    "side": "firstcrusade:block/dark_concrete_panel"
+  }
+}

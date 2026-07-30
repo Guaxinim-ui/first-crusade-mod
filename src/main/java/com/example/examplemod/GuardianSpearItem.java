@@ -1,6 +1,5 @@
 package com.example.examplemod;
 
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
@@ -37,7 +36,7 @@ public class GuardianSpearItem extends SwordItem {
                 player.getX(),
                 player.getY(),
                 player.getZ(),
-                SoundEvents.BLAZE_SHOOT,
+                FCWeaponSounds.BOLTER_FIRE.get(),
                 SoundSource.PLAYERS,
                 0.9F,
                 0.9F
@@ -47,6 +46,7 @@ public class GuardianSpearItem extends SwordItem {
             LasgunShotEntity projectile = new LasgunShotEntity(level, player);
             projectile.setBaseDamage(BOLT_DAMAGE);
             projectile.setKnockback(1);
+            projectile.setMicroExplosive(true);
             projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 4.2F, 0.5F);
 
             level.addFreshEntity(projectile);

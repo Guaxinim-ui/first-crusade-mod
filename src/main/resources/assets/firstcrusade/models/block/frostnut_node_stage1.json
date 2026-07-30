@@ -1,0 +1,97 @@
+{
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:cutout",
+  "ambientocclusion": false,
+  "textures": {
+    "fruit": "firstcrusade:block/frostnut_node_stage1",
+    "particle": "firstcrusade:block/frostnut_node_stage1"
+  },
+  "elements": [
+    {
+      "from": [
+        5.0,
+        10,
+        8
+      ],
+      "to": [
+        11.0,
+        16,
+        8
+      ],
+      "rotation": {
+        "origin": [
+          8,
+          8,
+          8
+        ],
+        "axis": "y",
+        "angle": 45,
+        "rescale": true
+      },
+      "shade": false,
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#fruit"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#fruit"
+        }
+      }
+    },
+    {
+      "from": [
+        8,
+        10,
+        5.0
+      ],
+      "to": [
+        8,
+        16,
+        11.0
+      ],
+      "rotation": {
+        "origin": [
+          8,
+          8,
+          8
+        ],
+        "axis": "y",
+        "angle": 45,
+        "rescale": true
+      },
+      "shade": false,
+      "faces": {
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#fruit"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#fruit"
+        }
+      }
+    }
+  ]
+}

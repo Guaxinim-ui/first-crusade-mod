@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "textures": {
+    "particle": "firstcrusade:block/dark_concrete",
+    "bottom": "firstcrusade:block/dark_concrete",
+    "top": "firstcrusade:block/dark_concrete",
+    "side": "firstcrusade:block/dark_concrete"
+  }
+}

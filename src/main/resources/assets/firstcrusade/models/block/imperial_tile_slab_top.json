@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "textures": {
+    "particle": "firstcrusade:block/imperial_tile",
+    "bottom": "firstcrusade:block/imperial_tile",
+    "top": "firstcrusade:block/imperial_tile",
+    "side": "firstcrusade:block/imperial_tile"
+  }
+}

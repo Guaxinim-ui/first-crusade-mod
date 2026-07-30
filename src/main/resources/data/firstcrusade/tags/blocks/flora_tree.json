@@ -1,0 +1,30 @@
+{
+  "replace": false,
+  "values": [
+    "firstcrusade:imperial_pine_log",
+    "firstcrusade:imperial_pine_leaves",
+    "firstcrusade:ash_snag_log",
+    "firstcrusade:ork_fungal_stalk",
+    "firstcrusade:ork_fungal_cap",
+    "firstcrusade:venom_bough_log",
+    "firstcrusade:venom_bough_leaves",
+    "firstcrusade:orchard_log",
+    "firstcrusade:orchard_leaves",
+    "firstcrusade:warped_bough_log",
+    "firstcrusade:warped_bough_leaves",
+    "firstcrusade:blighted_oak_log",
+    "firstcrusade:blighted_oak_leaves",
+    "firstcrusade:charred_snag_log",
+    "firstcrusade:ironwood_log",
+    "firstcrusade:ironwood_leaves",
+    "firstcrusade:resin_ironwood_log",
+    "firstcrusade:sump_mangrove_log",
+    "firstcrusade:sump_mangrove_leaves",
+    "firstcrusade:toxic_willow_log",
+    "firstcrusade:toxic_willow_leaves",
+    "firstcrusade:frostnut_pine_log",
+    "firstcrusade:frostnut_pine_leaves",
+    "firstcrusade:salt_thorn_log",
+    "firstcrusade:fossilized_trunk"
+  ]
+}

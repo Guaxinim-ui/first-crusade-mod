@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "particle": "firstcrusade:block/rusted_plasteel",
+    "bottom": "firstcrusade:block/rusted_plasteel",
+    "top": "firstcrusade:block/rusted_plasteel",
+    "side": "firstcrusade:block/rusted_plasteel"
+  }
+}
