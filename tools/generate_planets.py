@@ -66,6 +66,20 @@ def write(path, data):
 #              Rock Mountains sao vulcanicas ativas. (Lexicanum: Armageddon geography)
 #   CATACHAN   mundo-morte quase inteiramente coberto de selva densa que rebrota sozinha.
 #   VALHALLA   bola de gelo apos um impacto de cometa; a temperatura nunca sobe de zero.
+#   VERDANIS   mundo-agricola: planicie cultivada de horizonte a horizonte, com quebra-ventos
+#              e varzeas de irrigacao. Um mundo-agricola nao tem paisagem propria — tem lavoura.
+#   CADIA      planalto varrido pelo vento diante do Olho do Terror; rocha nua, estepe curta e
+#              o frio permanente que a proximidade da Fenda traz. (Lexicanum: Cadia)
+#   FORGE      mundo-forja no molde de Marte: atmosfera perdida para a industria, sem agua de
+#              superficie, cinza sobre rocha vulcanica e crosta de sal onde havia mar.
+#   ORK        mundo tomado: mato escuro e brejo que a espora de Ork ja reescreveu, com as
+#              cicatrizes de cinza das guerras que passaram por ali.
+#   NECRON     mundo-tumba: deserto de sal morto sobre planaltos de rocha. Nada cresce; o que
+#              importa esta embaixo.
+#
+# Os biomas sao os que o mod ja tem. Um planeta novo nao inventa bioma: inventa a PROPORCAO,
+# que e o que a arquitetura de composicao existe para fazer. Bioma novo custa textura, flora,
+# features e uma entrada no FloraRegionResolver — e outro trabalho, nao este.
 
 PLANETS = {
     "macragge": {
@@ -78,8 +92,6 @@ PLANETS = {
         "sea_level": 46,
         # Terreno alto e acidentado: e um mundo de montanha.
         "terrain": {"zero_at": 58, "span": 24, "continents": 0.55, "erosion": 0.30},
-        "sky": 0x7C96B4,
-        "fog": 0xA8B0BC,
     },
     "armageddon": {
         "name": "Armageddon",
@@ -90,8 +102,6 @@ PLANETS = {
         ],
         "sea_level": 0,          # sem agua de superficie: o ermo e o ponto
         "terrain": {"zero_at": 52, "span": 20, "continents": 0.40, "erosion": 0.20},
-        "sky": 0x9A8878,
-        "fog": 0xB4A490,
     },
     "catachan": {
         "name": "Catachan",
@@ -102,8 +112,6 @@ PLANETS = {
         "sea_level": 48,
         # Relevo suave e baixo: a selva e a parede, nao a montanha.
         "terrain": {"zero_at": 54, "span": 16, "continents": 0.30, "erosion": 0.15},
-        "sky": 0x6FA88C,
-        "fog": 0x7E9478,
     },
     "valhalla": {
         "name": "Valhalla",
@@ -113,8 +121,60 @@ PLANETS = {
         ],
         "sea_level": 48,
         "terrain": {"zero_at": 56, "span": 22, "continents": 0.45, "erosion": 0.25},
-        "sky": 0x9EC0DC,
-        "fog": 0xCEDCE4,
+    },
+    "agri_world": {
+        "name": "Verdanis",
+        "composition": [
+            ("pale_steppe", 60),
+            ("ironwood_forest", 25),
+            ("sump_marsh", 15),
+        ],
+        "sea_level": 48,
+        # O relevo mais manso dos nove: uma planicie de lavoura nao tem montanha, e o pouco
+        # que sobe serve so para separar um talhao do outro.
+        "terrain": {"zero_at": 52, "span": 14, "continents": 0.28, "erosion": 0.12},
+    },
+    "cadia": {
+        "name": "Cadia",
+        "composition": [
+            ("rocky_highland", 45),
+            ("pale_steppe", 40),
+            ("ossuary_tundra", 15),
+        ],
+        "sea_level": 44,
+        # Planalto exposto: erosao alta e mar baixo deixam a rocha a mostra, que e a imagem
+        # de Cadia — pedra, vento e nada onde se esconder.
+        "terrain": {"zero_at": 56, "span": 20, "continents": 0.45, "erosion": 0.30},
+    },
+    "forge_world": {
+        "name": "Forge World",
+        "composition": [
+            ("ash_waste", 45),
+            ("volcanic_highland", 30),
+            ("salt_waste", 25),
+        ],
+        "sea_level": 0,          # a industria consumiu a agua de superficie
+        "terrain": {"zero_at": 54, "span": 22, "continents": 0.40, "erosion": 0.22},
+    },
+    "ork_world": {
+        "name": "Ork World",
+        "composition": [
+            ("dark_wilds", 40),
+            ("sump_marsh", 30),
+            ("ash_waste", 30),
+        ],
+        "sea_level": 46,
+        "terrain": {"zero_at": 54, "span": 18, "continents": 0.35, "erosion": 0.20},
+    },
+    "necron_tomb_world": {
+        "name": "Necron Tomb World",
+        "composition": [
+            ("salt_waste", 60),
+            ("rocky_highland", 40),
+        ],
+        "sea_level": 0,          # mundo morto: nao ha ciclo de agua para ter mar
+        # Erosao alta com span curto da planalto de topo chato — mesa, nao montanha.
+        "terrain": {"zero_at": 55, "span": 14, "continents": 0.30, "erosion": 0.35},
     },
 }
 

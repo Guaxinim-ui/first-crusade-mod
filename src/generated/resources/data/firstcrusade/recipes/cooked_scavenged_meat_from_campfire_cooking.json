@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "category": "food",
+  "cookingtime": 600,
+  "experience": 0.2,
+  "ingredient": {
+    "item": "firstcrusade:scavenged_meat"
+  },
+  "result": "firstcrusade:cooked_scavenged_meat"
+}

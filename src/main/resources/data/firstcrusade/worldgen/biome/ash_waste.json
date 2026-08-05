@@ -12,7 +12,20 @@
   },
   "spawners": {
     "monster": [],
-    "creature": [],
+    "creature": [
+      {
+        "type": "firstcrusade:ash_strider",
+        "weight": 6,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "firstcrusade:squig",
+        "weight": 5,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ],
     "ambient": [],
     "axolotls": [],
     "underground_water_creature": [],
@@ -84,5 +97,6 @@
     [
       "minecraft:freeze_top_layer"
     ]
-  ]
+  ],
+  "creature_spawn_probability": 0.07
 }

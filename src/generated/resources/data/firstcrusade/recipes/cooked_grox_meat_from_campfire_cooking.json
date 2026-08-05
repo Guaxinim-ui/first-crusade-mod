@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "category": "food",
+  "cookingtime": 600,
+  "experience": 0.35,
+  "ingredient": {
+    "item": "firstcrusade:grox_meat"
+  },
+  "result": "firstcrusade:cooked_grox_meat"
+}

@@ -165,16 +165,29 @@ public enum FloraPalette {
     },
 
     /** Ground the green tide holds: its own ecology, dragged along behind it. */
-    ORK(7, 1.4F) {
+    /**
+     * Ork-held ground.
+     *
+     * <p>Base density came down from 1.4 to 1.0 and the fungus from 0.95 to 0.6. It was the
+     * densest palette in the mod and it read as one: green covering every visible block, which is
+     * not "the greenskins hold this ground" but "the texture broke".
+     *
+     * <p>The spore pod dropped much further — weight 9 to 3, and its group is a single pod — because
+     * it is the one entry here that is not scenery. Every pod becomes a Gretchin, so its weight is
+     * really a spawn rate, and at the old number a camp's halo out-produced the war being fought
+     * over it. {@link com.example.examplemod.flora.block.OrkSporePodBlock} now also refuses to
+     * hatch into a crowd, which is the hard ceiling; this is the soft one.
+     */
+    ORK(7, 1.0F) {
         @Override
         protected List<Entry> buildEntries() {
             return List.of(
-                    small(FCFlora.ORK_FUNGUS, 30, 0.95F, 4, 9, Environment.ANY),
-                    small(FCFlora.SQUIG_GRASS, 22, 0.85F, 4, 8, Environment.ANY),
-                    small(FCFlora.ORK_SPORE_CAP, 14, 0.6F, 2, 5, Environment.ANY),
+                    small(FCFlora.ORK_FUNGUS, 30, 0.6F, 3, 6, Environment.ANY),
+                    small(FCFlora.SQUIG_GRASS, 22, 0.6F, 3, 6, Environment.ANY),
+                    small(FCFlora.ORK_SPORE_CAP, 14, 0.45F, 2, 4, Environment.ANY),
                     // Spore pods want shade, exactly as the Orkoid cocoon does: they take root
                     // under a canopy or in the lee of rock, then grow a stage per quarter-day.
-                    small(FCFlora.ORK_SPORE_POD, 9, 0.45F, 1, 3, Environment.SHADED),
+                    small(FCFlora.ORK_SPORE_POD, 3, 0.20F, 1, 1, Environment.SHADED),
                     small(FCFlora.TRAMPLED_GRASS, 16, 0.7F, 3, 7, Environment.ANY),
                     small(FCFlora.OIL_STAINED_GRASS, 12, 0.6F, 2, 5, Environment.ANY),
                     lichen(FCFlora.GOB_MOSS, 14, 0.6F, 2, 5, Environment.ANY),

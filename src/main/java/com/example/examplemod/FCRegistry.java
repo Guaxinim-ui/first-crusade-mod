@@ -182,6 +182,27 @@ public static final RegistryObject<Item> SPACEPORT_ITEM =
         ITEMS.register("spaceport",
                 () -> new BlockItem(SPACEPORT.get(), new Item.Properties()));
 
+// Planetary Navigation Terminal — o console que abre a Imperial Planetary Navigation. Fica ao
+// lado da plataforma; o Spaceport continua com o lançamento de um clique que ele sempre teve.
+public static final RegistryObject<Block> PLANETARY_NAVIGATION_TERMINAL =
+        BLOCKS.register("planetary_navigation_terminal",
+                () -> new com.example.examplemod.planet.PlanetaryNavigationTerminalBlock(
+                        BlockBehaviour.Properties.of()
+                                .strength(4.0F, 900.0F)
+                                .requiresCorrectToolForDrops()
+                                .sound(SoundType.METAL)
+                                .noOcclusion()
+                                .lightLevel(state -> 9)));
+
+public static final RegistryObject<Item> PLANETARY_NAVIGATION_TERMINAL_ITEM =
+        ITEMS.register("planetary_navigation_terminal",
+                () -> new BlockItem(PLANETARY_NAVIGATION_TERMINAL.get(), new Item.Properties()));
+
+public static final RegistryObject<MenuType<com.example.examplemod.planet.PlanetNavigationMenu>>
+        PLANET_NAVIGATION_MENU = MENU_TYPES.register("planet_navigation_menu",
+                () -> IForgeMenuType.create((windowId, inventory, data) ->
+                        new com.example.examplemod.planet.PlanetNavigationMenu(windowId, inventory, data)));
+
     public static final RegistryObject<Item> IMPERIAL_COMMAND_CORE_ITEM = ITEMS.register("imperial_command_core",
             () -> new BlockItem(IMPERIAL_COMMAND_CORE.get(), new Item.Properties()));
 
@@ -987,6 +1008,7 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
                         output.accept(ORK_LOOT_PIT_ITEM.get());
                         output.accept(STRATEGIUM_ITEM.get());
                         output.accept(SPACEPORT_ITEM.get());
+                        output.accept(PLANETARY_NAVIGATION_TERMINAL_ITEM.get());
 
                         output.accept(CRUSADIUM_INGOT.get());
                         output.accept(CRUSADIUM_PLATE.get());
@@ -1045,6 +1067,9 @@ output.accept(PENAL_LEGIONNAIRE_SPAWN_EGG.get());
 output.accept(JUNGLE_FIGHTER_SPAWN_EGG.get());
 output.accept(FEUDAL_KNIGHT_SPAWN_EGG.get());
 output.accept(CITY_COMMANDER_SPAWN_EGG.get());
+
+                        // Fase E: a fauna registra-se em .animal, e so a vitrine passa por aqui.
+                        com.example.examplemod.animal.FCAnimals.addToCreativeTab(output);
                     })
                     .build());
 

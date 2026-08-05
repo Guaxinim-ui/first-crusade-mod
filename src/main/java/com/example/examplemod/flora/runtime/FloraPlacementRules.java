@@ -376,6 +376,13 @@ public final class FloraPlacementRules {
             return false;
         }
 
+        // Chao, nao qualquer coisa solida. `CarpetBlock.canSurvive` so pergunta se o bloco de
+        // baixo nao e ar, entao tapete sobre tapete passa e a manta sai com dois blocos de
+        // altura — foi assim que apareceu em jogo. A tag e a mesma que a worldgen exige.
+        if (!belowState.is(FloraTags.GROUND_ANY)) {
+            return false;
+        }
+
         if (isFunctional(belowState)) {
             return false;
         }

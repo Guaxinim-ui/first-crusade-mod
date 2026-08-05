@@ -708,7 +708,322 @@ medida: **mediana 128 blocos**.
 
 ---
 
-## 18. Limitações conhecidas
+## 18. Flora empilhada e o gerador infinito de Gretchins
+
+Dois defeitos reportados em jogo, de famílias diferentes.
+
+### 18.1 Tapete com dois blocos de altura
+
+`CarpetBlock.canSurvive` só pergunta se o bloco de baixo **não é ar**. Tapete sobre tapete passa
+nesse teste. Com `y_spread: 3`, a mancha sorteia posições acima das que ela mesma já preencheu, e a
+manta de agulhas sai com duas alturas — foi o que apareceu na tela.
+
+`would_survive` sozinho nunca ia pegar isso, porque a resposta dele estava *correta*: o carpete
+realmente sobrevive ali. O filtro passou a exigir que o bloco de baixo esteja em
+`firstcrusade:flora_ground_any`, o que resolve a família inteira de uma vez — planta não nasce sobre
+planta, tapete não nasce sobre tapete, nada nasce sobre tronco ou folha. A mesma regra entrou no
+decorador em runtime (`FloraPlacementRules.placeCarpet`), que tinha exatamente a mesma brecha.
+
+Medido depois, em 4.939 chunks e 713.551 blocos de flora nos dois biomas que usam tapete:
+**0 blocos empilhados**.
+
+### 18.2 O casulo Ork era um gerador de mobs sem teto
+
+`OrkSporePodBlock` transformava **todo** casulo em Gretchin, e não havia contagem de população em
+lugar nenhum do caminho. O decorador planta casulos por todo o halo de um acampamento, então a
+quantidade de Orks era função da área que os Orks ocupavam — o que é uma realimentação positiva.
+O resultado em jogo foi o Império perder o planeta para uma maré que cresceu do cenário, não de
+nenhuma decisão.
+
+Duas travas, uma dura e uma macia:
+
+* **Dura:** um casulo maduro não eclode se já houver 6 pele-verdes num raio de 24 blocos. Uma
+  consulta de AABB, e só no instante em que o casulo amadurece (no máximo uma vez por casulo por
+  quarto de dia). O casulo **mantém** o estágio maduro e tenta de novo depois, então um acampamento
+  limpo se repovoa sozinho.
+* **Macia:** o casulo caiu de peso 9 / densidade 0,45 / grupo 1-3 para peso 3 / densidade 0,20 /
+  grupo 1. O peso dele nunca foi decoração — é taxa de spawn.
+
+A paleta ORK também afinou no geral (densidade base 1,4 → 1,0; fungo 0,95 → 0,6). Era a paleta mais
+densa do mod e lia como textura quebrada, não como território tomado.
+
+> O sistema de acampamento (`OrkCampBlockEntity`) **já** tinha teto — guarnição de até 50, um Ork por
+> intervalo, contagem de vivos antes de spawnar. O vazamento era só o casulo, que ninguém contava.
+
+---
+
+## 20. Fase E — a fauna, e o que "um animal" custa
+
+A primeira espécie da fauna. O que ela exigiu não foi uma entidade: foi decidir **onde vive o teto de
+população**, porque o Minecraft cria criaturas por dois caminhos diferentes e só um deles aceita uma
+trava escrita em Java.
+
+### 20.1 Os dois caminhos de spawn, e por que isso importa
+
+| caminho | quando | quem limita |
+|---|---|---|
+| geração de chunk | quando o chunk nasce | `creature_spawn_probability` + `minCount/maxCount` do bioma — **datapack** |
+| spawn contínuo | servidor rodando, chunk carregado | `FCAnimalEntity.tooCrowded` + `wildlifePopulationLimit` — **Java** |
+
+A trava em Java **não funciona na geração**, e isso não é um descuido: ali o nível é um
+`WorldGenRegion`, cujas consultas de entidade devolvem lista vazia por contrato
+(`WorldGenRegion.getEntities` → `Collections.emptyList()`, verificado na fonte). Qualquer contagem
+feita naquele momento lê zero e responde "não está cheio" para sempre.
+
+Ou seja: o teto do casulo Ork (secção 18.2) **não teria funcionado** se o casulo fosse worldgen em
+vez de bloco. A lição da Fase E é a versão completa da mesma regra: *antes de criar qualquer coisa
+que gere entidade, perguntar quem conta — e verificar se quem conta consegue contar naquele
+momento.*
+
+Por isso os números do bioma são os que foram medidos, e o teto em Java é a rede de segurança do
+turno longo, não a trava principal.
+
+### 20.2 As seis espécies, e a regra que decide onde cada uma vive
+
+**Cada espécie pertence a um ambiente, e a densidade dela ali é maior que em qualquer outro lugar.**
+Sem essa regra não existe "o pasto" nem "o pântano" — existe fauna espalhada, e um planeta deixa de
+ser legível.
+
+| espécie | onde | peso / grupo | o que ela é |
+|---|---|---|---|
+| **Grox** | estepe · morro (¹⁄₅) | 8 / 2–4 · 6 / 1–3 | gado imperial: carne, couro, chifre |
+| **Cyber-mastiff** | estepe · morro | 3 / 1–2 | cão dos Arbites — **o único que caça** |
+| **Ash strider** | cinzas · sal (½) | 6 / 1–3 · 6 / 1–2 | pernalta; a silhueta que se lê de longe |
+| **Squig** | cinzas | 5 / 1–3 | bola de dentes, hostil, veio com os Orks |
+| **Sump rat** | pântano | 10 / 2–4 | sem ataque; só distância |
+| **Ambull** | morro | **1** / 1–1 | infestação, não população |
+
+E as `creature_spawn_probability`: pântano 0,12 (fervilha) · estepe 0,10 · cinzas 0,07 · sal e morro
+0,03. Valhalla e a selva continuam com a lista vazia — um mundo de gelo e um mundo que come o que
+entra nele não são lugares onde alguém criou algo.
+
+Três decisões que valem registro:
+
+* **O Ambull tem peso 1 contra 9 do resto do morro.** A tentação com um monstro é torná-lo comum o
+  bastante para "ser conteúdo". É o inverso: uma coisa rara e realmente perigosa *é* conteúdo; uma
+  coisa comum e perigosa é um imposto. Encontrar o segundo no mesmo dia deve parecer errado.
+* **O Squig e o Ambull são hostis e ainda assim `FCAnimalEntity`.** Isso é decisão sobre
+  **população**, não sobre temperamento: a base é quem carrega o teto de spawn, e uma coisa hostil
+  que brota do cenário sem teto é exatamente a falha que já custou um planeta a este mod (secção
+  18.2). São perigosos; não têm permissão de ser ilimitados.
+* **O Cyber-mastiff não é domesticável.** O mod não tem sistema de pet, e meio sistema de pet é pior
+  que nenhum: quem leva um para casa e depois não consegue alimentá-lo, curá-lo nem comandá-lo
+  ganhou um bug, não um companheiro. O que ele é, em vez disso, é um fato sobre o terreno — onde
+  correm mastins, os Arbites estiveram.
+
+### 20.3 Comportamento, e o orçamento de cada parte
+
+O escopo pede manada, pasto, sede, atração pela vagem, reprodução e fuga de combate. Cada um é
+escrito para **custar zero quando não está acontecendo**:
+
+| comportamento | custo | trava |
+|---|---|---|
+| alarme/fuga (`AlarmedPanicGoal`) | nada — o perigo se anuncia por `hurt()` | herdado da base |
+| manada (`HerdGoal`) | 1 consulta AABB a cada 80 ticks | raio 16, caminho ≤16 |
+| sede (`SeekWaterGoal`) | 1 varredura por animal a cada 5 min | raio 16, **para no primeiro achado** |
+| pasto (`GrazeGoal`) | 1 leitura de bloco atrás de um sorteio 1/600 | só o bloco onde ele pisa |
+| defesa do filhote | 1 consulta, só no instante do golpe | raio 16 |
+
+A varredura de água usa `BlockPos.withinManhattan`, que caminha para fora em ordem de distância: a
+água mais próxima é também a primeira encontrada, então o laço termina em algumas dezenas de
+leituras quando há água perto. A varredura cheia (7.623 posições) só acontece onde **não há** água —
+e ali ela é seguida do maior intervalo de espera. É o caso raro que paga o caso comum.
+
+### 20.4 O Grox pasta, mas não desmata
+
+`EatBlockGoal` do vanilla apaga o capim e transforma o `grass_block` em terra. Copiado aqui seria um
+desastre em câmera lenta: a vegetação do mod é posta pela worldgen **uma vez** e não rebrota, então
+uma manada esquecida num cercado deixaria o bioma pelado em poucos dias de jogo — e nenhum sistema
+do mod repõe.
+
+Então o Grox **rebaixa**: `tall_imperial_grass` vira `imperial_grass`, e capim de um bloco só apanha
+um focinhada. A cobertura do chão nunca chega a zero, o terreno lê como pasto em vez de campina, e
+a mordida continua visível — que é o que se quer de um animal que come.
+
+> É a mesma família de erro da secção 18: um sistema que consome o mundo sem teto, cujo estrago só
+> aparece muito depois da causa.
+
+### 20.5 A reprodução exige uma mão humana
+
+Um Grox só se apaixona com um `grox_feed_pod` **dado por alguém**. Nenhum sistema do mod produz esse
+item sozinho — ele nasce em nó de fruto, e colher é ato de jogador. Portanto o rebanho não cresce
+por conta própria: a população tem piso na worldgen e teto na decisão de quem joga.
+
+Pastar **cura**, não apaixona. A tentação de fazer o pasto alimentar a reprodução foi recusada de
+propósito: seria exatamente o laço de realimentação que custou um planeta na secção 18.2, só que
+com vaca.
+
+### 20.6 O bioma que não recebeu um único animal
+
+A primeira medição encontrou **137 Grox na estepe e zero no morro rochoso** — com os dois biomas
+declarados, gerados e amostrados aos milhares de chunks.
+
+A causa está numa linha do vanilla: `Animal.checkAnimalSpawnRules` exige que o bloco de baixo esteja
+em `#minecraft:animals_spawnable_on`, e essa tag contém **exatamente um bloco**, `grass_block`. O
+topo do `rocky_highland` é cascalho. A recusa é total e silenciosa: nada no log, nenhum erro,
+nenhuma diferença visível entre "o bioma não tem animal porque a densidade é baixa" e "o bioma nunca
+poderá ter animal".
+
+O mesmo valia para `salt_waste` (crosta de sal) e `sump_marsh` (lama de sump) — ou seja, para toda
+espécie futura em metade do chão que este mod constrói.
+
+A regra de chão passou a ser a do próprio mod, `firstcrusade:flora_ground_natural`: a mesma tag que
+decide onde uma planta pega. *Se o chão sustenta capim, ele sustenta quem come capim*, e um datapack
+que alarga um alarga o outro.
+
+> Vale como método: o defeito não estava no código escrito nesta fase — estava numa suposição
+> herdada do vanilla que parecia razoável demais para ser conferida. Só apareceu porque a medição
+> foi feita **por bioma** em vez de num total só. Um número agregado teria dito "137 Grox, funciona".
+
+### 20.7 Medido em servidor dedicado
+
+Mundo novo, servidor dedicado, 25 pontos de 16×16 chunks numa grade de ±4.000 blocos em Macragge —
+**10.001 chunks completos** (`Status == full`), lidos direto dos `.mca` com parser próprio. Quatro
+pontos no overworld como controle.
+
+| bioma | chunks | Grox | por chunk |
+|---|---|---|---|
+| `rocky_highland` | 8.083 | 116 | 0,014 |
+| `pale_steppe` | 1.107 | 85 | **0,077** |
+| `ironwood_forest` | 811 | 4 | 0,005 |
+| **overworld** (controle) | 529 | **0** | — |
+
+Três coisas que esses números dizem:
+
+* **A razão entre os dois biomas saiu como foi pedida.** O morro tem 0,18 da densidade da estepe;
+  o previsto pela probabilidade (0,03 / 0,10) vezes o tamanho médio de grupo (2 / 3) é 0,20. A
+  distância entre pedido e medido é menor que o ruído da amostra.
+* **Os 4 no ferrofuste não são um vazamento.** O ferrofuste não lista Grox. São animais que
+  nasceram na fronteira e caminharam — 2% do total, e a medição atribui bioma pelo chunk onde o
+  animal **está**, não onde nasceu.
+* **Zero no overworld.** A regra dos planetas vale na prática, não só no código.
+
+Aglomeração, medida na mesma caixa que `tooCrowded` conta (±48 blocos):
+
+| | valor |
+|---|---|
+| mediana | 5 |
+| p90 | 14 |
+| máximo | 19 |
+| limite do config | 12 |
+
+A mediana é o número que importa para a leitura: um Grox típico tem quatro companheiros por perto,
+que é uma manada. O máximo passa do limite do config, e pelo raciocínio isso é o comportamento
+desejado — o limite governa o spawn **contínuo**, então onde a geração já entregou 19 o servidor não
+acrescentaria mais nenhum. É raciocínio, não medição; ver 20.8 para o que a medição alcançou e o
+que não alcançou.
+
+### 20.8 O rebanho cresce sozinho? E o teste que descobriu o que ele não estava testando
+
+A pergunta que a secção 18.2 obriga a fazer. Uma área de 256×256 blocos com 28 Grox, mantida
+carregada por `forceload` durante 15 minutos de servidor:
+
+| | Grox na área | no mundo |
+|---|---|---|
+| antes | 28 | 213 |
+| depois de 900 s | 28 | 213 |
+
+Zero crescimento — e era tentador parar aí e escrever "o teto funciona".
+
+Só que **+0 tem duas explicações**, e elas são opostas: ou nada tentou nascer, ou coisas tentaram e
+o teto recusou. Um controle separa as duas: matar os Grox da mesma área e ver se ela repovoa. Se
+repovoar, o spawn contínuo existe e o teto é o que segurava; se não repovoar, o spawn contínuo nunca
+correu e o teto não foi exercitado uma única vez.
+
+Medido: `kill` levou 53 Grox; 15 minutos depois a área tinha **0**. Não repovoou.
+
+A causa é do jogo, não do mod: o spawn natural em tempo de execução só roda em chunks dentro do raio
+de simulação de um **jogador**, e um servidor de medição não tem jogador nenhum. `forceload` mantém
+o chunk carregado e ticando; não o torna um chunk de spawn.
+
+Então, honestamente, o que cada coisa está:
+
+| afirmação | estado |
+|---|---|
+| a geração entrega as densidades declaradas | **medido** |
+| nenhum Grox no overworld | **medido** |
+| nada no cenário cria Grox sozinho (sem jogador, população não muda) | **medido** |
+| `wildlifePopulationLimit` recusa spawns quando a área está cheia | **não medido** — exigiria um cliente conectado; o código roda em `SpawnPlacements.checkSpawnRules`, mas nunca foi visto recusar |
+
+A última linha fica declarada como pendência em vez de virar uma afirmação confortável. É o mesmo
+erro que a secção 14 registra duas vezes: a métrica que responde parecido com a pergunta certa, mas
+não é ela.
+
+> E há um detalhe de instrumentação que quase estragou o controle: logo após o `kill`, a contagem
+> lida dos arquivos `entities/*.mca` ainda dizia 28. Um chunk carregado guarda suas entidades em
+> memória, e o arquivo só conta a verdade depois que o save realmente o reescreve. A leitura de
+> arquivo é confiável para um mundo parado, não para um instante durante o tick.
+
+### 20.8.1 A amostra que media sempre o mesmo pedaço do mundo
+
+Ao estender a medição para os três planetas com fauna, os números saíram assim:
+
+| planeta | chunks completos | partição |
+|---|---|---|
+| Macragge | 400 | 367 / 32 / 1 |
+| Armageddon | 400 | 367 / 32 / 1 |
+| Catachan | 400 | 262 / 138 |
+
+**Composições de bioma completamente diferentes não produzem a mesma contagem duas vezes.** Números
+iguais para mundos diferentes não são dados: são um defeito. E 400 é exatamente o tamanho da área de
+spawn que um servidor gera ao subir.
+
+Custou **três diagnósticos**, e vale registrar os dois errados porque cada um era plausível:
+
+1. **"A geração é assíncrona, falta esperar."** Pus um `time.sleep(20)` entre marcar e salvar. Deu
+   os mesmos 400.
+2. **"O `sleep` mede o relógio errado."** O log mostrava `Running 3032050ms behind` — cinquenta
+   minutos de atraso de tick — e num servidor assim vinte segundos reais valem quase nenhum tick,
+   enquanto a geração consome tempo de *servidor*. Troquei a espera por `time query gametime`.
+   Também não resolveu: com o servidor saudável, 60 ticks são três segundos.
+
+O que resolveu foi parar de teorizar e fazer **um teste controlado**: um forceload de 4×4 chunks
+numa posição qualquer, contando os `Status` no disco a cada dez segundos.
+
+```
+antes:  full=400   outros=1364
+t=10s:  full=464   outros=1364      <- 16 chunks pedidos, 64 completos
+t=60s:  full=464   (estável)
+```
+
+O forceload **sempre funcionou**. O defeito era meu critério de parada: o contador fica parado
+enquanto o lote gera, e eu desistia depois de duas leituras iguais (~20 s) — antes de o primeiro
+chunk de um lote de 256 ficar pronto. A amostra saía vazia e o script chamava isso de "parou de
+crescer".
+
+Duas correções, e as duas são sobre o mesmo mal-entendido: **lote de 8×8 em vez de 16×16** (64
+chunks completam em dezenas de segundos, e o progresso aparece entre uma leitura e a seguinte), e
+**cinco leituras iguais em vez de duas** antes de declarar o fim. Com isso o primeiro ponto passou de
+400 para 633 chunks.
+
+> Quatro instrumentos errados nesta fase: a leitura de arquivo durante o tick, a amostra que media a
+> área de spawn, o `sleep` que media o relógio errado e o critério de parada que desistia no
+> silêncio. Todos **respondiam com confiança** — é a característica comum, e é o motivo de a única
+> defesa ser um teste controlado, pequeno, onde o resultado esperado é conhecido de antemão. Duas
+> teorias bonitas custaram mais tempo que os sessenta segundos que o teste levou.
+
+### 20.9 A receita que ia apagar uma receita do jogo base
+
+Os drops precisavam servir para alguma coisa. O couro é o caso com razão mecânica de verdade: nos
+quatro planetas não existe vaca nem cavalo, então **sem uma receita de couro o jogador que sai do
+overworld perde livro, encantamento e sela**. O chifre vira farinha de osso pela mesma lógica um
+degrau adiante — sem esqueleto fácil não há adubo, e as fazendas da Fase D precisam de adubo.
+
+O problema apareceu ao conferir a saída do datagen: `ShapelessRecipeBuilder.save(writer)` nomeia a
+receita pelo **item de saída**, e a saída aqui é vanilla. Os arquivos saíram como
+`data/minecraft/recipes/leather.json` e `bone_meal.json` — ou seja, **substituindo as receitas do
+jogo base**. Instalar o mod passaria a impedir fazer farinha de osso com osso.
+
+Os dois agora declaram id próprio (`firstcrusade:leather_from_grox_hide`,
+`bone_meal_from_grox_horn`). Nada mais do mod escreve fora do seu namespace, tirando as tags que
+devem mesmo estender as do vanilla.
+
+> Serve de aviso para toda receita futura cujo resultado seja um item de outro mod ou do jogo:
+> **conferir onde o arquivo caiu**, não só se ele foi gerado.
+
+---
+
+## 19. Limitações conhecidas
 
 1. **Caos** — a paleta, o degrau do resolver, a transição e a árvore existem e funcionam, mas
    **nenhum sistema do mod produz corrupção do Caos**; só o comando e a API a alcançam. É honesto: o

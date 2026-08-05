@@ -316,6 +316,18 @@ def plant_filter(block, props=None):
             "type": "minecraft:all_of",
             "predicates": [
                 {"type": "minecraft:matching_blocks", "blocks": "minecraft:air"},
+                # O bloco de baixo tem de ser CHAO, nao qualquer coisa solida.
+                #
+                # `would_survive` sozinho nao basta para tapete: `CarpetBlock.canSurvive` so exige
+                # que o bloco de baixo nao seja ar, entao tapete sobre tapete passa. Com y_spread 3
+                # a mancha tenta posicoes acima das que ja preencheu e o resultado, em jogo, e manta
+                # de agulhas com dois blocos de altura — o dono viu e reportou.
+                #
+                # Exigir a tag de chao resolve para toda forma de uma vez: planta nao nasce sobre
+                # planta, tapete nao nasce sobre tapete, e nada nasce sobre tronco ou folha.
+                {"type": "minecraft:matching_block_tag",
+                 "offset": [0, -1, 0],
+                 "tag": "%s:flora_ground_any" % MOD},
                 {"type": "minecraft:would_survive", "state": target},
             ],
         },

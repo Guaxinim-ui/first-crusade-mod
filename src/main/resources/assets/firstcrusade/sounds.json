@@ -106,5 +106,75 @@
         "stream": false
       }
     ]
+  },
+  "planet_terminal_open": {
+    "subtitle": "subtitle.firstcrusade.planet_terminal_open",
+    "sounds": [
+      {
+        "name": "minecraft:block.beacon.activate",
+        "type": "event",
+        "stream": false
+      }
+    ]
+  },
+  "planet_selected": {
+    "subtitle": "subtitle.firstcrusade.planet_selected",
+    "sounds": [
+      {
+        "name": "minecraft:block.note_block.hat",
+        "type": "event",
+        "stream": false
+      }
+    ]
+  },
+  "planet_locked": {
+    "subtitle": "subtitle.firstcrusade.planet_locked",
+    "sounds": [
+      {
+        "name": "minecraft:block.anvil.land",
+        "type": "event",
+        "stream": false
+      }
+    ]
+  },
+  "planet_travel_confirm": {
+    "subtitle": "subtitle.firstcrusade.planet_travel_confirm",
+    "sounds": [
+      {
+        "name": "minecraft:block.beacon.power_select",
+        "type": "event",
+        "stream": false
+      }
+    ]
+  },
+  "planet_travel_cancel": {
+    "subtitle": "subtitle.firstcrusade.planet_travel_cancel",
+    "sounds": [
+      {
+        "name": "minecraft:block.note_block.bass",
+        "type": "event",
+        "stream": false
+      }
+    ]
+  },
+  "planet_travel_start": {
+    "subtitle": "subtitle.firstcrusade.planet_travel_start",
+    "sounds": [
+      {
+        "name": "minecraft:block.respawn_anchor.charge",
+        "type": "event",
+        "stream": false
+      }
+    ]
+  },
+  "planet_travel_error": {
+    "subtitle": "subtitle.firstcrusade.planet_travel_error",
+    "sounds": [
+      {
+        "name": "minecraft:block.conduit.deactivate",
+        "type": "event",
+        "stream": false
+      }
+    ]
   }
 }

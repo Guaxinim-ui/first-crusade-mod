@@ -52,11 +52,33 @@ public final class FCPlanets {
     /** Ice world: frozen tundra over the bones of old wars, with taiga in the lee. */
     public static final ResourceKey<Level> VALHALLA = key("valhalla");
 
+    /** Agri world Verdanis: cultivated plain, windbreaks and irrigation flats. */
+    public static final ResourceKey<Level> AGRI_WORLD = key("agri_world");
+
+    /** Fortress world: bare rock and short steppe under a permanent wind. */
+    public static final ResourceKey<Level> CADIA = key("cadia");
+
+    /** Forge world: no surface water left, ash over volcanic rock and old salt beds. */
+    public static final ResourceKey<Level> FORGE_WORLD = key("forge_world");
+
+    /** Taken world: dark scrub and marsh the Ork spore has already rewritten. */
+    public static final ResourceKey<Level> ORK_WORLD = key("ork_world");
+
+    /** Tomb world: dead salt desert over stone mesas. What matters is underneath. */
+    public static final ResourceKey<Level> NECRON_TOMB_WORLD = key("necron_tomb_world");
+
     /**
      * In travel order. The Spaceport walks this list, so the order is the order a player meets the
-     * planets in — Macragge first because it is the mildest and the Imperium's own.
+     * planets in — Macragge first because it is the mildest and the Imperium's own, and the rest in
+     * the order the navigation terminal sorts them, so the two interfaces agree.
+     *
+     * <p>{@code firstcrusade:hive_world} is deliberately absent. It exists as a dimension, but it is
+     * a <b>flat</b> one — a single bedrock layer under {@code hive_floor} — because it is where the
+     * Hive City is built, not a world anyone should be dropped onto.
      */
-    public static final List<ResourceKey<Level>> ALL = List.of(MACRAGGE, ARMAGEDDON, CATACHAN, VALHALLA);
+    public static final List<ResourceKey<Level>> ALL = List.of(
+            MACRAGGE, AGRI_WORLD, ARMAGEDDON, CADIA, FORGE_WORLD,
+            ORK_WORLD, NECRON_TOMB_WORLD, CATACHAN, VALHALLA);
 
     /** The first destination a ship offers, and where a lost traveller is sent back to. */
     public static final ResourceKey<Level> DEFAULT = MACRAGGE;

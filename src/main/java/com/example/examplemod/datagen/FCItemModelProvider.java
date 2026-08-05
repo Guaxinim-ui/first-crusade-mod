@@ -49,6 +49,14 @@ public class FCItemModelProvider extends ItemModelProvider {
         spawnEgg("imperial_battle_tank_spawn_egg");
         spawnEgg("valkyrie_gunship_spawn_egg");
         spawnEgg("sentinel_walker_spawn_egg");
+
+        // Fase E — fauna.
+        spawnEgg("grox_spawn_egg");
+        spawnEgg("cyber_mastiff_spawn_egg");
+        spawnEgg("squig_spawn_egg");
+        spawnEgg("sump_rat_spawn_egg");
+        spawnEgg("ash_strider_spawn_egg");
+        spawnEgg("ambull_spawn_egg");
     }
 
     private void spawnEgg(String name) {

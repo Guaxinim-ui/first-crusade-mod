@@ -28,6 +28,8 @@ public final class FirstCrusadeClientEvents {
             MenuScreens.register(FCRegistry.IMPERIAL_COMMAND_CORE_MENU.get(), ImperialCommandCoreScreen::new);
             MenuScreens.register(FCRegistry.STRATEGIUM_MENU.get(), StrategiumScreen::new);
             MenuScreens.register(FCRegistry.ORK_CAMP_MENU.get(), OrkCampScreen::new);
+            MenuScreens.register(FCRegistry.PLANET_NAVIGATION_MENU.get(),
+                    com.example.examplemod.planet.client.PlanetNavigationScreen::new);
 
             // Chainsword teeth: cycles the four phase item-models while the motor is running, so the
             // held weapon physically moves its teeth (predicate read by chainsword.json's overrides).
@@ -84,5 +86,26 @@ public final class FirstCrusadeClientEvents {
         event.registerEntityRenderer(FCRegistry.JUNGLE_FIGHTER.get(), JungleFighterRenderer::new);
         event.registerEntityRenderer(FCRegistry.FEUDAL_KNIGHT.get(), FeudalKnightRenderer::new);
         event.registerEntityRenderer(FCRegistry.CITY_COMMANDER.get(), CityCommanderRenderer::new);
+
+        // Fase E — fauna. Sem uma classe de renderer por bicho: FCGeoRenderer ja resolve os tres
+        // caminhos de asset pelo nome, entao cada especie e uma linha e o nome aqui e o mesmo
+        // nome dos arquivos em geo/, textures/entity/ e animations/.
+        registerAnimal(event, com.example.examplemod.animal.FCAnimals.GROX.get(), "grox", 0.9F);
+        registerAnimal(event, com.example.examplemod.animal.FCAnimals.CYBER_MASTIFF.get(),
+                "cyber_mastiff", 0.5F);
+        registerAnimal(event, com.example.examplemod.animal.FCAnimals.SQUIG.get(), "squig", 0.4F);
+        registerAnimal(event, com.example.examplemod.animal.FCAnimals.SUMP_RAT.get(),
+                "sump_rat", 0.3F);
+        registerAnimal(event, com.example.examplemod.animal.FCAnimals.ASH_STRIDER.get(),
+                "ash_strider", 0.5F);
+        registerAnimal(event, com.example.examplemod.animal.FCAnimals.AMBULL.get(),
+                "ambull", 0.8F);
+    }
+
+    private static <T extends net.minecraft.world.entity.Mob
+            & software.bernie.geckolib.animatable.GeoEntity> void registerAnimal(
+            EntityRenderersEvent.RegisterRenderers event,
+            net.minecraft.world.entity.EntityType<T> type, String name, float shadow) {
+        event.registerEntityRenderer(type, context -> new FCGeoRenderer<>(context, name, shadow));
     }
 }

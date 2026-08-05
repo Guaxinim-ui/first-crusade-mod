@@ -64,5 +64,16 @@ public final class FirstCrusadeNetwork {
                 OrkCampActionPacket::decode,
                 OrkCampActionPacket::handle
         );
+
+        // Terminal de navegacao planetaria. Um pacote so, cliente -> servidor: o pedido de
+        // viagem. O caminho de volta (estado dos planetas) viaja no buffer do menu quando a tela
+        // abre, entao nao existe pacote de sincronizacao para manter nem trafego por tick.
+        CHANNEL.registerMessage(
+                packetId++,
+                com.example.examplemod.planet.PlanetTravelRequestPacket.class,
+                com.example.examplemod.planet.PlanetTravelRequestPacket::encode,
+                com.example.examplemod.planet.PlanetTravelRequestPacket::decode,
+                com.example.examplemod.planet.PlanetTravelRequestPacket::handle
+        );
     }
 }

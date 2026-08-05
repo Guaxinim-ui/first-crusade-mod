@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.example.examplemod.planet.FCPlanets;
+import com.example.examplemod.planet.PlanetLanding;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -97,9 +98,9 @@ public class SpaceportBlock extends Block {
 
         int x = player.blockPosition().getX();
         int z = player.blockPosition().getZ();
-        BlockPos landing = findDryLanding(destination, x, z);
+        BlockPos landing = PlanetLanding.findDryLanding(destination, x, z);
 
-        buildLandingPad(destination, landing);
+        PlanetLanding.buildLandingPad(destination, landing);
 
         // The first time anyone reaches a planet, populate it with settlements around the landing.
         if (FCPlanets.isCrusadeWorld(destinationKey)) {
@@ -115,67 +116,8 @@ public class SpaceportBlock extends Block {
                 Component.translatable("msg.firstcrusade.spaceport.arrived_at", where), true);
     }
 
-    // Finds a dry surface spot near (x,z) so the pad and Spaceport land on solid ground, not under a
-    // lava sea. Spirals outward; falls back to the raw surface if nowhere dry is found nearby.
-    private BlockPos findDryLanding(ServerLevel level, int x, int z) {
-        for (int r = 0; r <= 48; r += 4) {
-            int steps = r == 0 ? 1 : 8;
-            for (int a = 0; a < steps; a++) {
-                double ang = 2.0D * Math.PI * a / steps;
-                int px = x + (int) Math.round(Math.cos(ang) * r);
-                int pz = z + (int) Math.round(Math.sin(ang) * r);
-                BlockPos surface = WorldGenPlacement.groundPlacement(level, px, pz);
-
-                if (isDryLanding(level, surface)) {
-                    return surface;
-                }
-            }
-        }
-        return WorldGenPlacement.groundPlacement(level, x, z);
-    }
-
-    private boolean isDryLanding(ServerLevel level, BlockPos surface) {
-        if (!level.getFluidState(surface).isEmpty() || !level.getBlockState(surface).isAir()) {
-            return false;
-        }
-        BlockPos ground = surface.below();
-        return level.getBlockState(ground).getFluidState().isEmpty() && !level.getBlockState(ground).isAir();
-    }
-
-    private static final int PAD_RADIUS = 3;
-
-    // A bright, open landing pad: clears any trees/terrain in the way, lays a stone platform with
-    // lit corners and a return Spaceport, so the traveller never lands stranded in a dark pocket.
-    private void buildLandingPad(ServerLevel level, BlockPos landing) {
-        // Strip vegetation and give real headroom so you don't arrive boxed in.
-        WorldGenPlacement.clearVegetation(level, landing, PAD_RADIUS + 1, 6);
-
-        BlockState floor = Blocks.SMOOTH_STONE.defaultBlockState();
-        BlockState edge = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
-
-        for (int dx = -PAD_RADIUS; dx <= PAD_RADIUS; dx++) {
-            for (int dz = -PAD_RADIUS; dz <= PAD_RADIUS; dz++) {
-                boolean rim = Math.abs(dx) == PAD_RADIUS || Math.abs(dz) == PAD_RADIUS;
-                level.setBlock(landing.offset(dx, -1, dz), rim ? edge : floor, 3);
-
-                // Clear standing room above the pad.
-                for (int dy = 0; dy <= 4; dy++) {
-                    level.setBlock(landing.offset(dx, dy, dz), Blocks.AIR.defaultBlockState(), 2);
-                }
-            }
-        }
-
-        // Lanterns on the four corners.
-        int[][] corners = {{-PAD_RADIUS, -PAD_RADIUS}, {-PAD_RADIUS, PAD_RADIUS}, {PAD_RADIUS, -PAD_RADIUS}, {PAD_RADIUS, PAD_RADIUS}};
-        for (int[] c : corners) {
-            level.setBlock(landing.offset(c[0], 0, c[1]), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState(), 3);
-            level.setBlock(landing.offset(c[0], 1, c[1]), Blocks.LANTERN.defaultBlockState(), 3);
-        }
-
-        // Return Spaceport beside the centre.
-        BlockPos returnPort = landing.offset(2, 0, 0);
-        if (!level.getBlockState(returnPort).is(FCRegistry.SPACEPORT.get())) {
-            level.setBlock(returnPort, FCRegistry.SPACEPORT.get().defaultBlockState(), 3);
-        }
-    }
+    // O pouso (procurar chao seco, limpar, montar a plataforma e o porto de retorno) vive em
+    // PlanetLanding, porque o terminal de navegacao precisa exatamente do mesmo comportamento.
+    // Manter uma copia aqui significaria duas versoes que divergem ate uma delas largar alguem
+    // dentro de um lago de lava.
 }

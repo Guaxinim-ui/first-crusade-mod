@@ -65,6 +65,10 @@ public class ExampleMod {
     FCRegistry.register(modEventBus);
     FCWeaponSounds.register(modEventBus);
 
+    // Sons do terminal de navegacao planetaria (ids proprios; o audio vem do vanilla
+    // via sounds.json ate haver gravacao propria).
+    com.example.examplemod.planet.PlanetSounds.register(modEventBus);
+
     // Hive fluids + structure markers registry (com.example.examplemod.hive). The old decorative
     // block set was removed; the new decorative kit registers itself via the three classes below.
     com.example.examplemod.hive.HiveBlocks.register(modEventBus);
@@ -95,12 +99,21 @@ public class ExampleMod {
     // Phase D: fruit trees, their fruit, and the nodes it hangs from.
     com.example.examplemod.flora.fruit.FCFruits.register(modEventBus);
 
+    // Fase E: a fauna — entity types, ovos, drops, atributos e as regras de onde ela pode nascer.
+    // Registrado depois de FCFruits porque o Grox se alimenta da vagem da Fase D.
+    com.example.examplemod.animal.FCAnimals.register(modEventBus);
+
     net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
             net.minecraftforge.fml.config.ModConfig.Type.SERVER, FirstCrusadeServerConfig.SPEC);
 
     net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
             net.minecraftforge.fml.config.ModConfig.Type.COMMON,
             com.example.examplemod.flora.FloraConfig.SPEC, "firstcrusade-flora-common.toml");
+
+    // Fase E: fauna. Spec proprio — mexer nos animais nao e mexer no capim.
+    net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
+            net.minecraftforge.fml.config.ModConfig.Type.COMMON,
+            com.example.examplemod.animal.FCAnimalConfig.SPEC, "firstcrusade-animals-common.toml");
 
     // Forge game events live in FirstCrusadeForgeEvents (auto-registered via @EventBusSubscriber);
     // client wiring in FirstCrusadeClientEvents; networking in FirstCrusadeNetwork.

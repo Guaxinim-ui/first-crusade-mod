@@ -87,6 +87,7 @@ public class FCBlockTagsProvider extends BlockTagsProvider {
                 FCRegistry.IMPERIAL_BARRACKS.get(),
                 FCRegistry.IMPERIAL_HABITATION.get(),
                 FCRegistry.SPACEPORT.get(),
+                FCRegistry.PLANETARY_NAVIGATION_TERMINAL.get(),
                 FCRegistry.ORK_CAMP.get(),
                 // Petrified wood, so a pickaxe rather than an axe — and it must stay out of
                 // logs_that_burn, which is why it is not in logs().

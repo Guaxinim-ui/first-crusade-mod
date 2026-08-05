@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "firstcrusade:grox_hide"
+    }
+  ],
+  "result": {
+    "item": "minecraft:leather"
+  }
+}

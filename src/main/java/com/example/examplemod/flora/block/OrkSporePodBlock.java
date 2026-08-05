@@ -119,11 +119,31 @@ public class OrkSporePodBlock extends BushBlock {
         return (int) ((level.getDayTime() / QUARTER_TICKS) % 4L);
     }
 
+    /** How many greenskins may already stand within {@link #CROWD_RADIUS} before a pod gives up. */
+    private static final int CROWD_LIMIT = 6;
+    private static final double CROWD_RADIUS = 24.0D;
+
     /**
-     * The cocoon splits. The pod is consumed either way — a hatch that finds nowhere to put the
+     * The cocoon splits — unless the ground around it is already full of greenskins.
+     *
+     * <p><b>Why the cap exists.</b> Without it this block is an unbounded mob generator: the chunk
+     * decorator plants pods across a camp's whole halo, every pod becomes a Gretchin, and nothing
+     * anywhere counts them. In play that ended with the Imperium losing the planet to a tide that
+     * grew out of the scenery rather than out of any decision. A spore pod should dress an Ork camp
+     * and occasionally reinforce it, not out-produce the war.
+     *
+     * <p>The count is local and cheap: one AABB query, and only at the moment a pod is ripe, which
+     * is at most once per pod per quarter-day. A crowded pod keeps its ripe stage and simply tries
+     * again later, so a camp that gets cleared out will repopulate on its own.
+     *
+     * <p>The pod is consumed on a real hatch either way — a hatch that finds nowhere to put the
      * Gretchin still ends the pod's life, so a blocked-in cocoon cannot sit there retrying forever.
      */
     private void hatch(ServerLevel level, BlockPos pos) {
+        if (crowded(level, pos)) {
+            return;
+        }
+
         level.removeBlock(pos, false);
 
         Mob ork = FCRegistry.GRETCHIN.get().create(level);
@@ -143,5 +163,29 @@ public class OrkSporePodBlock extends BushBlock {
 
         level.playSound(null, pos, SoundEvents.SLIME_SQUISH, SoundSource.BLOCKS, 0.9F, 0.7F);
         level.levelEvent(2001, pos, Block.getId(Blocks.SLIME_BLOCK.defaultBlockState()));
+    }
+
+    /**
+     * True when there are already {@link #CROWD_LIMIT} greenskins nearby.
+     *
+     * <p>Counts any mob of the mod's Ork family rather than Gretchins alone: a pod that hatches
+     * into a warband of Boyz has not found empty ground just because none of them is a Gretchin.
+     */
+    private static boolean crowded(ServerLevel level, BlockPos pos) {
+        net.minecraft.world.phys.AABB box =
+                new net.minecraft.world.phys.AABB(pos).inflate(CROWD_RADIUS);
+
+        return level.getEntitiesOfClass(Mob.class, box, OrkSporePodBlock::isGreenskin).size()
+                >= CROWD_LIMIT;
+    }
+
+    private static boolean isGreenskin(Mob mob) {
+        net.minecraft.resources.ResourceLocation id =
+                net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(mob.getType());
+
+        return id != null
+                && id.getNamespace().equals(com.example.examplemod.ExampleMod.MODID)
+                && (id.getPath().contains("ork") || id.getPath().contains("gretchin")
+                    || id.getPath().contains("nob") || id.getPath().contains("squig"));
     }
 }
