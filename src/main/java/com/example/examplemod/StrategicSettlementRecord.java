@@ -65,6 +65,25 @@ public class StrategicSettlementRecord {
         return age;
     }
 
+    /**
+     * Raises the settlement's Age to at least the given one, and reports whether anything moved.
+     *
+     * <p>The Age used to be bought by the strategic AI out of a resource bank. It is now written
+     * here by the Command Core, straight from its level — so "upgrade the Core" and "the next tier
+     * of Astartes surgery opens" are one act the player can see. It only ever goes up: an Age is a
+     * thing a settlement has reached, and a base does not un-reach it by being downgraded.
+     *
+     * @return true when the record changed and its owner must be marked dirty
+     */
+    public boolean setAgeAtLeast(StrategicAge minimum) {
+        if (minimum == null || minimum.ordinal() <= this.age.ordinal()) {
+            return false;
+        }
+
+        this.age = minimum;
+        return true;
+    }
+
     public StrategicPlan getPlan() {
         return plan;
     }

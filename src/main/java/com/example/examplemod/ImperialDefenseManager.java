@@ -8,7 +8,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
@@ -18,6 +17,17 @@ public class ImperialDefenseManager {
     private ImperialDefenseManager() {
     }
 
+    /**
+     * Calls every defender back to the Core.
+     *
+     * <h2>It no longer builds a ring to stand them on</h2>
+     *
+     * Rally used to compute sixteen fixed posts, lay a stone-brick floor under each and carve the
+     * air above it, then pin a soldier there. That was the city builder's idea of a defence line —
+     * and it meant a base wrote blocks into the world every time the player pressed a button.
+     * A simplified base places nothing: the defenders are simply moved to the Core and left loose,
+     * which is how they stand the rest of the time as well.
+     */
     public static int rallyDefenders(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore) {
         BlockPos corePos = commandCore.getBlockPos();
 
@@ -28,28 +38,39 @@ public class ImperialDefenseManager {
         int index = 0;
 
         for (GuardsmanEntity guardsman : guardsmen) {
-            BlockPos defensePost = findDefensePost(corePos, commandCore.getCityLevel(), index);
-
-            prepareDefensePost(serverLevel, corePos, defensePost);
-            guardsman.assignGuardPost(defensePost);
-            moveMobToPost(guardsman, defensePost);
+            guardsman.clearGuardPost();
+            moveMobToPost(guardsman, rallySpot(serverLevel, corePos, index));
 
             affected++;
             index++;
         }
 
         for (SpaceMarineEntity spaceMarine : spaceMarines) {
-            BlockPos defensePost = findDefensePost(corePos, commandCore.getCityLevel(), index);
-
-            prepareDefensePost(serverLevel, corePos, defensePost);
-            spaceMarine.assignGuardPost(defensePost);
-            moveMobToPost(spaceMarine, defensePost);
+            moveMobToPost(spaceMarine, rallySpot(serverLevel, corePos, index));
 
             affected++;
             index++;
         }
 
         return affected;
+    }
+
+    /**
+     * A spot on a small ring around the Core, on whatever ground is already there.
+     *
+     * <p>Read off the heightmap rather than assumed: the point is to gather the garrison, not to
+     * flatten the ground it gathers on.
+     */
+    private static BlockPos rallySpot(ServerLevel serverLevel, BlockPos corePos, int index) {
+        double angle = (Math.PI * 2.0D / 8.0D) * (index % 8);
+        int radius = 4 + (index / 8) * 3;
+
+        BlockPos around = corePos.offset(
+                (int) Math.round(Math.cos(angle) * radius), 0,
+                (int) Math.round(Math.sin(angle) * radius));
+
+        return serverLevel.getHeightmapPos(
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, around);
     }
 
     public static int fortifyDefenders(ServerLevel serverLevel, ImperialCommandCoreBlockEntity commandCore) {
@@ -137,67 +158,8 @@ public class ImperialDefenseManager {
         );
     }
 
-    private static BlockPos findDefensePost(BlockPos corePos, int cityLevel, int index) {
-        int radius = switch (cityLevel) {
-            case 1 -> 5;
-            case 2 -> 8;
-            case 3 -> 11;
-            case 4 -> 15;
-            case 5 -> 20;
-            default -> 8;
-        };
-
-        int positionIndex = index % 16;
-
-        return switch (positionIndex) {
-            case 0 -> corePos.offset(0, 0, radius);
-            case 1 -> corePos.offset(radius, 0, 0);
-            case 2 -> corePos.offset(0, 0, -radius);
-            case 3 -> corePos.offset(-radius, 0, 0);
-
-            case 4 -> corePos.offset(radius, 0, radius);
-            case 5 -> corePos.offset(-radius, 0, radius);
-            case 6 -> corePos.offset(radius, 0, -radius);
-            case 7 -> corePos.offset(-radius, 0, -radius);
-
-            case 8 -> corePos.offset(radius / 2, 0, radius);
-            case 9 -> corePos.offset(-radius / 2, 0, radius);
-            case 10 -> corePos.offset(radius, 0, radius / 2);
-            case 11 -> corePos.offset(radius, 0, -radius / 2);
-
-            case 12 -> corePos.offset(radius / 2, 0, -radius);
-            case 13 -> corePos.offset(-radius / 2, 0, -radius);
-            case 14 -> corePos.offset(-radius, 0, radius / 2);
-            case 15 -> corePos.offset(-radius, 0, -radius / 2);
-
-            default -> corePos.offset(0, 0, radius);
-        };
-    }
-
-    private static void prepareDefensePost(ServerLevel serverLevel, BlockPos corePos, BlockPos defensePost) {
-        if (defensePost.equals(corePos)) {
-            return;
-        }
-
-        BlockPos floor = defensePost.below();
-
-        if (!floor.equals(corePos) && serverLevel.getBlockState(floor).isAir()) {
-            serverLevel.setBlock(floor, Blocks.STONE_BRICKS.defaultBlockState(), 3);
-        }
-
-        clearIfNeeded(serverLevel, corePos, defensePost);
-        clearIfNeeded(serverLevel, corePos, defensePost.above());
-    }
-
-    private static void clearIfNeeded(ServerLevel serverLevel, BlockPos corePos, BlockPos pos) {
-        if (pos.equals(corePos)) {
-            return;
-        }
-
-        if (!serverLevel.getBlockState(pos).isAir()) {
-            serverLevel.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
-        }
-    }
+    // findDefensePost / prepareDefensePost / clearIfNeeded went with the ring they built.
+    // Nothing in a simplified base writes blocks after its founding pad.
 
     private static void moveMobToPost(Mob mob, BlockPos defensePost) {
         double x = defensePost.getX() + 0.5D;

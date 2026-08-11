@@ -81,6 +81,28 @@ public enum OrkClan {
         return values[random.nextInt(values.length)];
     }
 
+    /**
+      * Strict lookup: nothing matched means nothing chosen.
+      *
+      * <p>{@link #fromName} answers GOFFS for anything it does not recognise, which is fine for a
+      * camp reading its own old save and completely wrong for a player's permanent, one-time choice
+      * arriving over the network. A malformed packet must pick no klan at all, not the first one in
+      * the enum.
+      */
+     public static OrkClan fromNameStrict(String name) {
+         if (name == null || name.isEmpty()) {
+             return null;
+         }
+
+         for (OrkClan clan : values()) {
+             if (clan.name().equals(name)) {
+                 return clan;
+             }
+         }
+
+         return null;
+     }
+
     public static OrkClan fromName(String name) {
         if (name == null || name.isEmpty()) {
             return GOFFS;

@@ -77,6 +77,8 @@ public class OrkCampBlockEntity extends BlockEntity {
     private int warPartiesLaunched = 0;
     private boolean warbossSpawned = false;
     private boolean hasSpread = false;
+    // Set while a player-started raid owns this camp; see checkOverrun.
+    private boolean underAssault = false;
     // How far this camp's spores reach, in blocks. Published to WorldWarMapData so the flora
     // decorator knows how much ground to turn Ork.
     private int sporeRadius = 0;
@@ -452,9 +454,23 @@ public class OrkCampBlockEntity extends BlockEntity {
 
     private static final int OVERRUN_MIN_IMPERIALS = 3;
 
-    // True (and razes the camp) when enough Imperial troops have gathered and outnumber the Orks
-    // still defending it — the moment a sortie or expedition takes the camp.
+    /**
+     * True (and razes the camp) when an Imperial force has taken it by weight of numbers.
+     *
+     * <h2>Not while a player-started raid is running</h2>
+     *
+     * {@link #OVERRUN_MIN_IMPERIALS} exists so a lone wandering Guardsman cannot walk a camp down.
+     * That is the right rule for an unattended camp and exactly the wrong one for a raid the player
+     * called: a commander who fights alone would be told the camp cannot fall because they are only
+     * one Imperial. So during an assault this check stands aside entirely and
+     * {@code ImperialAssaultManager} decides — its rule is "the defenders are dead", which a single
+     * player can satisfy.
+     */
     private boolean checkOverrun(ServerLevel serverLevel, BlockPos pos) {
+        if (this.underAssault) {
+            return false;
+        }
+
         int imperials = countFaction(serverLevel, pos, FirstCrusadeFaction.IMPERIUM);
 
         if (imperials < OVERRUN_MIN_IMPERIALS) {
@@ -466,11 +482,77 @@ public class OrkCampBlockEntity extends BlockEntity {
             return false;
         }
 
+        razeCamp(serverLevel, pos);
+        return true;
+    }
+
+    /** Removes the camp from the world and the war map, and tips the war toward the Imperium. */
+    public void razeCamp(ServerLevel serverLevel, BlockPos pos) {
         serverLevel.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
+        WorldWarMapData.get(serverLevel).removeCamp(pos);
+
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel, pos, Component.translatable("msg.firstcrusade.bcast.camp_razed_imperial"));
         WarDominionManager.shift(serverLevel, 6);
-        return true;
+    }
+
+    // ===== player-started raid =====
+
+    /**
+     * Whether a player's raid currently owns this camp.
+     *
+     * <p>Persisted, because the raid record is persisted: a restart mid-assault must find the camp
+     * still marked, or the camp's own overrun rule would quietly take over a fight the assault
+     * manager thinks it is running.
+     */
+    public boolean isUnderAssault() {
+        return this.underAssault;
+    }
+
+    public void setUnderAssault(boolean underAssault) {
+        this.underAssault = underAssault;
+        setChanged();
+    }
+
+    /**
+     * The Orks that count as this camp's defenders: alive, tagged to this camp, inside its ring.
+     *
+     * <p>Tagged to <i>this</i> camp is the important half. A Grot wandering past from a neighbouring
+     * camp, or an Ork the player spawned themselves, is not a defender and must not keep a raid
+     * alive — nor may a marching war party that has already left count as still holding the ground.
+     */
+    public int countLivingDefenders(ServerLevel serverLevel) {
+        BlockPos pos = this.worldPosition;
+
+        return serverLevel.getEntitiesOfClass(
+                Mob.class,
+                garrisonBox(pos),
+                mob -> mob.isAlive()
+                        && isCampOrk(mob, pos)
+                        && FirstCrusadeFactionManager.getFaction(mob) == FirstCrusadeFaction.ORKS
+        ).size();
+    }
+
+    /** The camp's living defenders, so a raid can point its soldiers at them. */
+    public List<Mob> listLivingDefenders(ServerLevel serverLevel) {
+        BlockPos pos = this.worldPosition;
+
+        return serverLevel.getEntitiesOfClass(
+                Mob.class,
+                garrisonBox(pos),
+                mob -> mob.isAlive()
+                        && isCampOrk(mob, pos)
+                        && FirstCrusadeFactionManager.getFaction(mob) == FirstCrusadeFaction.ORKS
+        );
+    }
+
+    /** Turns every defender onto whoever just declared the raid. */
+    public void alertDefenders(ServerLevel serverLevel, net.minecraft.world.entity.LivingEntity threat) {
+        for (Mob defender : listLivingDefenders(serverLevel)) {
+            if (FirstCrusadeFactionManager.canAttack(defender, threat)) {
+                defender.setTarget(threat);
+            }
+        }
     }
 
     // Counts living Orks (any kind) around a point — used to cap the swarm besieging a city.
@@ -678,6 +760,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         tag.putInt("WarPartiesLaunched", this.warPartiesLaunched);
         tag.putBoolean("WarbossSpawned", this.warbossSpawned);
         tag.putBoolean("HasSpread", this.hasSpread);
+        tag.putBoolean("UnderAssault", this.underAssault);
         tag.putInt("SporeRadius", this.sporeRadius);
         tag.putString("Clan", this.clan.name());
 
@@ -699,6 +782,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         this.warPartiesLaunched = tag.getInt("WarPartiesLaunched");
         this.warbossSpawned = tag.getBoolean("WarbossSpawned");
         this.hasSpread = tag.getBoolean("HasSpread");
+        this.underAssault = tag.getBoolean("UnderAssault");
         // "CorruptionRadius" is the old key, kept so camps saved before the sculk system was
         // removed keep the reach they had grown.
         this.sporeRadius = tag.contains("SporeRadius")

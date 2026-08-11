@@ -11,38 +11,51 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Inventory;
 
 public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialCommandCoreMenu> {
-    private static final int TAB_CITY = 0;
-    private static final int TAB_BUILD = 1;
+    // The Build tab is gone with the city builder: there is no structure to raise, no mine to
+    // place and no builder tool to hand out, so a tab of dead buttons would only be a lie about
+    // what the base can do. Its former index is not reserved — the tabs simply renumber.
+    // The Core stopped being a town hall and became an operations room, so the tabs are the
+    // headings a commander actually reads: what the base is, who is in it, what it is doing, what
+    // the Apothecarion is growing, and what the campaign has cost. City/Defense kept their code and
+    // took new names rather than being rewritten — the panels behind them already said the right
+    // things, they were only filed under the wrong words.
+    private static final int TAB_OVERVIEW = 0;
+    private static final int TAB_GARRISON = 1;
     private static final int TAB_MILITARY = 2;
     private static final int TAB_DEFENSE = 3;
-    private static final int TAB_RESOURCES = 4;
-    private static final int TAB_WAR = 5;
+    private static final int TAB_APOTHECARION = 4;
+    private static final int TAB_RECORD = 5;
+    private static final int TAB_RESOURCES = 6;
+    private static final int TAB_WAR = 7;
 
     private static final String[] TAB_KEYS = {
-            "gui.firstcrusade.tab.city",
-            "gui.firstcrusade.tab.build",
+            "gui.firstcrusade.tab.overview",
+            "gui.firstcrusade.tab.garrison",
             "gui.firstcrusade.tab.military",
-            "gui.firstcrusade.tab.defense",
+            "gui.firstcrusade.tab.vox",
+            "gui.firstcrusade.tab.apothecarion",
+            "gui.firstcrusade.tab.record",
             "gui.firstcrusade.tab.resources",
             "gui.firstcrusade.tab.war"
     };
 
-    private int activeTab = TAB_CITY;
+    private int activeTab = TAB_OVERVIEW;
+
+    /**
+     * Tabs that only report, and therefore get the full window width.
+     *
+     * <p>Kept as one predicate rather than repeated at each call site: the background, the text
+     * column and any future scrollbar all have to agree about which tabs are wide, and three copies
+     * of that list is three chances for them to disagree.
+     */
+    private static boolean isReadOnlyTab(int tab) {
+        return tab == TAB_GARRISON || tab == TAB_APOTHECARION || tab == TAB_RECORD;
+    }
 
     // City tab
     private Button upgradeButton;
     private Button governanceButton;
     private Button surveyBorderButton;
-    // Build tab
-    private Button builderToolButton;
-    private Button buildMineButton;
-    private Button buildGoldMineButton;
-    private Button buildScrapYardButton;
-    private Button buildForgeButton;
-    private Button buildRefineryButton;
-    private Button buildFarmButton;
-    private Button buildTradeDepotButton;
-    private Button buildBarracksButton;
     // Military tab
     private Button recruitButton;
     private Button cycleSpecialistButton;
@@ -66,7 +79,11 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
     public ImperialCommandCoreScreen(ImperialCommandCoreMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
 
-        this.imageWidth = 320;
+        // Widened from 320 when the Crusade tabs landed. Eight tabs need 8 + 8*59 = 480, and a
+        // tab narrower than its label is a tab whose label is cut in half — which is what 48px did
+        // to "APOTHECARION" and "Resources". Every panel is positioned from leftPos, so widening
+        // the window moves nothing else.
+        this.imageWidth = 480;
         this.imageHeight = 240;
     }
 
@@ -78,7 +95,9 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         addTabButtons();
 
         switch (this.activeTab) {
-            case TAB_BUILD -> initBuildTab();
+            // Read-only panels. Without these cases they fell through to the City buttons, which
+            // then sat on top of the roster text.
+            case TAB_GARRISON, TAB_APOTHECARION, TAB_RECORD -> { }
             case TAB_MILITARY -> initMilitaryTab();
             case TAB_DEFENSE -> initDefenseTab();
             case TAB_RESOURCES -> initResourcesTab();
@@ -91,15 +110,6 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
     private void clearButtonReferences() {
         this.upgradeButton = null;
-        this.builderToolButton = null;
-        this.buildMineButton = null;
-        this.buildGoldMineButton = null;
-        this.buildScrapYardButton = null;
-        this.buildForgeButton = null;
-        this.buildRefineryButton = null;
-        this.buildFarmButton = null;
-        this.buildTradeDepotButton = null;
-        this.buildBarracksButton = null;
         this.recruitButton = null;
         this.cycleSpecialistButton = null;
         this.promoteSpecialistButton = null;
@@ -120,11 +130,11 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
 
     private void addTabButtons() {
         int tabY = this.topPos + 20;
-        int tabWidth = 48;
+        int tabWidth = 54;
 
         for (int i = 0; i < TAB_KEYS.length; i++) {
             int index = i;
-            int tabX = this.leftPos + 8 + i * 51;
+            int tabX = this.leftPos + 8 + i * 59;
 
             Button tab = this.addRenderableWidget(
                     Button.builder(
@@ -153,14 +163,6 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         this.upgradeButton = addActionButton(buttonX(), buttonY(0), 148, 18, "gui.firstcrusade.button.upgrade_city", ImperialCommandCoreAction.UPGRADE_CITY);
         this.governanceButton = addActionButton(buttonX(), buttonY(1), 148, 18, "gui.firstcrusade.button.appoint_governor", ImperialCommandCoreAction.TOGGLE_GOVERNANCE);
         this.surveyBorderButton = addActionButton(buttonX(), buttonY(2), 148, 18, "gui.firstcrusade.button.survey_border", ImperialCommandCoreAction.SURVEY_BORDER);
-    }
-
-    private void initBuildTab() {
-        // The eight build buttons are replaced by a single tool: the owner takes the Ferramenta de
-        // Construção out of the Core and places structures anywhere within the border, ghost-preview
-        // and all (see CityBuilderToolItem). The build*Button fields stay null on this tab.
-        this.builderToolButton = addActionButton(buttonX(), buttonY(0), 148, 18,
-                "gui.firstcrusade.button.builder_tool", ImperialCommandCoreAction.GIVE_BUILDER_TOOL);
     }
 
     private void initMilitaryTab() {
@@ -230,40 +232,6 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
                 Component.translatable("gui.firstcrusade.tip.survey.title"),
                 Component.translatable("gui.firstcrusade.tip.survey.desc", this.menu.getBuildBorderRadius()),
                 null);
-
-        applyButton(this.buildMineButton, this.menu.getMineCount() < this.menu.getMineCapacity(),
-                Component.translatable("gui.firstcrusade.tip.mine.title"), Component.translatable("gui.firstcrusade.tip.mine.desc"),
-                Component.translatable("gui.firstcrusade.reason.mine_cap"));
-
-        applyButton(this.buildGoldMineButton,
-                this.menu.getCityLevel() >= 2 && this.menu.getGoldMineCount() < this.menu.getGoldMineCapacity(),
-                Component.translatable("gui.firstcrusade.tip.gold_mine.title"), Component.translatable("gui.firstcrusade.tip.gold_mine.desc"),
-                getGoldMineBlockReason());
-
-        applyButton(this.buildScrapYardButton, this.menu.getScrapYardCount() < this.menu.getScrapYardCapacity(),
-                Component.translatable("gui.firstcrusade.tip.scrap_yard.title"), Component.translatable("gui.firstcrusade.tip.scrap_yard.desc"),
-                Component.translatable("gui.firstcrusade.reason.scrap_yard_cap"));
-
-        applyButton(this.buildForgeButton, this.menu.getForgeCount() < this.menu.getForgeCapacity(),
-                Component.translatable("gui.firstcrusade.tip.forge.title"), Component.translatable("gui.firstcrusade.tip.forge.desc"),
-                Component.translatable("gui.firstcrusade.reason.forge_cap"));
-
-        applyButton(this.buildRefineryButton, this.menu.getRefineryCount() < this.menu.getRefineryCapacity(),
-                Component.translatable("gui.firstcrusade.tip.refinery.title"), Component.translatable("gui.firstcrusade.tip.refinery.desc"),
-                Component.translatable("gui.firstcrusade.reason.refinery_cap"));
-
-        applyButton(this.buildFarmButton, this.menu.getFarmCount() < this.menu.getFarmCapacity(),
-                Component.translatable("gui.firstcrusade.tip.farm.title"), Component.translatable("gui.firstcrusade.tip.farm.desc"),
-                Component.translatable("gui.firstcrusade.reason.farm_cap"));
-
-        applyButton(this.buildTradeDepotButton,
-                this.menu.getCityLevel() >= 3 && this.menu.getTradeDepotCount() < this.menu.getTradeDepotCapacity(),
-                Component.translatable("gui.firstcrusade.tip.trade_depot.title"), Component.translatable("gui.firstcrusade.tip.trade_depot.desc"),
-                getTradeDepotBlockReason());
-
-        applyButton(this.buildBarracksButton, this.menu.getBarracksCount() < this.menu.getBarracksCapacity(),
-                Component.translatable("gui.firstcrusade.tip.barracks.title"), Component.translatable("gui.firstcrusade.tip.barracks.desc"),
-                Component.translatable("gui.firstcrusade.reason.barracks_cap"));
 
         applyButton(this.recruitButton, canTrainRecruit(),
                 Component.translatable("gui.firstcrusade.tip.recruit.title"), Component.translatable("gui.firstcrusade.tip.recruit.desc"),
@@ -386,21 +354,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         return null;
     }
 
-    private Component getGoldMineBlockReason() {
-        if (this.menu.getCityLevel() < 2) {
-            return Component.translatable("gui.firstcrusade.reason.req_level_2");
-        }
 
-        return Component.translatable("gui.firstcrusade.reason.gold_mine_cap");
-    }
-
-    private Component getTradeDepotBlockReason() {
-        if (this.menu.getCityLevel() < 3) {
-            return Component.translatable("gui.firstcrusade.reason.req_level_3");
-        }
-
-        return Component.translatable("gui.firstcrusade.reason.trade_depot_cap");
-    }
 
     @Nullable
     private Component getReinforcementBlockReason() {
@@ -449,9 +403,16 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         guiGraphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, 0xEE0B0B0B);
         guiGraphics.fill(x, y, x + this.imageWidth, y + 16, 0xEE3A2A12);
 
-        // Content panels: left info column and right action column.
-        guiGraphics.fill(x + 6, y + 40, x + 152, y + this.imageHeight - 6, 0xAA202020);
-        guiGraphics.fill(x + 156, y + 40, x + this.imageWidth - 6, y + this.imageHeight - 6, 0xAA181818);
+        // Content panels. The split into a narrow info column and a wide action column only earns
+        // its keep on a tab that has actions: the Crusade tabs are read-only, and squeezing their
+        // prose into 146px was what pushed "Status: Unavailable (needs Core level 3)" out through
+        // the divider. Those get the whole width instead.
+        if (isReadOnlyTab(this.activeTab)) {
+            guiGraphics.fill(x + 6, y + 40, x + this.imageWidth - 6, y + this.imageHeight - 6, 0xAA202020);
+        } else {
+            guiGraphics.fill(x + 6, y + 40, x + 152, y + this.imageHeight - 6, 0xAA202020);
+            guiGraphics.fill(x + 156, y + 40, x + this.imageWidth - 6, y + this.imageHeight - 6, 0xAA181818);
+        }
     }
 
     @Override
@@ -459,9 +420,11 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         drawHeader(guiGraphics, "block.firstcrusade.imperial_command_core", 8, 5, 0xFFD6B85A);
 
         switch (this.activeTab) {
-            case TAB_BUILD -> renderBuildInfo(guiGraphics);
+            case TAB_GARRISON -> renderGarrisonInfo(guiGraphics);
             case TAB_MILITARY -> renderMilitaryInfo(guiGraphics);
             case TAB_DEFENSE -> renderDefenseInfo(guiGraphics);
+            case TAB_APOTHECARION -> renderApothecarionInfo(guiGraphics);
+            case TAB_RECORD -> renderRecordInfo(guiGraphics);
             case TAB_RESOURCES -> renderResourcesInfo(guiGraphics);
             case TAB_WAR -> renderWarInfo(guiGraphics);
             default -> renderCityInfo(guiGraphics);
@@ -594,27 +557,6 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         };
     }
 
-    private void renderBuildInfo(GuiGraphics guiGraphics) {
-        int y = 46;
-        drawHeader(guiGraphics, "gui.firstcrusade.section.structures", 12, y, 0xFFFFD27D);
-        y += 13;
-        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.mines", this.menu.getMineCount(), this.menu.getMineCapacity(), this.menu.getMinerCount()), 12, y, 0xFFFFDD77);
-        y += 11;
-        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.gold_mines", this.menu.getGoldMineCount(), this.menu.getGoldMineCapacity(), this.menu.getGoldMinerCount()), 12, y, 0xFFFFE08A);
-        y += 11;
-        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.scrap_yards", this.menu.getScrapYardCount(), this.menu.getScrapYardCapacity(), this.menu.getScrapperCount()), 12, y, 0xFFFFDD77);
-        y += 11;
-        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.forges", this.menu.getForgeCount(), this.menu.getForgeCapacity(), this.menu.getSmithCount()), 12, y, 0xFFFFDD77);
-        y += 11;
-        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.refineries", this.menu.getRefineryCount(), this.menu.getRefineryCapacity(), this.menu.getStokerCount()), 12, y, 0xFFFFDD77);
-        y += 11;
-        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.farms", this.menu.getFarmCount(), this.menu.getFarmCapacity(), this.menu.getFarmerCount()), 12, y, 0xFF9BE07A);
-        y += 11;
-        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.trade_depots", this.menu.getTradeDepotCount(), this.menu.getTradeDepotCapacity(), this.menu.getTraderCount()), 12, y, 0xFF7AE0B0);
-        y += 11;
-        drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.barracks", this.menu.getBarracksCount(), this.menu.getBarracksCapacity(), this.menu.getRecruitsInTraining()), 12, y, 0xFFFFDD77);
-    }
-
     private void renderMilitaryInfo(GuiGraphics guiGraphics) {
         int y = 46;
         drawHeader(guiGraphics, "gui.firstcrusade.section.military", 12, y, 0xFFFFD27D);
@@ -663,6 +605,146 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.crusadium", this.menu.getCrusadium(), cap), 12, y, 0xFFB0C4DE);
         y += 11;
         drawLine(guiGraphics, Component.translatable("gui.firstcrusade.info.food", this.menu.getFood(), cap), 12, y, 0xFFE6D27A);
+    }
+
+    // ==================================================================== the Crusade panels
+
+    /**
+     * The garrison, as people rather than as a number.
+     *
+     * <p>The roster is not in the menu's ContainerData — that carries integers, and this carries
+     * names. It is pulled on demand by {@link com.example.examplemod.crusade.client.CrusadeClientView},
+     * so opening this tab costs one packet and never opening it costs nothing.
+     */
+    private void renderGarrisonInfo(GuiGraphics g) {
+        int y = 46;
+
+        var panel = com.example.examplemod.crusade.client.CrusadeClientView.panelFor(
+                this.menu.getCommandCorePos(), gameTime());
+
+        if (panel == null) {
+            // "Asking" and "empty" must not look the same, or a slow answer reads as a dead base.
+            drawLine(g, Component.translatable("gui.firstcrusade.crusade.awaiting"), 12, y, 0xFF888888);
+            return;
+        }
+
+        drawLine(g, panel.regiment().displayName(), 12, y, 0xFFE0C070);
+        y += 13;
+        drawLine(g, Component.translatable("gui.firstcrusade.crusade.strength",
+                panel.serving(), this.menu.getMilitaryCapacity()), 12, y, 0xFFBBD7FF);
+        y += 11;
+        drawLine(g, Component.translatable("gui.firstcrusade.crusade.losses",
+                panel.totalFallen()), 12, y, 0xFFB05050);
+        y += 14;
+
+        for (var row : panel.roster()) {
+            if (y > this.imageHeight - 24) {
+                break;
+            }
+
+            drawLine(g, soldierTitle(row), 12, y, gradeColour(row.grade()));
+            drawLine(g, Component.literal(row.orkKills() + " Orks  ·  " + row.raids() + " raids  ·  "
+                    + row.serviceDays() + "d"), 162, y, 0xFF9A9A9A);
+            y += 11;
+        }
+    }
+
+    /**
+     * The Apothecarion: infrastructure, not a building.
+     *
+     * <p>Everything here is already synced as integers by the Core menu, so this panel is pure
+     * presentation — it renames a resource counter into a medical readout and says whether the
+     * facility is operational at this Core level.
+     */
+    private void renderApothecarionInfo(GuiGraphics g) {
+        int y = 46;
+        boolean operational = this.menu.getCityLevel() >= APOTHECARION_CORE_LEVEL;
+
+        drawHeader(g, "gui.firstcrusade.apothecarion.header", 12, y, 0xFFFFD27D);
+        y += 13;
+        drawLine(g, Component.translatable(operational
+                        ? "gui.firstcrusade.apothecarion.operational"
+                        : "gui.firstcrusade.apothecarion.unavailable"),
+                12, y, operational ? 0xFF7FD87F : 0xFFB05050);
+        y += 13;
+        drawLine(g, Component.translatable("gui.firstcrusade.apothecarion.stock",
+                this.menu.getEmperorGeneSeed(), this.menu.getEmperorGeneSeedCapacity()),
+                12, y, 0xFFD8C0FF);
+        y += 11;
+        drawLine(g, Component.translatable("gui.firstcrusade.apothecarion.production",
+                this.menu.getDailyGeneProduction()), 12, y, 0xFFBBD7FF);
+        y += 14;
+        drawLine(g, Component.translatable("gui.firstcrusade.apothecarion.hint"), 12, y, 0xFF888888);
+    }
+
+    /** What the campaign has cost: the totals, then the roll of the dead. */
+    private void renderRecordInfo(GuiGraphics g) {
+        int y = 46;
+
+        var panel = com.example.examplemod.crusade.client.CrusadeClientView.panelFor(
+                this.menu.getCommandCorePos(), gameTime());
+
+        drawHeader(g, "gui.firstcrusade.crusade.header", 12, y, 0xFFFFD27D);
+        y += 13;
+
+        if (panel == null) {
+            drawLine(g, Component.translatable("gui.firstcrusade.crusade.awaiting"), 12, y, 0xFF888888);
+            return;
+        }
+
+        drawLine(g, Component.translatable("gui.firstcrusade.crusade.name",
+                panel.crusadeName().isEmpty()
+                        ? Component.translatable("gui.firstcrusade.crusade.unnamed")
+                        : Component.literal(panel.crusadeName())),
+                12, y, 0xFFE0C070);
+        y += 11;
+        drawLine(g, Component.translatable("gui.firstcrusade.crusade.raids_won",
+                this.menu.getOrkRaidVictories(), this.menu.getOrkRaidCount()), 12, y, 0xFFBBD7FF);
+        y += 11;
+        drawLine(g, Component.translatable("gui.firstcrusade.crusade.serving",
+                panel.serving()), 12, y, 0xFFBBD7FF);
+        y += 14;
+
+        drawHeader(g, "gui.firstcrusade.crusade.memorial", 12, y, 0xFFB05050);
+        y += 13;
+
+        for (var row : panel.fallen()) {
+            if (y > this.imageHeight - 24) {
+                break;
+            }
+
+            drawLine(g, soldierTitle(row), 12, y, 0xFF8A8A8A);
+            drawLine(g, Component.translatable(row.fate()), 162, y, 0xFF6A6A6A);
+            y += 11;
+        }
+
+        if (panel.fallen().isEmpty()) {
+            drawLine(g, Component.translatable("gui.firstcrusade.crusade.no_dead"), 12, y, 0xFF7FD87F);
+        }
+    }
+
+    /** The Core level at which the Apothecarion is declared operational. */
+    private static final int APOTHECARION_CORE_LEVEL = 3;
+
+    private Component soldierTitle(com.example.examplemod.crusade.CrusadePanelPacket.Row row) {
+        return Component.translatable("soldier.firstcrusade.full_name",
+                Component.translatable("soldier.firstcrusade.title."
+                        + row.grade().toLowerCase(java.util.Locale.ROOT)),
+                row.name());
+    }
+
+    private static int gradeColour(String grade) {
+        return switch (grade) {
+            case "SERGEANT" -> 0xFFE0C070;
+            case "VETERAN" -> 0xFFD08050;
+            default -> 0xFFDDDDDD;
+        };
+    }
+
+    /** Client game time, used only to rate-limit the panel request. */
+    private long gameTime() {
+        var level = net.minecraft.client.Minecraft.getInstance().level;
+        return level == null ? 0L : level.getGameTime();
     }
 
     private void drawLine(GuiGraphics guiGraphics, String text, int x, int y, int color) {

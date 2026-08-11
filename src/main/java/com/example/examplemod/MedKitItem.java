@@ -46,7 +46,9 @@ public class MedKitItem extends Item {
         );
 
         if (!level.isClientSide) {
-            player.heal(6.0F);
+            // Field Recovery raises this; the helper is the only thing that knows by how much.
+            player.heal(com.example.examplemod.progression.PlayerProgressionCombat
+                    .healAmount(player, 6.0F));
 
             player.addEffect(new MobEffectInstance(
                     MobEffects.REGENERATION,

@@ -31,11 +31,25 @@ import net.minecraft.world.level.block.entity.BlockEntity;
  * Subclasses only add their attributes, weapon, name and their single attack goal (via
  * {@link #registerCombatGoals()}). The rank/chapter machinery is deliberately left to the Guardsman.
  */
-public abstract class AbstractImperialTroopEntity extends PathfinderMob implements LasgunAimingEntity {
+public abstract class AbstractImperialTroopEntity extends PathfinderMob
+        implements LasgunAimingEntity, ImperialTroopVisuals {
     private static final EntityDataAccessor<Integer> LASGUN_COMBAT_POSE = SynchedEntityData.defineId(AbstractImperialTroopEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> LASGUN_COMBAT_TICKS = SynchedEntityData.defineId(AbstractImperialTroopEntity.class, EntityDataSerializers.INT);
+
+    /**
+     * Which individual this soldier is. Synced because the renderer runs on the client, and an int
+     * because seven appearance features in one field is one packet instead of seven.
+     */
+    private static final EntityDataAccessor<Integer> VISUAL_VARIANT = SynchedEntityData.defineId(AbstractImperialTroopEntity.class, EntityDataSerializers.INT);
+
+    /** The NBT key the roll persists under. Named for the mod so it cannot collide with vanilla. */
+    public static final String VISUAL_VARIANT_TAG = "FirstCrusadeVisualVariant";
+
     private BlockPos commandCorePos;
     private BlockPos guardPostPos;
+
+    /** Cached so the renderer's per-frame lookup never touches the registry. */
+    private String appearanceKey;
 
     protected AbstractImperialTroopEntity(EntityType<? extends AbstractImperialTroopEntity> entityType, Level level) {
         super(entityType, level);
@@ -54,6 +68,36 @@ public abstract class AbstractImperialTroopEntity extends PathfinderMob implemen
         super.defineSynchedData();
         this.entityData.define(LASGUN_COMBAT_POSE, LasgunCombatPose.IDLE.ordinal());
         this.entityData.define(LASGUN_COMBAT_TICKS, 0);
+
+        // Rolled here, at the one moment every spawn path passes through — constructors run for
+        // troops created by a barracks, by a raid, by a spawn egg and by /summon alike, and
+        // finalizeSpawn does not. The client rolls its own value for a frame and is immediately
+        // overwritten by the server's; a save then pins it forever in readAdditionalSaveData.
+        this.entityData.define(VISUAL_VARIANT,
+                this.random.nextInt(ImperialTroopAppearance.variantCount(this.appearanceKey())));
+    }
+
+    // ==================================================================== appearance
+
+    @Override
+    public String appearanceKey() {
+        if (this.appearanceKey == null) {
+            net.minecraft.resources.ResourceLocation id =
+                    net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(this.getType());
+            this.appearanceKey = id == null ? ImperialTroopAppearance.FALLBACK_TROOP : id.getPath();
+        }
+
+        return this.appearanceKey;
+    }
+
+    @Override
+    public int getVisualVariant() {
+        return this.entityData.get(VISUAL_VARIANT);
+    }
+
+    /** Used by {@code /fctroop variant} and by any future "this unit was re-kitted" path. */
+    public void setVisualVariant(int variant) {
+        this.entityData.set(VISUAL_VARIANT, Math.max(0, variant));
     }
 
     @Override
@@ -81,11 +125,15 @@ public abstract class AbstractImperialTroopEntity extends PathfinderMob implemen
         // Combat (priority 2) is added by the subclass.
         registerCombatGoals();
 
-        // Return to the assigned patrol post when idle, then idle behaviours.
-        this.goalSelector.addGoal(3, new ImperialTroopGuardPostGoal(this, 1.0D, 3.0D));
+        // Walk back only when genuinely far from the base, then idle. ImperialTroopGuardPostGoal
+        // used to drag the troop onto a rotating waypoint every few seconds; a simplified base has
+        // no patrol ring, so a troop stands where it stands until something is wrong.
+        this.goalSelector.addGoal(3, new LightweightReturnToBaseGoal(this, this::getCommandCorePos,
+                1.0D, SimpleImperialBaseBalance.RETURN_TRIGGER_DISTANCE));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
-        this.goalSelector.addGoal(8, new RandomStrollGoal(this, 0.8D));
+        this.goalSelector.addGoal(8, new RandomStrollGoal(this, 0.8D,
+                SimpleImperialBaseBalance.STROLL_INTERVAL_TICKS));
 
         this.targetSelector.addGoal(1, new FirstCrusadeHurtByTargetGoal(this));
         this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
@@ -166,6 +214,8 @@ public abstract class AbstractImperialTroopEntity extends PathfinderMob implemen
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
 
+        tag.putInt(VISUAL_VARIANT_TAG, this.getVisualVariant());
+
         if (this.commandCorePos != null) {
             tag.putBoolean("HasCommandCore", true);
             tag.putInt("CommandCoreX", this.commandCorePos.getX());
@@ -188,6 +238,13 @@ public abstract class AbstractImperialTroopEntity extends PathfinderMob implemen
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
+
+        // A soldier saved before this system existed has no tag and keeps the value his
+        // constructor rolled, which is then written out on the next save. He looks the same from
+        // that point on — the one thing the appearance must never do is change on relog.
+        if (tag.contains(VISUAL_VARIANT_TAG)) {
+            this.setVisualVariant(tag.getInt(VISUAL_VARIANT_TAG));
+        }
 
         if (tag.getBoolean("HasCommandCore")) {
             this.commandCorePos = new BlockPos(

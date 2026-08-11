@@ -65,6 +65,16 @@ public final class FirstCrusadeNetwork {
                 OrkCampActionPacket::handle
         );
 
+        // The raid key (R). An empty packet on purpose: which camp, which base, how many soldiers
+        // and where they land are all decided on the server, so the press carries nothing to forge.
+        CHANNEL.registerMessage(
+                packetId++,
+                com.example.examplemod.assault.ImperialRaidKeyPacket.class,
+                com.example.examplemod.assault.ImperialRaidKeyPacket::encode,
+                com.example.examplemod.assault.ImperialRaidKeyPacket::decode,
+                com.example.examplemod.assault.ImperialRaidKeyPacket::handle
+        );
+
         // Terminal de navegacao planetaria. Um pacote so, cliente -> servidor: o pedido de
         // viagem. O caminho de volta (estado dos planetas) viaja no buffer do menu quando a tela
         // abre, entao nao existe pacote de sincronizacao para manter nem trafego por tick.
@@ -75,5 +85,68 @@ public final class FirstCrusadeNetwork {
                 com.example.examplemod.planet.PlanetTravelRequestPacket::decode,
                 com.example.examplemod.planet.PlanetTravelRequestPacket::handle
         );
+
+        // Imperial progression. Three packets: one verb from the client (buy a rank, start a
+        // surgery, ascend, use an ability), one private snapshot back to its owner, and one public
+        // stage broadcast — the player's body, which every client in render distance must have or
+        // it will simulate a giant with a human hitbox. The tree itself never travels; both sides
+        // read it from PlayerProgressionTree, which is code, not data.
+        CHANNEL.registerMessage(
+                packetId++,
+                com.example.examplemod.progression.ProgressionActionPacket.class,
+                com.example.examplemod.progression.ProgressionActionPacket::encode,
+                com.example.examplemod.progression.ProgressionActionPacket::decode,
+                com.example.examplemod.progression.ProgressionActionPacket::handle
+        );
+
+        CHANNEL.registerMessage(
+                packetId++,
+                com.example.examplemod.progression.SyncPlayerProgressionPacket.class,
+                com.example.examplemod.progression.SyncPlayerProgressionPacket::encode,
+                com.example.examplemod.progression.SyncPlayerProgressionPacket::decode,
+                com.example.examplemod.progression.SyncPlayerProgressionPacket::handle
+        );
+
+        CHANNEL.registerMessage(
+                packetId++,
+                com.example.examplemod.progression.SyncPlayerStagePacket.class,
+                com.example.examplemod.progression.SyncPlayerStagePacket::encode,
+                com.example.examplemod.progression.SyncPlayerStagePacket::decode,
+                com.example.examplemod.progression.SyncPlayerStagePacket::handle
+        );
+
+        // The Ork Fury bar, on its own. Fury moves on every blow in either direction, and routing it
+        // through the profile packet meant sending both trees, every tally and a body broadcast to
+        // shift a number between 0 and 100. Two fields, to one player, throttled on top.
+        CHANNEL.registerMessage(
+                packetId++,
+                com.example.examplemod.progression.ork.SyncOrkFuryPacket.class,
+                com.example.examplemod.progression.ork.SyncOrkFuryPacket::encode,
+                com.example.examplemod.progression.ork.SyncOrkFuryPacket::decode,
+                com.example.examplemod.progression.ork.SyncOrkFuryPacket::handle
+        );
+
+        // The Crusade panel: one ask from the client when a roster tab opens, one answer back. The
+        // roster is a list of names, which the Core menu's ContainerData cannot carry at all, and
+        // pulling it on demand means a player who never opens the tab never pays for it.
+        CHANNEL.registerMessage(
+                packetId++,
+                com.example.examplemod.crusade.CrusadePanelRequestPacket.class,
+                com.example.examplemod.crusade.CrusadePanelRequestPacket::encode,
+                com.example.examplemod.crusade.CrusadePanelRequestPacket::decode,
+                com.example.examplemod.crusade.CrusadePanelRequestPacket::handle
+        );
+
+        CHANNEL.registerMessage(
+                packetId++,
+                com.example.examplemod.crusade.CrusadePanelPacket.class,
+                com.example.examplemod.crusade.CrusadePanelPacket::encode,
+                com.example.examplemod.crusade.CrusadePanelPacket::decode,
+                com.example.examplemod.crusade.CrusadePanelPacket::handle
+        );
+
+        // Fails loudly at load if the tree is not the shape the design promises.
+        com.example.examplemod.progression.PlayerProgressionTree.validate();
+        com.example.examplemod.progression.ork.PlayerOrkProgressionTree.validate();
     }
 }

@@ -16,7 +16,7 @@ import net.minecraft.world.item.ItemStack;
  * simple-panel pattern as {@link StrategiumMenu}.
  */
 public class OrkCampMenu extends AbstractContainerMenu {
-    private static final int DATA_COUNT = 8;
+    private static final int DATA_COUNT = 10;
 
     private final ContainerData data;
     private final BlockPos campPos;
@@ -31,11 +31,23 @@ public class OrkCampMenu extends AbstractContainerMenu {
     public OrkCampMenu(int containerId, Inventory playerInventory, OrkCampBlockEntity camp) {
         super(FCRegistry.ORK_CAMP_MENU.get(), containerId);
         this.campPos = camp.getBlockPos();
-        this.data = createServerData(camp);
+        this.data = createServerData(camp, playerInventory.player);
         addDataSlots(this.data);
     }
 
-    private ContainerData createServerData(OrkCampBlockEntity camp) {
+    /**
+     * The panel's read-only view of the camp — plus, for the viewer only, whether they are Imperial.
+     *
+     * <p>The client cannot work its own allegiance out: {@code PlayerFactionData} lives on the
+     * server. Rather than teach the client about factions for one button, the server answers the
+     * question once, here, when the menu opens. The button it draws is still only a courtesy —
+     * {@link ImperialCommandCoreActionPacket}'s Ork counterpart re-checks the faction on arrival.
+     */
+    private ContainerData createServerData(OrkCampBlockEntity camp,
+                                           net.minecraft.world.entity.player.Player viewer) {
+        boolean imperial = FirstCrusadeFactionManager.getFaction(viewer)
+                == FirstCrusadeFaction.IMPERIUM;
+
         return new ContainerData() {
             @Override
             public int get(int index) {
@@ -48,6 +60,8 @@ public class OrkCampMenu extends AbstractContainerMenu {
                     case 5 -> camp.getCachedBoyz();
                     case 6 -> camp.getCachedLootPits();
                     case 7 -> camp.getLootPitCost();
+                    case 8 -> imperial ? 1 : 0;
+                    case 9 -> camp.isUnderAssault() ? 1 : 0;
                     default -> 0;
                 };
             }
@@ -99,6 +113,15 @@ public class OrkCampMenu extends AbstractContainerMenu {
 
     public int getLootPitCost() {
         return this.data.get(7);
+    }
+
+    /** Whether the player looking at this panel fights for the Imperium. */
+    public boolean isViewerImperial() {
+        return this.data.get(8) != 0;
+    }
+
+    public boolean isUnderAssault() {
+        return this.data.get(9) != 0;
     }
 
     @Override

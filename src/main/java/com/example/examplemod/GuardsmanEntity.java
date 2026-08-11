@@ -8,6 +8,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.sounds.SoundEvents;
@@ -36,9 +37,24 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-public class GuardsmanEntity extends PathfinderMob implements RangedAttackMob, LasgunAimingEntity {
+public class GuardsmanEntity extends PathfinderMob
+        implements RangedAttackMob, LasgunAimingEntity, ImperialTroopVisuals {
     private static final EntityDataAccessor<Integer> LASGUN_COMBAT_POSE = SynchedEntityData.defineId(GuardsmanEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> LASGUN_COMBAT_TICKS = SynchedEntityData.defineId(GuardsmanEntity.class, EntityDataSerializers.INT);
+
+    /** Which individual this Guardsman is. Rolled once, then his for life. */
+    private static final EntityDataAccessor<Integer> VISUAL_VARIANT = SynchedEntityData.defineId(GuardsmanEntity.class, EntityDataSerializers.INT);
+
+    /**
+     * Which wardrobe his career has earned him.
+     *
+     * <p>Synced separately from the rank itself because the rank is a server-side field with eight
+     * values and a pile of stats attached, while the client needs exactly one thing from it: which
+     * of three texture sets to draw. Sending the whole rank to the client would be sending the
+     * client a promotion system it has no use for.
+     */
+    private static final EntityDataAccessor<Byte> VISUAL_GRADE = SynchedEntityData.defineId(GuardsmanEntity.class, EntityDataSerializers.BYTE);
+
     private BlockPos commandCorePos;
     private BlockPos guardPostPos;
 
@@ -80,6 +96,48 @@ public class GuardsmanEntity extends PathfinderMob implements RangedAttackMob, L
         super.defineSynchedData();
         this.entityData.define(LASGUN_COMBAT_POSE, LasgunCombatPose.IDLE.ordinal());
         this.entityData.define(LASGUN_COMBAT_TICKS, 0);
+
+        // Rolled at the one point every spawn path passes through. See the same note on
+        // AbstractImperialTroopEntity: the client's roll lives for a frame and is then replaced by
+        // the server's, and a save pins it for good.
+        this.entityData.define(VISUAL_VARIANT,
+                this.random.nextInt(ImperialTroopAppearance.variantCount(this.appearanceKey())));
+        this.entityData.define(VISUAL_GRADE, (byte) ImperialTroopGrade.LINE.ordinal());
+    }
+
+    // ==================================================================== appearance
+
+    @Override
+    public String appearanceKey() {
+        return "guardsman";
+    }
+
+    @Override
+    public int getVisualVariant() {
+        return this.entityData.get(VISUAL_VARIANT);
+    }
+
+    public void setVisualVariant(int variant) {
+        this.entityData.set(VISUAL_VARIANT, Math.max(0, variant));
+    }
+
+    @Override
+    public ImperialTroopGrade getVisualGrade() {
+        ImperialTroopGrade[] grades = ImperialTroopGrade.values();
+        int index = this.entityData.get(VISUAL_GRADE);
+        return index >= 0 && index < grades.length ? grades[index] : ImperialTroopGrade.LINE;
+    }
+
+    /**
+     * Pushes the current rank's look onto the wire.
+     *
+     * <p>Called from every place a rank is set. It changes nothing but the picture: the entity is
+     * the same object it was a tick ago, so the UUID, the name, the merit, the Ork tally, the
+     * Command Core and the gear all carry through a promotion untouched.
+     */
+    private void refreshVisualGrade() {
+        this.entityData.set(VISUAL_GRADE,
+                (byte) ImperialTroopGrade.forRank(this.guardsmanRank).ordinal());
     }
 
     @Override
@@ -107,9 +165,15 @@ public class GuardsmanEntity extends PathfinderMob implements RangedAttackMob, L
         this.goalSelector.addGoal(1, new GuardsmanKnifeAttackGoal(this, 1.15D, 4.0D));
         this.goalSelector.addGoal(2, new ImperialLasgunAttackGoal<>(this, 1.0D, 35, 18.0F, 4.0F));
 
-        this.goalSelector.addGoal(4, new GuardsmanGuardPostGoal(this, 1.0D, 8.0D));
+        // Loose around the base, not pinned to a post. GuardsmanGuardPostGoal pulled the soldier to
+        // an exact block that the patrol manager rotated every thirty seconds, so a garrison marched
+        // in circles forever; this goal does nothing at all until the soldier is genuinely far from
+        // home. The stroll's long interval is the other half: standing still is the default.
+        this.goalSelector.addGoal(4, new LightweightReturnToBaseGoal(this, this::getCommandCorePos,
+                1.0D, SimpleImperialBaseBalance.RETURN_TRIGGER_DISTANCE));
 
-        this.goalSelector.addGoal(5, new RandomStrollGoal(this, 0.8D));
+        this.goalSelector.addGoal(5, new RandomStrollGoal(this, 0.8D,
+                SimpleImperialBaseBalance.STROLL_INTERVAL_TICKS));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
 
@@ -236,6 +300,7 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
         }
 
         this.guardsmanRank = startingRank;
+        this.refreshVisualGrade();
         this.cityType = cityType == null ? ImperialCityType.CIVILISED : cityType;
         this.merit = Math.max(this.merit, startingRank.getRequiredMerit());
 
@@ -293,17 +358,51 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
         this.updateRankName();
     }
 
+    /**
+     * Promotes as far as merit — and the base's establishment — allow.
+     *
+     * <p>Merit alone used to decide this, and the result was that every soldier who survived long
+     * enough became a Sergeant and then a Commander. A rank everyone reaches carries no information,
+     * so the base now holds a quota: {@link com.example.examplemod.crusade.ImperialSoldierCareerManager}
+     * answers whether this particular soldier may wear this particular grade at this base right now.
+     * Merit that cannot be spent is not lost — it sits there until a slot opens, which is what makes
+     * a Sergeant's death matter to the man behind him.
+     */
     private void tryPromoteFromMerit() {
         GuardsmanRank nextRank = this.guardsmanRank.getNextRank();
 
         while (nextRank != null && this.merit >= nextRank.getRequiredMerit()) {
+            if (!mayHold(nextRank)) {
+                break;
+            }
+
             this.setRank(nextRank, true);
             nextRank = this.guardsmanRank.getNextRank();
         }
+
+        // Whatever he ended up as, the record follows. A promotion never recreates the soldier: same
+        // entity, same UUID, same name, same tally.
+        if (this.level() instanceof ServerLevel serverLevel && this.commandCorePos != null) {
+            com.example.examplemod.crusade.ImperialSoldierCareerManager.setGrade(
+                    serverLevel, this.commandCorePos, this.getUUID(),
+                    ImperialTroopGrade.forRank(this.guardsmanRank));
+        }
+    }
+
+    /** Whether the base this soldier belongs to has room for him at that rank. */
+    private boolean mayHold(GuardsmanRank rank) {
+        if (!(this.level() instanceof ServerLevel serverLevel) || this.commandCorePos == null) {
+            // Not attached to a base: nobody is keeping an establishment, so the old rule applies.
+            return true;
+        }
+
+        return com.example.examplemod.crusade.ImperialSoldierCareerManager.mayPromoteTo(
+                serverLevel, this.commandCorePos, ImperialTroopGrade.forRank(rank));
     }
 
     public void setRank(GuardsmanRank rank, boolean healToFull) {
         this.guardsmanRank = rank;
+        this.refreshVisualGrade();
 
         this.applyRankStats(healToFull);
         this.updateEquipmentByRank();
@@ -500,6 +599,8 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
 
+        tag.putInt(AbstractImperialTroopEntity.VISUAL_VARIANT_TAG, this.getVisualVariant());
+
         if (this.commandCorePos != null) {
             tag.putBoolean("HasCommandCore", true);
             tag.putInt("CommandCoreX", this.commandCorePos.getX());
@@ -549,6 +650,14 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
         }
 
         this.guardsmanRank = GuardsmanRank.fromName(tag.getString("GuardsmanRank"));
+        this.refreshVisualGrade();
+
+        // Absent on soldiers saved before the appearance system: they keep the roll their
+        // constructor made, and it is written out from the next save on.
+        if (tag.contains(AbstractImperialTroopEntity.VISUAL_VARIANT_TAG)) {
+            this.setVisualVariant(tag.getInt(AbstractImperialTroopEntity.VISUAL_VARIANT_TAG));
+        }
+
         this.chapter = ImperiumChapter.fromName(tag.getString("ImperiumChapter"));
         this.specialization = GuardsmanSpecialization.fromName(tag.getString("Specialization"));
         this.cityType = ImperialCityType.fromName(tag.getString("CityType"));

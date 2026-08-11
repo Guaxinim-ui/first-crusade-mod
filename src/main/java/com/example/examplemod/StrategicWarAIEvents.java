@@ -15,10 +15,25 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+/**
+ * The war's server-tick entry point — now a much quieter one.
+ *
+ * <h2>What stopped running</h2>
+ *
+ * This class used to drive three loops per planet: {@link StrategicConstructionBuilder} every 20
+ * ticks laying blocks for queued city projects, {@link CityMilitaryManager} every 60 mustering
+ * squads and marching them, and the strategic AI every 100 choosing what each city should build
+ * next. All three served the city builder, and none of them is called any more. What is left is a
+ * light bookkeeping pass — sync the war map, keep the Ork side ticking — at a tenth of the old rate.
+ *
+ * <h2>Once every 600 ticks</h2>
+ *
+ * Half a minute. The pass does no per-base entity scan and places no blocks, so its cost is a walk
+ * over two small maps; running it faster would buy nothing.
+ */
 @Mod.EventBusSubscriber(modid = ExampleMod.MODID)
 public final class StrategicWarAIEvents {
-    private static final int STRATEGIC_AI_INTERVAL = 100;
-    private static final int CONSTRUCTION_AI_INTERVAL = 20;
+    private static final int STRATEGIC_AI_INTERVAL = 600;
 
     private StrategicWarAIEvents() {
     }
@@ -48,17 +63,8 @@ public final class StrategicWarAIEvents {
         }
         FactionResearchManager.tick(overworld);
 
-        if (gameTime % CONSTRUCTION_AI_INTERVAL == 0) {
-            StrategicWarAIData data = StrategicWarAIData.get(overworld);
-            StrategicConstructionBuilder.tickConstruction(overworld, data);
-        }
-
-        if (gameTime % CityMilitaryManager.MILITARY_AI_INTERVAL == 0) {
-            CityMilitaryManager.tickAll(overworld);
-        }
-
         if (gameTime % STRATEGIC_AI_INTERVAL == 0) {
-            StrategicWarAIManager.forceStrategicTick(overworld);
+            StrategicWarAIManager.lightStrategicTick(overworld);
         }
     }
 
@@ -114,7 +120,7 @@ public final class StrategicWarAIEvents {
                                         return 0;
                                     }
 
-                                    StrategicWarAIManager.forceStrategicTick(level);
+                                    StrategicWarAIManager.lightStrategicTick(level);
 
                                     source.sendSuccess(
                                             () -> Component.literal("IA estratégica executada manualmente."),
@@ -124,26 +130,8 @@ public final class StrategicWarAIEvents {
                                     return 1;
                                 }))
 
-                        .then(Commands.literal("buildtick")
-                                .executes(context -> {
-                                    CommandSourceStack source = context.getSource();
-                                    ServerLevel level = source.getServer().getLevel(Level.OVERWORLD);
-
-                                    if (level == null) {
-                                        source.sendFailure(Component.literal("Overworld não encontrado."));
-                                        return 0;
-                                    }
-
-                                    StrategicWarAIData data = StrategicWarAIData.get(level);
-                                    StrategicConstructionBuilder.tickConstruction(level, data);
-
-                                    source.sendSuccess(
-                                            () -> Component.literal("Construção estratégica executada manualmente."),
-                                            true
-                                    );
-
-                                    return 1;
-                                }))
+                        // "buildtick" is gone with the construction system it drove. Nothing queues
+                        // city projects any more, so there is nothing to step by hand.
 
                         .then(Commands.literal("reset")
                                 .executes(context -> {

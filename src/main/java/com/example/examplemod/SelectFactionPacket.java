@@ -47,6 +47,12 @@ public class SelectFactionPacket {
             }
 
             data.setFaction(player.getUUID(), packet.faction);
+
+            // Picking a side changes the body: an Ork is 0.70 x 2.05 and a human is 0.60 x 1.80.
+            // recalculate applies the right attribute pass, refreshes the dimensions, makes room if
+            // the new body does not fit, and syncs both the profile and the body to every client
+            // that can see him. Without it the choice only took effect on the next relog.
+            com.example.examplemod.progression.PlayerProgressionManager.recalculate(player);
             player.displayClientMessage(
                     Component.translatable("msg.firstcrusade.faction.chosen", packet.faction.getDisplayName()), false);
         });

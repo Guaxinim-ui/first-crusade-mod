@@ -92,14 +92,17 @@ Dono (`ownerUUID`/`ownerName`), `baseName`, `cityType` (`ImperialCityType`), `ci
 `pendingSpaceMarineCandidateUUID`, `selectedSpecialistOrdinal`, estado de Ork Camp
 (`orkCampSeeded`, `orkCampPos`).
 
-### Tick (server)
-`serverTick` roda **a cada tick**: atribuição do tipo de cidade (se nulo) e crescimento
-populacional. O resto roda a cada **200 ticks** (10s), nesta ordem:
-moral (`ImperialCityMoraleManager.tickMorale`), patrulhas (`ImperialPatrolManager.tickPatrols`),
-gestão de mão de obra (`ImperialWorkforceManager.autoManageWorkforce`), produção diária,
-redução de cooldowns, promoção automática a Space Marine, Custodes (`tickCustodes`),
-mourning do Primarch, Primarch (`tickPrimarch`), seed de Ork Camp (`trySeedOrkCamp`),
-spawn/checagem de Ork Raid.
+### Tick (server) — reduzido em 2026-08-06
+`serverTick` roda **a cada tick** só para atribuir tipo/governador e (quando alguém tem o menu
+aberto) refrescar as contagens da GUI. O resto roda a cada **200 ticks** (10s):
+registro no mapa de guerra, **`SimpleImperialBaseManager.tickBase`** (migração uma vez + reposição
+da guarnição no máximo 1x por minuto), produção diária, redução de cooldowns, aspirantes,
+Custodes, mourning do Primarch, Primarch, seed de Ork Camp, spawn/checagem de Ork Raid.
+
+**Saíram do tick** (chamadas removidas, não desligadas): `ImperialPopulationManager.tickCitizenGrowth`,
+`ImperialCityMoraleManager.tickMorale`, `ImperialPatrolManager.tickPatrols`,
+`ImperialWorkforceManager.autoManageWorkforce` e `tickAutonomousGovernance`
+(`autonomousRecruit`/`autonomousUpgrade`/`autonomousOffensive`).
 
 ### Tabelas por nível de cidade (1 → 5) — VALORES ATUAIS DO CÓDIGO
 
@@ -494,6 +497,41 @@ Score = soma do peso de cada inimigo do Imperium num raio (default 96): **Ork No
 O Core expõe `getLiveThreatScore`/`getLiveThreatLevel`; a GUI mostra colorido. A ameaça é o
 gatilho estratégico (ex.: Primarch só sai em saída se ameaça < Alert).
 
+### 9.5 Progressão do jogador ORK (`progression/ork/`)
+Um jogador que escolhe os Orks joga uma progressão **própria**, sem nada reaproveitado da Imperial:
+não há XP, Pontos de Doutrina, cirurgia, implante nem gene-seed. Detalhe completo em
+`docs/ORK_PLAYER_PROGRESSION.md`; o essencial:
+
+**Três valores, e não se misturam.** `krumpScore` (reputação, nunca gasta, é o que os portões de
+evolução leem), `teef` (a moeda, a única coisa que a árvore custa) e `waaaghFury` (0–100, temporário,
+só o grito consome). ⚠️ O mod tem **três** coisas chamadas WAAAGH — a maré global
+(`WaaaghOverlordData`), o humor local de um camp (`OrkCampBlockEntity`) e a fúria pessoal — e a única
+defesa contra confundi-las é que **nunca compartilham uma classe**. Mesma regra para `teef`:
+`StrategicResourceType.TEEF` é o cofre da IA Ork e não tem relação com o bolso do jogador.
+
+**Árvore com 38 nós**, cinco ramos (BRUTAL/TUFF/DAKKA/KUNNIN/WAAAGH), ranks até **3** (não 5), com
+mapa de ranks próprio dentro do `PlayerProgressionProfile` na tag `Ork`. Evolução **não se compra**:
+os cinco nós de estágio custam zero e são recusados pelo verbo de compra.
+
+**Cinco estágios, e o tamanho é a história:** Boy 2.05 → Big Boy 2.12 → Nob 2.25 → Big Nob 2.38 →
+Warboss 2.60. O Warboss ultrapassa de propósito qualquer silhueta humana do mod (um Space Marine
+para em 2.35). **Consequência a saber:** todos passam de 2.0, e um vão interno padrão tem 2 blocos —
+então de Nob para cima o jogador anda agachado dentro de casa. Isso é o guardião de pose funcionando
+(`PlayerProgressionPose`), não um bug.
+
+**Klan é obrigatório a partir de Nob:** o servidor recusa **qualquer** compra de um Nob sem klan, e a
+tela abre um modal que engole todo clique até escolher. GOFFS/EVIL_SUNZ/SNAKEBITES pagam em atributo,
+BAD_MOONS em dakka e Dentu, DEATHSKULLS em saque. ⚠️ `OrkClan.applyTo` **não** é chamado para
+jogador — aqueles multiplicadores são de mob e são grandes demais.
+
+**Onde entra Dentu no jogo:** botão "GUARDA OS DENTU" no Ork Camp (o servidor conta e remove o
+inventário; o cliente nunca diz quanto), elites krumpados (BIG TEEF) e Core Imperial destruído. Todos
+passam por `PlayerOrkRewardModifiers.scaleTeef`.
+
+**Quatro habilidades** nas teclas H/X/J/Z, mais a tela em K (roteada por facção). Nada roda por tick:
+o grito faz um scan ao apertar, e a única coisa que persiste é a ordem "BOYZ, OVER 'ERE", que guarda
+os Boyz por UUID e re-pathfinda de 40 em 40 ticks.
+
 ---
 
 ## 10. Facções (`FirstCrusadeFaction` / `FirstCrusadeFactionManager`)
@@ -706,3 +744,427 @@ não usar `this`; usar o parâmetro `blockEntity`.
 
 *Última atualização: 2026-06-17 — sincronizado com o estado real do código (Custodes,
 Primarch, Warboss, Ork Camps/Clãs, moral, tipos de cidade, ameaça, patrulhas, workforce).*
+
+---
+
+## 18. Progressão Imperial do jogador (pacote `progression`)
+
+Árvore individual do jogador Imperial, do recruta da Astra Militarum ao Adeptus Astartes. É um
+sistema **separado** do pipeline de aspirantes NPC (`AspirantManager`), que continua intocado: o
+NPC tem 3 estágios de implante no Core; o jogador tem 12 órgãos, 36 habilidades e uma prova.
+
+### Forma da árvore
+50 nós: 1 raiz gratuita + 36 habilidades (5 ranks cada) + 12 implantes + 1 ascensão, em 12 ciclos
+de **3 habilidades → 1 cirurgia**. A regra "não pular implante" **não é código**: as habilidades do
+ciclo N listam o órgão do ciclo N−1 como pré-requisito, e o órgão lista suas três habilidades. Como
+nenhum nó de fora aponta para dentro de um ciclo, não existe caminho que contorne uma cirurgia.
+`PlayerProgressionTree.validate()` roda na carga e falha alto se a contagem sair da forma.
+
+### Arquivos
+- **Dados:** `PlayerEvolutionStage` (17 estágios, cada um dono da própria altura/largura),
+  `PlayerSkillBranch`, `PlayerProgressionEffect`, `PlayerSkillNodeDefinition`,
+  `PlayerEvolutionNodeDefinition`, `PlayerProgressionTree`, `PlayerProgressionBalance`.
+- **Estado:** `PlayerProgressionProfile` (NBT), `PlayerProgressionData` (SavedData no overworld,
+  por UUID — mesma escolha de `PlayerFactionData` e `PlanetUnlockData`).
+- **Regras:** `PlayerProgressionRequirements` (todo veredito carrega o motivo),
+  `PlayerProgressionEquipment` (tabela de gear por estágio).
+- **Efeito:** `PlayerProgressionManager` (agrega tudo numa passada → `Totals`),
+  `PlayerProgressionAttributes` (UUIDs fixos, remove-then-add),
+  `PlayerProgressionSizeManager` (`EntityEvent.Size`, sem Pehkui),
+  `PlayerProgressionAbilityManager`, `PlayerProgressionCombat`, `PlayerProgressionEvents`.
+- **Rede:** `ProgressionActionPacket` (C2S, um verbo em enum) e `SyncPlayerProgressionPacket`
+  (S2C, o perfil em NBT). `PlayerProgressionNetwork` é a única porta.
+- **Cliente:** `progression/client/` — `PlayerProgressionKeys`, `PlayerProgressionScreen`,
+  `PlayerProgressionHud`, `PlayerProgressionClientView`.
+
+### Tamanho do jogador
+De 1,80 a 2,35 blocos, **sem Pehkui**, por `EntityEvent.Size`: o evento é o único gancho que
+alcança hitbox, colisão, altura dos olhos, câmera, sombra, nameplate e as poses de agachar/nadar de
+uma vez. Toda pose é escalada pelo mesmo fator, senão o Astartes encolhe ao agachar. Cirurgia em
+teto baixo não cresce dentro da pedra: `hasHeadroom` recusa antes de gastar gene-seed, e
+`makeRoom` reposiciona.
+
+### Ganho
+XP de progressão só de Ork morto pelo jogador (Gretchin 2 → Warboss 50); aliado, cidadão, animal e
+entidade invocada valem zero. Guarda anti-farm: invocado não conta, mesmo tipo tem teto por janela,
+e morte longe demais não conta. Cada nível dá 1 Ponto de Doutrina.
+
+### Teclas
+`K` árvore · `O` oração · `V` rolamento · `B` glândula de Betcher · `G` estase Sus-an.
+
+### Interface da árvore: ícones e páginas (2026-08-06, segunda passada)
+
+A tela deixou de ser um canvas contínuo com zoom e arrasto. Agora são **6 páginas verticais
+discretas**, cada uma com 2 ciclos completos (3 habilidades → implante → 3 habilidades → implante).
+O scroll do mouse é Page Up/Page Down — uma página por vez, com trava de 160 ms para que um gesto
+de trackpad não atravesse a árvore inteira. `PAGE UP`/`PAGE DOWN` fazem o mesmo. Não existe mais
+`panX`, `panY`, `zoom`, `dragging` nem `mouseDragged`.
+
+A página de abertura é escolhida pelo estado do jogador, nesta ordem: cirurgia em andamento →
+Prova de Sangue (página 6) → implante pronto para ser tomado → nó mais profundo comprado → página 1.
+
+**Ícones:** `PlayerProgressionIcon` (19 entradas) é o único lugar onde caminho de textura aparece;
+`PlayerSkillNodeDefinition.icon()` resolve por campo, com o ícone da categoria como piso — por isso
+uma habilidade nova não precisa de desenho nenhum. Os 12 implantes, a raiz e a ascensão carregam
+ícone próprio, atribuído em `PlayerProgressionTree`. O antigo `PlayerSkillBranch.Glyph`
+(retângulos desenhados em código) foi removido.
+
+**Texturas:** geradas por `tools/generate_progression_icons.py` (Pillow), 40×40 RGBA, fundo
+transparente, sem antialiasing, contorno derivado da própria silhueta. O script possui **apenas**
+`textures/gui/progression/icons/`.
+
+### Layout da árvore: regiões fixas e degraus (2026-08-06, terceira passada)
+
+`ProgressionPageLayout` é um **record de aritmética pura, sem um único tipo do Minecraft** — e é essa
+separação que o torna mensurável: dá para rodá-lo fora do jogo contra toda resolução e GUI scale e
+conferir a resposta. A primeira versão calculava a geometria dentro do `render()`, e o único jeito de
+descobrir que o rodapé estava sendo escrito por cima era olhar.
+
+O tamanho vem em **degraus** (`Tier`), do mais folgado ao mais apertado, e `compute()` devolve o
+primeiro que **cabe**. Um laço que decrementa vãos até acabar o que encolher simplesmente para e
+devolve um layout que não cabe — medido, esse era o caso em 44 de 54 combinações. Os quatro
+primeiros degraus mantêm os tamanhos do briefing (42/52/48/60, piso 36/46/52) e cedem só espaçamento
+e rótulos; os três últimos vão abaixo disso e compactam cabeçalho e rodapé, porque num canvas de
+240 px a alternativa não é "nós menores", é "sem o segundo ciclo".
+
+Três regiões: cabeçalho (64, ou 72 em janela estreita, ou 34 compacto), conteúdo, rodapé (40 ou 26).
+O scissor cobre exatamente o conteúdo e é **desligado antes** de cabeçalho e rodapé — é seguro, não
+o plano: o layout já garante que a última coisa da página termina acima do rodapé
+(`fitsInsideContentArea`).
+
+**Medido:** 54 combinações (1280×720, 1366×768, 1600×900, 1920×1080 × escalas que o jogo oferece ×
+6 páginas), zero falhas.
+
+Sob os nós vai só o essencial: nome curto (`node.firstcrusade.<id>.short`) e rank quando há linha
+para isso; quando não há, **o rank vai para o canto de dentro do nó** — o nome completo fica no
+painel lateral.
+
+### Árvore: rolagem contínua (2026-08-06, quarta passada)
+
+As 6 páginas viraram **uma faixa única rolável**. Motivo: as páginas faziam a árvore parecer seis
+árvores — o leitor tinha de reconstruir o fio a cada quebra, e as emendas precisavam de um marcador
+de entrada no topo e de um "continua" no pé para disfarçar. Esse marcador de entrada era, aliás, o
+que ficava por cima do primeiro nó da linha.
+
+`ProgressionTreeLayout` (aritmética pura, sem tipo do Minecraft) calcula a faixa: 27 linhas
+(raiz + 2 por ciclo + ascensão), `ROW_STEP` 78, altura total 2144. Com rolagem, **altura deixou de
+ser restrição**: os nós ficam fixos em 42/52/48/60 em qualquer resolução, sem degraus de encolhimento.
+
+Rolagem: roda do mouse contínua (26 px por entalhe), `Page Up`/`Page Down` saltam uma janela,
+`Home`/`End` vão às pontas, setas ↑↓ movem devagar, e há barra arrastável à direita.
+
+**Cabeçalho medido antes de desenhar:** os indicadores são quebrados em linhas que cabem no espaço
+à esquerda do painel, e um indicador que não caiba nem sozinho é cortado com reticências. Era isso
+que fazia "Implants: 3/12" sumir na borda direita.
+
+**Medido:** 27 combinações (4 resoluções × escalas do jogo × cabeçalho de 1 a 3 linhas), zero falhas.
+
+
+---
+
+## 19. Base Imperial simplificada (2026-08-06)
+
+O city builder foi retirado de circulação a pedido do dono. Uma base Imperial é agora o espelho do
+acampamento Ork: **um Core, uma laje e alguns soldados soltos**.
+
+### O que deixou de rodar
+| Sistema | Cadência antiga | Estado |
+|---------|-----------------|--------|
+| `StrategicConstructionBuilder.tickConstruction` | 20 ticks | não é mais chamado |
+| `CityMilitaryManager.tickAll` | 60 ticks | não é mais chamado |
+| IA estratégica (construir/atacar/avançar Era) | 100 ticks | removida do manager |
+| `ImperialPatrolManager.tickPatrols` | 200 ticks por Core | não é mais chamado |
+| `ImperialWorkforceManager.autoManageWorkforce` | 200 ticks por Core | não é mais chamado |
+| `ImperialPopulationManager.tickCitizenGrowth` | todo tick por Core | não é mais chamado |
+| `ImperialCityMoraleManager.tickMorale` | 200 ticks por Core | não é mais chamado |
+| governança autônoma do Core | 200 ticks por Core | métodos removidos |
+| `buildCityStructure` + 17 auxiliares | a cada upgrade | classes removidas do Core |
+
+O que sobrou de estratégico roda **1x a cada 600 ticks** (`StrategicWarAIManager.lightStrategicTick`):
+sincroniza o mapa de guerra, paga a renda passiva, tica o lado Ork e resolve captura de cidade —
+essa última **só** para cidades com um camp a menos de 160 blocos, medido pelo mapa, sem varredura
+de entidade nas outras.
+
+### A base
+- Fundação: laje 9x9 (`SimpleImperialBaseManager.foundBase`), quatro postes com lanterna nos cantos
+  e um pouco de tralha. **Escrita uma vez.** Nenhum `setBlock` de base acontece depois disso —
+  inclusive o Rally deixou de erguer o anel de postos que erguia.
+- Guarnição por nível do Core: **4 / 6 / 8 / 10 / 12** (`SimpleImperialBaseBalance`).
+- Reposição: uma olhada a cada **1200 ticks**, no máximo **1 soldado**, e só quando o contador *e*
+  uma varredura local de 32 blocos concordam que falta gente. A varredura **só levanta** o contador
+  (um soldado perseguindo um Ork não é uma baixa); quem o baixa é a morte, em
+  `onAssignedGuardsmanDeath`. Medido: sem essa regra a guarnição ia a 20 num teto de 10.
+- Soldados soltos: `restrictTo(Core, 24)` + `RandomStrollGoal` com intervalo de 140 ticks +
+  `LightweightReturnToBaseGoal` (só age acima de 32 blocos, e não repathiza um caminho válido).
+  `GuardsmanGuardPostGoal`/`ImperialTroopGuardPostGoal` deixaram de ser registrados.
+- Upgrade do Core: só o nível lógico, capacidade, armazenamento e a **Era estratégica**, escrita
+  direto no `StrategicSettlementRecord` (`SimpleImperialBaseBalance.ageForCoreLevel`:
+  1 OUTPOST · 2 FORTIFIED_SETTLEMENT · 3 MANUFACTORUM_AGE · 4 ASTARTES_AGE · 5 PLANETARY_WAR).
+- Migração de save antigo: campo `SimplifiedBaseMigrated` no Core. Na primeira atualização cancela
+  os projetos estratégicos daquela cidade, tira os guard posts, recontagem exata da guarnição e
+  **descarta os `ImperialCitizenEntity` ligados àquele Core** — menos aspirantes, que só perdem o
+  emprego. Muralhas, casas e ruas antigas **continuam no mundo**, apenas paradas.
+
+## 20. Raid iniciada pelo jogador (pacote `assault`, 2026-08-06)
+
+`ImperialAssaultManager` · `ImperialAssaultData` (SavedData) · `ImperialAssaultRecord` ·
+`ImperialAssaultPhase` · `ExpeditionTroopData` · `ImperialAssaultBalance` · `ImperialAssaultEvents` ·
+`ImperialExpeditionTags`.
+
+- **Como começa:** o jogador Imperium abre o Ork Camp e aperta **INICIAR RAID IMPERIAL**
+  (`OrkCampActionPacket.Action.START_IMPERIAL_RAID`). O servidor valida tudo: facção, 8 blocos de
+  distância, o bloco ainda ser um camp, não haver outra raid ali, o jogador não liderar outra, e o
+  cooldown. O botão só é desenhado para quem o servidor disse ser Imperial — e é cortesia, não regra.
+- **Quem atende:** a base elegível mais próxima, tirada do `WorldWarMapData` (nunca varredura de
+  blocos): mesma dimensão, Core válido, com soldados, sem raid Ork ativa, sem outra expedição, e
+  **do jogador ou sem dono** — base de outro jogador nunca é usada.
+- **Quantos:** o maior limite desbloqueado na árvore de Comando (0/3/5/7/10), limitado pelos
+  soldados elegíveis menos **1 que fica em casa**.
+- **Como chegam:** capturam posição/rotação/Core/raio de casa em `ExpeditionTroopData`, ganham as
+  tags de expedição, perdem a coleira de casa e são teleportados a ~**100 blocos** (70 com Inserção
+  Avançada) do lado da base de origem, em grupos de 3, em chão conferido (sólido embaixo, dois
+  blocos livres, sem fluido, nunca a menos de 40 do camp). Depois marcham; alvo novo só quando o
+  atual morre ou a cada 40 ticks.
+- **Vitória:** quando os defensores válidos do camp (Orks *marcados para aquele camp*) acabam, ou o
+  bloco some. Durante a raid o `checkOverrun` do camp fica de lado — a regra dele exige 3 Imperiais,
+  e um comandante sozinho tem que poder vencer. Recompensa uma vez só (flag persistida): camp
+  arrasado, War Dominion, Commander XP, XP de progressão e **contagem para a Prova de Sangue**.
+- **Retorno:** imediato, na próxima atualização do gerente — inclusive quando o jogador vence antes
+  de a tropa chegar. Volta para a posição original se ainda for segura, senão para um anel de 4-12
+  blocos do Core; restaura vínculo e coleira, limpa tags e alvo, **não** restaura guard post.
+- **Abortar:** jogador offline/morto/fora da dimensão/a mais de 256 blocos por 600 ticks, ou 24000
+  ticks de raid. Sem recompensa, tropas voltam, cooldown curto.
+- **Custo em CPU:** `tick` retorna num `isEmpty()` quando não há raid; com raid, 1 atualização a
+  cada 20 ticks e retarget a cada 40. Sem varredura mundial, sem chunk ticket, sem comando de texto.
+- **Comandos:** `/fcassault status | start | victory | abort | return_all | clear_orphans`.
+
+## 21. Comando Imperial (segunda aba da tela K, 2026-08-06)
+
+Moeda **separada** da Doutrina: `Commander XP` → `Commander Level` → `Command Points`. Melhorar o
+comandante nunca atrasa a transformação em Space Marine.
+
+- **Dados:** `PlayerCommanderProfile`, guardado **dentro** de `PlayerProgressionProfile` (tag
+  `Commander`), então viaja no mesmo pacote de sync e é salvo pelo mesmo escritor. `DATA_VERSION`
+  subiu para 2 — save antigo simplesmente não tem a tag e começa do zero.
+- **Árvore (`PlayerCommanderTree`, 9 nós):** Autoridade Imperial (grátis) → Vox de Esquadra (1 PC, 3
+  soldados) → Esquadra Reforçada (2 PC, 5) → Seção de Combate (2 PC, 7, exige 2 vitórias) → Pelotão
+  de Assalto (3 PC, 10, exige 4 vitórias). Ramo tático: Sargento de Campo (1 PC), Vox Prioritário
+  (1 PC, −25% de cooldown), Inserção Avançada (1 PC, 100→70 blocos), Ataque Coordenado (2 PC,
+  Speed I + firmeza por 20s ao chegar).
+- **XP:** 1ª raid 5 · vencer 30 · sem perder ninguém +10 · camp destruído +20 · Nob 4 · Meganob 6 ·
+  Warboss 15 (só durante a própria raid e a menos de 64 blocos do camp). Cada nível dá 1 PC; chegar
+  a ASTRA_VETERAN dá 1 PC inicial, uma vez.
+- **Tela:** duas abas desenhadas no cabeçalho (`ProgressionTab`), scroll e seleção **independentes**,
+  troca sem pacote nenhum. Ícones em `textures/gui/progression/commander/`.
+- **Rede:** `ProgressionActionPacket.Action.COMMAND_UNLOCK` — verbo novo, nunca `UNLOCK` com id de
+  comando, para que um id de comando jamais seja procurado na árvore Astartes.
+- **Comandos:** `/fccommand status [player] | add_xp | add_points | unlock | reset`.
+
+## 22. O corpo do jogador viaja na rede (2026-08-07)
+
+O tamanho do jogador é decidido em `PlayerProgressionSizeManager.onSize`, que roda **nos dois
+lados**: o servidor lê o stage do próprio save, o cliente lê `PlayerProgressionClientView`. Só que
+o mapa `STAGES` do cliente **não tinha produtor** — `putStage` e `clear` existiam sem nenhum
+chamador. O cliente respondia `ASTRA_RECRUIT` para todo mundo e não escalava ninguém, enquanto o
+servidor escalava. Do NEOPHYTE para cima isso era servidor com caixa 0.84×2.30 contra cliente com
+0.60×1.80.
+
+O que uma dessincronia de caixa faz (Forge 47.4.10, fonte decompilada):
+`ServerGamePacketListenerImpl.isPlayerCollidingWithAnythingNew` testa a caixa **do servidor** na
+posição que o cliente pediu; se ela toca um bloco que não tocava antes, o servidor chama
+`teleport(...)`, que seta `awaitingPositionFromClient` **sem log nenhum** (o `moved wrongly!` sai
+por outro ramo e nem roda em creative). E `handleUseItemOn` só age
+`if (this.awaitingPositionFromClient == null && ...)` — ou seja, colocar bloco vira no-op
+silencioso, e bater erra porque a posição do servidor foi puxada de volta. O sintoma que chega ao
+jogador é "não consigo bater em nada nem colocar bloco", sem uma linha de erro em lugar nenhum.
+
+**Como ficou:**
+- `SyncPlayerStagePacket` (UUID + nome do stage) — pacote **público**, separado de
+  `SyncPlayerProgressionPacket`, que continua privado do dono. Duas audiências, dois pacotes.
+- `PlayerProgressionNetwork.sync` manda o stage por `TRACKING_ENTITY_AND_SELF` (todo caminho que
+  muda stage termina em `recalculate`, que termina em `sync`).
+- `PlayerProgressionEvents.onStartTracking` → `syncStageTo`: quem entra na render distance depois
+  também recebe.
+- `progression/client/ClientStageSync`: `putStage` **+ `refreshDimensions()`** — só lembrar não
+  basta, a entidade guarda a caixa que calculou por último. Limpa em
+  `ClientPlayerNetworkEvent.LoggingOut` para o stage não vazar de um mundo para o outro.
+
+**Consequência ainda aberta:** `PlayerEvolutionStage` passa de 2.0 blocos de altura já no
+`IMPLANT_STAGE_4` (2.02) e chega a 2.30 no NEOPHYTE / 2.35 no SPACE_MARINE. Acima de 2.0 o jogador
+não atravessa porta nem corredor de 2 blocos — agora de forma **consistente** (parede, não
+teleporte). É a decisão de design do dono ("escalar só o modelo daria um gigante que passa por
+porta de humano"); o teto, se um dia for querido, mora só em `PlayerEvolutionStage`.
+
+## 23. Identidade visual das tropas Imperiais (2026-08-07)
+
+Nove tropas partilhavam **o mesmo arquivo de textura** (md5 `2524cc91…`). A causa não era falta de
+arte, era o lugar onde a arte era escolhida: cada renderer tinha um `static final ResourceLocation`
+e devolvia o mesmo objeto para toda instância, então acrescentar um PNG novo exigia mexer no
+renderer e ninguém nunca via que dois deles apontavam para o mesmo lugar.
+
+### A geometria que já existia
+As **11** tropas humanoides (Guardsman, Kasrkin, Skitarii Ranger, Sister of Battle, Penal
+Legionnaire, Jungle Fighter, Mine Guard, Feudal Knight, Agri Militia, Enforcer, City Commander)
+constroem o modelo com `ModelLayers.ZOMBIE` — `HumanoidModel.createMesh`, UV humanoide padrão
+64x64, com a camada de chapéu na cabeça. **Uma geometria compartilhada, onze texturas
+independentes**, que é exatamente o arranjo pedido. A camada de chapéu é o sinal de silhueta mais
+forte que o modelo oferece e é usada como tal: opaca e fechada no Kasrkin e no Enforcer, aberta no
+Guardsman, só a copa no Jungle Fighter (bandana) e no Agri (chapéu de palha), ausente no Penal
+(coleira) e na Sister (cabelo).
+
+As duas tropas GeckoLib (`guardsman_rifleman`, `guardsman_sergeant`) têm UV própria 64x128, com
+~22 cubos, lida direto do `.geo.json` pelo gerador. Braços/pernas esquerdo e direito apontam para a
+**mesma UV de propósito** — isso é espelhamento de uniforme, não defeito, e foi mantido.
+Nenhuma UV foi alterada em lugar nenhum.
+
+### As três perguntas
+`ImperialTroopAppearance.texture(troopKey, regiment, variant, grade)`:
+- **troopKey** — o path do registro da entidade, que também é o nome da pasta. Tropa nova não
+  precisa de código: basta a arte e uma linha em `define`.
+- **regiment** — cabeado, com uma entrada hoje (`default`). Um Cadian e um Krieg partilham modelo e
+  UV e diferem só no arquivo que este método devolve.
+- **variant** — qual indivíduo. Sorteado uma vez, persistido.
+- **grade** — `ImperialTroopGrade` (LINE/VETERAN/SERGEANT), **derivado** de `GuardsmanRank`. Oito
+  patentes, três guarda-roupas: oito graus de "um pouco mais enfeitado" não se leem de longe.
+  Derivar em vez de guardar evita uma segunda cópia do mesmo fato, livre para divergir.
+
+Custo: todo `ResourceLocation` é montado no class-load, num array por (tropa, regimento, grade).
+Uma chamada de render é dois lookups e um índice — não fica mais cara com o campo cheio.
+
+Nada renderiza roxo: tropa/regimento/grade desconhecidos caem no Guardsman de linha e avisam no log
+**uma vez** por miss distinto (um renderer roda por entidade por frame).
+
+### Persistência
+A variante é sorteada em `defineSynchedData` — o único ponto por onde **todo** caminho de spawn
+passa (quartel, raid, spawn egg, `/summon`); `finalizeSpawn` não passa. O cliente sorteia o seu por
+um frame e é sobrescrito pelo do servidor; `readAdditionalSaveData` fixa de vez. Save antigo sem a
+tag `FirstCrusadeVisualVariant` mantém o sorteio e passa a gravá-lo — a aparência nunca muda no
+relog.
+
+A promoção muda só a figura: `refreshVisualGrade()` é chamado nos três lugares que atribuem patente
+(`initializeFromCity`, `setRank`, carga do NBT). O soldado é o mesmo objeto — UUID, nome, merit,
+contagem de Orks, Command Core e equipamento atravessam a promoção intactos.
+
+### Arte
+29 PNGs 64x64 em `textures/entity/imperium/<tropa>/` e 8 de 64x128 para as GeckoLib, gerados por
+`tools/generate_troop_textures.py` e `tools/generate_geo_troop_textures.py`. Os geradores são
+**determinísticos** (semente = unidade + variante, nunca o relógio), então rodar de novo não produz
+diff espúrio. Cada tropa é uma receita: paleta, placas, cintos, bolsas, insígnia, desgaste e sujeira
+que se acumula embaixo, não espalhada por igual.
+
+**A arte feita à mão pelo dono foi preservada, não substituída:** `guardsman.png` virou
+`guardsman_3.png` e `kasrkin.png` virou `kasrkin_2.png` (bytes idênticos), no fim do conjunto para
+que uma variante gerada nova não os renumere. `OWNER_AUTHORED` no gerador proíbe sobrescrevê-los.
+
+### `/fctroop` (nível 2)
+`line` põe uma de cada tropa lado a lado — o teste visual inteiro num comando. `spawn <tipo>`,
+`variant <alvo> <n>`, `career <alvo> <patente>` (passa por `setRank`, o mesmo caminho de uma
+promoção real, então o que se confere é o comportamento e não uma prévia dele) e `info <alvo>`, que
+imprime chave, regimento, variante, grade e o PNG que aquilo resolveu.
+
+## 24. Fase 2 da Cruzada: regimentos e soldados persistentes (2026-08-09)
+
+Pacote novo `com.example.examplemod.crusade`. Nenhuma classe aqui tica.
+
+### Onde os dados moram
+`ImperialCrusadeData` (SavedData no overworld) guarda um `ImperialSoldierRoster` por Core, chaveado
+pela posição do Core. **Não** foi para dentro do `ImperialCommandCoreBlockEntity` por duas razões: o
+NBT de um block entity vive no chunk dele, então a ficha só seria legível com aquele chunk carregado
+— e o Registro da Cruzada, o memorial e o Spaceport querem ler bases longe do jogador; e o Core já é
+a classe de 3000 linhas que o projeto tem regra para não inflar. Overworld sempre, mesmo vindo de
+outro planeta: uma Cruzada atravessa planetas.
+
+### O soldado
+`ImperialSoldierRecord` — UUID, nome, regimento, grade, Orks/elites/Warbosses, raids, alistamento,
+queda e destino. **A ficha existe fora da entidade de propósito:** quando o soldado morre a entidade
+some naquele tick, e o único motivo de a campanha ainda saber o nome dele é que isto nunca foi
+guardado nele.
+
+`ImperialSoldierNames` deriva o nome do **UUID**, não sorteia e guarda: custo zero de armazenamento,
+impossível divergir entre cliente e servidor, sobrevive a qualquer mudança de formato. A ficha guarda
+uma cópia porque um morto não tem mais UUID para consultar. Listas originais (40 nomes × 40
+sobrenomes).
+
+### Regimento
+`ImperialRegimentType`: CRUSADE_GENERIC, CADIAN_LINE, CATACHAN_JUNGLE, FORGE_AUXILIA, PENAL. Só os
+que o mod consegue **de fato** montar com tropas registradas — Krieg e Valhallan ficaram de fora
+porque um regimento cujas tropas não existem seria uma mentira contada na UI. Decidido uma vez, na
+fundação (`forCityType`), e governa **quem** preenche as vagas, nunca **quantas**: o teto continua no
+`SimpleImperialBaseBalance`. PENAL é o único sem carreira.
+
+### Carreira
+`ImperialSoldierCareerManager` é o único lugar que promove. O mérito e as patentes continuam no
+`GuardsmanEntity`/`GuardsmanRank` intocados; o que mudou é que `tryPromoteFromMerit` agora pergunta
+se a base **tem vaga**. Cota: 1 Sergeant por 5 soldados, mínimo de 3 na guarnição. Antes, todo
+sobrevivente virava Sergeant e depois Commander — patente que todo mundo alcança não informa nada.
+Mérito que não pode ser gasto **não se perde**: fica esperando abrir vaga, que é o que faz a morte
+de um Sargento importar para o homem atrás dele.
+
+### Alistamento e morte
+`SimpleImperialBaseManager.bindToBase` é o ponto único por onde um soldado entra numa base —
+guarnição de fundação, reforço, migração de save antigo e sobrevivente voltando de raid passam todos
+por ali. Alistar é **idempotente**: veterano que volta para casa não volta recruta.
+
+`CrusadeEvents` usa o `LivingDeathEvent` que já existe — sem listener próprio, sem varredura. Custo
+normal: dois `instanceof`. Escreve **só a ficha**; mérito e patente continuam no caminho antigo
+(`recordOrkKill` no `die()` de cada Ork), então os dois nunca contam duas vezes: a entidade é o que
+ele **pode fazer**, a ficha é o que ele **fez**. Morte é permanente (`markFallen` é guardado) e o
+anúncio em chat só sai para quem tinha feito por merecer — anunciar todo recruta seria spam durante
+uma raid e barataria a única linha que deveria doer.
+
+Memorial limitado a 64 nomes por base (`MAX_REMEMBERED_FALLEN`), mas o **contador** de mortos não é
+truncado — o Registro continua verdadeiro depois que os nomes rolam.
+
+### Fatia 2b: regimento no spawn + visibilidade (2026-08-09)
+
+`spawnGarrisonTroop` (o ponto único que levanta um soldado de guarnição) agora pergunta ao
+**regimento**, não ao tipo de cidade. Regra: `CRUSADE_GENERIC` cai no tema antigo por tipo de
+cidade — é ali que a compatibilidade com bases fundadas antes dos regimentos mora; qualquer
+regimento **nomeado** é autoritativo, e um roll nulo dele significa Guardsman comum. Deixar o tema da
+cidade responder no lugar transformaria silenciosamente todo roll Catachan em Jungle Fighter e
+apagaria justamente a mistura que o roll existe para produzir. O teto de guarnição não é tocado: o
+chamador já conferiu a capacidade antes de chegar aqui.
+
+Visibilidade, enquanto o menu do Core não existe:
+- `/fccrusade roster <core> | fallen <core> | bases` (nível 2, só leitura). Uma ficha que ninguém
+  consegue ver é uma ficha que ninguém percebe estar errada.
+- **Clique direito num soldado** (`SoldierInspectEvents`): quatro linhas no chat — nome com título,
+  regimento, tempo de serviço, Orks/elites/raids, e o estado da guarnição. Sem GUI de propósito
+  (a Parte 21 do briefing permite): um menu custa container, par de pacotes e tela, e interrompe o
+  jogador para mostrar seis números.
+
+## 25. Parte 2 do briefing: o Core como sala de operações (2026-08-10)
+
+O Core deixou de ser prefeitura e virou centro operacional. Oito abas:
+VISÃO GERAL · GUARNIÇÃO · MILITAR · VOX/OPS · APOTHECARION · REGISTRO · RECURSOS · GUERRA.
+
+**City e Defense não foram reescritos — foram renomeados.** Os painéis por trás já diziam as coisas
+certas, só estavam arquivados sob as palavras erradas (City→VISÃO GERAL, Defense→VOX/OPS, que é
+onde reforço, rally e raid já moravam). Reescrever painel que funciona para trocar o título seria
+risco sem ganho.
+
+`imageWidth` foi de 320 para **420**: oito abas a 51px precisam de 416. Tudo é posicionado a partir
+de `leftPos` e o fundo é `fill`, então nada mais se moveu.
+
+### Como a ficha chega ao cliente
+O menu do Core já sincroniza 162 inteiros por `ContainerData` — ferramenta certa para contadores que
+mudam com a tela aberta, e **incapaz de carregar uma string**. A guarnição é uma lista de nomes de
+tamanho variável, então foi para um par de pacotes próprio:
+
+- `CrusadePanelRequestPacket` (C2S) — o cliente **pede** ao abrir GUARNIÇÃO ou REGISTRO. Pull, não
+  push: quem nunca abre a aba nunca paga. O servidor **não confia** na posição que veio do cliente —
+  confere chunk carregado, que o bloco é mesmo um Core, e distância de 64 blocos. Sem isso o pacote
+  seria um jeito de ler qualquer base do mapa de qualquer lugar, que em multiplayer é a guarnição de
+  outro jogador.
+- `CrusadePanelPacket` (S2C) — achatado em `Row`, listas limitadas a 32 (limitadas na escrita **e**
+  na leitura: a contagem vem do fio, e uma malformada deve custar lista truncada, não alocação do
+  tamanho que mandaram). Mortos vêm do mais recente para trás.
+- `client/CrusadeClientView` — **um slot só**, não cache. Um mapa de toda base já aberta ficaria
+  velho no instante em que um soldado morresse em outro lugar, e velho é pior que vazio aqui: painel
+  vazio diz "perguntando", painel velho mente com confiança. Pedido limitado a 1 a cada 40 ticks (a
+  tela redesenha 60x/s e pediria 60x/s). `null` enquanto não chega, e a tela desenha "Abrindo
+  vox-link..." — base sem soldados e base que ainda não respondeu não podem parecer a mesma coisa.
+
+### Apothecarion
+Painel de apresentação puro: os números já vinham como inteiros no menu. Operacional a partir do
+Core nível 3, nada construído fisicamente. As cirurgias continuam na árvore de Ascensão (K).

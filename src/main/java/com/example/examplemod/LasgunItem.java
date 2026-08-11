@@ -29,7 +29,9 @@ public class LasgunItem extends Item {
             return InteractionResultHolder.fail(lasgun);
         }
 
-        player.getCooldowns().addCooldown(this, 16);
+        // Fire Discipline shortens this; the helper is the only thing that knows by how much.
+        player.getCooldowns().addCooldown(this,
+                com.example.examplemod.progression.PlayerProgressionCombat.cooldownTicks(player, 16));
         player.awardStat(Stats.ITEM_USED.get(this));
 
         level.playSound(

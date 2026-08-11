@@ -8,7 +8,7 @@
 > mudanças grandes, **verifique o estado real** com `git log --oneline -8`, `git status` e um
 > `Glob` em `src/main/java/com/example/examplemod/*.java` — não confie só neste arquivo.
 
-Última atualização: **2026-07-02** · branch `main` · remoto `github.com/Guaxinim-ui/first-crusade-mod`
+Última atualização: **2026-08-11** · branch `main` · remoto `github.com/Guaxinim-ui/first-crusade-mod`
 
 ---
 
@@ -132,34 +132,164 @@ Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que conclu
 
 ### >>> HANDOFF / PRÓXIMO PASSO (retomar aqui após o /clear) <<<
 
-**🏰 FASE F — VILAS VIVAS (nova, pedido do dono 2026-06-20):** o mundo deve ter **vilas reais**
-com o **Core = castelo central**, **muralha em volta da vila toda** que **cresce** (mais casas+camas)
-conforme a cidade evolui; **cidadãos dormem em camas → nascem crianças**; e **só crianças escolhidas**
-viram aspirantes → estágios de **implante de órgãos** + **teste em batalha** → Space Marine.
-Plano em 3 fatias:
-- **F1 — Vila real (FEITO, NÃO testado em jogo):** já existia `buildCityStructure` (fundação +
-  muralha em volta + torres de canto + casas + estrada + torre central, escalando por nível
-  `getCityStructureRadius` 4/8/12/18/26 e `getCityWallHeight` 1/3/5/7/9), mas só rodava no **upgrade**
-  do jogador e as casas **não tinham cama**. Agora: (1) `buildSimpleHouse` ganha **camas** (`RED_BED`
-  foot+head, 1 por casa / 2 se largura≥6) + lampião interno; (2) novo `buildAutonomousVillage()`
-  público no Core (sobe a cidade pro nível 3 e chama `buildCityStructure`); (3) o **seeder B5**
-  (`WorldSettlementSeeder.foundCity`) agora coloca o Core e chama `buildAutonomousVillage` — cidades
-  do mundo nascem como **vila murada nível 3** (castelo central + muralha + 2 casas com cama), em vez
-  da plaza simples. A muralha do jogador **já cresce** ao dar upgrade (plate). Build/jar OK.
-- **F2 — dormir → filhos (PRÓXIMO):** `ImperialCitizenEntity` precisa de goal de **dormir** (achar
-  cama livre/POI `home` à noite, deitar) e o nascimento em `ImperialPopulationManager.tickCitizenGrowth`
-  passar a exigir **cama livre + comida + 2 adultos** em vez de só timer+capacidade. Camas já são
-  colocadas em F1 (registram POI). Spawnar **criança** (citizen com flag baby/idade) que cresce.
-- **F3 — aspirante → Space Marine:** só **algumas crianças** marcadas como aspirantes; pipeline com
-  estágios de implante (reusar a maturação do Neófito em `SpaceMarineEntity`) + **teste em batalha**
-  antes de virar SM. Hoje é Guardsman→SM direto (`processAutomaticSpaceMarinePromotion` +
-  `SpaceMarineUpgradeManager`). Repensar como child→aspirante→neófito(implantes)→prova→Space Marine.
+**🎨 IDENTIDADE VISUAL DAS TROPAS IMPERIAIS (2026-08-07).** Nove texturas eram **o mesmo arquivo**
+(md5 `2524cc91…`): agri_militia, city_commander, enforcer, feudal_knight, jungle_fighter,
+mine_guard, penal_legionnaire, sister_of_battle, skitarii_ranger. Cada renderer guardava um
+`static final ResourceLocation` e devolvia o mesmo para toda instância — por isso ninguém percebeu.
 
-**>>> AÇÃO IMEDIATA F1:** dono testa em **MUNDO NOVO** (git pull + da run): as 3 cidades do mundo
-nasceram como **vila murada** (muralha gótica em volta, Core no centro, casas COM cama)? ficou bom o
-visual/escala? deu erro (ler `run/logs/latest.log`)? Tunável: nível inicial em `AUTONOMOUS_VILLAGE_LEVEL`
-(3) e geometria em `getCityStructureRadius`/`getCityWallHeight`/posições de casa em `buildCityStructure`.
-Depois OK do dono, seguir pra **F2 (dormir→filhos)**.
+**Geometria (medida, não chutada):** as **11** tropas humanoides usam `ModelLayers.ZOMBIE`, ou seja
+`HumanoidModel.createMesh` — UV humanoide padrão 64x64 com camada de chapéu na cabeça. Uma
+geometria, onze unidades. As duas tropas GeckoLib (`guardsman_rifleman`, `guardsman_sergeant`) têm
+UV própria 64x128 lida do `.geo.json`. Nenhuma UV foi alterada; o espelhamento de braços/pernas nos
+modelos GeckoLib é proposital e foi mantido.
+
+**Arquitetura:** `ImperialTroopAppearance.texture(tipo, regimento, variante, grade)` — todo
+`ResourceLocation` é construído no class-load, então uma chamada de render é dois lookups e um
+índice. `ImperialTroopVisuals` é a única coisa que o renderer pode perguntar. `ImperialTroopGrade`
+(LINE/VETERAN/SERGEANT) é **derivado** de `GuardsmanRank`, nunca guardado — promover é um campo
+mudando na entidade que já existe: mesmo UUID, nome, merit e contagem de Orks. Regimento está
+cabeado com uma entrada (`default`); quando houver arte Cadian/Krieg é uma linha em `define`.
+Fallback para o Guardsman com aviso **uma vez** por miss (renderer roda por frame).
+
+**Variante:** sorteada em `defineSynchedData` (o único ponto por onde todo caminho de spawn passa —
+`finalizeSpawn` não), sincronizada num int, persistida em `FirstCrusadeVisualVariant`. Save antigo
+sem a tag mantém o sorteio e passa a gravá-lo: a aparência nunca muda no relog.
+
+**29 PNGs 64x64** em `textures/entity/imperium/<tropa>/` + **8 de 64x128** para as GeckoLib.
+Gerados por `tools/generate_troop_textures.py` e `tools/generate_geo_troop_textures.py`
+(determinísticos — rodar de novo dá bytes idênticos). **A arte feita à mão pelo dono foi
+preservada**: `guardsman.png` virou `guardsman_3.png` e `kasrkin.png` virou `kasrkin_2.png`, e o
+gerador tem uma trava (`OWNER_AUTHORED`) que proíbe sobrescrevê-las.
+
+**Conferido por script:** 29 declarados no Java = 29 no disco, 0 faltando, 0 órfãos, 0 fora de
+64x64. Build verde.
+
+**>>> FALTA VER EM JOGO (é o que fecha esta fase):** `/fctroop line` põe uma de cada tropa lado a
+lado. Olhar e responder: dá para distinguir todas sem ler o nome? `/fctroop career <alvo> SERGEANT`
+troca a aparência sem recriar o soldado; `/fctroop variant` e `/fctroop info` mostram qual PNG cada
+um resolveu. Nada disso foi visto em jogo ainda — só o build e a conferência de arquivos.
+
+**🐛 BUG "não consigo bater em nada nem colocar bloco" — CAUSA ACHADA E CORRIGIDA (2026-08-07).**
+
+Não era gamemode, nem evento de bloco cancelado, nem servidor órfão. Era **dessincronia do corpo
+do jogador**: `PlayerProgressionClientView.putStage(...)` **nunca era chamado por ninguém** (nem
+`clear()`). Com o mapa `STAGES` sempre vazio, `PlayerProgressionSizeManager.onSize` **no cliente**
+lia `ASTRA_RECRUIT` e voltava sem escalar, enquanto o **servidor** escalava de verdade. Do NEOPHYTE
+para cima o servidor movia uma caixa de **0.84 × 2.30** e o cliente uma de **0.60 × 1.80**.
+
+Consequência, verificada na fonte decompilada do Forge 47.4.10 (não é teoria):
+`ServerGamePacketListenerImpl.isPlayerCollidingWithAnythingNew` usa a caixa **do servidor**; quando
+o cliente (magro) anda para perto de um bloco que a caixa gorda do servidor não aceita, o servidor
+chama `teleport(...)`, que seta **`awaitingPositionFromClient`** — **sem escrever nada no log**
+(o "moved wrongly!" só sai fora do creative e por outro caminho). E `handleUseItemOn` começa com
+`if (this.awaitingPositionFromClient == null && ...)`: **toda colocação de bloco é descartada em
+silêncio** enquanto isso, e o ataque erra porque a posição do servidor foi puxada para trás.
+
+**Correção (compila, `build` verde):** novo pacote público `SyncPlayerStagePacket` (UUID + stage),
+enviado em `PlayerProgressionNetwork.sync` por `TRACKING_ENTITY_AND_SELF` e em
+`PlayerEvent.StartTracking` (`syncStageTo`); cliente aplica em `progression/client/ClientStageSync`,
+que faz `putStage` **e `refreshDimensions()`** (só lembrar não basta — a entidade guarda a caixa que
+calculou por último) e limpa tudo em `ClientPlayerNetworkEvent.LoggingOut`.
+
+**SEGUNDA CAUSA, achada depois (2026-08-07, "abaixo e levanto e fico num bloco invisível"):**
+não era o sync, era a **altura acima de 2.0**. `Player.updatePlayerPose` pergunta
+`canEnterPose(STANDING)` → `getBoundingBoxForPose` → `getDimensions(pose)`, e **o size event do
+Forge não roda nesse caminho** (só dentro de `refreshDimensions`). Então o jogo decide se o jogador
+cabe em pé usando a caixa **vanilla 0.60x1.80**, aprova, levanta — e só aí a caixa real de 2.30
+aparece dentro do bloco do teto. A colisão resolve para cima, e ele fica um bloco acima apoiado em
+nada. Repetir agachar/levantar sobe indefinidamente = "voando". O ramo de push-out do
+`Entity.refreshDimensions` que existiria para isso termina em `&& !(this instanceof Player)` —
+jogador está excluído, ninguém socorre.
+
+**Correção (2ª tentativa, a que ficou — dono pediu explicitamente para NÃO encolher):** nada é
+limitado. O corpo continua 2.30 e o Astartes continua não passando por porta de humano. Quem
+resolve é `PlayerProgressionPose`: no `TickEvent.Phase.START` (que o Forge dispara na **primeira
+linha** de `Player.tick()`, antes de `updatePlayerPose()` ler o campo no mesmo tick, nos **dois
+lados**) ele faz a pergunta que o vanilla queria fazer — "cabe em pé?" — contra a caixa **escalada**,
+e quando não cabe crava a pose com `Player#setForcedPose`. O jogador simplesmente **fica agachado
+até ter espaço**, que é o que o vanilla já faz com qualquer um debaixo de uma laje. Nunca é levantado
+para dentro da pedra, então não existe sobreposição para ejetar. Se nem agachado couber, vai para
+`SWIMMING` (rastejar), o último recurso do próprio vanilla. `release()` só limpa poses que esta
+classe crava (CROUCHING/SWIMMING) — pose forçada por outro mod não é pisada.
+
+Custo: um `noCollision` por jogador por tick no caso comum, e retorno imediato para quem ainda é
+`ASTRA_RECRUIT`. Build verde.
+
+**Tentativa descartada:** houve um teto de 1.99/0.98 no size event. Funcionava, mas matava o
+gigante; o dono mandou manter grande. Foi revertido — não reintroduzir.
+
+**Boneco grande (feito logo depois, a pedido do dono):** escalar dimensões **não** deixa o jogador
+visualmente maior — `PlayerRenderer` desenha o modelo num scale fixo de 0.9375 e nunca consulta as
+dimensões da entidade. Antes disso o Neófito ocupava 2.30, não passava pela porta, via o mundo da
+altura de um Astartes... e era desenhado do tamanho de um Guardsman.
+`progression/client/PlayerProgressionRenderScale` escala o modelo no `PoseStack`:
+`RenderPlayerEvent.Pre` (prioridade LOWEST, para que todo cancelamento já tenha acontecido — se
+alguém cancelar depois do push, o `Post` não roda e a matriz vaza para o resto do frame, que
+aparece como o mundo inteiro tortando) e `Post` (HIGHEST). Escala **uniforme** pela razão de
+**altura**; usar a razão de largura em X/Z esticaria o modelo em vez de aumentá-lo. `scale()`
+multiplica em torno da origem, que no render de entidade são **os pés**, então o boneco cresce para
+cima sem translate.
+
+**Dois artefatos cosméticos previstos, não vistos em jogo:** (1) o nameplate usa
+`getBbHeight() + 0.5` e depois é escalado junto, então flutua ~0.8 bloco alto demais e maior — só
+visível em F5/multiplayer, nunca no próprio jogador; (2) o boneco da tela de inventário também
+passa pelo `RenderPlayerEvent` e pode transbordar o quadro. Se incomodar, é aqui que se mexe.
+
+**Como o bug foi achado (para repetir):** NBT do save lido direto com um leitor Python de 60 linhas —
+`run/saves/<mundo>/playerdata/*.dat` (gamemode, abilities, atributos) e
+`run/saves/<mundo>/data/firstcrusade_player_progression.dat` (stage/ranks/implantes). Foi o que
+mostrou `playerGameType=0`, `mayBuild=1` e `Stage=NEOPHYTE` — descartando as hipóteses fáceis.
+
+---
+
+**⚔️ BASE SIMPLIFICADA + RAID DO JOGADOR + COMANDO IMPERIAL (2026-08-06, pedido do dono).**
+O city builder inteiro saiu de circulação. A base Imperial virou o espelho do acampamento Ork:
+um Core, uma laje 9x9 escrita uma única vez, quatro soldados soltos. O jogador agora **declara**
+a guerra em vez de assistir a ela: interage com o Ork Camp, aperta INICIAR RAID IMPERIAL, e a
+base Imperial elegível mais próxima manda o que a árvore de Comando permitir.
+
+**O que parou de rodar** (nada disso está escondido; as chamadas foram removidas, não desligadas):
+`StrategicConstructionBuilder.tickConstruction` (era 20 em 20 ticks), `CityMilitaryManager.tickAll`
+(60), a IA estratégica de construção/ataque (100), `ImperialPatrolManager.tickPatrols`,
+`ImperialWorkforceManager.autoManageWorkforce`, `ImperialPopulationManager.tickCitizenGrowth`,
+`ImperialCityMoraleManager.tickMorale` e toda a governança autônoma do Core. O tick estratégico que
+sobrou roda **1x a cada 600 ticks** e só faz contabilidade (sincronizar mapa, renda passiva, lado
+Ork, e a checagem de captura **apenas** para cidades com camp a menos de 160 blocos).
+
+**Medido em servidor dedicado** (mundo `fctest_assault`, RCON): base nova = 1 Core + 4 tropas +
+0 cidadãos + 0 obras estratégicas; raid iniciada pelo comando devolveu `ACTIVE | defensores 14`;
+com Esquadra Reforçada saíram **5 tropas reais** (contagem global de tropas não mudou: 20 antes,
+20 depois — nada foi duplicado); ao matar os defensores a vitória disparou sozinha, o bloco do camp
+sumiu, o comandante subiu para nível 1 (+1 Ponto de Comando) e os **5 sobreviventes voltaram** para
+a base. Tela K conferida por screenshot nas duas abas.
+
+**Dois bugs achados pela medição e corrigidos:**
+1. A guarnição crescia sem parar (20 tropas num teto de 10). A varredura de reconciliação de 32
+   blocos não enxerga um soldado perseguindo um Ork, e o código tratava isso como baixa: o contador
+   caía e a base recrutava de novo. Agora a varredura **só levanta** o contador; a morte já o baixa,
+   uma vez, em `onAssignedGuardsmanDeath`. O recount exato existe num único momento — a migração.
+2. O painel lateral da tela K escrevia por cima do próprio botão e do rodapé em GUI scale 3.
+   Agora há um teto (`panelTextLimit`) e a descrição é a primeira coisa a ser cortada; custo e
+   requisito vêm antes dela.
+
+**>>> AÇÃO IMEDIATA:** dono testa em **mundo novo** (git pull + da run):
+1. As bases do mundo nascem só com Core + laje + 4 soldados? Nenhuma casa/muralha/cidadão?
+2. Os soldados ficam soltos perto do Core sem marchar em círculo?
+3. No Ork Camp aparece o botão **INICIAR RAID IMPERIAL** (vermelho/dourado) para jogador Imperium?
+4. Tecla K: as abas ASCENSÃO ASTARTES / COMANDO IMPERIAL trocam sem perder scroll?
+5. Um save antigo carrega, mantém as construções antigas paradas e some com os cidadãos do Core?
+
+Tunáveis num arquivo só cada: `SimpleImperialBaseBalance` (guarnição/raio/laje),
+`ImperialAssaultBalance` (cadência/aproximação/abort), `PlayerCommanderBalance` (XP/pontos/limites).
+
+---
+
+#### Histórico: FASE F — VILAS VIVAS (SUPERSEDIDA em 2026-08-06)
+
+A Fase F (vila murada crescendo, cidadãos dormindo, filhos, aspirantes) foi **substituída** pela
+base simplificada. `buildCityStructure` e seus dezessete auxiliares foram removidos; a vila murada
+de saves antigos **continua no mundo**, apenas parada. O pipeline de aspirantes (`AspirantManager`)
+segue intocado, e a migração preserva qualquer aspirante em cirurgia.
 
 
 **Estado geral (tudo compilando, em origin/main):**
@@ -247,6 +377,71 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 - Mensagens de commit em pt-BR, terminar com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
 ## 7. Changelog (mais recente no topo)
+
+- 2026-08-11: **Progressão ORK do jogador terminada (Fases B, C, D)** — pacote `progression/ork/`,
+  **38 nós** (o número 34 em qualquer comentário antigo está errado). Ver
+  `docs/ORK_PLAYER_PROGRESSION.md` para o detalhe.
+  - **Fase B — todo nó faz alguma coisa.** Regra: nó que não faz nada não pode cobrar Dentu. Dois
+    helpers centrais: `PlayerOrkCombatModifiers` (dakka, melee, redução, fúria — responde nos **dois
+    lados**, porque o cooldown de arma é aplicado no cliente também) e `PlayerOrkRewardModifiers`
+    (Dentu e loot, só servidor). `ShootaItem` perdeu suas três constantes e **pergunta**.
+    `PlayerOrkWorldEvents` liga a destruição do Core Imperial (`BlockEvent.BreakEvent`, prioridade
+    `LOWEST`, recusa evento cancelado e criativo) a Krumpagem/Dentu/vitória — `countCoreDestroyed()` e
+    `countMajorVictory()` **não tinham chamador nenhum** e o portão do Warboss pede duas vitórias, ou
+    seja, Warboss era inalcançável sem comando. É também o único caminho do jogador até o WAAAGH
+    global (`WaaaghOverlordManager.contributeFromGreenskinVictory`); golpe e kill nunca tocam a maré.
+  - **Fase C — quatro habilidades** (`PlayerOrkAbility` + `PlayerOrkAbilityManager`): 'EADBUTT,
+    WAAAAAAAAAGH!, I'Z DA BOSS e a investida. Clip contra bloco antes de procurar entidade; a
+    investida testa a caixa de destino e **recusa** em vez de clipar; nenhuma adiciona velocidade
+    vertical. O grito exige a barra cheia e faz **um** scan. A ordem sem alvo cai em BOYZ, OVER 'ERE,
+    que captura os Boyz **por UUID** e re-pathfinda de 40 em 40 ticks, saindo na primeira linha
+    quando ninguém gritou. Teclas **H, X, J, Z** (K/O/V/B/G/R já tinham dono), só enviam se `isOrk()`.
+  - **Fase C — a Fúria parou de mandar o perfil inteiro.** Ela se move a cada golpe dado e recebido e
+    cada ganho terminava em `PlayerProgressionNetwork.sync()` — os dois ramos, todas as contagens e o
+    corpo transmitido para todo cliente que enxerga o jogador, **por espadada**. Agora é o
+    `SyncOrkFuryPacket`: dois campos, um jogador, no máximo a cada 10 ticks. Carrega o par
+    (valor, gameTime), não o valor, porque a decadência é aritmética sobre "quanto tinha e quando".
+    `isValidFuryTarget` reaproveita `krumpFor(...) > 0` (uma definição de "isso foi briga", não duas)
+    e `isValidFurySource` exige atacante vivo — cacto, lava e queda não enchem mais a barra.
+  - **Fase D — tela própria** (`progression/ork/client/`): `PlayerOrkProgressionScreen` +
+    `PlayerOrkTreeLayout`, **fora** da `PlayerProgressionScreen`. Cinco páginas discretas (a árvore
+    Ork é travada por tamanho, então a quebra por degrau é a forma da coisa), roda = 1 página por
+    entalhe com trava de 150 ms, sem zoom/arrasto/rolagem. 19 ícones de
+    `tools/generate_ork_progression_icons.py`. Portão de evolução aparece como **checklist**, nunca
+    como preço; o checklist e a recusa do servidor leem a mesma tabela (`...Requirements.Gate`) e o
+    cinza dos nós vem do mesmo `checkBuyRules` que o servidor usa. Conferida em jogo.
+  - **Armadilha de render que vale para qualquer tela:** `GuiGraphics` **não desenha texto quando
+    mandado** — enfileira e esvazia por tipo de render no fim do quadro, então o rótulo da árvore sai
+    *depois* de qualquer `fill`, por mais tarde que ele seja pintado. `flush()` explícito **não
+    resolve**; **scissor resolve**, porque `applyScissor` esvazia e só então recorta. Modal que engole
+    todo clique também não deve desenhar nada atrás de si.
+
+- 2026-08-11: **Voo ao crescer corrigido de vez** (`PlayerProgressionSizeManager.refresh`). O teste
+  era "a caixa está encostando em alguma coisa". Todo corpo do mod passa de 2.0 de altura e um vão
+  interno padrão tem 2 blocos, então quem crescia dentro de casa sempre tinha alguns centímetros de
+  couro cabeludo no teto — e isso contava. `makeRoom` então **teleportava o jogador um bloco para
+  cima**, atravessando o piso de cima, por um encostar de 5 cm. Nunca foi a física ejetando; era o
+  mod decidindo que ele precisava de resgate. Agora só age quando **nenhuma pose cabe**
+  (`PlayerProgressionPose.anyPoseFits`) — estar debaixo de algo não é estar preso dentro de algo.
+  Medido: Big Nob (0.92x2.38) emparedado em vão de 2 blocos, **144 amostras com `y=86.0` constante**,
+  `forced=CROUCHING`, `eyeY=87.68` sob teto em 88.0 — sem teleporte e sem sufocar.
+
+- 2026-08-06: **Base Imperial simplificada, raid iniciada pelo jogador, aba de Comando Imperial.**
+  Saíram de circulação: construção estratégica por tick, gerente militar de cidade, IA de
+  construção/ataque, patrulhas, mão de obra, crescimento populacional, moral e governança autônoma.
+  A base agora é Core + laje 9x9 (escrita uma vez) + 4 soldados soltos, com reposição de no máximo
+  1 soldado por minuto até 4/6/8/10/12 por nível (`SimpleImperialBaseBalance`). Upgrade do Core é
+  puramente abstrato — nenhum bloco é colocado — e escreve a Era estratégica direto no
+  `StrategicSettlementRecord`. Aba Build removida da GUI e as ações de construção passam a ser
+  **recusadas no servidor**, não só escondidas. Novo pacote `assault` (8 classes) com raid
+  persistente em SavedData: valida no servidor, escolhe a base elegível mais próxima pelo mapa de
+  guerra, empresta **soldados reais** (sem duplicar, sem mexer no contador), teleporta a ~100 blocos
+  (70 com Inserção Avançada) em terreno conferido, marcha, vence quando os defensores do camp
+  acabam — inclusive para um jogador sozinho — e devolve os sobreviventes na hora. Nova árvore de
+  Comando Imperial (9 nós, moeda própria: Commander XP / Command Points) numa segunda aba da tela K,
+  com 9 ícones em pixel art (`tools/generate_commander_icons.py`). Comandos `/fcassault` e
+  `/fccommand`. 89 chaves novas nos dois idiomas. **Medido em servidor dedicado**; dois bugs achados
+  e corrigidos na medição (guarnição infinita; painel escrevendo por cima do botão).
 
 - 2026-07-03 (2): **Vilas mais bonitas/completas + fim do friendly fire (pedido do dono)**.
   **(1) Anti-friendly-fire em 2 camadas:** novo `FriendlyFireGuard` — `hasClearShot` (checado SÓ na
@@ -1088,6 +1283,38 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 - 2026-06-17: Fase C (início) — **identidade militar por tipo de cidade**: bônus de rank nos
   recrutas (`ImperialCityType.recruitRankBonus` + `GuardsmanRank.advance`) e nome temático de tropa.
   Fortress treina Shock Troopers (+2), Forge Forge Guards (+1), Hive Levies (-1, compensado por 2x pop).
+- 2026-08-06: **Arvore virou rolagem continua** (a pedido do dono). Saiu a paginacao inteira
+  (`currentPage`, `turnPage`, marcador de entrada, "continua na proxima pagina"); entrou uma faixa
+  unica de 27 linhas com barra de rolagem, Page Up/Down, Home/End e setas. Nos fixos em 42/52/48/60
+  em toda resolucao. Cabecalho passou a medir e quebrar os indicadores antes de desenhar — o
+  "Implants: X/12" cortado na borda direita era falta disso. `ProgressionPageLayout` substituido por
+  `ProgressionTreeLayout`. Medido fora do jogo: 27 combinacoes, zero estouro.
+
+- 2026-08-06: **Layout da arvore corrigido.** Nos de 52/68/80 para 42/52/60 (piso 36/46/52);
+  cabecalho em 2-3 linhas em vez de tudo numa; rodape com area propria e texto medido antes de
+  desenhar; "Continua na proxima pagina" abaixo do segundo implante; rotulos reduzidos a nome curto
+  + rank, e so o rank (dentro do no) quando falta linha. Geometria extraida para
+  `ProgressionPageLayout`, um record de aritmetica pura que roda **fora do jogo**: 54 combinacoes de
+  resolucao x GUI scale x pagina medidas, zero estouro. A primeira tentativa (laco de encolhimento)
+  falhava em 44 delas — foi a medicao que pegou.
+
+- 2026-08-06: **Interface da progressao reformulada** — 19 icones em pixel art
+  (`tools/generate_progression_icons.py`, 40x40 RGBA) substituem os retangulos desenhados em
+  codigo; cada um dos 12 implantes tem icone proprio. Canvas continuo com zoom/arrasto virou **6
+  paginas discretas** de 2 ciclos cada, com scroll = Page Up/Down (trava de 160 ms) e as teclas
+  fisicas. Nos passaram de 9/13 px de raio para 52/68/80 px, com hitbox igual ao tamanho visual,
+  nome e rank sob o no. Gameplay intocado: 50 nos, 12 implantes, XP, Doutrina, cirurgias,
+  habilidades, Prova de Sangue, tamanhos e persistencia iguais. **Nao testado em jogo.**
+
+- 2026-08-06: **Progressao Imperial do jogador** (pacote `progression`, 21 classes). Arvore de 50
+  nos em 12 ciclos de 3 habilidades + 1 cirurgia; 12 implantes de gene-seed; Prova de Sangue;
+  ascensao a Space Marine. Jogador continua `ServerPlayer` — a transformacao e dado persistente,
+  atributo, tamanho (`EntityEvent.Size`, sem Pehkui: 1,80 -> 2,35) e habilidade ativa. Quatro
+  habilidades com tecla (oracao, rolamento, acido, estase) validadas no servidor. Persistencia por
+  UUID em SavedData no overworld, como faccao e planetas. Comandos `/fcprogress`. Teclas K/O/V/B/G.
+  247 chaves de traducao nos 2 idiomas. `AspirantManager` dos NPCs intocado.
+  **Nao testado em jogo** — build limpo verde, nada visto rodando.
+
 - 2026-06-17: Fase B COMPLETA — **Killa Kan** (andador/máquina Ork, 110 HP/16 dano/16 armor, peso
   de ameaça 20, entra na warband em WAAAGH! tier 3+). Placeholder humanoide até ter modelo próprio.
 - 2026-06-17: Fase B — **warbands por clã**: `OrkClan` ganhou composição (bonusBoyz/nobz/

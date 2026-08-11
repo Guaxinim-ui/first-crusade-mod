@@ -42,6 +42,33 @@ public final class WaaaghOverlordManager {
         }
     }
 
+    /**
+     * A greenskin victory big enough for the whole world to feel.
+     *
+     * <p>Added here rather than in a second SavedData of the WAAAGH's own: there is one global tide
+     * and it lives in {@link WaaaghOverlordData}. A player-side copy would be a second number with
+     * the same name, and this mod already has three of those.
+     *
+     * <p>Only called for events on the scale of a city falling. A kill or a blow must never reach
+     * this — the tide would stop meaning "how the war is going" and start meaning "how long somebody
+     * has been playing".
+     */
+    public static void contributeFromGreenskinVictory(ServerLevel level, int amount) {
+        if (amount <= 0) {
+            return;
+        }
+
+        WaaaghOverlordData data = WaaaghOverlordData.get(level);
+        data.add(amount);
+
+        int tier = data.getTier();
+
+        if (tier > data.getLastAnnouncedTier()) {
+            data.setLastAnnouncedTier(tier);
+            announce(level, tier);
+        }
+    }
+
     private static void announce(ServerLevel level, int tier) {
         if (tier <= 0 || tier >= TIER_CRIES.length) {
             return;

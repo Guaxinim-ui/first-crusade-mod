@@ -13,307 +13,77 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 
+/**
+ * The strategic layer, reduced to bookkeeping.
+ *
+ * <h2>What it stopped deciding</h2>
+ *
+ * This class used to run a city-building AI: every 100 ticks it chose what each Imperial settlement
+ * should build next, queued the project, advanced the settlement's Age out of a resource bank, and
+ * rolled for whether to march an attack squad at the nearest Ork camp. Every one of those is gone.
+ * A base does not decide anything now — the player does, from the Core, and the Age is a plain
+ * function of the Core's level written by {@link ImperialCommandCoreBlockEntity} at upgrade time.
+ *
+ * <h2>What it still does, and why</h2>
+ *
+ * The war map still has to agree with the world, the Ork side still runs itself, and a settlement
+ * still draws its passive income. That is the whole of {@link #lightStrategicTick}, and it does no
+ * per-base entity scan: the one place that needs entities (a city being overrun) is gated on the
+ * cheap map question "is there even a camp near this city" before any box is queried.
+ */
 public final class StrategicWarAIManager {
-    private static final int MAX_PROJECTS_PER_CITY = 1;
-
     private static final int CITY_CAPTURE_RADIUS = 34;
     private static final int CITY_CAPTURE_VERTICAL_DOWN = 32;
     private static final int CITY_CAPTURE_VERTICAL_UP = 48;
 
-    private static final int IMPERIAL_ATTACK_BASE_CHANCE = 3;
+    /** No camp within this many blocks of a city means nobody can be overrunning it. */
+    private static final int CAPTURE_CHECK_CAMP_RANGE = 160;
+
     private static final int ORK_EXPANSION_BASE_CHANCE = 4;
 
     private StrategicWarAIManager() {
     }
 
-    public static void forceStrategicTick(ServerLevel level) {
+    /**
+     * The half-minute pass: sync the map, pay the settlements, tick the Ork side, resolve any city
+     * actually under an Ork tide.
+     */
+    public static void lightStrategicTick(ServerLevel level) {
         StrategicWarAIData data = StrategicWarAIData.get(level);
         WorldWarMapData warMap = WorldWarMapData.get(level);
 
         data.syncWithWorldMap(level, warMap);
 
-        tickImperialCities(level, data, warMap);
+        tickImperialSettlements(level, data);
         tickOrkCamps(level, data, warMap);
         tryResolveCityCaptures(level, data, warMap);
 
         data.setDirty();
     }
 
-    private static void tickImperialCities(
-            ServerLevel level,
-            StrategicWarAIData data,
-            WorldWarMapData warMap
-    ) {
-        List<StrategicSettlementRecord> cities = new ArrayList<>();
+    /**
+     * Passive income for every loaded base, and nothing else.
+     *
+     * <p>No plan is chosen, no project is queued and no offensive is rolled for. The Age is not
+     * touched here either: it is written by the Core when the player upgrades it, so a base that has
+     * never been upgraded stays at OUTPOST no matter how long the world runs.
+     */
+    private static void tickImperialSettlements(ServerLevel level, StrategicWarAIData data) {
+        List<StrategicSettlementRecord> settlements = new ArrayList<>();
 
         for (StrategicSettlementRecord settlement : data.getImperialSettlements()) {
-            cities.add(settlement);
+            settlements.add(settlement);
         }
 
-        for (StrategicSettlementRecord settlement : cities) {
-            BlockPos corePos = settlement.getPos();
-            BlockEntity blockEntity = level.getBlockEntity(corePos);
+        for (StrategicSettlementRecord settlement : settlements) {
+            BlockEntity blockEntity = level.getBlockEntity(settlement.getPos());
 
             if (!(blockEntity instanceof ImperialCommandCoreBlockEntity core)) {
                 continue;
             }
 
-            tickImperialCity(level, data, warMap, settlement, core);
+            settlement.generateImperialIncome(level, core);
         }
-    }
-
-    private static void tickImperialCity(
-            ServerLevel level,
-            StrategicWarAIData data,
-            WorldWarMapData warMap,
-            StrategicSettlementRecord settlement,
-            ImperialCommandCoreBlockEntity core
-    ) {
-        settlement.generateImperialIncome(level, core);
-
-        int threat = calculateThreatAgainstCity(level, warMap, core.getBlockPos());
-        int dominion = WarDominionData.get(level).getDominion();
-
-        settlement.choosePlan(threat, dominion);
-
-        if (tryAdvanceAge(level, settlement, core)) {
-            return;
-        }
-
-        if (data.countActiveProjectsForCity(core.getBlockPos()) < MAX_PROJECTS_PER_CITY) {
-            StrategicConstructionType choice = chooseImperialConstruction(settlement, core, threat);
-
-            if (choice != null) {
-                boolean queued = StrategicConstructionBuilder.queueProject(
-                        level,
-                        data,
-                        settlement,
-                        core,
-                        choice
-                );
-
-                if (queued) {
-                    return;
-                }
-            }
-        }
-
-        maybeLaunchImperialAttack(level, warMap, settlement, core, threat);
-    }
-
-    private static boolean tryAdvanceAge(
-            ServerLevel level,
-            StrategicSettlementRecord settlement,
-            ImperialCommandCoreBlockEntity core
-    ) {
-        if (!settlement.canAdvanceAge()) {
-            return false;
-        }
-
-        boolean wantsTech =
-                settlement.getPlan() == StrategicPlan.TECH_UP
-                        || settlement.getAge().ordinal() <= StrategicAge.FORTIFIED_SETTLEMENT.ordinal()
-                        || level.random.nextInt(3) == 0;
-
-        if (!wantsTech) {
-            return false;
-        }
-
-        StrategicAge oldAge = settlement.getAge();
-
-        if (!settlement.advanceAge()) {
-            return false;
-        }
-
-        ImperiumOverlordManager.contributeFromCity(level, core);
-        WarDominionManager.shift(level, 5 + settlement.getAge().ordinal() * 2);
-
-        StrategicCoreMessageBus.sendToOpenCore(
-        level,
-        core.getBlockPos(),
-        Component.literal(
-                "A cidade imperial evoluiu de "
-                        + oldAge.getDisplayName()
-                        + " para "
-                        + settlement.getAge().getDisplayName()
-                        + "."
-        )
-);
-
-        return true;
-    }
-
-    private static StrategicConstructionType chooseImperialConstruction(
-            StrategicSettlementRecord settlement,
-            ImperialCommandCoreBlockEntity core,
-            int threat
-    ) {
-        StrategicAge age = settlement.getAge();
-        StrategicPlan plan = settlement.getPlan();
-
-        if (plan == StrategicPlan.SURVIVE || threat >= 18) {
-            if (age.ordinal() >= StrategicAge.FORTIFIED_SETTLEMENT.ordinal()
-                    && settlement.getBuiltCount(StrategicConstructionType.WALL_BASTION) < 2 + age.ordinal()) {
-                return StrategicConstructionType.WALL_BASTION;
-            }
-
-            if (settlement.getBuiltCount(StrategicConstructionType.BARRACKS) < 1 + age.ordinal()) {
-                return StrategicConstructionType.BARRACKS;
-            }
-
-            if (settlement.getBuiltCount(StrategicConstructionType.HABITATION) < 2 + age.ordinal()) {
-                return StrategicConstructionType.HABITATION;
-            }
-        }
-
-        if (plan == StrategicPlan.DEFENSE || threat >= 10) {
-            if (age.ordinal() >= StrategicAge.FORTIFIED_SETTLEMENT.ordinal()
-                    && settlement.getBuiltCount(StrategicConstructionType.WALL_BASTION) < 1 + age.ordinal()) {
-                return StrategicConstructionType.WALL_BASTION;
-            }
-
-            if (settlement.getBuiltCount(StrategicConstructionType.BARRACKS) < 1 + age.ordinal()) {
-                return StrategicConstructionType.BARRACKS;
-            }
-        }
-
-        if (plan == StrategicPlan.MILITARY || plan == StrategicPlan.ATTACK) {
-            if (settlement.getBuiltCount(StrategicConstructionType.BARRACKS) < 1 + age.ordinal()) {
-                return StrategicConstructionType.BARRACKS;
-            }
-
-            if (age.ordinal() >= StrategicAge.ASTARTES_AGE.ordinal()
-                    && settlement.getBuiltCount(StrategicConstructionType.COMMAND_BASTION) < 1) {
-                return StrategicConstructionType.COMMAND_BASTION;
-            }
-        }
-
-        if (settlement.getBuiltCount(StrategicConstructionType.HABITATION) < 2 + age.ordinal()) {
-            return StrategicConstructionType.HABITATION;
-        }
-
-        // Economy structures are kept to ONE of each — they level up with the city instead of
-        // multiplying (owner request: cleaner to test, the single work-site just produces more).
-        if (settlement.getBuiltCount(StrategicConstructionType.FARM) < 1) {
-            return StrategicConstructionType.FARM;
-        }
-
-        if (settlement.getBuiltCount(StrategicConstructionType.MINE) < 1) {
-            return StrategicConstructionType.MINE;
-        }
-
-        if (settlement.getBuiltCount(StrategicConstructionType.SCRAP_YARD) < 1) {
-            return StrategicConstructionType.SCRAP_YARD;
-        }
-
-        if (age.ordinal() >= StrategicAge.FORTIFIED_SETTLEMENT.ordinal()
-                && settlement.getBuiltCount(StrategicConstructionType.REFINERY) < 1) {
-            return StrategicConstructionType.REFINERY;
-        }
-
-        if (age.ordinal() >= StrategicAge.MANUFACTORUM_AGE.ordinal()
-                && settlement.getBuiltCount(StrategicConstructionType.FORGE) < 1) {
-            return StrategicConstructionType.FORGE;
-        }
-
-        if (age.ordinal() >= StrategicAge.MANUFACTORUM_AGE.ordinal()
-                && settlement.getBuiltCount(StrategicConstructionType.GOLD_MINE) < 1) {
-            return StrategicConstructionType.GOLD_MINE;
-        }
-
-        if (age.ordinal() >= StrategicAge.MANUFACTORUM_AGE.ordinal()
-                && settlement.getBuiltCount(StrategicConstructionType.TRADE_DEPOT) < 1) {
-            return StrategicConstructionType.TRADE_DEPOT;
-        }
-
-        if (settlement.getBuiltCount(StrategicConstructionType.BARRACKS) < 1 + age.ordinal()) {
-            return StrategicConstructionType.BARRACKS;
-        }
-
-        return null;
-    }
-
-    private static void maybeLaunchImperialAttack(
-            ServerLevel level,
-            WorldWarMapData warMap,
-            StrategicSettlementRecord settlement,
-            ImperialCommandCoreBlockEntity core,
-            int threat
-    ) {
-        if (settlement.getPlan() != StrategicPlan.ATTACK && threat > 8) {
-            return;
-        }
-
-        int attackChance = Math.max(1, IMPERIAL_ATTACK_BASE_CHANCE - settlement.getAge().ordinal() / 2);
-
-        if (level.random.nextInt(attackChance) != 0) {
-            return;
-        }
-
-        BlockPos targetCamp = findNearestCamp(warMap, core.getBlockPos());
-
-        if (targetCamp == null) {
-            return;
-        }
-
-        int age = settlement.getAge().ordinal();
-
-        int foodCost = 80 + age * 45;
-        int ironCost = 65 + age * 40;
-        int scrapCost = 45 + age * 25;
-        int coalCost = 25 + age * 15;
-        int promethiumCost = age >= 2 ? 25 + age * 10 : 0;
-        int crusadiumCost = age >= 3 ? 20 : 0;
-
-        boolean canPay = settlement.getResources().canAfford(
-                foodCost,
-                ironCost,
-                scrapCost,
-                coalCost,
-                0,
-                0,
-                promethiumCost,
-                0,
-                crusadiumCost,
-                0
-        );
-
-        if (!canPay) {
-            return;
-        }
-
-        // The offensive is no longer conjured out of thin air: the city's EXISTING garrison is
-        // mobilized into an attack squad led by the City Commander (the city empties out to attack
-        // and must retrain, like the Ork war parties). Resources are only spent if the squad
-        // actually formed — no commander / small garrison / cooldown means no attack this cycle.
-        int maxTroops = 4 + age * 3;
-
-        boolean launched = CityMilitaryManager.tryLaunchAttack(
-                level,
-                settlement,
-                core,
-                targetCamp,
-                maxTroops
-        );
-
-        if (!launched) {
-            return;
-        }
-
-        settlement.getResources().spend(
-                foodCost,
-                ironCost,
-                scrapCost,
-                coalCost,
-                0,
-                0,
-                promethiumCost,
-                0,
-                crusadiumCost,
-                0
-        );
-
-        WarDominionManager.shift(level, 3 + age);
     }
 
     private static void tickOrkCamps(
@@ -507,6 +277,15 @@ public final class StrategicWarAIManager {
         level.addFreshEntity(mob);
     }
 
+    /**
+     * Hands a city to the Orks when a green tide is actually standing on it.
+     *
+     * <p>The entity scan is the expensive part, so it is gated twice: the city's chunk must be
+     * loaded, and the war map must already say a camp is close enough for anyone to have walked
+     * over. A base with no camp within {@value #CAPTURE_CHECK_CAMP_RANGE} blocks costs a handful of
+     * long comparisons and no box query at all — which is the difference between this running for
+     * every base every pass and running for the one that is under attack.
+     */
     private static void tryResolveCityCaptures(
             ServerLevel level,
             StrategicWarAIData data,
@@ -520,6 +299,11 @@ public final class StrategicWarAIManager {
             }
 
             BlockPos cityPos = BlockPos.of(packed);
+
+            if (countCampsNear(warMap, cityPos, CAPTURE_CHECK_CAMP_RANGE) <= 0) {
+                continue;
+            }
+
             BlockEntity blockEntity = level.getBlockEntity(cityPos);
 
             if (!(blockEntity instanceof ImperialCommandCoreBlockEntity core)) {

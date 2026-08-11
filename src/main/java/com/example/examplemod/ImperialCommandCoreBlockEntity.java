@@ -129,43 +129,46 @@ private UUID pendingSpaceMarineCandidateUUID;
 // Currently selected specialist type for the Promote Specialist action (1 = first real specialist).
 private int selectedSpecialistOrdinal = 1;
 
-public void tryBuildImperialMine(Player player) {
-    if (!isOwner(player)) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
-        return;
-    }
+// Whether this Core has already been stood down from the old city builder. An existing save runs
+// the migration once (cancel projects, clear guard posts, dismiss the workforce) and never again.
+private boolean simplifiedBaseMigrated = false;
 
-    if (!(this.level instanceof ServerLevel serverLevel)) {
-        return;
-    }
+// When the base may next look at its garrison. A deadline in game time, not a countdown: an
+// unloaded chunk cannot fall behind one, and a base at full strength costs one comparison a minute.
+private long garrisonCheckReadyAt = 0L;
 
-    int currentMines = ImperialWorkSiteManager.countImperialMines(serverLevel, this, 128);
+/** True once this Core has been converted from a city to a simplified base. */
+public boolean isSimplifiedBaseMigrated() {
+    return this.simplifiedBaseMigrated;
+}
 
-    if (currentMines >= getImperialMineCapacity()) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.mine_cap"), true);
-        return;
-    }
-
-    int ironCost = 20;
-    int scrapCost = 10;
-    int coalCost = 5;
-
-    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_3", ironCost, scrapCost, coalCost), true);
-        return;
-    }
-
-    boolean built = ImperialWorkSiteManager.buildImperialMine(serverLevel, this, player);
-
-    if (!built) {
-        return;
-    }
-
-    this.resources.spend(ironCost, scrapCost, coalCost);
-
+public void markSimplifiedBaseMigrated() {
+    this.simplifiedBaseMigrated = true;
     setChanged();
+}
 
-    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_3", this.resources.getIron(), this.resources.getScrapMetal(), this.resources.getCoal()), false);
+public long getGarrisonCheckReadyAt() {
+    return this.garrisonCheckReadyAt;
+}
+
+public void setGarrisonCheckReadyAt(long gameTime) {
+    this.garrisonCheckReadyAt = gameTime;
+    setChanged();
+}
+
+/**
+ * The stock reply to any request the city builder used to serve.
+ *
+ * <p>Hiding the buttons is not enough: an old client, or a hand-written packet, can still ask. The
+ * server refuses here, so the removed system cannot be reached from outside at all.
+ */
+private void refuseRemovedConstruction(Player player) {
+    player.displayClientMessage(
+            Component.translatable("msg.firstcrusade.build.system_removed"), true);
+}
+
+public void tryBuildImperialMine(Player player) {
+    refuseRemovedConstruction(player);
 }
 
 // Each focus city type runs one extra of its signature work site (Mining→Mine, Fortress→Barracks,
@@ -181,47 +184,7 @@ public int getImperialMineCapacity() {
 
 // Gold mining unlocks at city level 2 and stays scarce: capacity grows slowly with the city.
 public void tryBuildImperialGoldMine(Player player) {
-    if (!isOwner(player)) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
-        return;
-    }
-
-    if (!(this.level instanceof ServerLevel serverLevel)) {
-        return;
-    }
-
-    if (this.cityLevel < 2) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.gold_mine_level"), true);
-        return;
-    }
-
-    int currentGoldMines = ImperialGoldMineManager.countGoldMines(serverLevel, this, 128);
-
-    if (currentGoldMines >= getGoldMineCapacity()) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.gold_mine_cap"), true);
-        return;
-    }
-
-    int ironCost = 40;
-    int scrapCost = 25;
-    int coalCost = 15;
-
-    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_3", ironCost, scrapCost, coalCost), true);
-        return;
-    }
-
-    boolean built = ImperialGoldMineManager.buildImperialGoldMine(serverLevel, this, player);
-
-    if (!built) {
-        return;
-    }
-
-    this.resources.spend(ironCost, scrapCost, coalCost);
-
-    setChanged();
-
-    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_3", this.resources.getIron(), this.resources.getScrapMetal(), this.resources.getCoal()), false);
+    refuseRemovedConstruction(player);
 }
 
 public int getGoldMineCapacity() {
@@ -234,41 +197,7 @@ public int getGoldMineCapacity() {
 
 // Farms feed the city: a staffed Farm raises morale and sustains population growth.
 public void tryBuildImperialFarm(Player player) {
-    if (!isOwner(player)) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
-        return;
-    }
-
-    if (!(this.level instanceof ServerLevel serverLevel)) {
-        return;
-    }
-
-    int currentFarms = ImperialFarmManager.countFarms(serverLevel, this, 128);
-
-    if (currentFarms >= getFarmCapacity()) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.farm_cap"), true);
-        return;
-    }
-
-    int ironCost = 15;
-    int scrapCost = 5;
-
-    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_2_is", ironCost, scrapCost), true);
-        return;
-    }
-
-    boolean built = ImperialFarmManager.buildImperialFarm(serverLevel, this, player);
-
-    if (!built) {
-        return;
-    }
-
-    this.resources.spend(ironCost, scrapCost, 0);
-
-    setChanged();
-
-    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_2", this.resources.getIron(), this.resources.getScrapMetal()), false);
+    refuseRemovedConstruction(player);
 }
 
 public int getFarmCapacity() {
@@ -277,47 +206,7 @@ public int getFarmCapacity() {
 
 // Trade Depots unlock at city level 3 and trade Gold for Emerald with the capital.
 public void tryBuildEmeraldTradeDepot(Player player) {
-    if (!isOwner(player)) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
-        return;
-    }
-
-    if (!(this.level instanceof ServerLevel serverLevel)) {
-        return;
-    }
-
-    if (this.cityLevel < 3) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.trade_depot_level"), true);
-        return;
-    }
-
-    int currentDepots = ImperialEmeraldTradeDepotManager.countTradeDepots(serverLevel, this, 128);
-
-    if (currentDepots >= getTradeDepotCapacity()) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.trade_depot_cap"), true);
-        return;
-    }
-
-    int ironCost = 30;
-    int scrapCost = 15;
-    int coalCost = 10;
-
-    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_3", ironCost, scrapCost, coalCost), true);
-        return;
-    }
-
-    boolean built = ImperialEmeraldTradeDepotManager.buildTradeDepot(serverLevel, this, player);
-
-    if (!built) {
-        return;
-    }
-
-    this.resources.spend(ironCost, scrapCost, coalCost);
-
-    setChanged();
-
-    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_3", this.resources.getIron(), this.resources.getScrapMetal(), this.resources.getCoal()), false);
+    refuseRemovedConstruction(player);
 }
 
 public int getTradeDepotCapacity() {
@@ -396,7 +285,8 @@ public int receiveProducedResource(ImperialResourceType resourceType, int amount
             blockEntity.ensureGovernor(serverLevel);
         }
 
-        ImperialPopulationManager.tickCitizenGrowth(serverLevel, blockEntity);
+        // Citizen growth belongs to the old city builder: a simplified base has soldiers, not a
+        // workforce, so nobody is born here any more (see SimpleImperialBaseManager).
 
         // The (expensive) structure/citizen/threat counts are only read by the Core GUI, so we
         // refresh them at most a few times per second AND only while a player actually has the menu
@@ -423,9 +313,10 @@ warMap.recordCityInfo(
         blockEntity.getSettlementScale(),
         blockEntity.cityLevel,
         blockEntity.getBuildBorderRadius());
-ImperialCityMoraleManager.tickMorale(serverLevel, blockEntity);
-ImperialPatrolManager.tickPatrols(serverLevel, blockEntity);
-ImperialWorkforceManager.autoManageWorkforce(serverLevel, blockEntity);
+// Morale easing, patrol rings and workforce management were the old city's three per-city scans.
+// A simplified base has no citizens to be moody, no ring to march and no jobs to fill: the only
+// recurring work left is keeping the small garrison alive, and that looks at itself once a minute.
+SimpleImperialBaseManager.tickBase(serverLevel, blockEntity);
 blockEntity.produceResourcesIfNewDay(level);
 blockEntity.reduceReinforcementCooldown();
 blockEntity.reduceSpaceMarinePromotionCooldown();
@@ -438,134 +329,38 @@ ImperiumOverlordManager.contributeFromCity(serverLevel, blockEntity);
 blockEntity.trySeedOrkCamp(serverLevel);
 blockEntity.trySpawnOrkRaid(serverLevel);
 blockEntity.checkActiveOrkRaid(serverLevel);
-blockEntity.tickAutonomousGovernance(serverLevel);
+// Autonomous governance — the Governor recruiting, upgrading and launching offensives on its own —
+// is gone with the city builder. A base does not decide anything; it holds its garrison and waits.
 // The Imperium pushing corruption back is now the flora system's job: retaking ground marks the
 // chunks and the decorator replaces Ork growth with the Imperial palette. Nothing to scrub here.
     }
 
-    // An unclaimed, world-generated city governs itself: it keeps a standing garrison and grows in
-    // level (expanding its walls/houses/population) on its own — no player owner required. A city a
-    // player has claimed is run by that player instead (this does nothing for owned cities).
-    private void tickAutonomousGovernance(ServerLevel serverLevel) {
-        // The Governor runs the city when it is unclaimed, or when a player owner has appointed
-        // (delegated to) the Governor so it keeps progressing while they are away.
-        if (!isGoverned()) {
-            return;
+    // Raises a single garrison soldier: the base's themed troop, or a Guardsman. No guard post is
+    // handed out — soldiers are bound to the Core's home ring and left loose (SimpleImperialBaseManager).
+    boolean spawnGarrisonTroop(ServerLevel serverLevel, GuardsmanRank rank) {
+        BlockPos spawnPos = SimpleImperialBaseManager.findStandingSpot(serverLevel, this.worldPosition);
+
+        // The regiment fills the slot, not the city type. A Catachan base is mostly Jungle Fighters
+        // and a Forge auxilia is a line with a few Skitarii in it — rolled per soldier, so a garrison
+        // is a mix rather than eleven copies of one unit. It never changes how many soldiers there
+        // are: the caller already checked the cap before getting here.
+        com.example.examplemod.crusade.ImperialRegimentType regiment =
+                com.example.examplemod.crusade.ImperialCrusadeData.get(serverLevel)
+                        .roster(this.worldPosition)
+                        .regiment();
+
+        EntityType<? extends AbstractImperialTroopEntity> themedType;
+
+        if (regiment == com.example.examplemod.crusade.ImperialRegimentType.CRUSADE_GENERIC) {
+            // The regiment with no character of its own is where the older city-type theme still
+            // lives, so a Shrine or Feudal base founded before regiments keeps its own troops.
+            themedType = getThemedTroopType(getCityType());
+        } else {
+            // A named regiment is authoritative: a null roll means a plain Guardsman, and letting
+            // the city theme answer instead would quietly turn every Catachan roll into a Jungle
+            // Fighter and erase the mix the roll exists to produce.
+            themedType = regiment.rollTroop(serverLevel.getRandom());
         }
-
-        autonomousRecruit(serverLevel);
-        autonomousUpgrade(serverLevel);
-        autonomousOffensive(serverLevel);
-    }
-
-    private static final int OFFENSIVE_MIN_TROOPS = 4;
-    private static final int OFFENSIVE_CHANCE = 3;
-
-    // A strong autonomous city takes the war to the Orks: it musters half its garrison and marches
-    // them on the nearby Ork camp. The troops fight on arrival; once they overwhelm the defenders the
-    // camp is razed (see OrkCampBlockEntity.checkOverrun).
-    private void autonomousOffensive(ServerLevel serverLevel) {
-        if (this.orkCampPos == null || !OrkCampManager.isCampStillThere(serverLevel, this.orkCampPos)) {
-            return;
-        }
-        if (serverLevel.random.nextInt(OFFENSIVE_CHANCE) != 0) {
-            return;
-        }
-
-        int radius = getTerritoryRadius();
-        AABB box = new AABB(
-                this.worldPosition.getX() - radius, this.worldPosition.getY() - 32, this.worldPosition.getZ() - radius,
-                this.worldPosition.getX() + radius, this.worldPosition.getY() + 48, this.worldPosition.getZ() + radius);
-
-        List<net.minecraft.world.entity.PathfinderMob> troops = serverLevel.getEntitiesOfClass(
-                net.minecraft.world.entity.PathfinderMob.class, box,
-                mob -> mob.isAlive()
-                        && !(mob instanceof ImperialCitizenEntity)
-                        && FirstCrusadeFactionManager.getFaction(mob) == FirstCrusadeFaction.IMPERIUM);
-
-        if (troops.size() < OFFENSIVE_MIN_TROOPS) {
-            return;
-        }
-
-        int dispatch = troops.size() / 2;
-        for (int i = 0; i < dispatch; i++) {
-            troops.get(i).getNavigation().moveTo(
-                    this.orkCampPos.getX() + 0.5D, this.orkCampPos.getY(), this.orkCampPos.getZ() + 0.5D, 1.0D);
-        }
-
-        OrkRaidManager.notifyNearbyPlayers(
-                serverLevel, this.worldPosition, Component.translatable("msg.firstcrusade.bcast.expedition"));
-    }
-
-    // Refill the garrison toward the city's military capacity, paying iron and ramping up gradually.
-    private void autonomousRecruit(ServerLevel serverLevel) {
-        if (this.recruitedGuardsmen >= getMilitaryCapacity()) {
-            return;
-        }
-
-        int ironCost = getCityType().getRecruitIronCost();
-        if (this.resources.getIron() < ironCost) {
-            return;
-        }
-
-        // Don't raise the whole garrison at once. A Warmonger Governor levies more eagerly.
-        int recruitGate = Math.max(1, 2 + getGovernorPersonality().getRecruitGateBias());
-        if (serverLevel.random.nextInt(recruitGate) != 0) {
-            return;
-        }
-
-        if (spawnGarrisonTroop(serverLevel, getReinforcementRank())) {
-            this.resources.remove(ImperialResourceType.IRON, ironCost);
-            this.recruitedGuardsmen++;
-            setChanged();
-        }
-    }
-
-    // A thriving autonomous city (near its population cap, with the resources to spare) expands to
-    // the next level by itself — no Crusadium Plate needed, unlike a player upgrade.
-    private void autonomousUpgrade(ServerLevel serverLevel) {
-        if (!canUpgradeMore()) {
-            return;
-        }
-
-        int ironCost = getUpgradeIronCost();
-        int scrapCost = getUpgradeScrapCost();
-        int coalCost = getUpgradeCoalCost();
-
-        if (this.resources.getIron() < ironCost
-                || this.resources.getScrapMetal() < scrapCost
-                || this.resources.getCoal() < coalCost) {
-            return;
-        }
-
-        // Only grow once the town is full of people pushing for more room.
-        if (ImperialPopulationManager.countAssignedCitizens(serverLevel, this)
-                < ImperialPopulationManager.getCitizenCapacity(this)) {
-            return;
-        }
-
-        // Growth is a slow, deliberate thing. An Administrator/Architect Governor pushes harder.
-        int upgradeGate = Math.max(1, 3 + getGovernorPersonality().getUpgradeGateBias());
-        if (serverLevel.random.nextInt(upgradeGate) != 0) {
-            return;
-        }
-
-        this.resources.spend(ironCost, scrapCost, coalCost);
-        this.cityLevel++;
-        reorganizeExistingGuardsmen(serverLevel);
-        setChanged();
-
-        OrkRaidManager.notifyNearbyPlayers(
-                serverLevel,
-                this.worldPosition,
-                Component.translatable("msg.firstcrusade.bcast.city_grew", this.cityLevel)
-        );
-    }
-
-    // Raises a single garrison soldier (the city's themed troop, or a Guardsman with a guard post).
-    private boolean spawnGarrisonTroop(ServerLevel serverLevel, GuardsmanRank rank) {
-        BlockPos spawnPos = findSpawnPosition(serverLevel);
-        EntityType<? extends AbstractImperialTroopEntity> themedType = getThemedTroopType(getCityType());
 
         if (themedType != null) {
             return spawnThemedTroopAt(serverLevel, themedType,
@@ -577,20 +372,65 @@ blockEntity.tickAutonomousGovernance(serverLevel);
             return false;
         }
 
-        BlockPos guardPostPos = findGuardPostPosition(this.recruitedGuardsmen);
-        prepareGuardPost(serverLevel, guardPostPos);
-
         guardsman.moveTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
-        guardsman.assignToCommandCore(this.worldPosition);
-        guardsman.assignGuardPost(guardPostPos);
         guardsman.assignRandomChapter();
         guardsman.initializeFromCity(rank, getCityType());
+        SimpleImperialBaseManager.bindToBase(guardsman, this.worldPosition);
 
         serverLevel.addFreshEntity(guardsman);
         return true;
     }
 
-    // Garrisons a freshly founded autonomous town so it can defend itself from the first night.
+    /** One replacement soldier, at the base's current rank. Called by the once-a-minute check. */
+    public boolean raiseGarrisonSoldier(ServerLevel serverLevel) {
+        if (this.recruitedGuardsmen >= getMilitaryCapacity()) {
+            return false;
+        }
+
+        if (!spawnGarrisonTroop(serverLevel, getReinforcementRank())) {
+            return false;
+        }
+
+        this.recruitedGuardsmen++;
+        setChanged();
+        return true;
+    }
+
+    /**
+     * Raises the tally to match a sweep that found more soldiers than the counter knew about.
+     *
+     * <h2>It only ever raises, and that is the whole point</h2>
+     *
+     * A sweep of the ring around the Core cannot see a soldier that is chasing an Ork over the hill
+     * or away on a raid, so "the sweep found fewer than the counter" does not mean soldiers are
+     * missing — it means some are out. Letting the sweep <i>lower</i> the counter is what made a
+     * base recruit forever: every soldier that strayed past the scan radius looked like a casualty,
+     * the tally dropped, a replacement was raised, and the garrison doubled. Deaths already
+     * decrement the counter exactly once, in {@link #onAssignedGuardsmanDeath}, which is the only
+     * place that knows a soldier is actually gone.
+     */
+    public void raiseGarrisonCountTo(int actual) {
+        if (actual <= this.recruitedGuardsmen) {
+            return;
+        }
+
+        this.recruitedGuardsmen = actual;
+        setChanged();
+    }
+
+    /**
+     * Sets the tally outright. Migration only.
+     *
+     * <p>The one moment an exact recount is honest is the conversion of an old city, before any
+     * expedition exists to hide a soldier from the sweep — and it is needed, because a city's tally
+     * counted citizens and recruits in training alongside actual soldiers.
+     */
+    public void setGarrisonCount(int actual) {
+        this.recruitedGuardsmen = Math.max(0, actual);
+        setChanged();
+    }
+
+    // Garrisons a freshly founded base so it can defend itself from the first night.
     private void spawnInitialGarrison(ServerLevel serverLevel, int count) {
         for (int i = 0; i < count; i++) {
             if (this.recruitedGuardsmen >= getMilitaryCapacity()) {
@@ -1500,9 +1340,9 @@ private boolean spawnTrainedGuardsman(ServerLevel serverLevel, ImperialCitizenEn
             recruit.getXRot()
     );
 
-    guardsman.assignToCommandCore(this.worldPosition);
     guardsman.assignRandomChapter();
     guardsman.initializeFromCity(getStartingGuardsmanRank(), getCityType());
+    SimpleImperialBaseManager.bindToBase(guardsman, this.worldPosition);
 
     serverLevel.addFreshEntity(guardsman);
 
@@ -1544,7 +1384,7 @@ private boolean spawnThemedTroopAt(ServerLevel serverLevel, EntityType<? extends
     }
 
     troop.moveTo(x, y, z, yRot, xRot);
-    troop.assignToCommandCore(this.worldPosition);
+    SimpleImperialBaseManager.bindToBase(troop, this.worldPosition);
 
     serverLevel.addFreshEntity(troop);
 
@@ -1714,128 +1554,10 @@ public boolean engineerRepair(int amount) {
         return basePos;
     }
 
-    private BlockPos findGuardPostPosition(int soldierIndex) {
-        if (this.cityLevel <= 1) {
-            int radius = 4;
-            int positionIndex = soldierIndex % 8;
-
-            return switch (positionIndex) {
-                case 0 -> this.worldPosition.offset(0, 0, radius);
-                case 1 -> this.worldPosition.offset(radius, 0, 0);
-                case 2 -> this.worldPosition.offset(0, 0, -radius);
-                case 3 -> this.worldPosition.offset(-radius, 0, 0);
-                case 4 -> this.worldPosition.offset(radius, 0, radius);
-                case 5 -> this.worldPosition.offset(-radius, 0, radius);
-                case 6 -> this.worldPosition.offset(radius, 0, -radius);
-                case 7 -> this.worldPosition.offset(-radius, 0, -radius);
-                default -> this.worldPosition.offset(0, 0, radius);
-            };
-        }
-
-        int radius = Math.max(8, getCityStructureRadius());
-        int wallYOffset = getCityWallHeight();
-        int towerYOffset = getCityWallHeight() + 4;
-        int positionIndex = soldierIndex % 16;
-
-        return switch (positionIndex) {
-            case 0 -> this.worldPosition.offset(radius, towerYOffset, radius);
-            case 1 -> this.worldPosition.offset(-radius, towerYOffset, radius);
-            case 2 -> this.worldPosition.offset(radius, towerYOffset, -radius);
-            case 3 -> this.worldPosition.offset(-radius, towerYOffset, -radius);
-            case 4 -> this.worldPosition.offset(5, wallYOffset, radius);
-            case 5 -> this.worldPosition.offset(-5, wallYOffset, radius);
-            case 6 -> this.worldPosition.offset(radius, wallYOffset, 5);
-            case 7 -> this.worldPosition.offset(radius, wallYOffset, -5);
-            case 8 -> this.worldPosition.offset(5, wallYOffset, -radius);
-            case 9 -> this.worldPosition.offset(-5, wallYOffset, -radius);
-            case 10 -> this.worldPosition.offset(-radius, wallYOffset, 5);
-            case 11 -> this.worldPosition.offset(-radius, wallYOffset, -5);
-            case 12 -> this.worldPosition.offset(radius - 2, wallYOffset, radius - 2);
-            case 13 -> this.worldPosition.offset(-radius + 2, wallYOffset, radius - 2);
-            case 14 -> this.worldPosition.offset(radius - 2, wallYOffset, -radius + 2);
-            case 15 -> this.worldPosition.offset(-radius + 2, wallYOffset, -radius + 2);
-            default -> this.worldPosition.offset(5, wallYOffset, radius);
-        };
-    }
-
-    private void prepareGuardPost(ServerLevel serverLevel, BlockPos guardPostPos) {
-        if (guardPostPos == null) {
-            return;
-        }
-
-        if (guardPostPos.equals(this.worldPosition)) {
-            return;
-        }
-
-        BlockPos floorPos = guardPostPos.below();
-
-        if (!floorPos.equals(this.worldPosition) && serverLevel.getBlockState(floorPos).isAir()) {
-            serverLevel.setBlock(floorPos, Blocks.STONE_BRICKS.defaultBlockState(), 3);
-        }
-
-        clearBlockForGuard(serverLevel, guardPostPos);
-        clearBlockForGuard(serverLevel, guardPostPos.above());
-    }
-
-    private void clearBlockForGuard(ServerLevel serverLevel, BlockPos pos) {
-        if (pos.equals(this.worldPosition)) {
-            return;
-        }
-
-        if (!serverLevel.getBlockState(pos).isAir()) {
-            serverLevel.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
-        }
-    }
-
-    private void reorganizeExistingGuardsmen(ServerLevel serverLevel) {
-        int searchRadius = Math.max(96, getCityStructureRadius() + 32);
-
-        AABB searchBox = new AABB(
-                this.worldPosition.getX() - searchRadius,
-                this.worldPosition.getY() - 64,
-                this.worldPosition.getZ() - searchRadius,
-                this.worldPosition.getX() + searchRadius,
-                this.worldPosition.getY() + 96,
-                this.worldPosition.getZ() + searchRadius
-        );
-
-        List<GuardsmanEntity> guardsmen = serverLevel.getEntitiesOfClass(
-                GuardsmanEntity.class,
-                searchBox,
-                guardsman -> guardsman.isAssignedToCommandCore(this.worldPosition)
-        );
-
-        int index = 0;
-
-        for (GuardsmanEntity guardsman : guardsmen) {
-            BlockPos guardPostPos = findGuardPostPosition(index);
-
-            prepareGuardPost(serverLevel, guardPostPos);
-            guardsman.assignGuardPost(guardPostPos);
-
-            if (guardsman.getTarget() == null) {
-                guardsman.teleportTo(
-                        guardPostPos.getX() + 0.5D,
-                        guardPostPos.getY(),
-                        guardPostPos.getZ() + 0.5D
-                );
-            }
-
-            index++;
-        }
-
-        // Themed troops (Skitarii, Kasrkin, Enforcer, Mine Guard, Agri Militia, ...) share a base
-        // class and count toward the military tally too, but they hold no fixed guard post — they
-        // patrol freely — so we only recount them here, in a single sweep.
-        List<AbstractImperialTroopEntity> themedTroops = serverLevel.getEntitiesOfClass(
-                AbstractImperialTroopEntity.class,
-                searchBox,
-                troop -> troop.isAssignedToCommandCore(this.worldPosition)
-        );
-
-        this.recruitedGuardsmen = guardsmen.size() + themedTroops.size();
-        setChanged();
-    }
+    // Guard posts are gone. A base's soldiers are bound to a home ring around the Core and left
+    // loose; findGuardPostPosition/prepareGuardPost/reorganizeExistingGuardsmen wrote blocks on the
+    // walls and reassigned every trooper on every level-up, and both were only ever there to serve
+    // the city builder. Binding is now one call to SimpleImperialBaseManager.bindToBase.
 
     public void onAssignedGuardsmanDeath() {
         if (this.recruitedGuardsmen > 0) {
@@ -1928,10 +1650,6 @@ public void callImperialReinforcements(Player player) {
                 continue;
             }
 
-            BlockPos guardPostPos = findGuardPostPosition(this.recruitedGuardsmen);
-
-            prepareGuardPost(serverLevel, guardPostPos);
-
             guardsman.moveTo(
                     spawnPos.getX() + 0.5D,
                     spawnPos.getY(),
@@ -1940,10 +1658,9 @@ public void callImperialReinforcements(Player player) {
                     0.0F
             );
 
-            guardsman.assignToCommandCore(this.worldPosition);
-            guardsman.assignGuardPost(guardPostPos);
             guardsman.assignRandomChapter();
             guardsman.initializeFromCity(getReinforcementRank(), getCityType());
+            SimpleImperialBaseManager.bindToBase(guardsman, this.worldPosition);
 
             serverLevel.addFreshEntity(guardsman);
 
@@ -2342,9 +2059,10 @@ private int getSpaceMarinePromotionCooldownTicks() {
 
     this.cityLevel++;
 
+    // An upgrade is now purely abstract: capacity, storage, production and the strategic Age move,
+    // and not one block is placed. Nothing is built, no wall grows and no soldier is reassigned.
     if (this.level instanceof ServerLevel serverLevel) {
-        buildCityStructure(serverLevel);
-        reorganizeExistingGuardsmen(serverLevel);
+        applyStrategicAgeForLevel(serverLevel);
     }
 
     setChanged();
@@ -2354,557 +2072,69 @@ private int getSpaceMarinePromotionCooldownTicks() {
     }
 
     player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.done", this.cityLevel), false);
-    player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.expanded"), false);
-    player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.reassigned"), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.abstract"), false);
+    player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.new_era",
+            SimpleImperialBaseBalance.ageForCoreLevel(this.cityLevel).getDisplayName()), false);
     player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.new_storage", getStorageCapacity()), false);
     player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.new_production", getDailyIronProduction(), getDailyScrapProduction(), getDailyCoalProduction()), false);
     player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.new_military", getMilitaryCapacity()), false);
     player.displayClientMessage(Component.translatable("msg.firstcrusade.upgrade.new_rank", getStartingGuardsmanRank().getDisplayName()), false);
 }
 
-// World-generated cities are established settlements, not fresh outposts: they start as a proper
-// walled village (Core as the central keep, curtain wall around the whole town, towers and houses
-// with beds). Called once by WorldSettlementSeeder right after the Core is placed.
-private static final int AUTONOMOUS_VILLAGE_LEVEL = 4;
-private static final int AUTONOMOUS_START_POPULATION = 18;
-private static final int AUTONOMOUS_GARRISON = 8;
-
+/**
+ * Founds a world-generated Imperial base: a Core, one small pad of ground, four soldiers.
+ *
+ * <p>This used to raise a whole walled town — curtain wall, corner towers, a housing district, a
+ * central spire — and settle eighteen citizens and eight troopers inside it, and then keep growing
+ * it forever. A base is now the Imperial mirror of an Ork camp, so the founding is a single call
+ * that writes a 9x9 foundation and never places another block.
+ *
+ * <p>Called once by {@link WorldSettlementSeeder} right after the Core block appears.
+ */
 public void buildAutonomousVillage(ServerLevel serverLevel) {
     if (this.cityType == null) {
         assignCityType(serverLevel);
     }
 
-    // The settlement's scale (Village/Town/City) drives its founding level, which the physical
-    // builder maps to a wall radius. HIVE_CAPITAL never reaches here (its own path builds it).
+    // The settlement scale still sets the base's abstract level (and so its garrison size), it just
+    // no longer maps to a wall radius, because there is no wall.
     this.cityLevel = Math.max(this.cityLevel, this.settlementScale.getStartLevel());
 
-    // Planned W40k settlement (plaza + avenues + curtain wall + zoned buildings), raised through
-    // the footprint/anti-collision/entity-safety pipeline. The old loose ring of wooden houses
-    // (buildSimpleSettlement) is kept but no longer called.
     // Register on the war map FIRST: the strategic sync prunes any settlement record whose city
-    // isn't on the map, which would silently drop the layout plan built below.
-    WorldWarMapData.get(serverLevel).recordCity(this.worldPosition);
-    StrategicWarAIData warData = StrategicWarAIData.get(serverLevel);
-    StrategicSettlementRecord record = warData.getOrCreateImperial(serverLevel, this.worldPosition);
-    CityArchitect.buildFoundingSettlement(serverLevel, this, record);
-    warData.setDirty();
+    // isn't on the map, which would drop the record the Age is written onto below.
+    SimpleImperialBaseManager.foundBase(serverLevel, this);
+    applyStrategicAgeForLevel(serverLevel);
 
-    spawnStartingPopulation(serverLevel, AUTONOMOUS_START_POPULATION);
-    spawnInitialGarrison(serverLevel, AUTONOMOUS_GARRISON);
+    // A brand-new base always starts at four, whatever its level would allow it to hold.
+    spawnInitialGarrison(serverLevel, SimpleImperialBaseBalance.FOUNDING_GARRISON);
+
+    // Founding counts as the migration: nothing legacy exists here to stand down.
+    this.simplifiedBaseMigrated = true;
     setChanged();
 }
 
-// Settles a starting population inside a freshly generated town so it reads as inhabited from the
-// first moment (instead of slowly growing from empty). Citizens are assigned to this Core and find
-// work / patrol / grow on their own from there.
-private void spawnStartingPopulation(ServerLevel serverLevel, int count) {
-    int radius = getCityStructureRadius();
-    int spawned = 0;
-    int attempts = 0;
-    int maxAttempts = count * 10;
+/**
+ * Writes the strategic Age this Core's level stands for straight onto its settlement record.
+ *
+ * <p>The Age used to be bought by an AI running every 100 ticks off a bank of strategic resources
+ * nobody could see. Making it a function of the Core level means upgrading the Core is the visible
+ * act that opens the next tier of Astartes surgery — and it costs one map write, not a tick.
+ */
+private void applyStrategicAgeForLevel(ServerLevel serverLevel) {
+    WorldWarMapData.get(serverLevel).recordCity(this.worldPosition);
 
-    while (spawned < count && attempts < maxAttempts) {
-        attempts++;
+    StrategicWarAIData warData = StrategicWarAIData.get(serverLevel);
+    StrategicSettlementRecord record = warData.getOrCreateImperial(serverLevel, this.worldPosition);
 
-        int dx = serverLevel.random.nextInt(radius * 2 - 4) - (radius - 2);
-        int dz = serverLevel.random.nextInt(radius * 2 - 4) - (radius - 2);
-        BlockPos pos = this.worldPosition.offset(dx, 0, dz);
-
-        // Stand on solid ground with two blocks of clearance, never inside a wall or the Core.
-        if (!serverLevel.isEmptyBlock(pos) || !serverLevel.isEmptyBlock(pos.above())) {
-            continue;
-        }
-        if (serverLevel.isEmptyBlock(pos.below())) {
-            continue;
-        }
-
-        ImperialCitizenEntity citizen = FCRegistry.IMPERIAL_CITIZEN.get().create(serverLevel);
-        if (citizen == null) {
-            break;
-        }
-
-        citizen.assignToCommandCore(this.worldPosition);
-        citizen.moveTo(
-                pos.getX() + 0.5D,
-                pos.getY(),
-                pos.getZ() + 0.5D,
-                serverLevel.random.nextFloat() * 360.0F,
-                0.0F
-        );
-        citizen.setCustomName(Component.literal("Imperial Citizen"));
-        serverLevel.addFreshEntity(citizen);
-        spawned++;
+    if (record.setAgeAtLeast(SimpleImperialBaseBalance.ageForCoreLevel(this.cityLevel))) {
+        warData.setDirty();
     }
 }
 
-private void buildCityStructure(ServerLevel serverLevel) {
-    int radius = getCityStructureRadius();
-    int wallHeight = getCityWallHeight();
-
-    // Clear the whole footprint (plus a perimeter margin) of trees, leaves, plants and snow first,
-    // so ambient terrain never pokes through or blocks the town.
-    WorldGenPlacement.clearVegetation(serverLevel, this.worldPosition, radius + 4, wallHeight + 16);
-
-    // The town just grew, so its footprint, its exclusion zones and the reach of its vegetation all
-    // moved. Flag the area for redecoration; unloaded chunks are handled when they next load.
-    com.example.examplemod.flora.runtime.FloraTransitionManager.onTerritoryCaptured(
-            serverLevel, this.worldPosition, radius + 48);
-
-    // Curtain wall around the whole town, corner towers, and a paved cross of main streets.
-    buildFoundation(serverLevel, radius);
-    buildOuterWall(serverLevel, radius, wallHeight);
-    buildCornerTowers(serverLevel, radius, wallHeight);
-    buildCentralRoad(serverLevel, radius);
-
-    // The Core is the central keep: a small castle in the middle of the town.
-    buildCentralKeep(serverLevel, CENTRAL_KEEP_HALF, wallHeight + 3);
-
-    // Fill the rest of the interior with a grid of houses (each with beds), like a real village.
-    buildHousingDistrict(serverLevel, radius);
-
-    // The towering central hive spire rises behind the keep — the city's crowning landmark, climbing
-    // far above the walls like the spire of an Imperial hive.
-    buildCentralSpire(serverLevel, this.worldPosition.offset(-1, 0, -(radius / 2)), wallHeight + 26 + this.cityLevel * 4);
-}
-
-private static final int CENTRAL_KEEP_HALF = 6;
-
-// The town's heart: a square gothic keep walled around the Core, with a southern gate, taller
-// corner pillars and battlements. The Core itself sits in the courtyard at the centre.
-private void buildCentralKeep(ServerLevel serverLevel, int keepHalf, int height) {
-    BlockState wall = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
-    BlockState pillar = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
-    BlockState crenel = Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState();
-
-    for (int x = -keepHalf; x <= keepHalf; x++) {
-        for (int z = -keepHalf; z <= keepHalf; z++) {
-            boolean perimeter = Math.abs(x) == keepHalf || Math.abs(z) == keepHalf;
-            if (!perimeter) {
-                continue;
-            }
-
-            boolean gate = z == keepHalf && x >= -1 && x <= 1;
-            boolean isCorner = Math.abs(x) == keepHalf && Math.abs(z) == keepHalf;
-            int top = isCorner ? height + 2 : height;
-
-            for (int y = 0; y < top; y++) {
-                if (gate && y < 4) {
-                    continue;
-                }
-                safePlace(serverLevel, this.worldPosition.offset(x, y, z), isCorner ? pillar : wall);
-            }
-
-            if (isCorner) {
-                safePlace(serverLevel, this.worldPosition.offset(x, top, z), Blocks.LANTERN.defaultBlockState());
-            } else if (!gate && ((x + z) & 1) == 0) {
-                safePlace(serverLevel, this.worldPosition.offset(x, height, z), crenel);
-            }
-        }
-    }
-}
-
-// Lays out the residential blocks of the town: gabled houses (each with beds) on a grid with wide
-// streets, leaving an open plaza around the central keep and the main cross-roads (incl. the south
-// gate) clear. Every house gets a street lamp at its corner so the city lights up at night. The
-// number of houses scales with the wall radius, so bigger cities are bigger towns.
-private void buildHousingDistrict(ServerLevel serverLevel, int radius) {
-    int cell = 9;                                // grid cell pitch (house up to 7 + street)
-    int inner = radius - 3;                      // keep houses off the curtain wall
-    int plazaHalf = CENTRAL_KEEP_HALF + 4;       // open plaza ringing the keep
-    int roadHalf = 2;                            // central cross-road corridor kept clear
-
-    for (int sx = -inner; sx + 7 <= inner; sx += cell) {
-        for (int sz = -inner; sz + 7 <= inner; sz += cell) {
-            // Vary each house's footprint so the district isn't a wall of identical boxes.
-            int w = 5 + serverLevel.random.nextInt(3);   // 5..7
-            int d = 5 + serverLevel.random.nextInt(3);   // 5..7
-            int x1 = sx + w - 1;
-            int z1 = sz + d - 1;
-
-            // Reserve the central plaza (the keep plus breathing room around it).
-            if (x1 >= -plazaHalf && sx <= plazaHalf && z1 >= -plazaHalf && sz <= plazaHalf) {
-                continue;
-            }
-
-            // Keep the main cross-roads (and the south gate) open.
-            if ((x1 >= -roadHalf && sx <= roadHalf) || (z1 >= -roadHalf && sz <= roadHalf)) {
-                continue;
-            }
-
-            // Leave the odd block as an open lamp-lit courtyard so it doesn't read as a solid grid.
-            if (serverLevel.random.nextInt(6) == 0) {
-                placeLampPost(serverLevel, this.worldPosition.offset(sx + w / 2, 0, sz + d / 2), 4);
-                continue;
-            }
-
-            // Now and then a tall subsidiary hive spire rises among the houses, for vertical scale.
-            if (serverLevel.random.nextInt(9) == 0) {
-                buildTower(serverLevel, this.worldPosition.offset(sx + 1, 0, sz + 1), 12 + serverLevel.random.nextInt(12));
-                continue;
-            }
-
-            int wallHeight = 4 + serverLevel.random.nextInt(2);   // 4..5
-            buildSimpleHouse(serverLevel, this.worldPosition.offset(sx, 0, sz), w, d, wallHeight);
-
-            // Street lamp on the corner facing the avenue.
-            placeLampPost(serverLevel, this.worldPosition.offset(sx - 1, 0, sz - 1), 3);
-
-            // Many hab-blocks vent a smoking manufactorum chimney — the industrial breath of a hive.
-            if (serverLevel.random.nextInt(3) == 0) {
-                placeSmokestack(serverLevel, this.worldPosition.offset(sx + 1, wallHeight, sz + 1), 3 + serverLevel.random.nextInt(3));
-            }
-        }
-    }
-}
-
-// An industrial chimney venting smoke (a lit campfire), poking up through a hab-block roof.
-private void placeSmokestack(ServerLevel serverLevel, BlockPos base, int height) {
-    for (int y = 0; y < height; y++) {
-        safePlace(serverLevel, base.offset(0, y, 0), Blocks.POLISHED_BLACKSTONE.defaultBlockState());
-    }
-    safePlace(serverLevel, base.offset(0, height, 0), Blocks.CAMPFIRE.defaultBlockState());
-}
-
-// A gothic street lamp: a slim dark post crowned with a lantern, lighting the town after dark.
-private void placeLampPost(ServerLevel serverLevel, BlockPos base, int height) {
-    for (int y = 0; y < height; y++) {
-        safePlace(serverLevel, base.offset(0, y, 0), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
-    }
-    safePlace(serverLevel, base.offset(0, height, 0), Blocks.LANTERN.defaultBlockState());
-}
-
-// A tall gothic spire: a 2x2 dark-stone shaft with banded buttresses, an overhanging
-// battlement, a tapering steeple and a gilded dome topped with a glowing finial.
-private void buildCentralSpire(ServerLevel serverLevel, BlockPos base, int height) {
-    buildTower(serverLevel, base, height);
-
-    // Extra arched windows up the shaft to read as a cathedral tower.
-    for (int y = 4; y < height - 2; y += 4) {
-        safePlace(serverLevel, base.offset(0, y, -1), Blocks.IRON_BARS.defaultBlockState());
-        safePlace(serverLevel, base.offset(1, y, -1), Blocks.IRON_BARS.defaultBlockState());
-    }
-}
-
-private void buildFoundation(ServerLevel serverLevel, int radius) {
-    BlockState lightTile = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
-    BlockState darkTile = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
-
-    for (int x = -radius; x <= radius; x++) {
-        for (int z = -radius; z <= radius; z++) {
-            // Pave the whole interior floor (replacing grass/dirt), so the city has a proper stone
-            // plaza instead of patches of bare ground. A thin sub-floor keeps it solid over dips.
-            BlockPos floor = this.worldPosition.offset(x, -1, z);
-            BlockState tile = ((x + z) & 1) == 0 ? lightTile : darkTile;
-            serverLevel.setBlock(floor, tile, 3);
-
-            BlockPos below = floor.below();
-            if (serverLevel.getBlockState(below).isAir()
-                    || !serverLevel.getBlockState(below).isCollisionShapeFullBlock(serverLevel, below)) {
-                serverLevel.setBlock(below, Blocks.COBBLED_DEEPSLATE.defaultBlockState(), 3);
-            }
-        }
-    }
-}
-
-private void buildOuterWall(ServerLevel serverLevel, int radius, int wallHeight) {
-    BlockState wall = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
-    BlockState pillar = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
-    BlockState crenel = Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState();
-    BlockState window = Blocks.IRON_BARS.defaultBlockState();
-
-    for (int x = -radius; x <= radius; x++) {
-        for (int z = -radius; z <= radius; z++) {
-            boolean isWall = Math.abs(x) == radius || Math.abs(z) == radius;
-
-            if (!isWall) {
-                continue;
-            }
-
-            // Southern gate: an arched opening (clear below, wall arches over the top).
-            boolean isGate = z == radius && x >= -2 && x <= 2;
-
-            // Buttress pillars every few blocks rise above the curtain wall.
-            boolean isPillar = (Math.abs(z) == radius && Math.floorMod(x, 5) == 0)
-                    || (Math.abs(x) == radius && Math.floorMod(z, 5) == 0);
-
-            int columnTop = isPillar ? wallHeight + 2 : wallHeight;
-
-            for (int y = 0; y < columnTop; y++) {
-                if (isGate && y < 5) {
-                    continue;
-                }
-
-                BlockState mat = isPillar ? pillar : wall;
-
-                // Tall narrow gothic windows between the buttresses.
-                if (!isPillar && !isGate && (y == wallHeight / 2 || y == wallHeight / 2 + 1)
-                        && (Math.floorMod(x, 5) == 2 || Math.floorMod(z, 5) == 2)) {
-                    mat = window;
-                }
-
-                safePlace(serverLevel, this.worldPosition.offset(x, y, z), mat);
-            }
-
-            if (isPillar) {
-                safePlace(serverLevel, this.worldPosition.offset(x, columnTop, z), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
-                safePlace(serverLevel, this.worldPosition.offset(x, columnTop + 1, z), Blocks.LANTERN.defaultBlockState());
-            } else if (!isGate && ((x + z) & 1) == 0) {
-                safePlace(serverLevel, this.worldPosition.offset(x, wallHeight, z), crenel);
-            }
-        }
-    }
-}
-
-private void buildCornerTowers(ServerLevel serverLevel, int radius, int wallHeight) {
-    int height = wallHeight + 8;
-    buildTower(serverLevel, this.worldPosition.offset(radius, 0, radius), height);
-    buildTower(serverLevel, this.worldPosition.offset(-radius, 0, radius), height);
-    buildTower(serverLevel, this.worldPosition.offset(radius, 0, -radius), height);
-    buildTower(serverLevel, this.worldPosition.offset(-radius, 0, -radius), height);
-}
-
-// A gothic Imperial spire: dark 2x2 shaft with banded buttresses and lit windows, an
-// overhanging battlement, a tapering steeple, and a gilded dome with a glowing finial.
-private void buildTower(ServerLevel serverLevel, BlockPos corner, int height) {
-    BlockState shaft = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
-    BlockState band = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
-
-    for (int y = 0; y < height; y++) {
-        BlockState mat = (y % 5 == 4) ? band : shaft;
-        safePlace(serverLevel, corner.offset(0, y, 0), mat);
-        safePlace(serverLevel, corner.offset(1, y, 0), mat);
-        safePlace(serverLevel, corner.offset(0, y, 1), mat);
-        safePlace(serverLevel, corner.offset(1, y, 1), mat);
-    }
-
-    int topY = height;
-
-    // Overhanging battlement platform (4x4).
-    for (int x = -1; x <= 2; x++) {
-        for (int z = -1; z <= 2; z++) {
-            safePlace(serverLevel, corner.offset(x, topY, z), band);
-        }
-    }
-
-    // Crenellations around the platform edge.
-    for (int t = -1; t <= 2; t++) {
-        if ((t & 1) == 0) {
-            safePlace(serverLevel, corner.offset(t, topY + 1, -1), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
-            safePlace(serverLevel, corner.offset(t, topY + 1, 2), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
-            safePlace(serverLevel, corner.offset(-1, topY + 1, t), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
-            safePlace(serverLevel, corner.offset(2, topY + 1, t), Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState());
-        }
-    }
-
-    // Tapering steeple above the platform.
-    int spireY = topY + 1;
-    for (int i = 0; i < 4; i++) {
-        BlockState m = (i % 2 == 0) ? band : shaft;
-        safePlace(serverLevel, corner.offset(0, spireY + i, 0), m);
-        safePlace(serverLevel, corner.offset(1, spireY + i, 0), m);
-        safePlace(serverLevel, corner.offset(0, spireY + i, 1), m);
-        safePlace(serverLevel, corner.offset(1, spireY + i, 1), m);
-    }
-
-    // Gilded dome and glowing finial.
-    int domeY = spireY + 4;
-    safePlace(serverLevel, corner.offset(0, domeY, 0), Blocks.GOLD_BLOCK.defaultBlockState());
-    safePlace(serverLevel, corner.offset(1, domeY, 0), Blocks.GOLD_BLOCK.defaultBlockState());
-    safePlace(serverLevel, corner.offset(0, domeY, 1), Blocks.GOLD_BLOCK.defaultBlockState());
-    safePlace(serverLevel, corner.offset(1, domeY, 1), Blocks.GOLD_BLOCK.defaultBlockState());
-    safePlace(serverLevel, corner.offset(0, domeY + 1, 0), Blocks.GOLD_BLOCK.defaultBlockState());
-    safePlace(serverLevel, corner.offset(0, domeY + 2, 0), Blocks.END_ROD.defaultBlockState());
-
-    // A lantern hung at the base of the steeple.
-    safePlace(serverLevel, corner.offset(0, spireY, -1), Blocks.LANTERN.defaultBlockState());
-}
-
-// A gothic Imperial hab-block: dark brick walls with tall narrow lancet windows, a gabled tiled
-// roof, a gilded finial, and beds inside. Footprint and roof axis vary per house so the district
-// reads as a real town of distinct buildings rather than a grid of identical boxes.
-private void buildSimpleHouse(ServerLevel serverLevel, BlockPos start, int width, int depth, int height) {
-    BlockState wall = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
-    BlockState corner = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
-    BlockState window = Blocks.IRON_BARS.defaultBlockState();
-
-    for (int x = 0; x < width; x++) {
-        for (int z = 0; z < depth; z++) {
-            safePlace(serverLevel, start.offset(x, -1, z), Blocks.COBBLED_DEEPSLATE.defaultBlockState());
-
-            boolean border = x == 0 || z == 0 || x == width - 1 || z == depth - 1;
-            boolean isCorner = (x == 0 || x == width - 1) && (z == 0 || z == depth - 1);
-
-            if (border) {
-                for (int y = 0; y < height; y++) {
-                    boolean doorway = z == 0 && x == width / 2 && y <= 1;
-                    // Tall, narrow lancet windows centred on each wall (gothic 40k look).
-                    boolean windowSlot = !isCorner && (x == width / 2 || z == depth / 2)
-                            && y >= 1 && y <= height - 2;
-
-                    if (doorway) {
-                        continue;
-                    }
-
-                    BlockState mat = isCorner ? corner : (windowSlot ? window : wall);
-                    safePlace(serverLevel, start.offset(x, y, z), mat);
-                }
-            }
-        }
-    }
-
-    // A pitched, tiled gable roof along the longer axis (varies the silhouette house to house).
-    boolean ridgeAlongX = width >= depth;
-    buildGableRoof(serverLevel, start, width, depth, height, ridgeAlongX);
-
-    // Gilded finial crowning the ridge.
-    int peak = (ridgeAlongX ? depth : width) / 2;
-    safePlace(serverLevel, start.offset(width / 2, height + peak + 1, depth / 2), Blocks.GOLD_BLOCK.defaultBlockState());
-    safePlace(serverLevel, start.offset(width / 2, height + peak + 2, depth / 2), Blocks.END_ROD.defaultBlockState());
-
-    // A lantern hung from the ridge lights the home at night.
-    safePlace(serverLevel, start.offset(width / 2, height - 1, depth / 2), Blocks.LANTERN.defaultBlockState());
-
-    // Beds (homes are where the population sleeps and grows; beds also register as home POIs).
-    placeBed(serverLevel, start.offset(1, 0, 1), Direction.SOUTH);
-    if (width >= 6 && depth >= 5) {
-        placeBed(serverLevel, start.offset(width - 2, 0, 1), Direction.SOUTH);
-    }
-}
-
-// Builds a tiled gable roof over a [0..width-1] x [0..depth-1] house whose walls top out at y=height,
-// with a one-block eave overhang and the gable-end walls filled in. The ridge runs along the longer
-// axis. Roof stairs face outward (away from the ridge); flip the facings here if it ever looks
-// inverted in game.
-private void buildGableRoof(ServerLevel serverLevel, BlockPos start, int width, int depth, int height, boolean ridgeAlongX) {
-    BlockState ridge = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
-    BlockState gableWall = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
-
-    if (ridgeAlongX) {
-        int peak = depth / 2;
-        for (int i = 0; i <= peak; i++) {
-            int y = height + i;
-            int zf = i;
-            int zb = depth - 1 - i;
-
-            for (int x = -1; x <= width; x++) {
-                if (zf < zb) {
-                    placeRoofStair(serverLevel, start.offset(x, y, zf), Direction.SOUTH);
-                    placeRoofStair(serverLevel, start.offset(x, y, zb), Direction.NORTH);
-                } else {
-                    safePlace(serverLevel, start.offset(x, y, zf), ridge);
-                }
-            }
-
-            // Fill the triangular gable ends so the attic isn't open.
-            for (int z = zf + 1; z < zb; z++) {
-                safePlace(serverLevel, start.offset(0, y, z), gableWall);
-                safePlace(serverLevel, start.offset(width - 1, y, z), gableWall);
-            }
-        }
-    } else {
-        int peak = width / 2;
-        for (int i = 0; i <= peak; i++) {
-            int y = height + i;
-            int xf = i;
-            int xb = width - 1 - i;
-
-            for (int z = -1; z <= depth; z++) {
-                if (xf < xb) {
-                    placeRoofStair(serverLevel, start.offset(xf, y, z), Direction.WEST);
-                    placeRoofStair(serverLevel, start.offset(xb, y, z), Direction.EAST);
-                } else {
-                    safePlace(serverLevel, start.offset(xf, y, z), ridge);
-                }
-            }
-
-            for (int x = xf + 1; x < xb; x++) {
-                safePlace(serverLevel, start.offset(x, y, 0), gableWall);
-                safePlace(serverLevel, start.offset(x, y, depth - 1), gableWall);
-            }
-        }
-    }
-}
-
-// Places a roof stair (into empty space only) facing the given direction.
-private void placeRoofStair(ServerLevel serverLevel, BlockPos pos, Direction facing) {
-    if (pos.equals(this.worldPosition) || !serverLevel.getBlockState(pos).isAir()) {
-        return;
-    }
-
-    serverLevel.setBlock(pos, Blocks.DEEPSLATE_TILE_STAIRS.defaultBlockState()
-            .setValue(BlockStateProperties.HORIZONTAL_FACING, facing), 3);
-}
-
-// Places a two-block bed (foot + head) facing the given direction, only into empty space.
-private void placeBed(ServerLevel serverLevel, BlockPos footPos, Direction facing) {
-    BlockPos headPos = footPos.relative(facing);
-
-    if (footPos.equals(this.worldPosition) || headPos.equals(this.worldPosition)) {
-        return;
-    }
-
-    if (!serverLevel.getBlockState(footPos).isAir() || !serverLevel.getBlockState(headPos).isAir()) {
-        return;
-    }
-
-    serverLevel.setBlock(footPos, Blocks.RED_BED.defaultBlockState()
-            .setValue(BedBlock.FACING, facing)
-            .setValue(BedBlock.PART, BedPart.FOOT), 3);
-    serverLevel.setBlock(headPos, Blocks.RED_BED.defaultBlockState()
-            .setValue(BedBlock.FACING, facing)
-            .setValue(BedBlock.PART, BedPart.HEAD), 3);
-}
-
-private void buildCentralRoad(ServerLevel serverLevel, int radius) {
-    BlockState road = Blocks.POLISHED_BLACKSTONE.defaultBlockState();
-    BlockState inlay = Blocks.GILDED_BLACKSTONE.defaultBlockState();
-
-    for (int z = -radius + 1; z <= radius - 1; z++) {
-        forcePlaceFloor(serverLevel, this.worldPosition.offset(0, -1, z), inlay);
-        forcePlaceFloor(serverLevel, this.worldPosition.offset(1, -1, z), road);
-        forcePlaceFloor(serverLevel, this.worldPosition.offset(-1, -1, z), road);
-    }
-
-    for (int x = -radius + 1; x <= radius - 1; x++) {
-        forcePlaceFloor(serverLevel, this.worldPosition.offset(x, -1, 0), inlay);
-        forcePlaceFloor(serverLevel, this.worldPosition.offset(x, -1, 1), road);
-        forcePlaceFloor(serverLevel, this.worldPosition.offset(x, -1, -1), road);
-    }
-
-    // Lamp posts line the grand avenues so the city glows after dark (skipping the keep around the
-    // centre so they don't punch through its wall).
-    for (int z = -radius + 4; z <= radius - 4; z += 6) {
-        if (Math.abs(z) <= CENTRAL_KEEP_HALF + 1) {
-            continue;
-        }
-        placeLampPost(serverLevel, this.worldPosition.offset(2, 0, z), 3);
-        placeLampPost(serverLevel, this.worldPosition.offset(-2, 0, z), 3);
-    }
-    for (int x = -radius + 4; x <= radius - 4; x += 6) {
-        if (Math.abs(x) <= CENTRAL_KEEP_HALF + 1) {
-            continue;
-        }
-        placeLampPost(serverLevel, this.worldPosition.offset(x, 0, 2), 3);
-        placeLampPost(serverLevel, this.worldPosition.offset(x, 0, -2), 3);
-    }
-}
-
-// Places a floor block, overwriting the plain foundation tiles (but never the Core itself).
-private void forcePlaceFloor(ServerLevel serverLevel, BlockPos pos, BlockState state) {
-    if (!pos.equals(this.worldPosition)) {
-        serverLevel.setBlock(pos, state, 3);
-    }
-}
-
-private void safePlace(ServerLevel serverLevel, BlockPos pos, BlockState state) {
-    if (pos.equals(this.worldPosition)) {
-        return;
-    }
-
-    if (serverLevel.getBlockState(pos).isAir()) {
-        serverLevel.setBlock(pos, state, 3);
-    }
-}
+// The physical city builder is gone: buildCityStructure and its seventeen helpers (foundation,
+// curtain wall, corner towers, central keep, housing district, roads, spire, beds, lamp posts)
+// placed thousands of blocks every time a city levelled up. A base's whole physical presence is
+// now the 9x9 pad written once at founding by SimpleImperialBaseManager, and nothing rebuilds it.
 
 private void trySpawnOrkRaid(ServerLevel serverLevel) {
     // The fixed test world relies on the seeded Ork cities' war parties, not artificial raids.
@@ -3319,27 +2549,9 @@ private float getRaidChance() {
     };
 }
 
-private int getCityStructureRadius() {
-    return switch (this.cityLevel) {
-        case 1 -> 8;
-        case 2 -> 15;
-        case 3 -> 22;
-        case 4 -> 30;
-        case 5 -> 40;
-        default -> 8;
-    };
-}
-
-private int getCityWallHeight() {
-    return switch (this.cityLevel) {
-        case 1 -> 1;
-        case 2 -> 3;
-        case 3 -> 5;
-        case 4 -> 7;
-        case 5 -> 9;
-        default -> 1;
-    };
-}
+// getCityStructureRadius / getCityWallHeight went with the builder they served: there is no wall
+// to be tall and no footprint to be wide. Territory reach is getTerritoryRadius; the garrison's
+// home ring is SimpleImperialBaseBalance.HOME_RADIUS.
 
 public GuardsmanRank getStartingGuardsmanRank() {
     GuardsmanRank baseRank = switch (this.cityLevel) {
@@ -3540,66 +2752,14 @@ public void surveyBuildBorder(Player player) {
 
 // Hands the owner the Ferramenta de Construção, bound to this Core (see CityBuilderToolItem).
 public void giveBuilderTool(Player player) {
-    if (!isOwner(player)) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.builder.not_owner"), true);
-        return;
-    }
-
-    ItemStack tool = new ItemStack(FCRegistry.CITY_BUILDER_TOOL.get());
-    CityBuilderToolItem.bindToCore(tool, this.worldPosition);
-
-    if (!player.getInventory().add(tool)) {
-        player.drop(tool, false);
-    }
-
-    player.displayClientMessage(Component.translatable("msg.firstcrusade.builder.given"), true);
+    refuseRemovedConstruction(player);
 }
 
 // Places a structure the owner picked with the Builder Tool at a chosen position: validates
 // ownership, city level, the build border, a clear+solid footprint and the resource cost, then
 // builds/binds/staffs it through the same manager path the Core's auto-build uses.
 public void placeStructureWithTool(Player player, CityStructureType type, BlockPos pos) {
-    if (!isOwner(player)) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.builder.not_owner"), true);
-        return;
-    }
-
-    if (!(this.level instanceof ServerLevel serverLevel)) {
-        return;
-    }
-
-    if (this.cityLevel < type.getRequiredLevel()) {
-        player.displayClientMessage(
-                Component.translatable("msg.firstcrusade.builder.need_level", type.getRequiredLevel()), true);
-        return;
-    }
-
-    int border = getBuildBorderRadius();
-    double dx = (pos.getX() + 0.5D) - (this.worldPosition.getX() + 0.5D);
-    double dz = (pos.getZ() + 0.5D) - (this.worldPosition.getZ() + 0.5D);
-
-    if (dx * dx + dz * dz > (double) border * border) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.builder.out_of_border", border), true);
-        return;
-    }
-
-    if (!CityBuilderPlacement.isAreaBuildable(serverLevel, pos, type.getFootprintRadius(), type.getFootprintHeight())) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.builder.blocked"), true);
-        return;
-    }
-
-    if (!this.resources.has(type.getIronCost(), type.getScrapCost(), type.getCoalCost())) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.builder.need_res",
-                type.getIronCost(), type.getScrapCost(), type.getCoalCost()), true);
-        return;
-    }
-
-    type.place(serverLevel, this, player, pos);
-    this.resources.spend(type.getIronCost(), type.getScrapCost(), type.getCoalCost());
-    setChanged();
-
-    player.displayClientMessage(Component.translatable("msg.firstcrusade.builder.built",
-            Component.translatable(type.getNameKey())), true);
+    refuseRemovedConstruction(player);
 }
 
 // Live threat from actual nearby enemies (quantity x quality), not raid history.
@@ -3770,8 +2930,15 @@ public int getStorageCapacity() {
     return ImperialCityLevelStats.storageCapacity(this.cityLevel);
 }
 
+/**
+ * How many soldiers this base may hold.
+ *
+ * <p>Four at level 1, twelve at level 5 — a garrison, not the hundred-strong army the old city
+ * table allowed. The number lives in {@link SimpleImperialBaseBalance} because it is the only
+ * military figure a simple base has.
+ */
 public int getMilitaryCapacity() {
-    int cap = ImperialCityLevelStats.militaryCapacity(this.cityLevel);
+    int cap = SimpleImperialBaseBalance.garrisonCapacity(this.cityLevel);
     return ExampleMod.TEST_FIXED_WORLD ? Math.min(ExampleMod.TEST_WARRIOR_CAP, cap) : cap;
 }
 
@@ -3902,6 +3069,9 @@ tag.putInt("Food", this.food);
 tag.putInt("SpaceMarinePromotionCooldownTicks", this.spaceMarinePromotionCooldownTicks);
 tag.putInt("SelectedSpecialistOrdinal", this.selectedSpecialistOrdinal);
 
+tag.putBoolean("SimplifiedBaseMigrated", this.simplifiedBaseMigrated);
+tag.putLong("GarrisonCheckReadyAt", this.garrisonCheckReadyAt);
+
 if (this.pendingSpaceMarineCandidateUUID != null) {
     tag.putUUID("PendingSpaceMarineCandidateUUID", this.pendingSpaceMarineCandidateUUID);
 }
@@ -4019,6 +3189,11 @@ if (!GuardsmanSpecialization.fromOrdinal(this.selectedSpecialistOrdinal).isSpeci
     this.selectedSpecialistOrdinal = GuardsmanSpecialization.SNIPER.ordinal();
 }
 
+// Absent in every save written before the base was simplified — which is exactly the set of saves
+// that still need the migration, so the default of false is the correct answer.
+this.simplifiedBaseMigrated = tag.getBoolean("SimplifiedBaseMigrated");
+this.garrisonCheckReadyAt = tag.getLong("GarrisonCheckReadyAt");
+
 if (tag.hasUUID("PendingSpaceMarineCandidateUUID")) {
     this.pendingSpaceMarineCandidateUUID = tag.getUUID("PendingSpaceMarineCandidateUUID");
 } else {
@@ -4031,41 +3206,7 @@ if (this.reinforcementCooldownTicks < 0) {
 
 }
 public void tryBuildScrapYard(Player player) {
-    if (!isOwner(player)) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
-        return;
-    }
-
-    if (!(this.level instanceof ServerLevel serverLevel)) {
-        return;
-    }
-
-    int currentScrapYards = ImperialScrapYardManager.countScrapYards(serverLevel, this, 128);
-
-    if (currentScrapYards >= getScrapYardCapacity()) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.scrap_yard_cap"), true);
-        return;
-    }
-
-    int ironCost = 15;
-    int coalCost = 5;
-
-    if (this.resources.getIron() < ironCost || this.resources.getCoal() < coalCost) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_2_ic", ironCost, coalCost), true);
-        return;
-    }
-
-    boolean built = ImperialScrapYardManager.buildScrapYard(serverLevel, this, player);
-
-    if (!built) {
-        return;
-    }
-
-    this.resources.spend(ironCost, 0, coalCost);
-
-    setChanged();
-
-    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_3", this.resources.getIron(), this.resources.getScrapMetal(), this.resources.getCoal()), false);
+    refuseRemovedConstruction(player);
 }
 
 public int getScrapYardCapacity() {
@@ -4073,41 +3214,7 @@ public int getScrapYardCapacity() {
 }
 
 public void tryBuildPromethiumRefinery(Player player) {
-    if (!isOwner(player)) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
-        return;
-    }
-
-    if (!(this.level instanceof ServerLevel serverLevel)) {
-        return;
-    }
-
-    int currentRefineries = ImperialPromethiumRefineryManager.countRefineries(serverLevel, this, 128);
-
-    if (currentRefineries >= getPromethiumRefineryCapacity()) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.refinery_cap"), true);
-        return;
-    }
-
-    int ironCost = 18;
-    int scrapCost = 8;
-
-    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_2_is", ironCost, scrapCost), true);
-        return;
-    }
-
-    boolean built = ImperialPromethiumRefineryManager.buildRefinery(serverLevel, this, player);
-
-    if (!built) {
-        return;
-    }
-
-    this.resources.spend(ironCost, scrapCost, 0);
-
-    setChanged();
-
-    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_3", this.resources.getIron(), this.resources.getScrapMetal(), this.resources.getCoal()), false);
+    refuseRemovedConstruction(player);
 }
 
 public int getBarracksCapacity() {
@@ -4115,81 +3222,11 @@ public int getBarracksCapacity() {
 }
 
 public void tryBuildBarracks(Player player) {
-    if (!isOwner(player)) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
-        return;
-    }
-
-    if (!(this.level instanceof ServerLevel serverLevel)) {
-        return;
-    }
-
-    int currentBarracks = ImperialBarracksManager.countBarracks(serverLevel, this, 128);
-
-    if (currentBarracks >= getBarracksCapacity()) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.barracks_cap"), true);
-        return;
-    }
-
-    int ironCost = 25;
-    int scrapCost = 15;
-    int coalCost = 5;
-
-    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_3", ironCost, scrapCost, coalCost), true);
-        return;
-    }
-
-    boolean built = ImperialBarracksManager.buildBarracks(serverLevel, this, player);
-
-    if (!built) {
-        return;
-    }
-
-    this.resources.spend(ironCost, scrapCost, coalCost);
-
-    setChanged();
-
-    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_3", this.resources.getIron(), this.resources.getScrapMetal(), this.resources.getCoal()), false);
+    refuseRemovedConstruction(player);
 }
 
 public void tryBuildImperialForge(Player player) {
-    if (!isOwner(player)) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.not_owner"), true);
-        return;
-    }
-
-    if (!(this.level instanceof ServerLevel serverLevel)) {
-        return;
-    }
-
-    int currentForges = ImperialForgeManager.countForges(serverLevel, this, 128);
-
-    if (currentForges >= getImperialForgeCapacity()) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.forge_cap"), true);
-        return;
-    }
-
-    int ironCost = 30;
-    int scrapCost = 20;
-    int coalCost = 10;
-
-    if (this.resources.getIron() < ironCost || this.resources.getScrapMetal() < scrapCost || this.resources.getCoal() < coalCost) {
-        player.displayClientMessage(Component.translatable("msg.firstcrusade.build.need_3", ironCost, scrapCost, coalCost), true);
-        return;
-    }
-
-    boolean built = ImperialForgeManager.buildForge(serverLevel, this, player);
-
-    if (!built) {
-        return;
-    }
-
-    this.resources.spend(ironCost, scrapCost, coalCost);
-
-    setChanged();
-
-    player.displayClientMessage(Component.translatable("msg.firstcrusade.build.res_3", this.resources.getIron(), this.resources.getScrapMetal(), this.resources.getCoal()), false);
+    refuseRemovedConstruction(player);
 }
 
 public int getImperialForgeCapacity() {

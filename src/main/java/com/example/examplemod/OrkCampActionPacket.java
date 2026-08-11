@@ -7,6 +7,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -17,7 +18,26 @@ import net.minecraftforge.network.NetworkEvent;
  */
 public class OrkCampActionPacket {
     public enum Action {
-        BUILD_LOOT_PIT
+        BUILD_LOOT_PIT,
+
+        /**
+         * An Imperial player declares a raid on this camp.
+         *
+         * <p>The packet carries the camp and nothing else. How many soldiers answer, which base
+         * they come from, how far out they land, whether it is even allowed and what the reward is
+         * are all decided by {@link com.example.examplemod.assault.ImperialAssaultManager} on the
+         * server — the client's only contribution is "this player clicked that block".
+         */
+        START_IMPERIAL_RAID,
+
+        /**
+         * An Ork player pours the teeth in his pockets into his own tally.
+         *
+         * <p>The packet carries the camp and nothing else — not how many teeth, which is the whole
+         * point. A client that could name the amount could name any amount; the server counts what
+         * is actually in the inventory and converts that.
+         */
+        STASH_TEEF
     }
 
     private final BlockPos campPos;
@@ -59,10 +79,82 @@ public class OrkCampActionPacket {
             if (blockEntity instanceof OrkCampBlockEntity camp) {
                 switch (packet.action) {
                     case BUILD_LOOT_PIT -> camp.buildLootPit(player);
+                    case START_IMPERIAL_RAID -> startRaid(player, packet.campPos);
+                    case STASH_TEEF -> stashTeef(player);
                 }
             }
         });
 
         context.setPacketHandled(true);
+    }
+
+    /**
+     * Asks the assault manager to open a raid, and shows the player whatever it says.
+     *
+     * <p>Every rule — faction, range, a raid already running here, this player already leading one,
+     * the cooldown — lives in the manager. Nothing is duplicated here, so there is exactly one
+     * place a rule can be wrong.
+     */
+    /**
+     * Turns Ork Teeth in the inventory into personal Teef.
+     *
+     * <p>Counted and removed item by item on the server, so the two halves of the trade can never
+     * disagree: the teeth are gone before the Teef exist, and a full inventory or a failed removal
+     * costs the player nothing. This is the only way Teef enters the game outside a command.
+     *
+     * <p>The strategic {@code StrategicResourceType.TEEF} is untouched. That is the Ork AI's war
+     * chest and shares nothing with a player's pocket but the word.
+     */
+    private static void stashTeef(net.minecraft.server.level.ServerPlayer player) {
+        if (!com.example.examplemod.progression.ork.PlayerOrkProgressionRequirements.isOrk(player)) {
+            player.displayClientMessage(
+                    Component.translatable("msg.firstcrusade.ork.not_ork"), true);
+            return;
+        }
+
+        net.minecraft.world.item.Item tooth = FCRegistry.ORK_TEETH.get();
+        int teeth = 0;
+
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = player.getInventory().getItem(slot);
+            if (stack.is(tooth)) {
+                teeth += stack.getCount();
+                player.getInventory().setItem(slot, ItemStack.EMPTY);
+            }
+        }
+
+        if (teeth <= 0) {
+            player.displayClientMessage(
+                    Component.translatable("msg.firstcrusade.ork.no_teeth"), true);
+            return;
+        }
+
+        com.example.examplemod.progression.ork.PlayerOrkProgressionProfile ork =
+                com.example.examplemod.progression.PlayerProgressionManager.profile(player).ork();
+
+        // TEEF IZ MONEY, KUNNIN BUT BRUTAL and the Bad Moons all pay here, through the one scaler
+        // every Teef award in the mod goes through. Writing the bonus at this call site would have
+        // been a bonus the Core-destroyed award silently did not have.
+        int gained = com.example.examplemod.progression.ork.PlayerOrkRewardModifiers.scaleTeef(ork,
+                teeth * com.example.examplemod.progression.ork
+                        .PlayerOrkProgressionBalance.TEEF_PER_ORK_TOOTH);
+
+        ork.addTeef(gained);
+
+        com.example.examplemod.progression.PlayerProgressionManager
+                .data(player.serverLevel()).markChanged();
+        com.example.examplemod.progression.PlayerProgressionNetwork.sync(player);
+
+        player.displayClientMessage(Component.translatable(
+                "msg.firstcrusade.ork.teef_stashed", gained, ork.teef()), true);
+    }
+
+    private static void startRaid(ServerPlayer player, BlockPos campPos) {
+        Component problem = com.example.examplemod.assault.ImperialAssaultManager
+                .startRaid(player, campPos);
+
+        if (!problem.getString().isEmpty()) {
+            player.displayClientMessage(problem, true);
+        }
     }
 }

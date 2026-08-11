@@ -38,7 +38,9 @@ public class PlasmaGunItem extends Item {
             return InteractionResultHolder.fail(plasmaGun);
         }
 
-        player.getCooldowns().addCooldown(this, FIRE_COOLDOWN_TICKS);
+        player.getCooldowns().addCooldown(this,
+                com.example.examplemod.progression.PlayerProgressionCombat
+                        .cooldownTicks(player, FIRE_COOLDOWN_TICKS));
         player.awardStat(Stats.ITEM_USED.get(this));
 
         level.playSound(
