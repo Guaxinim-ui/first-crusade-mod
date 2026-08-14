@@ -2,6 +2,13 @@ package com.example.examplemod;
 
 import net.minecraft.world.entity.LivingEntity;
 import javax.annotation.Nullable;
+import com.example.examplemod.ai.formation.FCLeaderGoal;
+import com.example.examplemod.ai.formation.FCSquad;
+import com.example.examplemod.ai.formation.FCSquadLeader;
+import com.example.examplemod.performance.config.FirstCrusadePerformanceConfig;
+import com.example.examplemod.unit.profile.FCCombatProfile;
+import com.example.examplemod.unit.profile.FCUnit;
+import com.example.examplemod.unit.profile.UnitRole;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -19,7 +26,31 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
-public class OrkNobEntity extends Monster {
+public class OrkNobEntity extends Monster implements FCUnit, FCSquadLeader {
+
+    /**
+     * A Nob leads by being the biggest thing present, so its profile is a Boy's with the dials
+     * turned up and {@code leads()} added. It never retreats: an Ork mob that breaks is a Warboss's
+     * problem, not a Nob's.
+     */
+    private static final FCCombatProfile PROFILE = FCCombatProfile.builder()
+            .range(4.0F, 2.0F, 0.0F)
+            .accuracy(0.6F)
+            .speeds(1.05D, 1.0D)
+            .courage(0.95F)
+            .retreatHealthThreshold(0.05F)
+            .usesCover(false)
+            .backsAwayFromMelee(false)
+            .melee(3.2F, 18)
+            .perception(20, 32.0D, 120)
+            .leads(16, 2.5D)
+            .build();
+
+    // NOT a field initializer: registerGoals() runs from the super constructor, BEFORE subclass
+    // field initializers, so a `= new FCSquad(this)` here would still be null when FCLeaderGoal is
+    // built. Same trap the Guardsman Sergeant documents. Created lazily via getSquad().
+    private FCSquad squad;
+
     public OrkNobEntity(EntityType<? extends OrkNobEntity> entityType, Level level) {
         super(entityType, level);
 
@@ -37,9 +68,47 @@ public class OrkNobEntity extends Monster {
                 .add(Attributes.FOLLOW_RANGE, 32.0D);
     }
 
+    // =========================
+    // FCUnit / FCSquadLeader
+    // =========================
+
+    @Override
+    public FirstCrusadeFaction getUnitFaction() {
+        return FirstCrusadeFaction.ORKS;
+    }
+
+    @Override
+    public UnitRole getUnitRole() {
+        return UnitRole.SQUAD_LEADER;
+    }
+
+    @Override
+    public FCCombatProfile getCombatProfile() {
+        return PROFILE;
+    }
+
+    @Override
+    public String getUnitId() {
+        return "ork_nob";
+    }
+
+    @Override
+    public FCSquad getSquad() {
+        if (this.squad == null) {
+            this.squad = new FCSquad(this);
+        }
+
+        return this.squad;
+    }
+
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
+        // Sets no goal flags, so it layers under the melee goal rather than competing with it: a
+        // Nob fights normally and the mob organises itself around wherever it ends up.
+        this.goalSelector.addGoal(1, new FCLeaderGoal(this, getSquad(),
+                FirstCrusadePerformanceConfig.squadFollowerCap(
+                        getUnitFaction(), PROFILE.maxFollowers())));
         this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.05D, true));
         this.goalSelector.addGoal(5, new RandomStrollGoal(this, 0.75D));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
@@ -53,8 +122,14 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
     public void die(DamageSource damageSource) {
         Entity attacker = damageSource.getEntity();
 
-        if (!this.level().isClientSide && attacker instanceof GuardsmanEntity guardsman) {
-            guardsman.recordOrkKill(5);
+        if (!this.level().isClientSide) {
+            if (attacker instanceof GuardsmanEntity guardsman) {
+                guardsman.recordOrkKill(5);
+            }
+
+            // Release the mob so Boyz stop forming up on a corpse, and so each of them learns it is
+            // unattached rather than being left pointing at a dead Nob. See FCSquad.
+            getSquad().disband();
         }
 
         super.die(damageSource);
