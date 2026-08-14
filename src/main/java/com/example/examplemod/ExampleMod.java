@@ -115,6 +115,21 @@ public class ExampleMod {
             net.minecraftforge.fml.config.ModConfig.Type.COMMON,
             com.example.examplemod.animal.FCAnimalConfig.SPEC, "firstcrusade-animals-common.toml");
 
+    // Performance. SERVER porque tudo aqui muda simulacao — alcance de aquisicao, frequencia de
+    // varredura, nivel de IA por distancia. Cliente nenhum pode decidir isso por si.
+    net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
+            net.minecraftforge.fml.config.ModConfig.Type.SERVER,
+            com.example.examplemod.performance.config.FirstCrusadePerformanceConfig.SPEC,
+            "firstcrusade-performance-server.toml");
+
+    // Graficos. CLIENT porque e so aparencia — densidade de particula, tracer, distancia visual.
+    // Preset padrao GRIMDARK. Este spec nunca e lido pela simulacao: dois clientes com presets
+    // diferentes no mesmo servidor tomam exatamente o mesmo dano do mesmo tiro.
+    net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
+            net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
+            com.example.examplemod.performance.config.FirstCrusadeClientConfig.SPEC,
+            "firstcrusade-graphics-client.toml");
+
     // Forge game events live in FirstCrusadeForgeEvents (auto-registered via @EventBusSubscriber);
     // client wiring in FirstCrusadeClientEvents; networking in FirstCrusadeNetwork.
 }

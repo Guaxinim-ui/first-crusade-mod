@@ -1,5 +1,6 @@
 package com.example.examplemod.entity.projectile;
 
+import com.example.examplemod.performance.graphics.FCServerParticles;
 import com.example.examplemod.registry.ModCombatVehicleContent;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.protocol.Packet;
@@ -57,7 +58,10 @@ public final class SentinelMissileEntity extends Projectile implements ItemSuppl
         Vec3 motion = this.getDeltaMovement();
         this.setPos(this.getX() + motion.x, this.getY() + motion.y, this.getZ() + motion.z);
         if (this.level() instanceof ServerLevel serverLevel) {
-            serverLevel.sendParticles(ParticleTypes.SMOKE, this.getX(), this.getY(), this.getZ(), 2, 0.05D, 0.05D, 0.05D, 0.01D);
+            // Every tick of the flight, so this is the one smoke source in the mod that is a rate
+            // rather than an event — the reason the SMOKE channel is worth having a dial at all.
+            FCServerParticles.send(serverLevel, ParticleTypes.SMOKE, FCServerParticles.Channel.SMOKE,
+                    this.getX(), this.getY(), this.getZ(), 2, 0.05D, 0.05D, 0.05D, 0.01D);
         }
         if (++this.life > 100 || !this.level().hasChunkAt(this.blockPosition())) this.discard();
     }
@@ -75,7 +79,9 @@ public final class SentinelMissileEntity extends Projectile implements ItemSuppl
             else victim.hurt(this.damageSources().explosion(this, null), damage);
         }
         if (this.level() instanceof ServerLevel serverLevel) {
-            serverLevel.sendParticles(ParticleTypes.EXPLOSION, this.getX(), this.getY(), this.getZ(), 4, 0.5D, 0.5D, 0.5D, 0.05D);
+            FCServerParticles.send(serverLevel, ParticleTypes.EXPLOSION,
+                    FCServerParticles.Channel.EXPLOSION,
+                    this.getX(), this.getY(), this.getZ(), 4, 0.5D, 0.5D, 0.5D, 0.05D);
         }
         this.level().playSound(null, this.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.HOSTILE, 1.4F, 0.9F);
         this.discard();

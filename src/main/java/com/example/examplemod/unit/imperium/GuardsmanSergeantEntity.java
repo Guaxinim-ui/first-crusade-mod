@@ -306,6 +306,10 @@ public class GuardsmanSergeantEntity extends PathfinderMob
 
             this.setTarget(candidate);
         }
+
+        // Publish it. This one line is what lets every rifleman in the squad skip its own scan: the
+        // sergeant has already done the expensive, role-weighted choice, and the squad inherits it.
+        getSquad().setSharedTarget(this.getTarget());
     }
 
     @Override
@@ -398,8 +402,11 @@ public class GuardsmanSergeantEntity extends PathfinderMob
 
             this.entityData.set(DEATH_DIRECTION, direction);
 
-            // Release the squad so followers stop marching on a corpse.
-            getSquad().getMembers().clear();
+            // Release the squad so followers stop marching on a corpse — and so each of them
+            // actually learns it is unattached. Emptying the roster alone left every follower
+            // pointing at the dead sergeant; hasSquad() happens to answer no for a corpse, so that
+            // one read stayed correct by luck, but the stale reference is not the contract.
+            getSquad().disband();
         }
 
         super.die(damageSource);

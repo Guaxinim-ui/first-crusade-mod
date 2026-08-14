@@ -2,6 +2,7 @@ package com.example.examplemod.ai.formation;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 
 /**
@@ -27,5 +28,24 @@ public interface FCSquadMember {
     default boolean hasSquad() {
         Mob leader = getSquadLeader();
         return leader != null && leader.isAlive() && !leader.isRemoved();
+    }
+
+    /**
+     * The enemy this unit's squad has settled on, or null if it has no squad or the squad has no
+     * target.
+     *
+     * <p>A member that gets a target from here does not run a scan of its own at all, which is the
+     * whole saving. Null means "decide for yourself", which is what an unattached soldier and a
+     * squad with nothing in sight both need.
+     */
+    @Nullable
+    default LivingEntity getSquadTarget() {
+        if (!hasSquad()) {
+            return null;
+        }
+
+        return getSquadLeader() instanceof FCSquadLeader leader
+                ? leader.getSquad().getSharedTarget()
+                : null;
     }
 }

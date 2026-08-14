@@ -1,6 +1,7 @@
 package com.example.examplemod.weapon;
 
 import com.example.examplemod.LasgunShotEntity;
+import com.example.examplemod.performance.graphics.FCServerParticles;
 
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -114,6 +115,10 @@ public final class FCProjectiles {
      * Emits a short flash at the muzzle. Deliberately a particle rather than a spawned entity, and
      * deliberately a small count — this fires several times a second per shooting trooper, and with
      * a large battle on screen the particle budget is the first thing to break.
+     *
+     * <p>Routed through {@link FCServerParticles}: together with the casing eject below, this is the
+     * highest-frequency broadcast in the mod, so it is the first thing the server's particle dials
+     * need to be able to reach.</p>
      */
     public static void spawnMuzzleFlash(LivingEntity shooter, FCWeaponMount mount,
                                         ParticleOptions particle, int count) {
@@ -123,8 +128,10 @@ public final class FCProjectiles {
 
         Vec3 muzzle = mount.muzzleWorldPosition(shooter);
 
-        serverLevel.sendParticles(
+        FCServerParticles.send(
+                serverLevel,
                 particle,
+                FCServerParticles.Channel.MUZZLE_FLASH,
                 muzzle.x, muzzle.y, muzzle.z,
                 count,
                 0.02D, 0.02D, 0.02D,
@@ -140,8 +147,10 @@ public final class FCProjectiles {
 
         Vec3 eject = mount.ejectWorldPosition(shooter);
 
-        serverLevel.sendParticles(
+        FCServerParticles.send(
+                serverLevel,
                 ParticleTypes.CRIT,
+                FCServerParticles.Channel.DEBRIS,
                 eject.x, eject.y, eject.z,
                 1,
                 0.05D, 0.05D, 0.05D,

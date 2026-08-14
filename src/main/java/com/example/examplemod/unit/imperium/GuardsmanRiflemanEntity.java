@@ -327,6 +327,26 @@ public class GuardsmanRiflemanEntity extends PathfinderMob
             return;
         }
 
+        // The squad's decision comes first, and taking it means running no scan at all — which is
+        // the entire point of squad targeting. A rifleman that inherits its sergeant's target costs
+        // nothing to aim, and the squad concentrates its fire instead of each man wounding a
+        // different Ork.
+        //
+        // Individuality is not lost: FirstCrusadeHurtByTargetGoal sits at priority 1 in the target
+        // selector, so anything that actually shoots this trooper still takes precedence over what
+        // the sergeant is pointing at.
+        LivingEntity squadTarget = this.getSquadTarget();
+
+        if (squadTarget != null
+                && FirstCrusadeFactionManager.canAttack(this, squadTarget)
+                && this.distanceTo(squadTarget) <= PROFILE.targetScanRadius()) {
+            if (this.getTarget() != squadTarget) {
+                this.setTarget(squadTarget);
+            }
+            return;
+        }
+
+        // Unattached, or the squad has nobody in sight: decide alone.
         LivingEntity current = this.getTarget();
         LivingEntity candidate = FCTargetPriority.selectTarget(this, PROFILE.targetScanRadius());
 

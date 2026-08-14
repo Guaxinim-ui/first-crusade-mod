@@ -38,8 +38,16 @@ public final class ModVehicleEntities {
             ENTITY_TYPES.register("tank_shell",
                     () -> EntityType.Builder.<TankShellEntity>of(TankShellEntity::new, MobCategory.MISC)
                             .sized(0.35F, 0.35F)
-                            .clientTrackingRange(96)
-                            .updateInterval(1)
+                            // Chunks, not blocks: 96 meant 1536 blocks of tracking with a position
+                            // packet every tick, for every player inside a kilometre and a half.
+                            // Deliberately looser than the unguided bolts (10/10): the shell is
+                            // ballistic — it carries drag and gravity in its own tick() — so the
+                            // client is integrating an arc rather than replaying a straight line,
+                            // and a shorter correction interval keeps that arc honest over its
+                            // 160-tick life. 12 chunks is 192 blocks, still a sixty-fourth of the
+                            // area it was tracking before.
+                            .clientTrackingRange(12)
+                            .updateInterval(5)
                             .build(ExampleMod.MODID + ":tank_shell"));
 
     public static final RegistryObject<Item> IMPERIAL_BATTLE_TANK_SPAWN_EGG =

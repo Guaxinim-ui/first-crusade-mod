@@ -1,5 +1,8 @@
 package com.example.examplemod;
 
+import com.example.examplemod.performance.graphics.FCServerParticles;
+import com.example.examplemod.performance.graphics.FirstCrusadeParticleBudget;
+
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -49,29 +52,43 @@ public class LasgunShotEntity extends AbstractArrow {
         this.setNoGravity(true);
 
         if (this.level().isClientSide) {
-            this.level().addParticle(
-                    this.microExplosive ? ParticleTypes.FLAME : ParticleTypes.ELECTRIC_SPARK,
-                    this.getX(),
-                    this.getY(),
-                    this.getZ(),
-                    0.0D,
-                    0.0D,
-                    0.0D
-            );
-
-            this.level().addParticle(
-                    ParticleTypes.END_ROD,
-                    this.getX(),
-                    this.getY(),
-                    this.getZ(),
-                    0.0D,
-                    0.0D,
-                    0.0D
-            );
+            spawnTrail();
         }
 
         if (this.tickCount > 40) {
             this.discard();
+        }
+    }
+
+    /**
+     * The visible las-bolt: a bright core with a coloured accent, drawn once per tick of flight.
+     *
+     * <p>Two particles a tick for up to forty ticks is up to eighty particles per shot, and a
+     * hundred-strong firing line puts thousands of them on screen every second. Both are now routed
+     * through {@link FirstCrusadeParticleBudget}, which thins them by the player's graphics preset,
+     * by distance, and by a hard per-tick ceiling. At EXTERMINATUS (100%) the result is identical to
+     * before, particle for particle.
+     *
+     * <p>Client-side only, and purely cosmetic. The bolt's speed, path, hit detection and damage all
+     * happen on the server and are untouched by any of this: a las-bolt whose trail was thinned out
+     * still travels the same line and still kills whatever it hits.
+     */
+    private void spawnTrail() {
+        Level level = this.level();
+        double x = this.getX();
+        double y = this.getY();
+        double z = this.getZ();
+
+        if (FirstCrusadeParticleBudget.request(level, x, y, z,
+                FirstCrusadeParticleBudget.Channel.TRACER, this.random)) {
+            level.addParticle(ParticleTypes.END_ROD, x, y, z, 0.0D, 0.0D, 0.0D);
+        }
+
+        if (FirstCrusadeParticleBudget.request(level, x, y, z,
+                FirstCrusadeParticleBudget.Channel.TRACER, this.random)) {
+            level.addParticle(
+                    this.microExplosive ? ParticleTypes.FLAME : ParticleTypes.ELECTRIC_SPARK,
+                    x, y, z, 0.0D, 0.0D, 0.0D);
         }
     }
 
@@ -128,11 +145,18 @@ public class LasgunShotEntity extends AbstractArrow {
         }
 
         if (this.level() instanceof ServerLevel serverLevel) {
-            serverLevel.sendParticles(ParticleTypes.EXPLOSION, center.x, center.y, center.z,
+            // Through FCServerParticles rather than straight to sendParticles: fourteen particles
+            // per detonation is nothing on its own and a great deal once a firing line is landing
+            // bolter rounds. The flame rides the EXPLOSION channel because it is part of the same
+            // fireball, not a separate effect somebody would want to tune apart from it.
+            FCServerParticles.send(serverLevel, ParticleTypes.EXPLOSION,
+                    FCServerParticles.Channel.EXPLOSION, center.x, center.y, center.z,
                     2, 0.16D, 0.16D, 0.16D, 0.015D);
-            serverLevel.sendParticles(ParticleTypes.SMOKE, center.x, center.y, center.z,
+            FCServerParticles.send(serverLevel, ParticleTypes.SMOKE,
+                    FCServerParticles.Channel.SMOKE, center.x, center.y, center.z,
                     7, 0.28D, 0.28D, 0.28D, 0.025D);
-            serverLevel.sendParticles(ParticleTypes.FLAME, center.x, center.y, center.z,
+            FCServerParticles.send(serverLevel, ParticleTypes.FLAME,
+                    FCServerParticles.Channel.EXPLOSION, center.x, center.y, center.z,
                     5, 0.22D, 0.22D, 0.22D, 0.03D);
         }
 

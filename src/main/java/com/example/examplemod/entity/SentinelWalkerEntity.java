@@ -2,6 +2,7 @@ package com.example.examplemod.entity;
 
 import com.example.examplemod.entity.projectile.SentinelCannonBoltEntity;
 import com.example.examplemod.entity.projectile.SentinelMissileEntity;
+import com.example.examplemod.performance.graphics.FCServerParticles;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -160,8 +161,12 @@ public final class SentinelWalkerEntity extends PathfinderMob implements GeoEnti
             victim.hurtMarked = true;
         }
 
-        serverLevel.sendParticles(ParticleTypes.EXPLOSION, this.getX(), this.getY() + 0.2D, this.getZ(), 5, 1.4D, 0.2D, 1.4D, 0.02D);
-        serverLevel.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, this.getX(), this.getY() + 0.1D, this.getZ(), 18, 2.0D, 0.15D, 2.0D, 0.03D);
+        FCServerParticles.send(serverLevel, ParticleTypes.EXPLOSION,
+                FCServerParticles.Channel.EXPLOSION,
+                this.getX(), this.getY() + 0.2D, this.getZ(), 5, 1.4D, 0.2D, 1.4D, 0.02D);
+        FCServerParticles.send(serverLevel, ParticleTypes.CAMPFIRE_COSY_SMOKE,
+                FCServerParticles.Channel.SMOKE,
+                this.getX(), this.getY() + 0.1D, this.getZ(), 18, 2.0D, 0.15D, 2.0D, 0.03D);
         this.level().playSound(null, this.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.HOSTILE, 1.8F, 0.65F);
     }
 

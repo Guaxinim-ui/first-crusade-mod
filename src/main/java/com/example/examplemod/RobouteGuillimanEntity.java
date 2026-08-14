@@ -21,7 +21,14 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
-public class RobouteGuillimanEntity extends PathfinderMob {
+public class RobouteGuillimanEntity extends PathfinderMob
+        implements com.example.examplemod.performance.strategic.FCStrategicExempt {
+
+    @Override
+    public String strategicExemptReason() {
+        return "personagem nomeado";
+    }
+
     public RobouteGuillimanEntity(EntityType<? extends RobouteGuillimanEntity> entityType, Level level) {
         super(entityType, level);
         this.xpReward = 100;

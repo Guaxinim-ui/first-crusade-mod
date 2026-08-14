@@ -1,14 +1,15 @@
 package com.example.examplemod.ai.combat;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.example.examplemod.FirstCrusadeFactionManager;
-import com.example.examplemod.unit.profile.FCUnit;
+import com.example.examplemod.performance.ai.FirstCrusadeAiLod;
+import com.example.examplemod.performance.ai.FirstCrusadeCombatantIndex;
 import com.example.examplemod.unit.profile.UnitRole;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.phys.AABB;
 
 /**
  * Chooses which enemy a unit should shoot at.
@@ -54,11 +55,18 @@ public final class FCTargetPriority {
      * forever; with it the same twenty spread their scans evenly across the window.</p>
      */
     public static boolean shouldRescan(Mob mob, int interval) {
-        if (interval <= 1) {
+        // Stretched by how far the unit is from anyone who could notice. A rifleman at the player's
+        // elbow rescans on its profile's interval; the same rifleman in a battle a hundred and fifty
+        // blocks away rescans a twentieth as often, and shoots exactly as hard.
+        int scaled = FirstCrusadeAiLod.scale(mob, interval);
+
+        if (scaled <= 1) {
             return true;
         }
 
-        return (mob.tickCount + mob.getId()) % interval == 0;
+        // Safe here, unlike inside a Goal's canUse: this is called from customServerAiStep, which
+        // vanilla runs on every tick, so no parity of tickCount can hide the zero case.
+        return (mob.tickCount + mob.getId()) % scaled == 0;
     }
 
     /**
@@ -67,15 +75,11 @@ public final class FCTargetPriority {
      * <p>Callers should gate this behind {@link #shouldRescan}.</p>
      */
     public static LivingEntity selectTarget(Mob hunter, double radius) {
-        AABB searchBox = hunter.getBoundingBox().inflate(radius, radius * 0.5D, radius);
-
-        List<LivingEntity> candidates = hunter.level().getEntitiesOfClass(
-                LivingEntity.class,
-                searchBox,
-                candidate -> candidate != hunter
-                        && candidate.isAlive()
-                        && FirstCrusadeFactionManager.canAttack(hunter, candidate)
-        );
+        // The candidate list comes from the shared per-level index rather than a box query of this
+        // unit's own: the scoring below is what makes this class worth its cost, and it was being
+        // paid for twice — once to find who is nearby, once to rank them.
+        List<LivingEntity> candidates =
+                FirstCrusadeCombatantIndex.collectEnemies(hunter, radius, new ArrayList<>());
 
         if (candidates.isEmpty()) {
             return null;

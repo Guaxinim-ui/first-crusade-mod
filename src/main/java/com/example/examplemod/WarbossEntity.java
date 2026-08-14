@@ -45,7 +45,14 @@ import software.bernie.geckolib.util.GeckoLibUtil;
  * shoota and boss-pole are bones in that model, so — unlike a vanilla humanoid mob — the weapons
  * are drawn by the model itself; the held POWER_KLAW item stays for combat/logic only.
  */
-public class WarbossEntity extends PathfinderMob implements GeoEntity {
+public class WarbossEntity extends PathfinderMob
+        implements GeoEntity, com.example.examplemod.performance.strategic.FCStrategicExempt {
+
+    @Override
+    public String strategicExemptReason() {
+        return "Warboss";
+    }
+
     private static final double LEADERSHIP_RADIUS = 24.0D;
 
     // Names must match the keys in assets/firstcrusade/animations/warboss.animation.json.

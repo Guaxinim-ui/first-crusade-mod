@@ -45,7 +45,14 @@ import software.bernie.geckolib.util.GeckoLibUtil;
  *
  * Only one may live per settlement. If he falls, the city enters mourning (see the manager).
  */
-public class PrimarchEntity extends PathfinderMob implements GeoEntity {
+public class PrimarchEntity extends PathfinderMob
+        implements GeoEntity, com.example.examplemod.performance.strategic.FCStrategicExempt {
+
+    @Override
+    public String strategicExemptReason() {
+        return "Primarca";
+    }
+
     // The Primarch ranges far, since he marches out to lead sorties against Ork camps.
     private static final double LEASH_RADIUS_SQR = 128.0D * 128.0D;
     private static final double LEADERSHIP_RADIUS = 24.0D;

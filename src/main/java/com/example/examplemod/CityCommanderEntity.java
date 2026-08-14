@@ -22,7 +22,14 @@ import net.minecraft.world.level.Level;
  *
  * Strong melee fighter with a Chainsword, but his real value is command, not stats.
  */
-public class CityCommanderEntity extends AbstractImperialTroopEntity {
+public class CityCommanderEntity extends AbstractImperialTroopEntity
+        implements com.example.examplemod.performance.strategic.FCStrategicExempt {
+
+    @Override
+    public String strategicExemptReason() {
+        return "Lorde Comandante";
+    }
+
     public CityCommanderEntity(EntityType<? extends CityCommanderEntity> entityType, Level level) {
         super(entityType, level);
 

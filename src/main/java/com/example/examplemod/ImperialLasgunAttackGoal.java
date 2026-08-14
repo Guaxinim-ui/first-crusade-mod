@@ -2,6 +2,9 @@ package com.example.examplemod;
 
 import java.util.EnumSet;
 
+import com.example.examplemod.performance.ai.FirstCrusadeAiLod;
+import com.example.examplemod.performance.config.FirstCrusadePerformanceConfig;
+
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
@@ -33,6 +36,27 @@ public class ImperialLasgunAttackGoal<T extends PathfinderMob & RangedAttackMob 
     private int cooldownTicks;
     private int shootingTicks;
 
+    /**
+     * Ticks left before this troop may ask for a new path to its target.
+     *
+     * <p>Chasing used to call {@code Navigation#moveTo} on every tick of every troop, and six unit
+     * classes share this goal (Guardsman, Kasrkin, Skitarii Ranger, Sister of Battle, Jungle
+     * Fighter, Agri Militia).
+     *
+     * <p><b>How much this actually saves, honestly.</b> Vanilla is not as naive as it looks:
+     * {@code PathNavigation#createPath} returns the existing path unchanged when the target is still
+     * on the same block, so repeated calls only run a real A* when the target has moved a block or
+     * the path has finished. Against a running enemy that is roughly every three to five ticks, so
+     * this cooldown cuts pathfinds during a chase by something like half — not by the factor of ten
+     * the call frequency suggests. It was measured at 100-a-side and the difference was smaller than
+     * the run-to-run noise, so treat it as a cheap, safe reduction rather than a proven win.
+     *
+     * <p>Half a second of staleness cannot be seen: the target has barely moved and the troop is
+     * already walking towards it. {@code FCRangedAttackGoal} does the same thing; the interval now
+     * lives in one config key instead of two literals.
+     */
+    private int repathCooldown;
+
     public ImperialLasgunAttackGoal(T shooter, double speedModifier, int attackInterval, float attackRadius) {
         this(shooter, speedModifier, attackInterval, attackRadius, 0.0F);
     }
@@ -63,6 +87,7 @@ public class ImperialLasgunAttackGoal<T extends PathfinderMob & RangedAttackMob 
         this.warmupTicks = 0;
         this.cooldownTicks = 0;
         this.shootingTicks = 0;
+        this.repathCooldown = 0;
         this.shooter.setAggressive(true);
         this.shooter.setLasgunCombatPose(LasgunCombatPose.DRAWING, 0);
     }
@@ -103,7 +128,14 @@ public class ImperialLasgunAttackGoal<T extends PathfinderMob & RangedAttackMob 
         // Do not raise the rifle while running blindly after a target. Once the troop reaches a
         // clear firing position the full draw animation starts from the beginning.
         if (distanceSqr > attackRadiusSqr || !canSeeTarget) {
-            this.shooter.getNavigation().moveTo(target, this.speedModifier);
+            if (this.repathCooldown > 0) {
+                this.repathCooldown--;
+            } else {
+                this.shooter.getNavigation().moveTo(target, this.speedModifier);
+                this.repathCooldown = FirstCrusadeAiLod.scale(
+                        this.shooter, FirstCrusadePerformanceConfig.repathInterval());
+            }
+
             this.warmupTicks = 0;
             this.cooldownTicks = 0;
             this.shootingTicks = 0;
@@ -112,6 +144,11 @@ public class ImperialLasgunAttackGoal<T extends PathfinderMob & RangedAttackMob 
         }
 
         this.shooter.getNavigation().stop();
+
+        // Standing still in a firing position: clear the throttle so that the moment the target
+        // breaks range or cover, the troop paths after it on the very next tick. The cooldown is
+        // meant to stop repeated repaths during a chase, not to delay the start of one.
+        this.repathCooldown = 0;
 
         if (this.shootingTicks > 0) {
             int poseTick = SHOOT_TICKS - this.shootingTicks;

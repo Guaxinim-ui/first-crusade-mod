@@ -2,6 +2,7 @@ package com.example.examplemod.ai.formation;
 
 import java.util.EnumSet;
 
+import com.example.examplemod.performance.ai.FirstCrusadeAiLod;
 import com.example.examplemod.unit.profile.FCUnit;
 
 import net.minecraft.world.entity.LivingEntity;
@@ -124,7 +125,7 @@ public class FCFormationGoal extends Goal {
         double speed = distance > CATCHUP_DISTANCE ? 1.25D : 0.95D;
 
         this.follower.getNavigation().moveTo(slot.x, slot.y, slot.z, speed);
-        this.repathCooldown = REPATH_INTERVAL;
+        this.repathCooldown = FirstCrusadeAiLod.scale(this.follower, REPATH_INTERVAL);
     }
 
     // ------------------------------------------------------------------

@@ -5,6 +5,8 @@ import java.util.EnumSet;
 import com.example.examplemod.FriendlyFireGuard;
 import com.example.examplemod.LasgunCombatPose;
 import com.example.examplemod.LasgunAimingEntity;
+import com.example.examplemod.performance.ai.FirstCrusadeAiLod;
+import com.example.examplemod.performance.config.FirstCrusadePerformanceConfig;
 import com.example.examplemod.unit.profile.FCCombatProfile;
 import com.example.examplemod.unit.profile.FCUnit;
 
@@ -406,9 +408,15 @@ public class FCRangedAttackGoal<T extends PathfinderMob & RangedAttackMob & Lasg
 
         this.shooter.getNavigation().moveTo(target, speed);
 
-        // Recomputing a path every tick for every trooper is the single biggest AI cost in a large
-        // battle. Half a second of staleness is imperceptible.
-        this.repathCooldown = 10;
+        // Throttle repathing. The original comment here called this "the single biggest AI cost in a
+        // large battle", which overstates it: PathNavigation#createPath already returns the current
+        // path unchanged while the target stays on the same block, so only a target that has moved
+        // costs a real A*. This still halves pathfinds during a chase, and half a second of
+        // staleness is imperceptible, but it is not where the big money was.
+        // The number moved to the performance config so this goal and ImperialLasgunAttackGoal
+        // share one dial instead of two literals.
+        this.repathCooldown = FirstCrusadeAiLod.scale(
+                this.shooter, FirstCrusadePerformanceConfig.repathInterval());
     }
 
     private void retreatFrom(LivingEntity target, double speed) {
@@ -426,7 +434,9 @@ public class FCRangedAttackGoal<T extends PathfinderMob & RangedAttackMob & Lasg
         Vec3 destination = this.shooter.position().add(flat.normalize().scale(4.0D));
 
         this.shooter.getNavigation().moveTo(destination.x, destination.y, destination.z, speed);
-        this.repathCooldown = 8;
+        // Deliberately shorter than a chase repath: falling back is an evasive hop and needs to
+        // react faster. Still scaled by LOD.
+        this.repathCooldown = FirstCrusadeAiLod.scale(this.shooter, 8);
     }
 
     private void holdPosition() {

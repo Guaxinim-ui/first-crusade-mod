@@ -15,6 +15,8 @@ import net.minecraft.world.entity.ai.goal.PanicGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import com.example.examplemod.performance.ai.FCLodGoal;
+
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
@@ -66,9 +68,18 @@ public class ImperialCitizenEntity extends PathfinderMob {
         this.goalSelector.addGoal(0, new OpenDoorGoal(this, true));
         this.goalSelector.addGoal(1, new PanicGoal(this, 1.25D));
         this.goalSelector.addGoal(2, new ImperialCitizenSleepGoal(this));
-        this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.75D));
-        this.goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));
+        // Wandering and looking around are the only expensive goals a citizen has: strolling
+        // samples random positions and pathfinds to them. They are also the only ones nobody misses
+        // when a hab-block is half a kilometre away, so they go through the level-of-detail wrapper.
+        //
+        // Float, OpenDoor and Panic are deliberately NOT wrapped. Those are safety and reaction:
+        // a citizen that drowns because the throttle had not come round yet is a bug, not an
+        // optimisation.
+        this.goalSelector.addGoal(3, new FCLodGoal(this,
+                new WaterAvoidingRandomStrollGoal(this, 0.75D), 2));
+        this.goalSelector.addGoal(4, new FCLodGoal(this,
+                new LookAtPlayerGoal(this, Player.class, 8.0F), 2));
+        this.goalSelector.addGoal(5, new FCLodGoal(this, new RandomLookAroundGoal(this), 2));
     }
 
     @Override

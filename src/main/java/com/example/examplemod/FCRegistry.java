@@ -583,8 +583,22 @@ public static final RegistryObject<MenuType<StrategiumMenu>> STRATEGIUM_MENU =
             ENTITY_TYPES.register("lasgun_shot",
                     () -> EntityType.Builder.<LasgunShotEntity>of(LasgunShotEntity::new, MobCategory.MISC)
                             .sized(0.25F, 0.25F)
-                            .clientTrackingRange(64)
-                            .updateInterval(1)
+                            // clientTrackingRange is in CHUNKS, not blocks — ChunkMap multiplies it
+                            // by 16. This was 64, which is 1024 blocks: every las-bolt was tracked
+                            // and synchronised to every player within a kilometre. Vanilla's arrow
+                            // uses 4 (64 blocks), and every mob in this mod uses 8 to 16, so the 64
+                            // was almost certainly someone reading the unit as blocks.
+                            //
+                            // 8 chunks is 128 blocks, comfortably past the 96-block default of
+                            // visuals.maxVisualCombatDistance — a bolt further away than that is not
+                            // drawing anything anyway.
+                            .clientTrackingRange(8)
+                            // And this was 1: a position packet for every bolt, to every tracking
+                            // player, twenty times a second. A hundred troopers firing turns that
+                            // into a flood. The bolt has no gravity and constant velocity, so the
+                            // client reproduces its path exactly from the spawn packet; updates are
+                            // only corrections. Vanilla's arrow gets by on 20 while also falling.
+                            .updateInterval(10)
                             .build(ExampleMod.MODID + ":lasgun_shot"));
 
     // =========================

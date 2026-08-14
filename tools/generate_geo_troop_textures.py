@@ -191,6 +191,18 @@ def paint_weapon(c, boxes, metal, rng, accent=None):
             c.fdot(face, 0, 0, accent)
 
 
+def paint_antenna(c, boxes, metal, rng, tip=None):
+    """Antena de vox: haste de metal escuro com a ponta marcada.
+
+    A ponta colorida existe por legibilidade a distancia -- e o que faz o operador de vox se
+    distinguir num pelotao inteiro de verde quando o jogador olha de longe.
+    """
+    coat(c, boxes, metal, rng, 0.20)
+    if tip and len(boxes) > 1:
+        face = boxes[1]["front"]
+        c.fill((face[0], face[1], face[2], min(2, face[3])), tip)
+
+
 # --------------------------------------------------------------------------- recipes
 
 def rifleman(c, bones, rng, v):
@@ -203,6 +215,7 @@ def rifleman(c, bones, rng, v):
                 (plate, green, leather, (150, 128, 70)), rng)
     paint_limbs(c, bones, green, (58, 46, 32), (66, 78, 48), (52, 42, 30), rng)
     paint_pack(c, bones["backpack"], (66, 76, 48), rng, leather)
+    paint_antenna(c, bones["vox_antenna"], (44, 46, 42), rng, (150, 60, 50))
     paint_head(c, bones["head"], skin, rng, stubble=(70, 58, 46) if v % 2 else None)
     paint_helmet(c, bones["helmet"], (85, 100, 59), rng)
     paint_weapon(c, bones["lasgun"], (48, 50, 46), rng, (150, 60, 50))
@@ -227,6 +240,7 @@ def sergeant(c, bones, rng, v):
                 (plate, green, leather, bronze), rng)
     paint_limbs(c, bones, green, (46, 38, 28), (58, 70, 42), (44, 36, 26), rng)
     paint_pack(c, bones["backpack"], (52, 62, 40), rng, leather)
+    paint_antenna(c, bones["vox_antenna"], (40, 42, 38), rng, (196, 168, 70))
     paint_head(c, bones["head"], skin, rng, stubble=(64, 50, 40), scar=(v % 2 == 1))
     # Banded helmet with a short crest: the squad leader is the one with the red stripe.
     paint_helmet(c, bones["helmet"], (60, 74, 44), rng, band=red, crest=red)

@@ -25,7 +25,9 @@ public final class FirstCrusadeForgeEvents {
     // The war should be fought across the field, not just at arm's length: every Imperial/Ork combat
     // unit gets a wide FOLLOW_RANGE on join so it spots the enemy across the field. Citizens
     // (non-combatants) and Custodes (sworn to guard the Core) keep their short range.
-    private static final double WAR_FOLLOW_RANGE = 96.0D;
+    //
+    // The number itself now lives in FirstCrusadePerformanceConfig, and it CLAMPS rather than
+    // assigns. See onEntityJoinLevel for why that distinction was worth a rewrite.
 
     private FirstCrusadeForgeEvents() {
     }
@@ -114,6 +116,20 @@ public final class FirstCrusadeForgeEvents {
             return;
         }
 
+        // The faction question comes FIRST, and it is the cheap one.
+        //
+        // This handler runs for every living entity on the server — every cow, every bat, every mob
+        // of every other mod installed. It used to read two block states before asking whether the
+        // entity was even something the corruption applies to, so a server full of vanilla animals
+        // paid two world lookups per animal every two seconds to reach a branch that could only ever
+        // do nothing. getFaction is a couple of instanceof checks against this mod's own types;
+        // getBlockState is a chunk lookup. Asking the cheap question first is the whole fix.
+        FirstCrusadeFaction faction = FirstCrusadeFactionManager.getFaction(entity);
+
+        if (faction != FirstCrusadeFaction.IMPERIUM && faction != FirstCrusadeFaction.ORKS) {
+            return;
+        }
+
         net.minecraft.core.BlockPos feet = entity.blockPosition();
 
         boolean onOrkGrowth =
@@ -123,8 +139,6 @@ public final class FirstCrusadeForgeEvents {
         if (!onOrkGrowth) {
             return;
         }
-
-        FirstCrusadeFaction faction = FirstCrusadeFactionManager.getFaction(entity);
 
         if (faction == FirstCrusadeFaction.IMPERIUM) {
             entity.addEffect(new net.minecraft.world.effect.MobEffectInstance(
@@ -167,8 +181,32 @@ public final class FirstCrusadeForgeEvents {
         net.minecraft.world.entity.ai.attributes.AttributeInstance followRange =
                 living.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.FOLLOW_RANGE);
 
-        if (followRange != null && followRange.getBaseValue() < WAR_FOLLOW_RANGE) {
-            followRange.setBaseValue(WAR_FOLLOW_RANGE);
+        if (followRange == null) {
+            return;
+        }
+
+        // Clamped into a band, not overwritten with one number.
+        //
+        // This line was the single most expensive thing in the mod. It used to read "if the unit
+        // asks for less than 96, give it 96", which is not a floor — it is an assignment, because
+        // every combat unit in the mod asks for less than 96. A Guardsman that declares 34 and a
+        // Sump Rat that declares 12 both came out at 96.
+        //
+        // What 96 costs: NearestAttackableTargetGoal builds its search box as
+        // getBoundingBox().inflate(FOLLOW_RANGE, 4, FOLLOW_RANGE) and then calls getEntitiesOfClass
+        // with a predicate of `true` — it collects EVERY living entity in the box and only then
+        // filters. At 96 that box is 192 x 8 x 192, about 295,000 cubic metres spanning 144 chunk
+        // columns, and the goal samples it on average once every ten ticks per unit. Three hundred
+        // units in one battle is six hundred of those scans a second, each returning most of the
+        // battle, each running the faction predicate over all of it.
+        //
+        // At the default cap of 40 the same box is about 33,000 cubic metres — a twentieth of the
+        // work — and 40 blocks is still further than any of these units can shoot.
+        double clamped = com.example.examplemod.performance.config
+                .FirstCrusadePerformanceConfig.clampFollowRange(followRange.getBaseValue());
+
+        if (followRange.getBaseValue() != clamped) {
+            followRange.setBaseValue(clamped);
         }
     }
 }

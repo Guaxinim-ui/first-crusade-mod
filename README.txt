@@ -44,3 +44,33 @@ Community Documentation: https://docs.minecraftforge.net/en/1.20.1/gettingstarte
 LexManos' Install Video: https://youtu.be/8VEdtQLuLO0
 Forge Forums: https://forums.minecraftforge.net/
 Forge Discord: https://discord.minecraftforge.net/
+
+Performance
+=============================
+O First Crusade funciona sozinho: nenhum mod de performance e dependencia, e o jogo abre, roda e
+joga sem nenhum deles instalado.
+
+Documento completo: docs/PERFORMANCE.md
+
+Resumo:
+
+  Cliente  ..... Embeddium (recomendado), ImmediatelyFast, Entity Culling, Oculus (opcionais)
+  Servidor ..... ModernFix, FerriteCore, Chunky (recomendados)
+  Diagnostico .. spark
+
+  Shader recomendado ... MakeUp Ultra Fast (performance) ou Complementary (cinematico)
+  Preset recomendado ... GRIMDARK, em config/firstcrusade-graphics-client.toml
+
+Comandos de diagnostico dentro do jogo:
+
+  /fc perf              unidades por nivel de IA, projeteis, batalhas abstraidas
+  /fc perf entities     contagem por faccao e por tipo
+  /fc squad             esquadroes: lider, membros, alvo compartilhado
+  /fc strategic         batalhas distantes resolvidas como numero
+  /fc compat            quais mods de performance estao instalados
+  /forge tps            MSPT por dimensao
+
+Preset grafico e SO aparencia: um tiro causa exatamente o mesmo dano em qualquer preset.
+
+A matriz de compatibilidade em docs/PERFORMANCE.md esta deliberadamente VAZIA - nenhuma combinacao
+foi testada ainda, e afirmar que funciona sem ter executado seria mentira.
