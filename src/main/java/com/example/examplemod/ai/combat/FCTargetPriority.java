@@ -58,15 +58,28 @@ public final class FCTargetPriority {
         // Stretched by how far the unit is from anyone who could notice. A rifleman at the player's
         // elbow rescans on its profile's interval; the same rifleman in a battle a hundred and fifty
         // blocks away rescans a twentieth as often, and shoots exactly as hard.
-        int scaled = FirstCrusadeAiLod.scale(mob, interval);
+        return shouldRescanScaled(mob, FirstCrusadeAiLod.scale(mob, interval));
+    }
 
-        if (scaled <= 1) {
+    /**
+     * The same schedule, for a caller that has already worked out its own interval.
+     *
+     * <p>Exists so a squad leader can use {@code FCSquad#intervalFor}, which folds in the squad's
+     * state as well as the distance to a player. Passing that result to {@link #shouldRescan} would
+     * apply the level-of-detail multiplier a second time, and the compounded number is not a
+     * slightly-too-slow scan — at STRATEGIC detail it is four hundred ticks, which is a sergeant who
+     * looks for the enemy once every twenty seconds.
+     *
+     * @param scaledInterval ticks between scans, already stretched by whatever the caller wanted
+     */
+    public static boolean shouldRescanScaled(Mob mob, int scaledInterval) {
+        if (scaledInterval <= 1) {
             return true;
         }
 
         // Safe here, unlike inside a Goal's canUse: this is called from customServerAiStep, which
         // vanilla runs on every tick, so no parity of tickCount can hide the zero case.
-        return (mob.tickCount + mob.getId()) % scaled == 0;
+        return (mob.tickCount + mob.getId()) % scaledInterval == 0;
     }
 
     /**

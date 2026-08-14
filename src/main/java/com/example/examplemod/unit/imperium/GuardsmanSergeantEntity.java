@@ -3,6 +3,7 @@ package com.example.examplemod.unit.imperium;
 import javax.annotation.Nullable;
 
 import com.example.examplemod.ExampleMod;
+import com.example.examplemod.performance.config.FirstCrusadePerformanceConfig;
 import com.example.examplemod.FirstCrusadeFaction;
 import com.example.examplemod.FirstCrusadeFactionManager;
 import com.example.examplemod.FirstCrusadeHurtByTargetGoal;
@@ -272,7 +273,8 @@ public class GuardsmanSergeantEntity extends PathfinderMob
 
         // Squad bookkeeping sits at the top but claims no goal flags, so it runs alongside combat
         // rather than displacing it.
-        this.goalSelector.addGoal(1, new FCLeaderGoal(this, getSquad(), PROFILE.maxFollowers()));
+        this.goalSelector.addGoal(1, new FCLeaderGoal(this, getSquad(),
+                FirstCrusadePerformanceConfig.squadFollowerCap(getUnitFaction(), PROFILE.maxFollowers())));
 
         this.goalSelector.addGoal(2, new FCRangedAttackGoal<>(this));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
@@ -290,7 +292,15 @@ public class GuardsmanSergeantEntity extends PathfinderMob
             this.orderCooldown--;
         }
 
-        if (!FCTargetPriority.shouldRescan(this, PROFILE.targetScanInterval())) {
+        // The squad's scan cadence, not this sergeant's personal one. This is the scan that the
+        // whole squad inherits from, so it is the squad's state and the squad's distance from a
+        // player that should decide how often it happens -- and it is what finally gives
+        // ai.squadScanIntervalTicks something to control. The profile's own interval still governs
+        // units that scan for themselves, such as an unattached rifleman.
+        int scanInterval = getSquad().intervalFor(
+                FirstCrusadePerformanceConfig.squadScanInterval());
+
+        if (!FCTargetPriority.shouldRescanScaled(this, scanInterval)) {
             return;
         }
 

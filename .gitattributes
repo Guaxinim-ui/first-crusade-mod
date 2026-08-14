@@ -3,3 +3,12 @@
 # are changed when only line endings change.
 src/generated/**/.cache/cache text eol=lf
 src/generated/**/*.json text eol=lf
+
+# The Gradle wrapper ships both launchers, and each one only works with the
+# line endings its own interpreter expects. gradlew is read by sh, which
+# treats a trailing CR as part of the command and fails with a confusing
+# "bad interpreter" or "command not found"; gradlew.bat is read by cmd.exe,
+# which needs CRLF. Without these two lines, a checkout on Windows rewrites
+# gradlew to CRLF and it stops working under Git Bash and WSL.
+gradlew text eol=lf
+*.bat text eol=crlf

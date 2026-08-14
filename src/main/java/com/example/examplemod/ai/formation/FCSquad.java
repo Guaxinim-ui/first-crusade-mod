@@ -4,10 +4,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
+import javax.annotation.Nullable;
+
+import com.example.examplemod.performance.ai.FirstCrusadeAiLod;
 import com.example.examplemod.unit.profile.FCUnit;
 import com.example.examplemod.unit.profile.UnitRole;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 
@@ -75,7 +80,28 @@ public class FCSquad {
      */
     private final List<Mob> membersView = Collections.unmodifiableList(this.members);
 
+    /**
+     * A stable identity for this squad, independent of the leader's entity reference.
+     *
+     * <p>Object identity is enough while everything happens in one tick of one server, and stops
+     * being enough the moment anything needs to name a squad: a debug command, an order issued from
+     * elsewhere, staggered scheduling that has to spread squads deterministically, or a future
+     * strategic layer that assigns objectives. Generated rather than derived from the leader's
+     * entity id because entity ids are recycled, and a recycled id would silently transfer one
+     * squad's orders to an unrelated one.
+     */
+    private final UUID id = UUID.randomUUID();
+
     private FCFormation formation = FCFormation.LINE;
+
+    /** What the squad is doing. Drives how often the expensive decisions are re-made. */
+    private FCSquadState state = FCSquadState.IDLE;
+
+    /** What the squad has been told to do. FOLLOW is the pre-existing behaviour. */
+    private FCSquadOrder order = FCSquadOrder.FOLLOW;
+
+    /** Where the current order points, if it points anywhere. */
+    private BlockPos destination;
 
     /**
      * The enemy the whole squad is shooting at, chosen once by the leader.
@@ -122,6 +148,86 @@ public class FCSquad {
 
     public Mob getLeader() {
         return this.leader;
+    }
+
+    /** This squad's stable identity, independent of the leader's entity reference. */
+    public UUID getId() {
+        return this.id;
+    }
+
+    public FCSquadState getState() {
+        return this.state;
+    }
+
+    public FCSquadOrder getOrder() {
+        return this.order;
+    }
+
+    /** Issues an order. A null order means FOLLOW, which is "stay with the leader". */
+    public void setOrder(FCSquadOrder order, @Nullable BlockPos destination) {
+        this.order = order == null ? FCSquadOrder.FOLLOW : order;
+        this.destination = destination;
+    }
+
+    /** Where the current order points, or null when it does not point anywhere. */
+    @Nullable
+    public BlockPos getDestination() {
+        return this.destination;
+    }
+
+    /**
+     * Re-reads what the squad is doing.
+     *
+     * <p>Kept here rather than in the goal for the same reason {@link #chooseFormation} is: it is a
+     * decision about the squad, and a future order system needs one place to override it.
+     *
+     * @param inCombat  the leader has a live target
+     * @param scattered at least one follower is a long way from where it should be
+     */
+    public void updateState(boolean inCombat, boolean scattered) {
+        // An explicit order outranks the situation: a squad told to fall back is RETREATING even
+        // while it is still being shot at, or it would never disengage.
+        if (this.order == FCSquadOrder.RETREAT) {
+            this.state = FCSquadState.RETREATING;
+            return;
+        }
+
+        if (inCombat) {
+            this.state = this.order == FCSquadOrder.DEFEND
+                    ? FCSquadState.DEFENDING
+                    : FCSquadState.ENGAGING;
+            return;
+        }
+
+        if (scattered) {
+            this.state = FCSquadState.REGROUPING;
+            return;
+        }
+
+        // Movement is read from the leader rather than asked of it: a squad following a sergeant
+        // who is walking somewhere is MOVING whether or not anybody gave an order.
+        boolean leaderMoving = !this.leader.getNavigation().isDone()
+                || this.leader.getDeltaMovement().horizontalDistanceSqr() > 1.0E-3D;
+
+        this.state = leaderMoving || this.order.needsDestination()
+                ? FCSquadState.MOVING
+                : FCSquadState.IDLE;
+    }
+
+    /**
+     * Stretches a base interval by whichever throttle currently applies more strongly.
+     *
+     * <p><b>Maximum, not product.</b> Distance and idleness are two reasons to be cheap and they
+     * overlap almost completely — a squad far from every player is usually also doing nothing.
+     * Multiplying them compounds into intervals like 80x, where a squad stops reacting at all;
+     * taking the larger keeps the strongest reason and stays bounded by it. Same rule, and same
+     * reasoning, as the master-versus-channel density in the particle budget.
+     */
+    public int intervalFor(int baseTicks) {
+        int byDistance = FirstCrusadeAiLod.forEntity(this.leader).intervalMultiplier();
+        int byState = this.state.intervalScale();
+
+        return Math.max(1, baseTicks * Math.max(byDistance, byState));
     }
 
     public FCFormation getFormation() {

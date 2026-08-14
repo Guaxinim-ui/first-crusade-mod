@@ -1,6 +1,7 @@
 package com.example.examplemod.performance.config;
 
 import com.example.examplemod.ExampleMod;
+import com.example.examplemod.FirstCrusadeFaction;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -148,9 +149,62 @@ public final class FirstCrusadePerformanceConfig {
 
     public static final ForgeConfigSpec.IntValue SQUAD_SCAN_INTERVAL = BUILDER
             .comment("Ticks between a squad's shared enemy scan at full AI.",
-                    "One scan per squad replaces one scan per soldier; medium/low/strategic AI",
-                    "multiply this interval.")
+                    "One scan per squad replaces one scan per soldier; AI level of detail and the",
+                    "squad's own state stretch this further.")
             .defineInRange("ai.squadScanIntervalTicks", 20, 4, 200);
+
+    // ==================================================================== squads
+    //
+    // These were constants scattered across FCLeaderGoal and FCFormationGoal. Gathering them is not
+    // tidiness for its own sake: they interact, and interacting numbers that live in different files
+    // get tuned against each other by accident. The cohesion radius has to stay comfortably larger
+    // than the recruit radius, for instance, or a squad drops members it cannot re-recruit and the
+    // soldier bounces between squads forever.
+
+    public static final ForgeConfigSpec.IntValue SQUAD_RECRUIT_INTERVAL = BUILDER
+            .comment("Ticks between a leader's sweep for new followers.",
+                    "Recruitment scans an area, so this is the leader's most expensive routine job.")
+            .defineInRange("ai.squad.recruitIntervalTicks", 40, 5, 400);
+
+    public static final ForgeConfigSpec.DoubleValue SQUAD_RECRUIT_RADIUS = BUILDER
+            .comment("How far a leader looks for new followers, in blocks.")
+            .defineInRange("ai.squad.recruitRadius", 12.0D, 4.0D, 64.0D);
+
+    public static final ForgeConfigSpec.DoubleValue SQUAD_COHESION_RADIUS = BUILDER
+            .comment("How far a follower may stray before it is dropped from the squad, in blocks.",
+                    "Keep this well above recruitRadius. If they are close together a soldier that",
+                    "steps out of the recruit radius is immediately dropped and cannot be picked up",
+                    "again until it walks back, which reads in game as squads constantly falling",
+                    "apart for no visible reason.")
+            .defineInRange("ai.squad.cohesionRadius", 28.0D, 8.0D, 128.0D);
+
+    public static final ForgeConfigSpec.IntValue SQUAD_FORMATION_INTERVAL = BUILDER
+            .comment("Ticks between a follower's attempts to correct its formation position.",
+                    "A firing line does not need its shape recomputed twenty times a second; the",
+                    "squad state stretches this further when nothing is happening.")
+            .defineInRange("ai.squad.formationIntervalTicks", 10, 1, 100);
+
+    public static final ForgeConfigSpec.IntValue SQUAD_ENEMY_COUNT_INTERVAL = BUILDER
+            .comment("Goal evaluations between a leader's head-count of nearby enemies.",
+                    "Only the counting is throttled: the formation is re-decided every tick from the",
+                    "cached number, so a squad still reacts the instant its leader acquires a target.")
+            .defineInRange("ai.squad.enemyCountIntervalTicks", 5, 1, 100);
+
+    public static final ForgeConfigSpec.IntValue SQUAD_MAX_IMPERIAL = BUILDER
+            .comment("Most followers an Imperial Guard squad may hold.",
+                    "A unit's own combat profile may ask for fewer; this is the ceiling, so that a",
+                    "single sergeant cannot end up leading a hundred men and turning one entity's",
+                    "tick into the whole battle's cost.")
+            .defineInRange("ai.squad.maxImperialFollowers", 11, 1, 60);
+
+    public static final ForgeConfigSpec.IntValue SQUAD_MAX_ELITE = BUILDER
+            .comment("Most followers an elite squad may hold — Kasrkin, Space Marines, Custodes.",
+                    "Smaller than a line squad on purpose: elites fight in small formations.")
+            .defineInRange("ai.squad.maxEliteFollowers", 9, 1, 40);
+
+    public static final ForgeConfigSpec.IntValue SQUAD_MAX_ORK = BUILDER
+            .comment("Most followers an Ork mob may hold. Larger than an Imperial squad by design.")
+            .defineInRange("ai.squad.maxOrkFollowers", 19, 1, 80);
 
 
     // ==================================================================== strategic combat
@@ -355,6 +409,14 @@ public final class FirstCrusadePerformanceConfig {
     private static int maxTargetCandidateChecks = 12;
     private static int repathInterval = 10;
     private static int squadScanInterval = 20;
+    private static int squadRecruitInterval = 40;
+    private static double squadRecruitRadius = 12.0D;
+    private static double squadCohesionRadius = 28.0D;
+    private static int squadFormationInterval = 10;
+    private static int squadEnemyCountInterval = 5;
+    private static int squadMaxImperial = 11;
+    private static int squadMaxElite = 9;
+    private static int squadMaxOrk = 19;
     private static boolean strategicEnabled = true;
     private static int strategicMaterialiseDistance = 160;
     private static int strategicDematerialiseDistance = 220;
@@ -440,6 +502,46 @@ public final class FirstCrusadePerformanceConfig {
 
     public static int squadScanInterval() {
         return squadScanInterval;
+    }
+
+    // ---------------------------------------------------------------- squads
+
+    public static int squadRecruitInterval() {
+        return squadRecruitInterval;
+    }
+
+    public static double squadRecruitRadius() {
+        return squadRecruitRadius;
+    }
+
+    public static double squadCohesionRadius() {
+        return squadCohesionRadius;
+    }
+
+    public static int squadFormationInterval() {
+        return squadFormationInterval;
+    }
+
+    public static int squadEnemyCountInterval() {
+        return squadEnemyCountInterval;
+    }
+
+    /**
+     * The ceiling on followers for a unit of this faction.
+     *
+     * <p>A unit's own {@code FCCombatProfile} may ask for fewer and keeps that number; this only
+     * caps it, the same way {@link #clampFollowRange} caps sight range. Elite units are recognised
+     * by asking for a small squad in the first place, so they get the elite ceiling rather than the
+     * line-infantry one.
+     */
+    public static int squadFollowerCap(FirstCrusadeFaction faction, int declared) {
+        int cap = switch (faction) {
+            case ORKS -> squadMaxOrk;
+            case IMPERIUM -> declared <= squadMaxElite ? squadMaxElite : squadMaxImperial;
+            default -> squadMaxImperial;
+        };
+
+        return Math.max(0, Math.min(cap, declared));
     }
 
     public static boolean strategicEnabled() {
@@ -588,6 +690,14 @@ public final class FirstCrusadePerformanceConfig {
         lowAiMultiplier = LOW_AI_MULTIPLIER.get();
         strategicAiMultiplier = STRATEGIC_AI_MULTIPLIER.get();
         squadScanInterval = SQUAD_SCAN_INTERVAL.get();
+        squadRecruitInterval = SQUAD_RECRUIT_INTERVAL.get();
+        squadRecruitRadius = SQUAD_RECRUIT_RADIUS.get();
+        squadCohesionRadius = SQUAD_COHESION_RADIUS.get();
+        squadFormationInterval = SQUAD_FORMATION_INTERVAL.get();
+        squadEnemyCountInterval = SQUAD_ENEMY_COUNT_INTERVAL.get();
+        squadMaxImperial = SQUAD_MAX_IMPERIAL.get();
+        squadMaxElite = SQUAD_MAX_ELITE.get();
+        squadMaxOrk = SQUAD_MAX_ORK.get();
         strategicEnabled = STRATEGIC_ENABLED.get();
         strategicMaterialiseDistance = STRATEGIC_MATERIALISE_DISTANCE.get();
         strategicDematerialiseDistance = STRATEGIC_DEMATERIALISE_DISTANCE.get();

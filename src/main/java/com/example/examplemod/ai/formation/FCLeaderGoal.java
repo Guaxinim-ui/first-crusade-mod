@@ -4,8 +4,8 @@ import java.util.EnumSet;
 import java.util.List;
 
 import com.example.examplemod.FirstCrusadeFactionManager;
-import com.example.examplemod.performance.ai.FirstCrusadeAiLod;
 import com.example.examplemod.performance.ai.FirstCrusadeCombatantIndex;
+import com.example.examplemod.performance.config.FirstCrusadePerformanceConfig;
 import com.example.examplemod.unit.profile.FCUnit;
 
 import net.minecraft.world.entity.LivingEntity;
@@ -24,34 +24,24 @@ import net.minecraft.world.phys.AABB;
  * all the positioning work in {@link FCFormationGoal}.</p>
  *
  * <h2>Cost</h2>
- * <p>Recruitment scans an area, which is expensive, so it runs every {@code RECRUIT_INTERVAL} ticks
- * and is staggered by entity id — the same trick {@link com.example.examplemod.ai.combat.FCTargetPriority}
- * uses — so several sergeants spawned together never scan on the same tick.</p>
+ * <p>Recruitment scans an area, which is expensive, so it runs on the configured interval and is
+ * staggered by squad identity, so several sergeants spawned together never scan on the same tick.
+ * Every interval here is stretched further by {@link FCSquad#intervalFor}, which folds in both the
+ * distance to the nearest player and what the squad is currently doing.</p>
  */
 public class FCLeaderGoal extends Goal {
 
-    /** Ticks between recruitment sweeps. */
-    private static final int RECRUIT_INTERVAL = 40;
-
-    /** How far a leader looks for new followers. */
-    private static final double RECRUIT_RADIUS = 12.0D;
-
     /**
-     * Evaluations between enemy head-counts. Five is roughly half a second at this goal's cadence:
-     * fast enough that a squad caught by a charge re-forms while the charge is still arriving, slow
-     * enough that it is no longer a per-tick cost.
+     * How far around the leader an enemy still counts towards "are we outnumbered".
+     *
+     * <p>Left as a constant while the intervals moved to config, because it is not a performance
+     * dial: it goes through the shared combatant index rather than a world query, and it feeds a
+     * three-way formation choice where a couple of blocks either way cannot change the outcome.
      */
-    private static final int ENEMY_COUNT_INTERVAL = 5;
-
-    /** How far around the leader an enemy still counts towards "are we outnumbered". */
     private static final double ENEMY_COUNT_RADIUS = 14.0D;
 
-    /**
-     * How far a follower may get before it is dropped from the squad. Larger than the recruit
-     * radius on purpose: a squad should not disband the moment someone chases a target, only when
-     * they are genuinely gone.
-     */
-    private static final double COHESION_RADIUS = 28.0D;
+    /** How far a follower may be from its slot before the squad counts as scattered. */
+    private static final double SCATTERED_DISTANCE = 12.0D;
 
     private final PathfinderMob leader;
     private final FCSquad squad;
@@ -76,10 +66,15 @@ public class FCLeaderGoal extends Goal {
         this.squad = squad;
         this.maxFollowers = maxFollowers;
 
-        // Offset the first sweep by entity id so a squad of sergeants spawned on one tick spreads
-        // its scans across the interval instead of spiking together. Unlike a modulo on the world
-        // tick, this only shifts the phase — every leader still sweeps on schedule.
-        this.recruitCountdown = Math.floorMod(leader.getId(), RECRUIT_INTERVAL);
+        // Offset the first sweep by the SQUAD's identity so a dozen sergeants spawned on one tick
+        // spread their scans across the interval instead of spiking together. Unlike a modulo on
+        // the world tick, this only shifts the phase — every leader still sweeps on schedule.
+        //
+        // Keyed on the squad UUID rather than the entity id: entity ids handed out in one batch are
+        // consecutive, which spreads fine, but ids are also recycled, so a squad could inherit the
+        // phase of a dead one and land back on top of a neighbour it was meant to be offset from.
+        this.recruitCountdown = Math.floorMod(squad.getId().hashCode(),
+                Math.max(1, FirstCrusadePerformanceConfig.squadRecruitInterval()));
 
         // No MOVE or LOOK flags: this goal only bookkeeps, it must not block combat goals.
         this.setFlags(EnumSet.noneOf(Goal.Flag.class));
@@ -109,15 +104,20 @@ public class FCLeaderGoal extends Goal {
 
     @Override
     public void tick() {
-        this.squad.prune(COHESION_RADIUS);
+        this.squad.prune(FirstCrusadePerformanceConfig.squadCohesionRadius());
 
         LivingEntity target = this.leader.getTarget();
         boolean inCombat = target != null && target.isAlive();
 
+        // State first: every interval below is scaled by it, so reading it stale would throttle a
+        // squad that has just been charged at the rate it used while it was standing around.
+        this.squad.updateState(inCombat, isScattered());
+
         if (this.enemyCountCountdown > 0) {
             this.enemyCountCountdown--;
         } else {
-            this.enemyCountCountdown = FirstCrusadeAiLod.scale(this.leader, ENEMY_COUNT_INTERVAL);
+            this.enemyCountCountdown = this.squad.intervalFor(
+                    FirstCrusadePerformanceConfig.squadEnemyCountInterval());
             this.cachedEnemyCount = countEnemies(target);
         }
 
@@ -134,8 +134,28 @@ public class FCLeaderGoal extends Goal {
             return;
         }
 
-        this.recruitCountdown = FirstCrusadeAiLod.scale(this.leader, RECRUIT_INTERVAL);
+        this.recruitCountdown = this.squad.intervalFor(
+                FirstCrusadePerformanceConfig.squadRecruitInterval());
         recruit();
+    }
+
+    /**
+     * Whether anybody is far enough from the squad to be worth reforming for.
+     *
+     * <p>Measured against the leader rather than against each follower's exact slot: the slot is
+     * derived from the leader's position anyway, and this runs on the leader's tick, so asking the
+     * cheap question keeps a whole-squad geometry pass out of a routine bookkeeping step.
+     */
+    private boolean isScattered() {
+        double limitSq = SCATTERED_DISTANCE * SCATTERED_DISTANCE;
+
+        for (Mob member : this.squad.getMembers()) {
+            if (member.distanceToSqr(this.leader) > limitSq) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -151,7 +171,8 @@ public class FCLeaderGoal extends Goal {
             return;
         }
 
-        AABB box = this.leader.getBoundingBox().inflate(RECRUIT_RADIUS, 6.0D, RECRUIT_RADIUS);
+        AABB box = this.leader.getBoundingBox().inflate(FirstCrusadePerformanceConfig.squadRecruitRadius(), 6.0D,
+                FirstCrusadePerformanceConfig.squadRecruitRadius());
 
         List<Mob> candidates = this.leader.level().getEntitiesOfClass(
                 Mob.class,

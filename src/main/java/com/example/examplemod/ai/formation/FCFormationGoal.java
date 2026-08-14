@@ -3,6 +3,7 @@ package com.example.examplemod.ai.formation;
 import java.util.EnumSet;
 
 import com.example.examplemod.performance.ai.FirstCrusadeAiLod;
+import com.example.examplemod.performance.config.FirstCrusadePerformanceConfig;
 import com.example.examplemod.unit.profile.FCUnit;
 
 import net.minecraft.world.entity.LivingEntity;
@@ -32,9 +33,6 @@ import net.minecraft.world.phys.Vec3;
  * {@link com.example.examplemod.unit.profile.FCCombatProfile}.</p>
  */
 public class FCFormationGoal extends Goal {
-
-    /** Ticks between repath attempts while out of position. */
-    private static final int REPATH_INTERVAL = 10;
 
     /**
      * Beyond this distance from its slot a unit sprints to catch up rather than walking. Stops a
@@ -125,7 +123,17 @@ public class FCFormationGoal extends Goal {
         double speed = distance > CATCHUP_DISTANCE ? 1.25D : 0.95D;
 
         this.follower.getNavigation().moveTo(slot.x, slot.y, slot.z, speed);
-        this.repathCooldown = FirstCrusadeAiLod.scale(this.follower, REPATH_INTERVAL);
+
+        // Through the squad when there is one, so the cooldown answers to what the squad is doing
+        // as well as to how far away the player is: a formation that is merely marching does not
+        // need its ranks corrected as often as one that is under fire and losing shape. A follower
+        // without a squad cannot get here at all -- canUse() requires membership -- but the
+        // fallback keeps this honest rather than assuming.
+        FCSquad squad = squad();
+        int base = FirstCrusadePerformanceConfig.squadFormationInterval();
+        this.repathCooldown = squad != null
+                ? squad.intervalFor(base)
+                : FirstCrusadeAiLod.scale(this.follower, base);
     }
 
     // ------------------------------------------------------------------

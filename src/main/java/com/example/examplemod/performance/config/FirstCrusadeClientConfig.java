@@ -125,10 +125,14 @@ public final class FirstCrusadeClientConfig {
             .defineInRange("visuals.distantAnimationQuality", 70, 0, 100);
 
     public static final ForgeConfigSpec.IntValue VEHICLE_EFFECTS = BUILDER
-            .comment("Percentage of exhaust, dust and spark effects thrown by vehicles.",
-                    "NOT WIRED YET. Checked 2026-08-13: no vehicle in the mod emits a per-tick",
-                    "effect at all. The Sentinel only throws particles on its stomp impact, and",
-                    "the tank and the Valkyrie throw none. There is nothing here to thin.")
+            .comment("PLACEHOLDER: there is currently nothing for this to thin. Changing it does",
+                    "nothing, and that is a fact about the vehicles rather than a missing hook.",
+                    "Percentage of exhaust, dust and spark effects thrown by vehicles.",
+                    "Checked 2026-08-13 and again 2026-08-14: no vehicle in the mod emits a per-tick",
+                    "effect at all. The Sentinel only throws particles on its stomp impact, which is",
+                    "an event and already goes through particles.explosionDensity and",
+                    "particles.smokeDensity in the SERVER config; the tank and the Valkyrie throw",
+                    "none. When a vehicle grows an exhaust plume, this is where it gets its dial.")
             .defineInRange("visuals.vehicleEffects", 70, 0, 100);
 
     public static final ForgeConfigSpec.IntValue EXPLOSION_EFFECTS = BUILDER
@@ -152,8 +156,11 @@ public final class FirstCrusadeClientConfig {
             .defineInRange("visuals.maxVisualCombatDistance", 96, 16, 512);
 
     public static final ForgeConfigSpec.IntValue CORPSE_RENDER_DISTANCE = BUILDER
-            .comment("Beyond this distance from you, in blocks, bodies stop being drawn.",
-                    "NOT WIRED YET: the mod has no corpse system; nothing reads this.")
+            .comment("PLACEHOLDER FOR A SYSTEM THAT DOES NOT EXIST. Changing this does nothing.",
+                    "Beyond this distance from you, in blocks, bodies would stop being drawn.",
+                    "Kept as a declared intention rather than deleted so the key does not appear and",
+                    "disappear between versions, but it controls nothing today: the mod has no corpse",
+                    "system at all, so there is no body to stop drawing.")
             .defineInRange("visuals.corpseRenderDistance", 48, 8, 256);
 
     public static final ForgeConfigSpec.IntValue MAX_PARTICLES_PER_TICK = BUILDER

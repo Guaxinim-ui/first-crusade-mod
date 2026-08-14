@@ -15,10 +15,12 @@ import com.example.examplemod.performance.config.FirstCrusadePerformanceConfig;
 import com.example.examplemod.performance.graphics.FCServerParticles;
 import com.example.examplemod.performance.strategic.FCStrategicBattle;
 import com.example.examplemod.performance.strategic.FCStrategicBattleData;
+import com.example.examplemod.unit.profile.FCUnit;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -223,15 +225,30 @@ public final class FirstCrusadePerformanceCommand {
             followers += squad.size();
 
             LivingEntity shared = squad.getSharedTarget();
-            String text = String.format("  #%d %s — %d membros, formacao %s, alvo %s, LOD %s",
+            BlockPos destination = squad.getDestination();
+
+            // Two lines per squad: identity and roster on the first, what it is doing on the
+            // second. One line held everything until state and orders existed, and a line that
+            // wraps in a terminal is a line nobody reads.
+            String head = String.format("  #%d %s [%s] %s — %d/%d membros, %s",
                     mob.getId(),
                     mob.getName().getString(),
+                    squad.getId().toString().substring(0, 8),
+                    FirstCrusadeFactionManager.getFaction(mob).name(),
                     squad.size(),
-                    squad.getFormation().name(),
-                    shared == null ? "nenhum" : shared.getName().getString(),
-                    FirstCrusadeAiLod.forEntity(mob).name());
+                    followerCapOf(mob),
+                    squad.getFormation().name());
 
-            source.sendSuccess(() -> Component.literal(text).withStyle(ChatFormatting.GRAY), false);
+            String body = String.format("      estado %s, ordem %s, alvo %s, destino %s, LOD %s, scan %d ticks",
+                    squad.getState().name(),
+                    squad.getOrder().name(),
+                    shared == null ? "nenhum" : shared.getName().getString(),
+                    destination == null ? "nenhum" : destination.toShortString(),
+                    FirstCrusadeAiLod.forEntity(mob).name(),
+                    squad.intervalFor(FirstCrusadePerformanceConfig.squadScanInterval()));
+
+            source.sendSuccess(() -> Component.literal(head).withStyle(ChatFormatting.WHITE), false);
+            source.sendSuccess(() -> Component.literal(body).withStyle(ChatFormatting.GRAY), false);
         }
 
         if (squads == 0) {
@@ -297,6 +314,16 @@ public final class FirstCrusadePerformanceCommand {
     }
 
     // ==================================================================== helpers
+
+    /** The follower ceiling this leader is actually operating under, profile clamped by config. */
+    private static int followerCapOf(Mob leader) {
+        if (!(leader instanceof FCUnit unit)) {
+            return 0;
+        }
+
+        return FirstCrusadePerformanceConfig.squadFollowerCap(
+                unit.getUnitFaction(), unit.getCombatProfile().maxFollowers());
+    }
 
     private static boolean isModCombatant(Mob mob) {
         FirstCrusadeFaction faction = FirstCrusadeFactionManager.getFaction(mob);
