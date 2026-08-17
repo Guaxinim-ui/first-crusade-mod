@@ -95,7 +95,7 @@ public class GuardsmanEntity extends PathfinderMob
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(LASGUN_COMBAT_POSE, LasgunCombatPose.IDLE.ordinal());
-        this.entityData.define(LASGUN_COMBAT_TICKS, 0);
+        this.entityData.define(LASGUN_COMBAT_TICKS, POSE_NEVER_STARTED);
 
         // Rolled at the one point every spawn path passes through. See the same note on
         // AbstractImperialTroopEntity: the client's roll lives for a frame and is then replaced by
@@ -147,14 +147,16 @@ public class GuardsmanEntity extends PathfinderMob
 
     @Override
     public int getLasgunCombatTicks() {
-        return this.entityData.get(LASGUN_COMBAT_TICKS);
+        int start = this.entityData.get(LASGUN_COMBAT_TICKS);
+        return start == POSE_NEVER_STARTED ? 0 : Math.max(0, (int) this.level().getGameTime() - start);
     }
 
     @Override
     public void setLasgunCombatPose(LasgunCombatPose pose, int poseTicks) {
         LasgunCombatPose safePose = pose == null ? LasgunCombatPose.IDLE : pose;
         this.entityData.set(LASGUN_COMBAT_POSE, safePose.ordinal());
-        this.entityData.set(LASGUN_COMBAT_TICKS, Math.max(0, poseTicks));
+        this.entityData.set(LASGUN_COMBAT_TICKS,
+                (int) this.level().getGameTime() - Math.max(0, poseTicks));
     }
 
     @Override

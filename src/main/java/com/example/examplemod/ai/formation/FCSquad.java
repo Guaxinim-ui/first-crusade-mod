@@ -272,6 +272,14 @@ public class FCSquad {
             return false;
         }
 
+        // Being on the same side is not enough. Without this a Guard sergeant sweeps up Kasrkin,
+        // Space Marines and Custodes into one formation, which is wrong for the fiction and wrong
+        // mechanically -- a formation is built around units that move and fight alike.
+        if (!(this.leader instanceof FCUnit leadingUnit)
+                || !unit.getSquadFamily().canFollow(leadingUnit.getSquadFamily())) {
+            return false;
+        }
+
         this.members.add(candidate);
 
         if (candidate instanceof FCSquadMember member) {

@@ -43,6 +43,17 @@ public interface FCUnit {
         return !role.isLeader() && !role.isNonCombatant();
     }
 
+    /**
+     * Which formation this unit belongs to.
+     *
+     * <p>Derived from the faction unless the unit says otherwise, so line troops need not declare
+     * anything and elites declare once. See {@link FCSquadFamily} for why being on the same side is
+     * not sufficient reason to stand in the same squad.
+     */
+    default FCSquadFamily getSquadFamily() {
+        return FCSquadFamily.forFaction(getUnitFaction());
+    }
+
     /** Whether this unit can anchor a formation. */
     default boolean canLead() {
         return getUnitRole().isLeader() && getCombatProfile().maxFollowers() > 0;

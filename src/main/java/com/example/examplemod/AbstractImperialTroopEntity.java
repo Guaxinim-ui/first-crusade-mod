@@ -67,7 +67,7 @@ public abstract class AbstractImperialTroopEntity extends PathfinderMob
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(LASGUN_COMBAT_POSE, LasgunCombatPose.IDLE.ordinal());
-        this.entityData.define(LASGUN_COMBAT_TICKS, 0);
+        this.entityData.define(LASGUN_COMBAT_TICKS, POSE_NEVER_STARTED);
 
         // Rolled here, at the one moment every spawn path passes through — constructors run for
         // troops created by a barracks, by a raid, by a spawn egg and by /summon alike, and
@@ -105,16 +105,36 @@ public abstract class AbstractImperialTroopEntity extends PathfinderMob
         return LasgunCombatPose.fromId(this.entityData.get(LASGUN_COMBAT_POSE));
     }
 
+    /**
+     * How far into its current combat pose this unit is, in ticks.
+     *
+     * <h2>Derived, not synchronised</h2>
+     *
+     * <p>The synchronised value behind this is the game time the pose <i>began</i>, not the counter
+     * itself. That looks like an indirection for nothing until you count packets: the combat goals
+     * call {@code setLasgunCombatPose} every single tick with a counter that has advanced by one, so
+     * storing the counter meant {@code SynchedEntityData} saw a changed value every tick and pushed
+     * an entity-metadata packet to every client tracking that soldier — twenty a second, per
+     * trooper, for a number the client can work out on its own. Storing the start instead means the
+     * stored value is <i>identical</i> on every one of those calls, and vanilla only marks an entry
+     * dirty when the value actually differs, so the packets stop entirely.</p>
+     *
+     * <p>The cost is that the client reads its own {@code getGameTime()}, which can sit a few ticks
+     * away from the server's between time syncs. For an animation phase that is invisible; it would
+     * not be acceptable for anything that decided damage, which is why nothing here does.</p>
+     */
     @Override
     public int getLasgunCombatTicks() {
-        return this.entityData.get(LASGUN_COMBAT_TICKS);
+        int start = this.entityData.get(LASGUN_COMBAT_TICKS);
+        return start == POSE_NEVER_STARTED ? 0 : Math.max(0, (int) this.level().getGameTime() - start);
     }
 
     @Override
     public void setLasgunCombatPose(LasgunCombatPose pose, int poseTicks) {
         LasgunCombatPose safePose = pose == null ? LasgunCombatPose.IDLE : pose;
         this.entityData.set(LASGUN_COMBAT_POSE, safePose.ordinal());
-        this.entityData.set(LASGUN_COMBAT_TICKS, Math.max(0, poseTicks));
+        this.entityData.set(LASGUN_COMBAT_TICKS,
+                (int) this.level().getGameTime() - Math.max(0, poseTicks));
     }
 
     @Override

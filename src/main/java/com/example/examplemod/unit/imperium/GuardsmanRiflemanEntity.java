@@ -213,7 +213,7 @@ public class GuardsmanRiflemanEntity extends PathfinderMob
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(COMBAT_POSE, LasgunCombatPose.IDLE.ordinal());
-        this.entityData.define(COMBAT_TICKS, 0);
+        this.entityData.define(COMBAT_TICKS, POSE_NEVER_STARTED);
         this.entityData.define(VARIANT, 0);
         this.entityData.define(DEATH_DIRECTION, 0);
     }
@@ -225,14 +225,16 @@ public class GuardsmanRiflemanEntity extends PathfinderMob
 
     @Override
     public int getLasgunCombatTicks() {
-        return this.entityData.get(COMBAT_TICKS);
+        int start = this.entityData.get(COMBAT_TICKS);
+        return start == POSE_NEVER_STARTED ? 0 : Math.max(0, (int) this.level().getGameTime() - start);
     }
 
     @Override
     public void setLasgunCombatPose(LasgunCombatPose pose, int poseTicks) {
         LasgunCombatPose safePose = pose == null ? LasgunCombatPose.IDLE : pose;
         this.entityData.set(COMBAT_POSE, safePose.ordinal());
-        this.entityData.set(COMBAT_TICKS, Math.max(0, poseTicks));
+        this.entityData.set(COMBAT_TICKS,
+                (int) this.level().getGameTime() - Math.max(0, poseTicks));
     }
 
     public int getVariant() {
