@@ -157,6 +157,12 @@ public void setTarget(@Nullable LivingEntity target) {
     }
 
     super.setTarget(target);
+
+    // Publish it to the mob. Free: the Nob had already chosen for itself, and every Boy that
+    // inherits this skips its own scan. Done by overriding setTarget rather than in a tick hook
+    // because a Nob acquires targets through its target selector, which has no per-tick entry
+    // point of its own the way the Guardsman Sergeant's customServerAiStep does.
+    getSquad().setSharedTarget(target);
 }
 
 }

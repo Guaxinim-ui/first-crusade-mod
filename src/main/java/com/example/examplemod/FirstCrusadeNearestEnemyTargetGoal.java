@@ -1,5 +1,6 @@
 package com.example.examplemod;
 
+import com.example.examplemod.ai.formation.FCSquadMember;
 import com.example.examplemod.performance.ai.FirstCrusadeAiLod;
 import com.example.examplemod.performance.ai.FirstCrusadeCombatantIndex;
 import com.example.examplemod.performance.config.FirstCrusadePerformanceConfig;
@@ -103,6 +104,45 @@ public class FirstCrusadeNearestEnemyTargetGoal extends NearestAttackableTargetG
         // range the conditions enforced and the range actually searched could disagree.
         this.targetConditions.range(range);
 
+        LivingEntity shared = squadTarget();
+        if (shared != null) {
+            this.target = shared;
+            return;
+        }
+
         this.target = FirstCrusadeCombatantIndex.nearestTarget(this.mob, range, this.targetConditions);
+    }
+
+    /**
+     * The enemy this unit's squad has already settled on, if it is one this unit could attack.
+     *
+     * <h2>This is where a squad stops costing what it holds</h2>
+     *
+     * <p>A mob of twenty Boyz used to run twenty scans to arrive at roughly the same answer. The Nob
+     * has already made the expensive, line-of-sight-tested choice, so every follower that inherits it
+     * skips its scan entirely and the mob costs one scan instead of twenty. Putting it here rather
+     * than in each unit means all thirteen classes that register this goal get it, not just the ones
+     * somebody remembered to edit — the Guardsman Rifleman had this and the Orks did not, which is
+     * exactly the kind of gap a shared goal is supposed to close.
+     *
+     * <p>The inherited enemy is put through {@link #targetConditions} rather than trusted: it was
+     * chosen from where the leader stands, and a follower can be far enough away, walled off, or
+     * simply out of range. Failing that test falls through to a normal scan, so a straggler still
+     * fights rather than standing idle because its sergeant is shooting at something it cannot see.
+     *
+     * <h2>Individuality</h2>
+     *
+     * <p>A unit that is actually being shot at still answers for itself: {@code
+     * FirstCrusadeHurtByTargetGoal} sits above this in the target selector, so whoever hurts you takes
+     * precedence over whatever the leader is pointing at.
+     */
+    private LivingEntity squadTarget() {
+        if (!(this.mob instanceof FCSquadMember member)) {
+            return null;
+        }
+
+        LivingEntity shared = member.getSquadTarget();
+
+        return shared != null && this.targetConditions.test(this.mob, shared) ? shared : null;
     }
 }
