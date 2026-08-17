@@ -396,7 +396,8 @@ public class FCStrategicBattleData extends SavedData {
             FirstCrusadeFaction faction = FirstCrusadeFactionManager.getFaction(mob);
             FCStrategicForce force = sides.get(faction);
             force.add(mob.getType(), mob.getHealth() / Math.max(1.0F, mob.getMaxHealth()),
-                    mob.hasCustomName() ? mob.getCustomName().getString() : null);
+                    mob.hasCustomName() ? mob.getCustomName().getString() : null,
+                    FCStrategicForce.equipmentOf(mob));
 
             if (mob instanceof FCUnit unit && unit.canLead()) {
                 force.setHasCommander(true);

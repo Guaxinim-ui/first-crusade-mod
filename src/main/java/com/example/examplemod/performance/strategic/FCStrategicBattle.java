@@ -16,8 +16,10 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 /**
@@ -352,6 +354,15 @@ public final class FCStrategicBattle {
             // Restore the wear the battle put on it, so a force that materialises after a hard fight
             // looks like one: the survivors come back bloodied, not freshly issued.
             living.setHealth(Math.max(1.0F, living.getMaxHealth() * stack.health()));
+
+            // Kit last, and deliberately AFTER finalizeSpawn: vanilla's finalizeSpawn is entitled to
+            // issue equipment of its own, so restoring first would let it overwrite the gear the
+            // unit actually walked into the battle carrying.
+            List<ItemStack> kit = stack.equipment();
+            EquipmentSlot[] slots = EquipmentSlot.values();
+            for (int i = 0; i < kit.size() && i < slots.length; i++) {
+                living.setItemSlot(slots[i], kit.get(i).copy());
+            }
         }
 
         return level.addFreshEntity(entity) ? PlacementOutcome.PLACED : PlacementOutcome.NO_ROOM;

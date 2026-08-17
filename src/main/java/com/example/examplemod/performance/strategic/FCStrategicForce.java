@@ -10,10 +10,12 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.attributes.DefaultAttributes;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
@@ -21,17 +23,21 @@ import net.minecraftforge.registries.ForgeRegistries;
  *
  * <h2>What survives dematerialisation</h2>
  *
- * A force is a list of stacks, and a stack is <i>type, count, average health, display name</i>. That
- * is deliberately much less than the entities carried: no inventories, no squad membership, no guard
- * posts. Persisting the full NBT of three hundred soldiers would be exactly the "dados temporários
- * enormes em NBT" the brief warns against, and it would have to be reconciled against a changed
- * world on every load.
+ * A force is a list of stacks, and a stack is <i>type, count, average health, display name,
+ * equipment</i>. Still deliberately less than the entities carried — no squad membership, no guard
+ * posts, no {@code getPersistentData()} — because persisting the full NBT of three hundred soldiers
+ * would be exactly the "dados temporários enormes em NBT" the brief warns against, and it would have
+ * to be reconciled against a changed world on every load.
  *
- * <p>The price is honest and worth stating: a soldier that goes into a strategic battle and comes
- * back out is the same <i>kind</i> of soldier, with the same health and the same name, but not the
- * same individual — its inventory and its place in a squad are rebuilt from scratch. For line troops
- * that is invisible; for anything the player has equipped by hand it is not, which is why absorption
- * only ever happens to units in a battle nobody is near.
+ * <p>Equipment earns its place in that list where the rest does not, because it is the one piece of
+ * per-unit state a player can change by hand. It rides in the <i>merge key</i>, so it costs nothing
+ * in the common case: every line soldier equips itself identically in its own constructor, so a
+ * hundred of them still collapse into one stack carrying one copy of the kit. Only the unit holding
+ * something unusual pays for a stack of its own — and that is precisely the unit worth paying for.
+ *
+ * <p>The remaining price is honest and worth stating: a soldier that goes into a strategic battle
+ * and comes back out has the same type, health, name and gear, but its place in a squad and anything
+ * written to its persistent data are rebuilt from scratch. For line troops that is invisible.
  *
  * <h2>Where combat power comes from</h2>
  *
@@ -63,15 +69,43 @@ public final class FCStrategicForce {
          */
         private final String name;
 
+        /**
+         * What the units in this stack were carrying, in {@link EquipmentSlot#values()} order.
+         *
+         * <p><b>Part of the stack's identity, not a decoration.</b> Equipment used to be discarded
+         * outright, so a Guardsman that walked into an abstracted battle holding a weapon a player
+         * had given it came back holding whatever its constructor issues. Carrying the gear in the
+         * merge key instead means troops with identical kit — which is every line soldier, since
+         * they equip themselves in their own constructor — still collapse into a single stack and
+         * cost nothing extra, while the one unit with something unusual forms its own stack of one
+         * and gets that thing back.
+         *
+         * <p>This is deliberately cheaper than a full per-entity NBT snapshot. Writing three hundred
+         * soldiers' complete NBT to disk is the "huge temporary data in NBT" the brief warns
+         * against, and almost all of it would be identical.
+         */
+        private final List<ItemStack> equipment;
+
         private int count;
         /** Mean health of the units in this stack, as a fraction of their maximum. */
         private float health;
 
         public Stack(EntityType<?> type, int count, float health, String name) {
+            this(type, count, health, name, List.of());
+        }
+
+        public Stack(EntityType<?> type, int count, float health, String name,
+                     List<ItemStack> equipment) {
             this.type = type;
             this.count = count;
             this.health = Math.max(0.0F, Math.min(1.0F, health));
             this.name = name;
+            this.equipment = equipment == null ? List.of() : List.copyOf(equipment);
+        }
+
+        /** What these units carried, in {@link EquipmentSlot#values()} order. May be empty. */
+        public List<ItemStack> equipment() {
+            return this.equipment;
         }
 
         public EntityType<?> type() {
@@ -150,10 +184,12 @@ public final class FCStrategicForce {
         this.hasCommander = hasCommander;
     }
 
-    /** Adds one unit, merging into the stack of its own type and name. */
-    public void add(EntityType<?> type, float health, String name) {
+    /** Adds one unit, merging into the stack of its own type, name and equipment. */
+    public void add(EntityType<?> type, float health, String name, List<ItemStack> equipment) {
         for (Stack stack : this.stacks) {
-            if (stack.type == type && java.util.Objects.equals(stack.name, name)) {
+            if (stack.type == type
+                    && java.util.Objects.equals(stack.name, name)
+                    && sameEquipment(stack.equipment, equipment)) {
                 // Running mean, so a stack of forty at full health plus one at half does not
                 // suddenly report the whole stack as wounded.
                 stack.health = (stack.health * stack.count + health) / (stack.count + 1);
@@ -162,7 +198,40 @@ public final class FCStrategicForce {
             }
         }
 
-        this.stacks.add(new Stack(type, 1, health, name));
+        this.stacks.add(new Stack(type, 1, health, name, equipment));
+    }
+
+    /**
+     * Whether two kits are the same down to item, count and NBT.
+     *
+     * <p>Strict on purpose. A looser comparison — item type only, say — would quietly merge an
+     * enchanted or renamed weapon into the stack of plain ones and hand the player back a plain one,
+     * which is the exact failure this whole mechanism exists to prevent. The cost of being strict is
+     * an extra stack for a unit that is genuinely carrying something different, which is correct.
+     */
+    private static boolean sameEquipment(List<ItemStack> first, List<ItemStack> second) {
+        if (first.size() != second.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < first.size(); i++) {
+            if (!ItemStack.matches(first.get(i), second.get(i))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /** Reads a unit's worn and held items, in {@link EquipmentSlot#values()} order. */
+    public static List<ItemStack> equipmentOf(LivingEntity entity) {
+        List<ItemStack> kit = new ArrayList<>(EquipmentSlot.values().length);
+
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            kit.add(entity.getItemBySlot(slot).copy());
+        }
+
+        return kit;
     }
 
     public int totalUnits() {
@@ -329,6 +398,17 @@ public final class FCStrategicForce {
             if (stack.name != null) {
                 entry.putString("Name", stack.name);
             }
+
+            // Only written when there is something to write: an empty kit is by far the common
+            // case and an empty list per stack would be pure overhead in every save.
+            if (!stack.equipment.isEmpty()) {
+                ListTag kit = new ListTag();
+                for (ItemStack item : stack.equipment) {
+                    kit.add(item.save(new CompoundTag()));
+                }
+                entry.put("Kit", kit);
+            }
+
             list.add(entry);
         }
 
@@ -359,7 +439,15 @@ public final class FCStrategicForce {
             // resurrected as something wrong. Losing a stack beats corrupting a save.
             if (type != null) {
                 String name = entry.contains("Name") ? entry.getString("Name") : null;
-                force.stacks.add(new Stack(type, entry.getInt("Count"), entry.getFloat("Health"), name));
+
+                List<ItemStack> kit = new ArrayList<>();
+                ListTag saved = entry.getList("Kit", Tag.TAG_COMPOUND);
+                for (int slot = 0; slot < saved.size(); slot++) {
+                    kit.add(ItemStack.of(saved.getCompound(slot)));
+                }
+
+                force.stacks.add(new Stack(type, entry.getInt("Count"), entry.getFloat("Health"),
+                        name, kit));
             }
         }
 
