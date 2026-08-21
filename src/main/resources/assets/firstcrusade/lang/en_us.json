@@ -1700,5 +1700,18 @@
   "msg.firstcrusade.ork.waaagh_failed": "Da boyz wouldn't move. Sumfin' iz wrong.",
   "msg.firstcrusade.ork.waaagh_launched": "WAAAGH! Da boyz iz movin' out!",
   "gui.firstcrusade.ork.nobz_of": "Nobz %s/%s",
-  "gui.firstcrusade.ork.boyz_of": "Boyz %s/%s"
+  "gui.firstcrusade.ork.boyz_of": "Boyz %s/%s",
+  "block.firstcrusade.ork_squig_pen": "Ork Squig Pen",
+  "block.firstcrusade.ork_mek_workshop": "Ork Mek Workshop",
+  "gui.firstcrusade.ork.build_pit_short": "Loot Pit",
+  "gui.firstcrusade.ork.build_pit_short.tip": "Grots dig it for loot. One per camp, and it grows with the camp.",
+  "gui.firstcrusade.ork.build_squig_pen": "Squig Pen",
+  "gui.firstcrusade.ork.build_squig_pen.tip": "Squigs feed da mob, so da camp holds a bigger garrison. One per camp.",
+  "gui.firstcrusade.ork.build_mek_workshop": "Mek Shop",
+  "gui.firstcrusade.ork.build_mek_workshop.tip": "Da Mek bolts more dakka on, so a bigger war host marches when da WAAAGH! goes. One per camp.",
+  "gui.firstcrusade.ork.build_costs": "Pit %s  Pen %s  Shop %s",
+  "msg.firstcrusade.ork.built_squig_pen": "Da boyz penned up some squigs! More mouths can be fed.",
+  "msg.firstcrusade.ork.squig_pen_exists": "Da camp already has a Squig Pen.",
+  "msg.firstcrusade.ork.built_mek_workshop": "Da Mek set up shop! Da next WAAAGH! will be bigger.",
+  "msg.firstcrusade.ork.mek_workshop_exists": "Da camp already has a Mek Shop."
 }

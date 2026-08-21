@@ -48,7 +48,9 @@ public class OrkCampActionPacket {
         RECRUIT_BOY,
         PROMOTE_NOB,
         CYCLE_TARGET,
-        ORDER_WAAAGH
+        ORDER_WAAAGH,
+        BUILD_SQUIG_PEN,
+        BUILD_MEK_WORKSHOP
     }
 
     private final BlockPos campPos;
@@ -100,6 +102,8 @@ public class OrkCampActionPacket {
                     case PROMOTE_NOB -> ifOrk(player, () -> camp.promoteNob(player));
                     case CYCLE_TARGET -> ifOrk(player, () -> camp.cycleTarget(player));
                     case ORDER_WAAAGH -> ifOrk(player, () -> camp.orderWaaagh(player));
+                    case BUILD_SQUIG_PEN -> ifOrk(player, () -> camp.buildSquigPen(player));
+                    case BUILD_MEK_WORKSHOP -> ifOrk(player, () -> camp.buildMekWorkshop(player));
                 }
             }
         });

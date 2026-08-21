@@ -46,6 +46,8 @@ public class FCBlockStateProvider extends BlockStateProvider {
 
         existingModel(FCRegistry.ORK_CAMP);
         existingModel(FCRegistry.ORK_LOOT_PIT);
+        existingModel(FCRegistry.ORK_SQUIG_PEN);
+        existingModel(FCRegistry.ORK_MEK_WORKSHOP);
     }
 
     private void cubeAll(RegistryObject<Block> block, net.minecraft.resources.ResourceLocation texture) {

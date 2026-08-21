@@ -302,6 +302,30 @@ public static final RegistryObject<Item> ORK_LOOT_PIT_ITEM =
         ITEMS.register("ork_loot_pit",
                 () -> new BlockItem(ORK_LOOT_PIT.get(), new Item.Properties()));
 
+// Squig Pen — Ork livestock. Squigs are what an Ork mob eats, so the pen is what lets the camp
+// hold a bigger garrison (see OrkCampBlockEntity.garrisonCap). Raised from the Ork Core panel.
+public static final RegistryObject<Block> ORK_SQUIG_PEN =
+        BLOCKS.register("ork_squig_pen",
+                () -> new Block(BlockBehaviour.Properties.of()
+                        .strength(2.0F, 3.0F)
+                        .sound(SoundType.WOOD)));
+
+public static final RegistryObject<Item> ORK_SQUIG_PEN_ITEM =
+        ITEMS.register("ork_squig_pen",
+                () -> new BlockItem(ORK_SQUIG_PEN.get(), new Item.Properties()));
+
+// Mek Workshop — where a Mek bolts more dakka onto everything. It makes the war host that marches
+// out bigger (see OrkCampBlockEntity.warPartySize). Raised from the Ork Core panel.
+public static final RegistryObject<Block> ORK_MEK_WORKSHOP =
+        BLOCKS.register("ork_mek_workshop",
+                () -> new Block(BlockBehaviour.Properties.of()
+                        .strength(3.0F, 6.0F)
+                        .sound(SoundType.METAL)));
+
+public static final RegistryObject<Item> ORK_MEK_WORKSHOP_ITEM =
+        ITEMS.register("ork_mek_workshop",
+                () -> new BlockItem(ORK_MEK_WORKSHOP.get(), new Item.Properties()));
+
 public static final RegistryObject<MenuType<OrkCampMenu>> ORK_CAMP_MENU =
         MENU_TYPES.register("ork_camp_menu",
                 () -> IForgeMenuType.create((windowId, inventory, data) -> new OrkCampMenu(windowId, inventory, data)));

@@ -16,7 +16,7 @@ import net.minecraft.world.item.ItemStack;
  * simple-panel pattern as {@link StrategiumMenu}.
  */
 public class OrkCampMenu extends AbstractContainerMenu {
-    private static final int DATA_COUNT = 16;
+    private static final int DATA_COUNT = 20;
 
     private final ContainerData data;
     private final BlockPos campPos;
@@ -71,6 +71,10 @@ public class OrkCampMenu extends AbstractContainerMenu {
                     case 13 -> camp.getTargetDistance();
                     case 14 -> camp.getBoyLootCost();
                     case 15 -> camp.getNobLootCost();
+                    case 16 -> camp.hasSquigPen() ? 1 : 0;
+                    case 17 -> camp.hasMekWorkshop() ? 1 : 0;
+                    case 18 -> camp.getSquigPenCost();
+                    case 19 -> camp.getMekWorkshopCost();
                     default -> 0;
                 };
             }
@@ -160,6 +164,22 @@ public class OrkCampMenu extends AbstractContainerMenu {
 
     public int getNobCost() {
         return this.data.get(15);
+    }
+
+    public boolean hasSquigPen() {
+        return this.data.get(16) != 0;
+    }
+
+    public boolean hasMekWorkshop() {
+        return this.data.get(17) != 0;
+    }
+
+    public int getSquigPenCost() {
+        return this.data.get(18);
+    }
+
+    public int getMekWorkshopCost() {
+        return this.data.get(19);
     }
 
     @Override

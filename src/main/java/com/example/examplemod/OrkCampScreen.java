@@ -32,6 +32,8 @@ public class OrkCampScreen extends AbstractContainerScreen<OrkCampMenu> {
     private Button recruitBoyButton;
     private Button promoteNobButton;
     private Button waaaghButton;
+    private Button squigPenButton;
+    private Button mekWorkshopButton;
 
     /**
      * Whether this viewer gets the §24 command row, decided once.
@@ -56,14 +58,31 @@ public class OrkCampScreen extends AbstractContainerScreen<OrkCampMenu> {
     protected void init() {
         super.init();
 
-        this.buildLootPitButton = addRenderableWidget(
-                Button.builder(
-                        Component.translatable("gui.firstcrusade.ork.build_loot_pit"),
-                        button -> FirstCrusadeNetwork.CHANNEL.sendToServer(
-                                new OrkCampActionPacket(this.menu.getCampPos(),
-                                        OrkCampActionPacket.Action.BUILD_LOOT_PIT))
-                ).bounds(this.leftPos + 10, this.topPos + 146, 180, 20).build()
-        );
+        // An Ork gets three buildings on one row; everyone else keeps the single wide button they
+        // always had. Three narrow buttons instead of three more rows is what keeps the panel at a
+        // height that still fits on screen at GUI scale 4.
+        if (this.ork) {
+            this.buildLootPitButton = addRenderableWidget(
+                    orkButton("build_pit_short", OrkCampActionPacket.Action.BUILD_LOOT_PIT,
+                            this.leftPos + 10, this.topPos + 146, 58));
+
+            this.squigPenButton = addRenderableWidget(
+                    orkButton("build_squig_pen", OrkCampActionPacket.Action.BUILD_SQUIG_PEN,
+                            this.leftPos + 72, this.topPos + 146, 58));
+
+            this.mekWorkshopButton = addRenderableWidget(
+                    orkButton("build_mek_workshop", OrkCampActionPacket.Action.BUILD_MEK_WORKSHOP,
+                            this.leftPos + 134, this.topPos + 146, 56));
+        } else {
+            this.buildLootPitButton = addRenderableWidget(
+                    Button.builder(
+                            Component.translatable("gui.firstcrusade.ork.build_loot_pit"),
+                            button -> FirstCrusadeNetwork.CHANNEL.sendToServer(
+                                    new OrkCampActionPacket(this.menu.getCampPos(),
+                                            OrkCampActionPacket.Action.BUILD_LOOT_PIT))
+                    ).bounds(this.leftPos + 10, this.topPos + 146, 180, 20).build()
+            );
+        }
 
         if (this.menu.isViewerImperial()) {
             this.raidButton = addRenderableWidget(
@@ -99,6 +118,7 @@ public class OrkCampScreen extends AbstractContainerScreen<OrkCampMenu> {
             this.waaaghButton = addRenderableWidget(
                     orkButton("order_waaagh", OrkCampActionPacket.Action.ORDER_WAAAGH,
                             this.leftPos + 102, this.topPos + 194, 88));
+
 
             addRenderableWidget(
                     Button.builder(
@@ -155,6 +175,18 @@ public class OrkCampScreen extends AbstractContainerScreen<OrkCampMenu> {
 
         if (this.waaaghButton != null) {
             this.waaaghButton.active = this.menu.hasTarget();
+        }
+
+        // Built-or-not is a fact the server already syncs, so unlike the counts these two can be
+        // greyed honestly: a second Squig Pen is refused for a reason the panel can see.
+        if (this.squigPenButton != null) {
+            this.squigPenButton.active = !this.menu.hasSquigPen()
+                    && this.menu.getLoot() >= this.menu.getSquigPenCost();
+        }
+
+        if (this.mekWorkshopButton != null) {
+            this.mekWorkshopButton.active = !this.menu.hasMekWorkshop()
+                    && this.menu.getLoot() >= this.menu.getMekWorkshopCost();
         }
     }
 
@@ -255,7 +287,12 @@ public class OrkCampScreen extends AbstractContainerScreen<OrkCampMenu> {
                 10, line, 0xFFE0C68A, false);
 
         g.drawString(this.font,
-                Component.translatable("gui.firstcrusade.ork.build_cost", this.menu.getLootPitCost()),
+                this.ork
+                        ? Component.translatable("gui.firstcrusade.ork.build_costs",
+                                this.menu.getLootPitCost(), this.menu.getSquigPenCost(),
+                                this.menu.getMekWorkshopCost())
+                        : Component.translatable("gui.firstcrusade.ork.build_cost",
+                                this.menu.getLootPitCost()),
                 10, 136, 0xFF909090, false);
 
         if (this.ork) {

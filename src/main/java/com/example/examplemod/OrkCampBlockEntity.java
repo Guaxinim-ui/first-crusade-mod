@@ -97,6 +97,18 @@ public class OrkCampBlockEntity extends BlockEntity {
     /** Boyz that must be standing before one of them can be made a Nob — a Nob needs a mob to boss. */
     private static final int MIN_BOYZ_TO_PROMOTE = 4;
 
+    private static final int SQUIG_PEN_COST = 60;
+    private static final int MEK_WORKSHOP_COST = 90;
+
+    /** Squigs are what an Ork mob eats, so the pen is what lets the camp hold more Boyz. */
+    private static final int SQUIG_PEN_GARRISON_BONUS = 4;
+
+    /** A Mek bolts more dakka onto everything, so more of the mob is worth marching out. */
+    private static final int MEK_WORKSHOP_PARTY_BONUS = 2;
+
+    private boolean cachedSquigPen = false;
+    private boolean cachedMekWorkshop = false;
+
     public OrkCampBlockEntity(BlockPos pos, BlockState state) {
         super(FCRegistry.ORK_CAMP_BLOCK_ENTITY.get(), pos, state);
     }
@@ -219,11 +231,32 @@ public class OrkCampBlockEntity extends BlockEntity {
         this.cachedBoyz = countCampOfType(serverLevel, pos, FCRegistry.ORK_BOY.get());
         this.cachedNobz = countCampOfType(serverLevel, pos, FCRegistry.ORK_NOB.get());
         this.cachedLootPits = pits;
+        this.cachedSquigPen = hasStructure(serverLevel, pos, FCRegistry.ORK_SQUIG_PEN.get());
+        this.cachedMekWorkshop = hasStructure(serverLevel, pos, FCRegistry.ORK_MEK_WORKSHOP.get());
 
         // The single Loot Pit scales with the Ork city level (it levels up instead of multiplying).
         this.loot = Math.min(LOOT_CAP,
                 this.loot + grots * LOOT_PER_GROT + pits * LOOT_PER_PIT * Math.max(1, this.campLevel));
         setChanged();
+    }
+
+    /**
+     * Whether one of the camp's structures stands nearby.
+     *
+     * <p>Reads the world rather than a flag on the block entity, exactly as the Loot Pit count
+     * always has. That is what makes knocking the building down mean something: an Imperial raider
+     * who blows up the Squig Pen takes the garrison bonus with it, and nothing has to be told.
+     */
+    private boolean hasStructure(ServerLevel serverLevel, BlockPos pos, net.minecraft.world.level.block.Block block) {
+        for (BlockPos p : BlockPos.betweenClosed(
+                pos.offset(-BUILD_SCAN_RADIUS, -4, -BUILD_SCAN_RADIUS),
+                pos.offset(BUILD_SCAN_RADIUS, 8, BUILD_SCAN_RADIUS))) {
+            if (serverLevel.getBlockState(p).is(block)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Counts the Loot Pits built around this Ork city (the Ork mirror of an Imperial work-site).
@@ -260,7 +293,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         }
 
         int boyz = countCampOfType(serverLevel, pos, FCRegistry.ORK_BOY.get());
-        if (boyz < garrisonForLevel(this.campLevel) && this.loot >= BOY_LOOT_COST) {
+        if (boyz < garrisonCap() && this.loot >= BOY_LOOT_COST) {
             spawnCampUnit(serverLevel, pos, FCRegistry.ORK_BOY.get());
             this.loot -= BOY_LOOT_COST;
             this.growthCooldown = GROWTH_INTERVAL_CYCLES;
@@ -276,6 +309,18 @@ public class OrkCampBlockEntity extends BlockEntity {
             case 4 -> 8;
             default -> 3;
         };
+    }
+
+    /**
+     * What this camp's standing garrison may actually reach: its level's ceiling, plus the Squig Pen.
+     *
+     * <p>Every path that raises a Boy asks this one method — the growth tick, the recruit button and
+     * the panel's own read-out — so the pen cannot end up counting for one of them and not the
+     * others, and the number the player is shown is the number they are judged against.
+     */
+    private int garrisonCap() {
+        return garrisonForLevel(this.campLevel)
+                + (this.cachedSquigPen ? SQUIG_PEN_GARRISON_BONUS : 0);
     }
 
     // The standing Boy garrison cap: a small encampment holds a handful (6-8); a full Ork city keeps
@@ -379,7 +424,8 @@ public class OrkCampBlockEntity extends BlockEntity {
         WarDominionManager.shift(serverLevel, -2);
 
         int tier = WaaaghOverlordManager.getTier(serverLevel);
-        int wanted = WAR_PARTY_SIZE + tier + this.clan.getBonusBoyz() + (this.campLevel - 1);
+        int wanted = WAR_PARTY_SIZE + tier + this.clan.getBonusBoyz() + (this.campLevel - 1)
+                + (this.cachedMekWorkshop ? MEK_WORKSHOP_PARTY_BONUS : 0);
         int partySize = Math.min(garrison.size(), wanted);
 
         for (int i = 0; i < partySize; i++) {
@@ -687,7 +733,7 @@ public class OrkCampBlockEntity extends BlockEntity {
 
     /** The standing-Boy ceiling at this camp's level — what the recruit button is measured against. */
     public int getGarrisonCap() {
-        return garrisonForLevel(this.campLevel);
+        return garrisonCap();
     }
 
     /** One Nob per camp level. */
@@ -712,6 +758,22 @@ public class OrkCampBlockEntity extends BlockEntity {
 
     public int getWarPartyLootCost() {
         return WAR_PARTY_LOOT_COST;
+    }
+
+    public boolean hasSquigPen() {
+        return this.cachedSquigPen;
+    }
+
+    public boolean hasMekWorkshop() {
+        return this.cachedMekWorkshop;
+    }
+
+    public int getSquigPenCost() {
+        return SQUIG_PEN_COST;
+    }
+
+    public int getMekWorkshopCost() {
+        return MEK_WORKSHOP_COST;
     }
 
     // Opens the Ork city's command panel (the Ork mirror of the Imperial Command Core screen).
@@ -795,9 +857,9 @@ public class OrkCampBlockEntity extends BlockEntity {
 
         int boyz = countCampOfType(serverLevel, this.worldPosition, FCRegistry.ORK_BOY.get());
 
-        if (boyz >= garrisonForLevel(this.campLevel)) {
+        if (boyz >= garrisonCap()) {
             player.displayClientMessage(Component.translatable(
-                    "msg.firstcrusade.ork.garrison_full", garrisonForLevel(this.campLevel)), true);
+                    "msg.firstcrusade.ork.garrison_full", garrisonCap()), true);
             return;
         }
 
@@ -989,6 +1051,71 @@ public class OrkCampBlockEntity extends BlockEntity {
 
         player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.waaagh_launched")
                 .copy().withStyle(net.minecraft.ChatFormatting.GREEN), true);
+    }
+
+    /**
+     * Raises the Squig Pen: the camp's larder, and so its garrison ceiling.
+     *
+     * <p>One per camp, the same rule the Loot Pit has — it belongs to the city rather than
+     * multiplying across it, which keeps the bonus a thing you either have or do not.
+     */
+    public void buildSquigPen(net.minecraft.world.entity.player.Player player) {
+        buildStructure(player, FCRegistry.ORK_SQUIG_PEN.get(), SQUIG_PEN_COST,
+                "msg.firstcrusade.ork.built_squig_pen", "msg.firstcrusade.ork.squig_pen_exists");
+    }
+
+    /** Raises the Mek Workshop: more dakka, and so a bigger war host when the WAAAGH! marches. */
+    public void buildMekWorkshop(net.minecraft.world.entity.player.Player player) {
+        buildStructure(player, FCRegistry.ORK_MEK_WORKSHOP.get(), MEK_WORKSHOP_COST,
+                "msg.firstcrusade.ork.built_mek_workshop", "msg.firstcrusade.ork.mek_workshop_exists");
+    }
+
+    /**
+     * The shared body of every one-per-camp build.
+     *
+     * <p>{@link #buildLootPit} predates this and keeps its own copy on purpose: its "already built"
+     * test counts pits rather than asking whether one exists, because {@link #produceLoot} pays per
+     * pit and the count is the thing that matters there. Folding it in would have made the count a
+     * boolean at the one call site that needs it to be a number.
+     */
+    private void buildStructure(net.minecraft.world.entity.player.Player player,
+                                net.minecraft.world.level.block.Block block, int cost,
+                                String builtKey, String existsKey) {
+        if (!(this.level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        if (hasStructure(serverLevel, this.worldPosition, block)) {
+            player.displayClientMessage(Component.translatable(existsKey), true);
+            return;
+        }
+
+        if (this.loot < cost) {
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.no_loot"), true);
+            return;
+        }
+
+        BlockPos spot = findFreeBuildSpot(serverLevel, this.worldPosition);
+
+        if (spot == null) {
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.no_space"), true);
+            return;
+        }
+
+        serverLevel.setBlock(spot, block.defaultBlockState(), 3);
+        this.loot -= cost;
+
+        // Marked here as well as on the next economy cycle, so the bonus and the panel agree the
+        // instant the building goes up rather than up to ten seconds later.
+        if (block == FCRegistry.ORK_SQUIG_PEN.get()) {
+            this.cachedSquigPen = true;
+        } else if (block == FCRegistry.ORK_MEK_WORKSHOP.get()) {
+            this.cachedMekWorkshop = true;
+        }
+
+        setChanged();
+
+        player.displayClientMessage(Component.translatable(builtKey), true);
     }
 
     // Finds an empty surface spot in a ring around the heart to drop a new Ork structure on.

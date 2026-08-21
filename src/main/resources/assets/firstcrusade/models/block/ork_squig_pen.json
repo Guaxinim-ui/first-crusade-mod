@@ -1,0 +1,106 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "mud": "minecraft:block/rooted_dirt",
+    "post": "minecraft:block/stripped_spruce_log",
+    "squig": "minecraft:block/red_mushroom_block",
+    "particle": "minecraft:block/stripped_spruce_log"
+  },
+  "elements": [
+    {
+      "name": "trampled_ground",
+      "from": [0, 0, 0],
+      "to": [16, 2, 16],
+      "faces": {
+        "down":  {"texture": "#mud", "cullface": "down"},
+        "up":    {"texture": "#mud"},
+        "north": {"texture": "#mud", "cullface": "north"},
+        "south": {"texture": "#mud", "cullface": "south"},
+        "west":  {"texture": "#mud", "cullface": "west"},
+        "east":  {"texture": "#mud", "cullface": "east"}
+      }
+    },
+    {
+      "name": "squig",
+      "from": [4, 2, 4],
+      "to": [12, 9, 12],
+      "faces": {
+        "up":    {"texture": "#squig"},
+        "north": {"texture": "#squig"},
+        "south": {"texture": "#squig"},
+        "west":  {"texture": "#squig"},
+        "east":  {"texture": "#squig"}
+      }
+    },
+    {
+      "name": "post_nw",
+      "from": [0, 2, 0],
+      "to": [2, 12, 2],
+      "faces": {
+        "up":    {"texture": "#post"},
+        "north": {"texture": "#post"},
+        "south": {"texture": "#post"},
+        "west":  {"texture": "#post"},
+        "east":  {"texture": "#post"}
+      }
+    },
+    {
+      "name": "post_ne",
+      "from": [14, 2, 0],
+      "to": [16, 12, 2],
+      "faces": {
+        "up":    {"texture": "#post"},
+        "north": {"texture": "#post"},
+        "south": {"texture": "#post"},
+        "west":  {"texture": "#post"},
+        "east":  {"texture": "#post"}
+      }
+    },
+    {
+      "name": "post_sw",
+      "from": [0, 2, 14],
+      "to": [2, 12, 16],
+      "faces": {
+        "up":    {"texture": "#post"},
+        "north": {"texture": "#post"},
+        "south": {"texture": "#post"},
+        "west":  {"texture": "#post"},
+        "east":  {"texture": "#post"}
+      }
+    },
+    {
+      "name": "post_se",
+      "from": [14, 2, 14],
+      "to": [16, 12, 16],
+      "faces": {
+        "up":    {"texture": "#post"},
+        "north": {"texture": "#post"},
+        "south": {"texture": "#post"},
+        "west":  {"texture": "#post"},
+        "east":  {"texture": "#post"}
+      }
+    },
+    {
+      "name": "rail_north",
+      "from": [0, 7, 0],
+      "to": [16, 9, 2],
+      "faces": {
+        "up":    {"texture": "#post"},
+        "down":  {"texture": "#post"},
+        "north": {"texture": "#post", "cullface": "north"},
+        "south": {"texture": "#post"}
+      }
+    },
+    {
+      "name": "rail_south",
+      "from": [0, 7, 14],
+      "to": [16, 9, 16],
+      "faces": {
+        "up":    {"texture": "#post"},
+        "down":  {"texture": "#post"},
+        "north": {"texture": "#post"},
+        "south": {"texture": "#post", "cullface": "south"}
+      }
+    }
+  ]
+}

@@ -78,6 +78,7 @@ public class FCBlockTagsProvider extends BlockTagsProvider {
         // The toxic-sludge liquid and the structure-marker blocks need no mineable tag (liquid /
         // instabreak). The new decorative kit provides its own tags.
         tag(BlockTags.MINEABLE_WITH_PICKAXE).add(
+                FCRegistry.ORK_MEK_WORKSHOP.get(),
                 FCRegistry.IMPERIAL_COMMAND_CORE.get(),
                 FCRegistry.IMPERIAL_MINE.get(),
                 FCRegistry.IMPERIAL_GOLD_MINE.get(),
@@ -100,6 +101,7 @@ public class FCBlockTagsProvider extends BlockTagsProvider {
 
         tag(BlockTags.MINEABLE_WITH_SHOVEL).add(
                 FCRegistry.ORK_LOOT_PIT.get(),
+                FCRegistry.ORK_SQUIG_PEN.get(),
                 com.example.examplemod.flora.FCFloraGround.SUMP_MUD.get(),
                 com.example.examplemod.flora.FCFloraGround.SALT_CRUST.get());
 

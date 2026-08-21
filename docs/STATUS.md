@@ -378,6 +378,37 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-08-21 (4): **§24 COMPLETO — Squig Pen e Mek Workshop.** Build verde, `runData` rodado.
+  A fatia 1 foi confirmada em jogo pelo dono; estas duas peças **ainda não**.
+
+  Dois blocos novos (`ork_squig_pen`, `ork_mek_workshop`), construídos do painel como o Loot Pit,
+  **um por campo**. Cada um mexe num número que **já existia** em vez de trazer sistema novo:
+  - **Squig Pen → +4 no teto de guarnição.** Squig é o que uma horda come, então o curral é o que
+    deixa o campo segurar mais Boyz. Todo caminho que cria um Boy (o tick de crescimento, o botão de
+    recrutar e o próprio mostrador do painel) passou a perguntar ao **mesmo** método `garrisonCap()`,
+    para o bónus não valer num e não valer noutro — e o número mostrado ser o número cobrado.
+  - **Mek Workshop → +2 no tamanho da war party.** Entra na mesma soma que já tinha clã, tier e nível
+    de campo, logo não há segunda regra de tamanho de horda.
+
+  **A estrutura é lida do mundo, não de uma flag** — como o Loot Pit sempre foi. É isso que faz
+  derrubar o prédio significar alguma coisa: um raider imperial que explode o Curral leva o bónus de
+  guarnição junto, e ninguém precisa de ser avisado.
+
+  **`buildLootPit` não foi refatorado para dentro do helper novo** de propósito: o teste de "já
+  existe" dele **conta** poços em vez de perguntar se há um, porque `produceLoot` paga por poço.
+  Dobrar os dois teria transformado a contagem num booleano exactamente no sítio onde ela precisa de
+  ser número.
+
+  **Painel sem crescer:** a fila de construção virou 3 colunas (58/58/56) em vez de 3 filas novas,
+  então continua em 252 — que é o que cabe no ecrã do dono à escala de GUI 4. Conferi os retângulos
+  outra vez (colisão par a par + limites): 0 problemas, último widget acaba em 250.
+  As duas tooltips novas tinham `%s` e o helper genérico não passa argumentos — tirado antes de
+  virar `%s` cru na tela.
+
+  Assets: modelos à mão com textura vanilla (§43, zero PNG novo); blockstate, modelo de item, loot
+  table e as duas tags `mineable` vieram do **datagen rodado**. Sem receita, de propósito: como o
+  Loot Pit, estes prédios levantam-se do painel e não da bancada.
+
 - 2026-08-21 (3): **§24 fatia 1 — o Ork Camp ganhou mãos.** Build verde. **Nada testado em jogo**
   (precisa de um jogador Ork; a via RCON não alcança).
 

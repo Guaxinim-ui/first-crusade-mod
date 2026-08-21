@@ -1694,5 +1694,18 @@
   "msg.firstcrusade.ork.waaagh_failed": "Os boyz num sairam do lugar. Tem coisa errada.",
   "msg.firstcrusade.ork.waaagh_launched": "WAAAGH! Os boyz tão indo!",
   "gui.firstcrusade.ork.nobz_of": "Nobz %s/%s",
-  "gui.firstcrusade.ork.boyz_of": "Boyz %s/%s"
+  "gui.firstcrusade.ork.boyz_of": "Boyz %s/%s",
+  "block.firstcrusade.ork_squig_pen": "Curral de Squigs",
+  "block.firstcrusade.ork_mek_workshop": "Oficina do Mek",
+  "gui.firstcrusade.ork.build_pit_short": "Poço",
+  "gui.firstcrusade.ork.build_pit_short.tip": "Os grots cavam por loot. Um por campo, e cresce com o campo.",
+  "gui.firstcrusade.ork.build_squig_pen": "Curral",
+  "gui.firstcrusade.ork.build_squig_pen.tip": "Squig alimenta a horda, então o campo segura uma guarnição maior. Um por campo.",
+  "gui.firstcrusade.ork.build_mek_workshop": "Oficina",
+  "gui.firstcrusade.ork.build_mek_workshop.tip": "O Mek parafusa mais dakka, então marcha uma horda maior quando a WAAAGH! sai. Um por campo.",
+  "gui.firstcrusade.ork.build_costs": "Poço %s  Curral %s  Oficina %s",
+  "msg.firstcrusade.ork.built_squig_pen": "Os boyz encurralaram uns squigs! Dá pra alimentar mais boca.",
+  "msg.firstcrusade.ork.squig_pen_exists": "O campo já tem um Curral de Squigs.",
+  "msg.firstcrusade.ork.built_mek_workshop": "O Mek montou a oficina! A próxima WAAAGH! vai ser maior.",
+  "msg.firstcrusade.ork.mek_workshop_exists": "O campo já tem uma Oficina do Mek."
 }
