@@ -29,11 +29,27 @@ public class OrkCampScreen extends AbstractContainerScreen<OrkCampMenu> {
 
     private Button buildLootPitButton;
     private Button raidButton;
+    private Button recruitBoyButton;
+    private Button promoteNobButton;
+    private Button waaaghButton;
+
+    /**
+     * Whether this viewer gets the §24 command row, decided once.
+     *
+     * <p>Read here and not per-frame because it also sets {@link #imageHeight}: the panel is taller
+     * for an Ork, and a height that changed after {@code init} would leave the background painted to
+     * one size and the widgets laid out to another.
+     */
+    private final boolean ork;
 
     public OrkCampScreen(OrkCampMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
+        this.ork = com.example.examplemod.progression.PlayerProgressionClientView.isOrk();
         this.imageWidth = 200;
-        this.imageHeight = 200;
+
+        // An Imperial viewer sees exactly the panel they saw before — same height, same positions.
+        // The four command buttons are the only reason to grow it, so they are the only ones that do.
+        this.imageHeight = this.ork ? 252 : 200;
     }
 
     @Override
@@ -65,17 +81,48 @@ public class OrkCampScreen extends AbstractContainerScreen<OrkCampMenu> {
         // The Ork half of the same panel. Drawn from the client's synced faction, and it is only
         // courtesy: the server checks the faction again before converting anything, so a client
         // that drew the button anyway would still be refused.
-        if (com.example.examplemod.progression.PlayerProgressionClientView.isOrk()) {
+        if (this.ork) {
+            // Two columns, because four commands stacked full-width would push the panel past the
+            // height of a 1080p window at GUI scale 3.
+            this.recruitBoyButton = addRenderableWidget(
+                    orkButton("recruit_boy", OrkCampActionPacket.Action.RECRUIT_BOY,
+                            this.leftPos + 10, this.topPos + 170, 88));
+
+            this.promoteNobButton = addRenderableWidget(
+                    orkButton("promote_nob", OrkCampActionPacket.Action.PROMOTE_NOB,
+                            this.leftPos + 102, this.topPos + 170, 88));
+
+            addRenderableWidget(
+                    orkButton("cycle_target", OrkCampActionPacket.Action.CYCLE_TARGET,
+                            this.leftPos + 10, this.topPos + 194, 180));
+
+            this.waaaghButton = addRenderableWidget(
+                    orkButton("order_waaagh", OrkCampActionPacket.Action.ORDER_WAAAGH,
+                            this.leftPos + 10, this.topPos + 218, 180));
+
             addRenderableWidget(
                     Button.builder(
                             Component.translatable("gui.firstcrusade.ork.stash_teef"),
                             button -> FirstCrusadeNetwork.CHANNEL.sendToServer(
                                     new OrkCampActionPacket(this.menu.getCampPos(),
                                             OrkCampActionPacket.Action.STASH_TEEF))
-                    ).bounds(this.leftPos + 10, this.topPos + 170, 180, 22).build()
+                    ).bounds(this.leftPos + 10, this.topPos + 242, 180, 22).build()
             ).setTooltip(Tooltip.create(
                     Component.translatable("gui.firstcrusade.ork.stash_teef.tip")));
         }
+    }
+
+    /** One command button: same label/tooltip convention for all four, so adding a fifth is one line. */
+    private Button orkButton(String key, OrkCampActionPacket.Action action, int x, int y, int width) {
+        Button button = Button.builder(
+                Component.translatable("gui.firstcrusade.ork." + key),
+                b -> FirstCrusadeNetwork.CHANNEL.sendToServer(
+                        new OrkCampActionPacket(this.menu.getCampPos(), action))
+        ).bounds(x, y, width, 20).build();
+
+        button.setTooltip(Tooltip.create(Component.translatable("gui.firstcrusade.ork." + key + ".tip")));
+
+        return button;
     }
 
     @Override
@@ -91,6 +138,23 @@ public class OrkCampScreen extends AbstractContainerScreen<OrkCampMenu> {
             this.raidButton.setTooltip(Tooltip.create(this.menu.isUnderAssault()
                     ? Component.translatable("gui.firstcrusade.assault.start_raid.active")
                     : raidTooltip()));
+        }
+
+        // Greyed out only for the two things the client can actually see: loot in hand and a cap it
+        // was told. Everything else — standing Boyz, the field cap, whether a target still exists —
+        // is the server's to answer, and it answers with a reason rather than a dead button.
+        if (this.recruitBoyButton != null) {
+            this.recruitBoyButton.active = this.menu.getLoot() >= this.menu.getBoyCost()
+                    && this.menu.getBoyz() < this.menu.getGarrisonCap();
+        }
+
+        if (this.promoteNobButton != null) {
+            this.promoteNobButton.active = this.menu.getLoot() >= this.menu.getNobCost()
+                    && this.menu.getNobz() < this.menu.getNobCap();
+        }
+
+        if (this.waaaghButton != null) {
+            this.waaaghButton.active = this.menu.hasTarget();
         }
     }
 
@@ -194,10 +258,27 @@ public class OrkCampScreen extends AbstractContainerScreen<OrkCampMenu> {
                 Component.translatable("gui.firstcrusade.ork.build_cost", this.menu.getLootPitCost()),
                 10, 136, 0xFF909090, false);
 
+        if (this.ork) {
+            // The two numbers the command buttons are judged against, next to the buttons rather
+            // than in a tooltip: "why is this greyed out" should be answerable without hovering.
+            g.drawString(this.font,
+                    Component.translatable("gui.firstcrusade.ork.garrison_of",
+                            this.menu.getBoyz(), this.menu.getGarrisonCap(),
+                            this.menu.getNobz(), this.menu.getNobCap()),
+                    10, 160, 0xFF909090, false);
+
+            g.drawString(this.font,
+                    this.menu.hasTarget()
+                            ? Component.translatable("gui.firstcrusade.ork.target_at",
+                                    this.menu.getTargetDistance())
+                            : Component.translatable("gui.firstcrusade.ork.target_none"),
+                    10, 186, this.menu.hasTarget() ? 0xFFE0C68A : 0xFF909090, false);
+        }
+
         if (this.menu.isUnderAssault()) {
             g.drawString(this.font,
                     Component.translatable("gui.firstcrusade.assault.camp_under_attack"),
-                    10, 194, 0xFFFF7070, false);
+                    10, this.ork ? 236 : 194, 0xFFFF7070, false);
         }
     }
 

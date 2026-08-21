@@ -37,7 +37,18 @@ public class OrkCampActionPacket {
          * point. A client that could name the amount could name any amount; the server counts what
          * is actually in the inventory and converts that.
          */
-        STASH_TEEF
+        STASH_TEEF,
+
+        /**
+         * The Ork half of §24: the camp doing on command what it otherwise only does on its clock.
+         *
+         * <p>Like every other action here, the packet carries the camp and nothing else — not a
+         * cost, not a count, not a target. The camp owns all of those and re-checks each one.
+         */
+        RECRUIT_BOY,
+        PROMOTE_NOB,
+        CYCLE_TARGET,
+        ORDER_WAAAGH
     }
 
     private final BlockPos campPos;
@@ -81,6 +92,14 @@ public class OrkCampActionPacket {
                     case BUILD_LOOT_PIT -> camp.buildLootPit(player);
                     case START_IMPERIAL_RAID -> startRaid(player, packet.campPos);
                     case STASH_TEEF -> stashTeef(player);
+
+                    // Commanding the camp is an Ork's business, and the check is here rather than
+                    // in each method so there is one place it can be wrong. The screen hides these
+                    // buttons from everyone else, but hiding is a courtesy and this is the rule.
+                    case RECRUIT_BOY -> ifOrk(player, () -> camp.recruitBoy(player));
+                    case PROMOTE_NOB -> ifOrk(player, () -> camp.promoteNob(player));
+                    case CYCLE_TARGET -> ifOrk(player, () -> camp.cycleTarget(player));
+                    case ORDER_WAAAGH -> ifOrk(player, () -> camp.orderWaaagh(player));
                 }
             }
         });
@@ -105,6 +124,22 @@ public class OrkCampActionPacket {
      * <p>The strategic {@code StrategicResourceType.TEEF} is untouched. That is the Ork AI's war
      * chest and shares nothing with a player's pocket but the word.
      */
+    /**
+     * Runs a camp-command action only for a player who actually fights for the WAAAGH!.
+     *
+     * <p>The same refusal an Ork-only action already gave, in one place, so a fifth command added
+     * later cannot quietly ship without the check.
+     */
+    private static void ifOrk(ServerPlayer player, Runnable action) {
+        if (!com.example.examplemod.progression.ork.PlayerOrkProgressionRequirements.isOrk(player)) {
+            player.displayClientMessage(
+                    Component.translatable("msg.firstcrusade.ork.not_ork"), true);
+            return;
+        }
+
+        action.run();
+    }
+
     private static void stashTeef(net.minecraft.server.level.ServerPlayer player) {
         if (!com.example.examplemod.progression.ork.PlayerOrkProgressionRequirements.isOrk(player)) {
             player.displayClientMessage(

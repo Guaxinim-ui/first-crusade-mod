@@ -88,7 +88,14 @@ public class OrkCampBlockEntity extends BlockEntity {
     // the menu never triggers entity/block scans on its own polling).
     private int cachedGrots = 0;
     private int cachedBoyz = 0;
+    private int cachedNobz = 0;
     private int cachedLootPits = 0;
+
+    /** Loot to promote a standing Boy into a Nob. Three Boyz' worth, because it eats one of them. */
+    private static final int NOB_LOOT_COST = BOY_LOOT_COST * 3;
+
+    /** Boyz that must be standing before one of them can be made a Nob — a Nob needs a mob to boss. */
+    private static final int MIN_BOYZ_TO_PROMOTE = 4;
 
     public OrkCampBlockEntity(BlockPos pos, BlockState state) {
         super(FCRegistry.ORK_CAMP_BLOCK_ENTITY.get(), pos, state);
@@ -210,6 +217,7 @@ public class OrkCampBlockEntity extends BlockEntity {
 
         this.cachedGrots = grots;
         this.cachedBoyz = countCampOfType(serverLevel, pos, FCRegistry.ORK_BOY.get());
+        this.cachedNobz = countCampOfType(serverLevel, pos, FCRegistry.ORK_NOB.get());
         this.cachedLootPits = pits;
 
         // The single Loot Pit scales with the Ork city level (it levels up instead of multiplying).
@@ -673,6 +681,39 @@ public class OrkCampBlockEntity extends BlockEntity {
         return this.cachedLootPits;
     }
 
+    public int getCachedNobz() {
+        return this.cachedNobz;
+    }
+
+    /** The standing-Boy ceiling at this camp's level — what the recruit button is measured against. */
+    public int getGarrisonCap() {
+        return garrisonForLevel(this.campLevel);
+    }
+
+    /** One Nob per camp level. */
+    public int getNobCap() {
+        return this.campLevel;
+    }
+
+    /** Distance to the chosen target in blocks, or -1 when the camp has not picked one. */
+    public int getTargetDistance() {
+        return this.targetCorePos == null
+                ? -1
+                : (int) Math.sqrt(this.targetCorePos.distSqr(this.worldPosition));
+    }
+
+    public int getNobLootCost() {
+        return NOB_LOOT_COST;
+    }
+
+    public int getBoyLootCost() {
+        return BOY_LOOT_COST;
+    }
+
+    public int getWarPartyLootCost() {
+        return WAR_PARTY_LOOT_COST;
+    }
+
     // Opens the Ork city's command panel (the Ork mirror of the Imperial Command Core screen).
     public void openOrkInterface(net.minecraft.world.entity.player.Player player) {
         if (!(player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)) {
@@ -729,6 +770,225 @@ public class OrkCampBlockEntity extends BlockEntity {
         setChanged();
 
         player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.built_loot_pit"), true);
+    }
+
+    // ================================================================================
+    // The Ork player's own hands (§24)
+    //
+    // Everything below is the camp doing on command what it otherwise only does on its own clock.
+    // None of it invents a new economy: the loot, the garrison cap and the muster are the ones the
+    // automatic growth already used, so a camp a player drives and a camp left alone are the same
+    // camp running at different speeds — and can be balanced against one number.
+    // ================================================================================
+
+    /**
+     * Raises one Boy now, for loot, instead of waiting out the growth cooldown.
+     *
+     * <p>The cooldown is skipped on purpose — that is what paying by hand buys — but the garrison
+     * cap is not, because the cap is the thing keeping a camp from becoming an unkillable field of
+     * Orks. A player with loot can fill the garrison instantly; they cannot exceed it.
+     */
+    public void recruitBoy(net.minecraft.world.entity.player.Player player) {
+        if (!(this.level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        int boyz = countCampOfType(serverLevel, this.worldPosition, FCRegistry.ORK_BOY.get());
+
+        if (boyz >= garrisonForLevel(this.campLevel)) {
+            player.displayClientMessage(Component.translatable(
+                    "msg.firstcrusade.ork.garrison_full", garrisonForLevel(this.campLevel)), true);
+            return;
+        }
+
+        if (this.loot < BOY_LOOT_COST) {
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.no_loot"), true);
+            return;
+        }
+
+        if (!spawnCampUnit(serverLevel, this.worldPosition, FCRegistry.ORK_BOY.get())) {
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.no_space"), true);
+            return;
+        }
+
+        this.loot -= BOY_LOOT_COST;
+        this.cachedBoyz = boyz + 1;
+        setChanged();
+
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.recruited_boy"), true);
+    }
+
+    /**
+     * Turns one standing Boy into a Nob.
+     *
+     * <p>A promotion and not a summoning: the Boy is removed and the Nob takes his place, so the
+     * camp's head count does not move. That matters beyond flavour — every other path that puts Orks
+     * on the ground counts against a cap, and a button that added a body for loot would be the one
+     * hole in it.
+     *
+     * <p>Capped at one Nob per camp level. A Nob with nobody to boss is just an expensive Boy, so
+     * the promotion also refuses below {@link #MIN_BOYZ_TO_PROMOTE} standing Boyz.
+     */
+    public void promoteNob(net.minecraft.world.entity.player.Player player) {
+        if (!(this.level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        int nobz = countCampOfType(serverLevel, this.worldPosition, FCRegistry.ORK_NOB.get());
+
+        if (nobz >= this.campLevel) {
+            player.displayClientMessage(Component.translatable(
+                    "msg.firstcrusade.ork.nob_cap", this.campLevel), true);
+            return;
+        }
+
+        List<OrkBoyEntity> boyz = serverLevel.getEntitiesOfClass(
+                OrkBoyEntity.class,
+                garrisonBox(this.worldPosition),
+                ork -> ork.isAlive() && isCampOrk(ork, this.worldPosition));
+
+        if (boyz.size() < MIN_BOYZ_TO_PROMOTE) {
+            player.displayClientMessage(Component.translatable(
+                    "msg.firstcrusade.ork.not_enough_boyz", MIN_BOYZ_TO_PROMOTE), true);
+            return;
+        }
+
+        if (this.loot < NOB_LOOT_COST) {
+            player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.no_loot"), true);
+            return;
+        }
+
+        // The biggest Boy in the mob gets the promotion, which is the only selection rule an Ork
+        // would recognise.
+        OrkBoyEntity chosen = boyz.get(0);
+
+        for (OrkBoyEntity boy : boyz) {
+            if (boy.getHealth() > chosen.getHealth()) {
+                chosen = boy;
+            }
+        }
+
+        OrkNobEntity nob = FCRegistry.ORK_NOB.get().create(serverLevel);
+
+        if (nob == null) {
+            return;
+        }
+
+        nob.moveTo(chosen.getX(), chosen.getY(), chosen.getZ(), chosen.getYRot(), 0.0F);
+        this.clan.applyTo(nob);
+        markAsCampOrk(nob, this.worldPosition);
+        nob.setPersistenceRequired();
+
+        chosen.discard();
+        serverLevel.addFreshEntity(nob);
+
+        this.loot -= NOB_LOOT_COST;
+        this.cachedNobz = nobz + 1;
+        this.cachedBoyz = Math.max(0, this.cachedBoyz - 1);
+        setChanged();
+
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.promoted_nob"), true);
+    }
+
+    /**
+     * Points the camp at the next Imperial city on this planet.
+     *
+     * <p>Cycles rather than asking the player to type coordinates, and reads the war map rather than
+     * the world, so it works for a city whose chunks nobody has loaded. Only cities <b>on this
+     * planet</b> are offered — the war map is bucketed by dimension, and a war host cannot walk to
+     * another world.
+     */
+    public void cycleTarget(net.minecraft.world.entity.player.Player player) {
+        if (!(this.level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        List<BlockPos> cities = new java.util.ArrayList<>();
+
+        for (long packed : WorldWarMapData.get(serverLevel).getCities(serverLevel.dimension())) {
+            cities.add(BlockPos.of(packed));
+        }
+
+        if (cities.isEmpty()) {
+            player.displayClientMessage(
+                    Component.translatable("msg.firstcrusade.ork.no_targets"), true);
+            return;
+        }
+
+        // Sorted so the cycle has a stable order between clicks; a set's iteration order would
+        // reshuffle and make the button feel random.
+        cities.sort(java.util.Comparator.comparingDouble(city -> city.distSqr(this.worldPosition)));
+
+        int next = 0;
+
+        if (this.targetCorePos != null) {
+            int current = cities.indexOf(this.targetCorePos);
+            next = current < 0 ? 0 : (current + 1) % cities.size();
+        }
+
+        this.targetCorePos = cities.get(next);
+        setChanged();
+
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.target_set",
+                this.targetCorePos.getX(), this.targetCorePos.getZ(),
+                (int) Math.sqrt(this.targetCorePos.distSqr(this.worldPosition))), true);
+    }
+
+    /**
+     * The player orders the muster now.
+     *
+     * <p>Deliberately not gated on {@code ExampleMod.ORK_WAVES_ENABLED}. That flag turns off the
+     * camp launching war parties <i>by itself</i>, which is a decision about the world running
+     * unattended; it was never a statement that the muster is broken. The machinery it gates —
+     * {@link #launchWarParty} — is complete and, with the flag off, simply unreachable. This is the
+     * door to it, and it opens only when a player pushes.
+     *
+     * <p>Each refusal names the check that failed, because "nothing happened" is what a player
+     * reports as a bug.
+     */
+    public void orderWaaagh(net.minecraft.world.entity.player.Player player) {
+        if (!(this.level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        if (this.targetCorePos == null) {
+            player.displayClientMessage(
+                    Component.translatable("msg.firstcrusade.ork.waaagh_no_target"), true);
+            return;
+        }
+
+        if (this.loot < WAR_PARTY_LOOT_COST) {
+            player.displayClientMessage(Component.translatable(
+                    "msg.firstcrusade.ork.waaagh_no_loot", WAR_PARTY_LOOT_COST), true);
+            return;
+        }
+
+        int standing = countCampOfType(serverLevel, this.worldPosition, FCRegistry.ORK_BOY.get());
+
+        if (standing < MIN_BOYZ_TO_MUSTER) {
+            player.displayClientMessage(Component.translatable(
+                    "msg.firstcrusade.ork.waaagh_no_boyz", MIN_BOYZ_TO_MUSTER), true);
+            return;
+        }
+
+        if (countNearbyOrks(serverLevel, this.targetCorePos) >= WAR_FIELD_ORK_CAP) {
+            player.displayClientMessage(Component.translatable(
+                    "msg.firstcrusade.ork.waaagh_field_full", WAR_FIELD_ORK_CAP), true);
+            return;
+        }
+
+        if (!launchWarParty(serverLevel, this.worldPosition)) {
+            player.displayClientMessage(
+                    Component.translatable("msg.firstcrusade.ork.waaagh_failed"), true);
+            return;
+        }
+
+        this.loot -= WAR_PARTY_LOOT_COST;
+        this.waaagh = 0;
+        setChanged();
+
+        player.displayClientMessage(Component.translatable("msg.firstcrusade.ork.waaagh_launched")
+                .copy().withStyle(net.minecraft.ChatFormatting.GREEN), true);
     }
 
     // Finds an empty surface spot in a ring around the heart to drop a new Ork structure on.

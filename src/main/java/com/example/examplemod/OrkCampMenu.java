@@ -16,7 +16,7 @@ import net.minecraft.world.item.ItemStack;
  * simple-panel pattern as {@link StrategiumMenu}.
  */
 public class OrkCampMenu extends AbstractContainerMenu {
-    private static final int DATA_COUNT = 10;
+    private static final int DATA_COUNT = 16;
 
     private final ContainerData data;
     private final BlockPos campPos;
@@ -62,6 +62,15 @@ public class OrkCampMenu extends AbstractContainerMenu {
                     case 7 -> camp.getLootPitCost();
                     case 8 -> imperial ? 1 : 0;
                     case 9 -> camp.isUnderAssault() ? 1 : 0;
+                    case 10 -> camp.getCachedNobz();
+                    case 11 -> camp.getGarrisonCap();
+                    case 12 -> camp.getNobCap();
+                    // -1 when no target is chosen, which the panel reads as "none" rather than as a
+                    // distance of zero — a camp aimed at itself and a camp aimed at nothing must not
+                    // look the same.
+                    case 13 -> camp.getTargetDistance();
+                    case 14 -> camp.getBoyLootCost();
+                    case 15 -> camp.getNobLootCost();
                     default -> 0;
                 };
             }
@@ -122,6 +131,35 @@ public class OrkCampMenu extends AbstractContainerMenu {
 
     public boolean isUnderAssault() {
         return this.data.get(9) != 0;
+    }
+
+    public int getNobz() {
+        return this.data.get(10);
+    }
+
+    public int getGarrisonCap() {
+        return this.data.get(11);
+    }
+
+    public int getNobCap() {
+        return this.data.get(12);
+    }
+
+    /** Blocks to the chosen target, or -1 when the camp is not pointed at anything. */
+    public int getTargetDistance() {
+        return this.data.get(13);
+    }
+
+    public boolean hasTarget() {
+        return getTargetDistance() >= 0;
+    }
+
+    public int getBoyCost() {
+        return this.data.get(14);
+    }
+
+    public int getNobCost() {
+        return this.data.get(15);
     }
 
     @Override

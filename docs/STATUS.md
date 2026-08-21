@@ -378,6 +378,40 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-08-21 (3): **§24 fatia 1 — o Ork Camp ganhou mãos.** Build verde. **Nada testado em jogo**
+  (precisa de um jogador Ork; a via RCON não alcança).
+
+  O Camp já era grande (803 linhas: economia de loot, crescimento, Loot Pit construído no mundo,
+  war parties, Warboss, espalhamento). O que faltava não era sistema, era **agência**: tudo acontecia
+  no relógio dele e o jogador só olhava.
+
+  **A descoberta que decidiu a fatia:** `launchWarParty` — 50 linhas completas, com muster da
+  guarnição, tamanho por clã e tier, aviso aos jogadores e ascensão do Warboss — está **inalcançável**,
+  porque `ExampleMod.ORK_WAVES_ENABLED` é `false` por pedido teu. O flag desliga o camp atacar
+  **sozinho**, que é uma decisão sobre o mundo rodando à revelia; nunca foi dizer que o muster está
+  errado. Então a fatia não reescreveu nada disso — abriu uma porta para ele.
+
+  **4 ações novas** (`OrkCampActionPacket`), todas no padrão que o `buildLootPit` já usava — o cliente
+  manda só "cliquei", o camp re-checa tudo, e cada recusa diz qual regra falhou:
+  - **Criar um Boy**: gasta loot e pula o cooldown de crescimento (é o que pagar à mão compra), mas
+    **respeita o teto de guarnição** — o teto é o que impede o campo de virar um mar de Orks.
+  - **Fazer um Nob**: promove o Boy mais forte — **consome-o**. Promoção, não invocação: a contagem de
+    corpos não mexe, que é o que impede este botão de ser o único furo no teto de população. Exige 4
+    Boyz de pé (Nob sem quem mandar é um Boy caro) e no máximo 1 Nob por nível de camp.
+  - **Escolher Alvo**: percorre as cidades imperiais **deste planeta**, lidas do mapa de guerra (logo
+    funciona com chunk descarregado) e ordenadas por distância, para o ciclo ser estável entre cliques.
+  - **WAAAGH!**: o jogador manda o muster agora. É a porta para o `launchWarParty`.
+
+  **Faction check num lugar só** (`ifOrk`), não em cada método — para a quinta ação não entrar sem ele.
+  A tela esconde os botões de quem não é Ork, mas esconder é cortesia; a regra é o servidor.
+
+  **Painel**: 200×200 → 200×252 **só para o Ork**. A vista Imperial ficou byte a byte a mesma — mesmas
+  posições, mesma altura. Botões acinzentam só pelo que o cliente realmente sabe (loot e um teto que
+  lhe foi dito); Boyz de pé e teto de campo são do servidor, que responde com motivo.
+
+  **Falta do §24** (fatia 2): Squig Pen e Mek Workshop — precisam de bloco novo, modelo, loot, receita
+  e `runData`, ao contrário destas quatro que não pediram um único asset.
+
 - 2026-08-21 (2): **A Mesa de Guerra foi aberta em jogo pela 1ª vez. 4 defeitos visíveis no
   screenshot, corrigidos.** Build verde; a aba Logistics foi re-verificada em servidor, a tela em si
   **ainda não** foi revista depois do conserto.
