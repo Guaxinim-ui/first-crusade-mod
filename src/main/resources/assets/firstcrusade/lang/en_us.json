@@ -1684,9 +1684,8 @@
   "gui.firstcrusade.ork.cycle_target.tip": "Cycle through Imperial cities on this world, nearest first. The WAAAGH! marches on whichever is chosen.",
   "gui.firstcrusade.ork.order_waaagh": "WAAAGH!",
   "gui.firstcrusade.ork.order_waaagh.tip": "Muster the standing Boyz and march them on the target. Costs loot. The camp will not do this on its own.",
-  "gui.firstcrusade.ork.garrison_of": "Boyz %s/%s   Nobz %s/%s",
-  "gui.firstcrusade.ork.target_at": "Target: %s blocks away",
-  "gui.firstcrusade.ork.target_none": "No target picked",
+  "gui.firstcrusade.ork.target_at": "Target %sm",
+  "gui.firstcrusade.ork.target_none": "No target",
   "msg.firstcrusade.ork.garrison_full": "Da camp iz full — %s Boyz iz all it holdz. Grow da camp.",
   "msg.firstcrusade.ork.recruited_boy": "Anuvver Boy stompz out of da spawn pile.",
   "msg.firstcrusade.ork.nob_cap": "Already got %s Nob(z). Dis camp ain't big enuff for anuvver.",
@@ -1699,5 +1698,7 @@
   "msg.firstcrusade.ork.waaagh_no_boyz": "Need %s Boyz standin' to call it a WAAAGH!.",
   "msg.firstcrusade.ork.waaagh_field_full": "Already %s Orkz at da target. Let 'em finish.",
   "msg.firstcrusade.ork.waaagh_failed": "Da boyz wouldn't move. Sumfin' iz wrong.",
-  "msg.firstcrusade.ork.waaagh_launched": "WAAAGH! Da boyz iz movin' out!"
+  "msg.firstcrusade.ork.waaagh_launched": "WAAAGH! Da boyz iz movin' out!",
+  "gui.firstcrusade.ork.nobz_of": "Nobz %s/%s",
+  "gui.firstcrusade.ork.boyz_of": "Boyz %s/%s"
 }

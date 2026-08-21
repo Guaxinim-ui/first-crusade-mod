@@ -94,11 +94,11 @@ public class OrkCampScreen extends AbstractContainerScreen<OrkCampMenu> {
 
             addRenderableWidget(
                     orkButton("cycle_target", OrkCampActionPacket.Action.CYCLE_TARGET,
-                            this.leftPos + 10, this.topPos + 194, 180));
+                            this.leftPos + 10, this.topPos + 194, 88));
 
             this.waaaghButton = addRenderableWidget(
                     orkButton("order_waaagh", OrkCampActionPacket.Action.ORDER_WAAAGH,
-                            this.leftPos + 10, this.topPos + 218, 180));
+                            this.leftPos + 102, this.topPos + 194, 88));
 
             addRenderableWidget(
                     Button.builder(
@@ -106,7 +106,7 @@ public class OrkCampScreen extends AbstractContainerScreen<OrkCampMenu> {
                             button -> FirstCrusadeNetwork.CHANNEL.sendToServer(
                                     new OrkCampActionPacket(this.menu.getCampPos(),
                                             OrkCampActionPacket.Action.STASH_TEEF))
-                    ).bounds(this.leftPos + 10, this.topPos + 242, 180, 22).build()
+                    ).bounds(this.leftPos + 10, this.topPos + 218, 180, 22).build()
             ).setTooltip(Tooltip.create(
                     Component.translatable("gui.firstcrusade.ork.stash_teef.tip")));
         }
@@ -259,26 +259,32 @@ public class OrkCampScreen extends AbstractContainerScreen<OrkCampMenu> {
                 10, 136, 0xFF909090, false);
 
         if (this.ork) {
-            // The two numbers the command buttons are judged against, next to the buttons rather
-            // than in a tooltip: "why is this greyed out" should be answerable without hovering.
+            // Second column of the stats block, NOT the gap between buttons. Put between the button
+            // rows these landed on top of them — a 20-tall button starting at 146 owns 146-166, and
+            // a label at 160 is inside it. The stat lines on the left are short enough that the
+            // right half of the panel is free, and using it costs no height at all.
             g.drawString(this.font,
-                    Component.translatable("gui.firstcrusade.ork.garrison_of",
-                            this.menu.getBoyz(), this.menu.getGarrisonCap(),
+                    Component.translatable("gui.firstcrusade.ork.nobz_of",
                             this.menu.getNobz(), this.menu.getNobCap()),
-                    10, 160, 0xFF909090, false);
+                    118,24, 0xFFCFCFCF, false);
+
+            g.drawString(this.font,
+                    Component.translatable("gui.firstcrusade.ork.boyz_of",
+                            this.menu.getBoyz(), this.menu.getGarrisonCap()),
+                    118,38, 0xFFCFCFCF, false);
 
             g.drawString(this.font,
                     this.menu.hasTarget()
                             ? Component.translatable("gui.firstcrusade.ork.target_at",
                                     this.menu.getTargetDistance())
                             : Component.translatable("gui.firstcrusade.ork.target_none"),
-                    10, 186, this.menu.hasTarget() ? 0xFFE0C68A : 0xFF909090, false);
+                    118,52, this.menu.hasTarget() ? 0xFFE0C68A : 0xFF909090, false);
         }
 
         if (this.menu.isUnderAssault()) {
             g.drawString(this.font,
                     Component.translatable("gui.firstcrusade.assault.camp_under_attack"),
-                    10, this.ork ? 236 : 194, 0xFFFF7070, false);
+                    10, this.ork ? 242 : 194, 0xFFFF7070, false);
         }
     }
 

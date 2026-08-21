@@ -1678,9 +1678,8 @@
   "gui.firstcrusade.ork.cycle_target.tip": "Percorre as cidades imperiais deste mundo, da mais perto para a mais longe. A WAAAGH! marcha sobre a escolhida.",
   "gui.firstcrusade.ork.order_waaagh": "WAAAGH!",
   "gui.firstcrusade.ork.order_waaagh.tip": "Reúne os Boyz de guarnição e marcha sobre o alvo. Custa loot. O campo não faz isto sozinho.",
-  "gui.firstcrusade.ork.garrison_of": "Boyz %s/%s   Nobz %s/%s",
-  "gui.firstcrusade.ork.target_at": "Alvo: a %s blocos",
-  "gui.firstcrusade.ork.target_none": "Nenhum alvo escolhido",
+  "gui.firstcrusade.ork.target_at": "Alvo %sm",
+  "gui.firstcrusade.ork.target_none": "Sem alvo",
   "msg.firstcrusade.ork.garrison_full": "O campo tá cheio — %s Boyz é tudo que cabe. Faz o campo crescer.",
   "msg.firstcrusade.ork.recruited_boy": "Mais um Boy saiu do monte de esporos.",
   "msg.firstcrusade.ork.nob_cap": "Já tem %s Nob(z). Esse campo num é grande o bastante pra mais.",
@@ -1693,5 +1692,7 @@
   "msg.firstcrusade.ork.waaagh_no_boyz": "Precisa de %s Boyz de pé pra chamar de WAAAGH!.",
   "msg.firstcrusade.ork.waaagh_field_full": "Já tem %s Orkz no alvo. Deixa eles terminarem.",
   "msg.firstcrusade.ork.waaagh_failed": "Os boyz num sairam do lugar. Tem coisa errada.",
-  "msg.firstcrusade.ork.waaagh_launched": "WAAAGH! Os boyz tão indo!"
+  "msg.firstcrusade.ork.waaagh_launched": "WAAAGH! Os boyz tão indo!",
+  "gui.firstcrusade.ork.nobz_of": "Nobz %s/%s",
+  "gui.firstcrusade.ork.boyz_of": "Boyz %s/%s"
 }
