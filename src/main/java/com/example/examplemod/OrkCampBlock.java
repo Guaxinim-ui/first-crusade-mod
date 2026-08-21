@@ -37,7 +37,7 @@ public class OrkCampBlock extends BaseEntityBlock {
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock()) && level instanceof ServerLevel serverLevel) {
-            WorldWarMapData.get(serverLevel).removeCamp(pos);
+            WorldWarMapData.get(serverLevel).removeCamp(serverLevel, pos);
         }
 
         super.onRemove(state, level, pos, newState, movedByPiston);

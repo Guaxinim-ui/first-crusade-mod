@@ -213,6 +213,18 @@ public abstract class FCAnimalEntity extends Animal {
         return super.getTarget();
     }
 
+    /**
+     * Vanilla's daylight test, reachable from outside the class hierarchy.
+     *
+     * <p>{@code Animal.isBrightEnoughToSpawn} is {@code protected static}, so only a subclass can
+     * call it — and {@code FaunaSpawnRules} is not one. Wrapping it here rather than copying the
+     * two-line body keeps a single source for "is it light enough", which is exactly the sort of rule
+     * that gets edited in one copy and not the other.
+     */
+    public static boolean brightEnoughToSpawn(ServerLevelAccessor level, BlockPos pos) {
+        return isBrightEnoughToSpawn(level, pos);
+    }
+
     /** Convenience for goals: is the given entity something this animal should run from? */
     protected static boolean isThreat(Entity entity) {
         return entity instanceof Player || entity instanceof Mob;

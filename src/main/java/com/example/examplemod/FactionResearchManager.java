@@ -48,6 +48,38 @@ public final class FactionResearchManager {
         }
     }
 
+    /**
+     * Brings a running research forward by the given number of ticks, completing it properly if that
+     * finishes it.
+     *
+     * <p>Exists so nothing outside this class calls {@link FactionResearchData#countDown} directly.
+     * That method deactivates the research when it reaches zero and returns true to say so — a
+     * caller that ignored the return would silently cancel the research instead of finishing it, and
+     * the player would watch the bench go blank without ever gaining the Age they paid for.
+     *
+     * @return true when this completed the research
+     */
+    public static boolean accelerate(ServerLevel overworld, int ticks) {
+        if (ticks <= 0) {
+            return false;
+        }
+
+        FactionResearchData research = FactionResearchData.get(overworld);
+
+        if (!research.isActive()) {
+            return false;
+        }
+
+        int targetTier = research.getTargetTier();
+
+        if (!research.countDown(ticks)) {
+            return false;
+        }
+
+        complete(overworld, targetTier);
+        return true;
+    }
+
     private static void complete(ServerLevel overworld, int targetTier) {
         // The breakthrough lifts the Crusade Age to the researched tier.
         ImperiumOverlordData.get(overworld).ensureAtLeastTier(targetTier);

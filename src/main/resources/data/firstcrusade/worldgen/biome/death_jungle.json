@@ -12,7 +12,20 @@
   },
   "spawners": {
     "monster": [],
-    "creature": [],
+    "creature": [
+      {
+        "type": "firstcrusade:greater_malkavan_constrictor",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 1
+      },
+      {
+        "type": "firstcrusade:cthellean_cudbear",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
     "ambient": [],
     "axolotls": [],
     "underground_water_creature": [],
@@ -33,7 +46,12 @@
     [],
     [],
     [],
-    [],
+    [
+      "firstcrusade:site_barking_toad_clearing",
+      "firstcrusade:site_catachan_devil_nest",
+      "firstcrusade:site_constrictor_nest",
+      "firstcrusade:site_cudbear_den"
+    ],
     [],
     [
       "minecraft:ore_dirt",
@@ -85,5 +103,6 @@
     [
       "minecraft:freeze_top_layer"
     ]
-  ]
+  ],
+  "creature_spawn_probability": 0.05
 }

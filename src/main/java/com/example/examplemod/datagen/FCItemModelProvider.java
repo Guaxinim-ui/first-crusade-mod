@@ -57,9 +57,34 @@ public class FCItemModelProvider extends ItemModelProvider {
         spawnEgg("sump_rat_spawn_egg");
         spawnEgg("ash_strider_spawn_egg");
         spawnEgg("ambull_spawn_egg");
+
+        // A fauna dos modelos do Blockbench: nove ovos e os itens que ela larga.
+        spawnEgg("fenrisian_wolf_spawn_egg");
+        spawnEgg("arthromite_duneskuttler_spawn_egg");
+        spawnEgg("dustback_helamite_spawn_egg");
+        spawnEgg("cthellean_cudbear_spawn_egg");
+        spawnEgg("duskhorn_spawn_egg");
+        spawnEgg("knarloc_spawn_egg");
+        spawnEgg("greater_malkavan_constrictor_spawn_egg");
+        spawnEgg("catachan_barking_toad_spawn_egg");
+        spawnEgg("catachan_devil_spawn_egg");
+
+        for (String drop : new String[]{
+                "beast_hide", "thick_pelt", "beast_fang", "duskhorn_horn", "serpent_scale",
+                "knarloc_quill", "game_meat", "cooked_game_meat", "devil_stinger",
+                "heavy_carapace", "trophy_ambull", "trophy_catachan_devil", "trophy_duskhorn",
+                "trophy_greater_malkavan_constrictor", "trophy_cthellean_cudbear"}) {
+            flatItem(drop);
+        }
     }
 
     private void spawnEgg(String name) {
         withExistingParent(name, mcLoc("item/template_spawn_egg"));
+    }
+
+    /** Item plano comum: uma sprite em {@code textures/item/<name>.png}. */
+    private void flatItem(String name) {
+        withExistingParent(name, mcLoc("item/generated"))
+                .texture("layer0", modLoc("item/" + name));
     }
 }

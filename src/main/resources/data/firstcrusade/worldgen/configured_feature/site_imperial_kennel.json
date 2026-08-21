@@ -1,0 +1,25 @@
+{
+  "type": "firstcrusade:fauna_site",
+  "config": {
+    "shape": "pen",
+    "min_count": 1,
+    "max_count": 3,
+    "radius": 5,
+    "prop_tries": 24,
+    "props": [
+      {
+        "Name": "firstcrusade:bone_fragments"
+      },
+      {
+        "Name": "firstcrusade:rubble_pebbles"
+      }
+    ],
+    "mob": "firstcrusade:cyber_mastiff",
+    "floor": {
+      "Name": "minecraft:gravel"
+    },
+    "frame": {
+      "Name": "minecraft:iron_bars"
+    }
+  }
+}

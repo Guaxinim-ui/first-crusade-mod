@@ -1,60 +1,89 @@
 package com.example.examplemod;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.example.examplemod.campaign.StrategicLocation;
+import com.example.examplemod.planet.FCPlanets;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 
 /**
- * World-wide register of every settlement in the war: the positions of all Imperial Command Cores
- * (cities) and all Ork Camps. It lets the Core's War Table draw the whole planet's strategic picture
- * — every city and camp, wherever it is — instead of only what is within a small radius. Stored on
- * the overworld's data storage (same pattern as {@link WaaaghOverlordData}).
+ * Register of every settlement in the war — every Imperial Command Core and every Ork Camp — on
+ * every world the Crusade is fought on.
  *
- * Entries are self-registered: a city/camp adds itself while it ticks (so existing and new ones are
- * covered, even after their chunk reloads), and removes itself when its block is destroyed. Positions
- * for settlements in unloaded chunks stay on the map until they are actually torn down.
+ * <h2>One file, but never one planet (format 3)</h2>
  *
- * <h2>Territorial attributes (added for the flora decorator)</h2>
+ * Entries used to be a flat set of packed {@link BlockPos} longs. That was correct while the mod
+ * owned a single world. It is not correct now: {@code (100, 64, 100)} exists on Macragge and on
+ * Armageddon, and the flat set could not tell an Imperial city on one from an Ork camp on the other.
+ * Worse, {@link #get} resolves against the <i>overworld's</i> data storage no matter which level it
+ * is handed, so all nine planets were writing into the same bucket and reading each other's
+ * settlements back out. A city on Cadia could be "the nearest city" to a camp on Valhalla.
  *
- * Alongside each position the map now also keeps the handful of <i>attributes</i> that describe what
- * kind of territory that settlement projects: an Imperial city's type and radii, an Ork camp's level
- * and corruption reach. These are pushed by the very same tick that already calls
- * {@link #recordCity(BlockPos)} / {@link #recordCamp(BlockPos)}, so the block entity stays the single
- * source of truth and nothing keeps a second copy of the faction.
+ * <p>Entries are now bucketed by dimension. The storage stays on the overworld — deliberately, and
+ * this is the one thing about the old design worth keeping: the War Table has to draw Armageddon
+ * while the player stands on Macragge, and a per-level file cannot be read without loading the
+ * level. One global file, keyed by planet, answers both questions.
  *
- * <p>Why here and not in a new registry: {@link com.example.examplemod.flora.runtime.FloraRegionResolver}
- * has to answer "who owns this chunk?" for chunks whose settlement is in an <b>unloaded</b> chunk. A
- * block entity cannot be read then; this SavedData can. Keeping the attributes next to the positions
- * they belong to means one lookup, one persisted structure, and no chance of the two drifting apart.
+ * <p>Every accessor therefore takes a dimension. That is not ceremony: it is the compiler refusing
+ * to let a caller forget which planet it meant, which is the bug this rewrite exists to close.
  *
- * <p>{@link #getTerritoryRevision()} counts every change to the territorial picture. The flora
- * decorator stores the revision it decorated a chunk under; when the counter moves past it, that
- * chunk is stale and gets re-resolved. Writes that change nothing do not bump it, so a city ticking
- * with unchanged attributes never causes redecoration.
+ * <h2>Old saves</h2>
+ *
+ * A format-2 tag's flat sets are read into the {@link FCPlanets#DEFAULT} bucket. That save really
+ * did have one world's settlements in it, and Macragge is where the Crusade starts. Anything that
+ * was actually somewhere else re-registers itself on the correct planet the next time its chunk
+ * ticks — settlements self-register, which is what makes the migration safe rather than merely
+ * convenient. {@link #pruneOrphans} clears out whatever is left behind.
+ *
+ * <h2>Territorial attributes</h2>
+ *
+ * Alongside each position the map keeps the attributes that describe what territory that settlement
+ * projects: an Imperial city's type and radii, an Ork camp's level and corruption reach. They are
+ * pushed by the same tick that records the position, so the block entity stays the single source of
+ * truth. {@link com.example.examplemod.flora.runtime.FloraRegionResolver} needs them for chunks whose
+ * settlement is in an <b>unloaded</b> chunk, where no block entity can be read but this can.
+ *
+ * <p>{@link #getTerritoryRevision(ResourceKey)} counts changes to one planet's territorial picture,
+ * per planet rather than globally: a city founded on Cadia used to invalidate every decorated chunk
+ * on Catachan.
  */
 public class WorldWarMapData extends SavedData {
     private static final String NAME = "firstcrusade_warmap";
 
     /** Bumped when the NBT layout changes; older saves are read on a best-effort basis. */
-    private static final int FORMAT_VERSION = 2;
+    private static final int FORMAT_VERSION = 3;
 
-    private final Set<Long> cities = new HashSet<>();
-    private final Set<Long> camps = new HashSet<>();
+    /** One planet's settlements. Nothing here is shared with any other planet. */
+    private static final class PlanetEntry {
+        private final Set<Long> cities = new HashSet<>();
+        private final Set<Long> camps = new HashSet<>();
+        private final Map<Long, CityInfo> cityInfo = new HashMap<>();
+        private final Map<Long, CampInfo> campInfo = new HashMap<>();
+        private int territoryRevision;
 
-    private final Map<Long, CityInfo> cityInfo = new HashMap<>();
-    private final Map<Long, CampInfo> campInfo = new HashMap<>();
+        private boolean isEmpty() {
+            return this.cities.isEmpty() && this.camps.isEmpty();
+        }
+    }
 
-    private int territoryRevision;
+    private final Map<ResourceLocation, PlanetEntry> planets = new HashMap<>();
 
     public WorldWarMapData() {
     }
@@ -82,137 +111,229 @@ public class WorldWarMapData extends SavedData {
         }
     }
 
+    /**
+     * The global map. Stored on the overworld on purpose — see the class note: the War Table must be
+     * able to read a planet nobody is standing on.
+     */
     public static WorldWarMapData get(ServerLevel level) {
         ServerLevel overworld = level.getServer().overworld();
         return overworld.getDataStorage().computeIfAbsent(WorldWarMapData::load, WorldWarMapData::new, NAME);
     }
 
+    // ====================================================================================
+    // Persistence
+    // ====================================================================================
+
     public static WorldWarMapData load(CompoundTag tag) {
         WorldWarMapData data = new WorldWarMapData();
 
+        int version = tag.getInt("Version");
+
+        if (version < 3) {
+            data.loadLegacyFlat(tag);
+            return data;
+        }
+
+        ListTag planetList = tag.getList("Planets", Tag.TAG_COMPOUND);
+
+        for (int i = 0; i < planetList.size(); i++) {
+            CompoundTag planetTag = planetList.getCompound(i);
+
+            ResourceLocation id = ResourceLocation.tryParse(planetTag.getString("Dim"));
+            if (id == null) {
+                continue;
+            }
+
+            PlanetEntry entry = data.planets.computeIfAbsent(id, key -> new PlanetEntry());
+            readPlanetEntry(planetTag, entry);
+        }
+
+        return data;
+    }
+
+    /**
+     * Reads a format-2 (pre-campaign) tag, whose sets carry no dimension at all, into the default
+     * planet's bucket. See the class note on why that is the honest reading of such a save.
+     */
+    private void loadLegacyFlat(CompoundTag tag) {
+        PlanetEntry entry = this.planets.computeIfAbsent(
+                FCPlanets.DEFAULT.location(), key -> new PlanetEntry());
+
+        readPlanetEntry(tag, entry);
+    }
+
+    private static void readPlanetEntry(CompoundTag tag, PlanetEntry entry) {
         for (long packed : tag.getLongArray("Cities")) {
-            data.cities.add(packed);
+            entry.cities.add(packed);
         }
 
         for (long packed : tag.getLongArray("Camps")) {
-            data.camps.add(packed);
+            entry.camps.add(packed);
         }
 
-        data.territoryRevision = tag.getInt("TerritoryRevision");
+        entry.territoryRevision = tag.getInt("TerritoryRevision");
 
         ListTag cityInfoList = tag.getList("CityInfo", Tag.TAG_COMPOUND);
 
         for (int i = 0; i < cityInfoList.size(); i++) {
-            CompoundTag entry = cityInfoList.getCompound(i);
-            long packed = entry.getLong("Pos");
+            CompoundTag saved = cityInfoList.getCompound(i);
+            long packed = saved.getLong("Pos");
 
             // Only keep attributes for a settlement that still exists on the map.
-            if (!data.cities.contains(packed)) {
+            if (!entry.cities.contains(packed)) {
                 continue;
             }
 
-            data.cityInfo.put(packed, new CityInfo(
-                    entry.getString("Type"),
-                    entry.getString("Scale"),
-                    entry.getInt("Level"),
-                    entry.getInt("Border")
+            entry.cityInfo.put(packed, new CityInfo(
+                    saved.getString("Type"),
+                    saved.getString("Scale"),
+                    saved.getInt("Level"),
+                    saved.getInt("Border")
             ));
         }
 
         ListTag campInfoList = tag.getList("CampInfo", Tag.TAG_COMPOUND);
 
         for (int i = 0; i < campInfoList.size(); i++) {
-            CompoundTag entry = campInfoList.getCompound(i);
-            long packed = entry.getLong("Pos");
+            CompoundTag saved = campInfoList.getCompound(i);
+            long packed = saved.getLong("Pos");
 
-            if (!data.camps.contains(packed)) {
+            if (!entry.camps.contains(packed)) {
                 continue;
             }
 
-            data.campInfo.put(packed, new CampInfo(
-                    entry.getString("Clan"),
-                    entry.getInt("Level"),
-                    entry.getInt("Corruption")
+            entry.campInfo.put(packed, new CampInfo(
+                    saved.getString("Clan"),
+                    saved.getInt("Level"),
+                    saved.getInt("Corruption")
             ));
         }
-
-        return data;
     }
 
     @Override
     public CompoundTag save(CompoundTag tag) {
         tag.putInt("Version", FORMAT_VERSION);
-        tag.putLongArray("Cities", this.cities.stream().mapToLong(Long::longValue).toArray());
-        tag.putLongArray("Camps", this.camps.stream().mapToLong(Long::longValue).toArray());
-        tag.putInt("TerritoryRevision", this.territoryRevision);
 
-        ListTag cityInfoList = new ListTag();
+        ListTag planetList = new ListTag();
 
-        for (Map.Entry<Long, CityInfo> entry : this.cityInfo.entrySet()) {
-            CompoundTag saved = new CompoundTag();
-            saved.putLong("Pos", entry.getKey());
-            saved.putString("Type", entry.getValue().typeName());
-            saved.putString("Scale", entry.getValue().scaleName());
-            saved.putInt("Level", entry.getValue().cityLevel());
-            saved.putInt("Border", entry.getValue().borderRadius());
-            cityInfoList.add(saved);
+        for (Map.Entry<ResourceLocation, PlanetEntry> planet : this.planets.entrySet()) {
+            PlanetEntry entry = planet.getValue();
+
+            CompoundTag planetTag = new CompoundTag();
+            planetTag.putString("Dim", planet.getKey().toString());
+            planetTag.putLongArray("Cities", entry.cities.stream().mapToLong(Long::longValue).toArray());
+            planetTag.putLongArray("Camps", entry.camps.stream().mapToLong(Long::longValue).toArray());
+            planetTag.putInt("TerritoryRevision", entry.territoryRevision);
+
+            ListTag cityInfoList = new ListTag();
+
+            for (Map.Entry<Long, CityInfo> info : entry.cityInfo.entrySet()) {
+                CompoundTag saved = new CompoundTag();
+                saved.putLong("Pos", info.getKey());
+                saved.putString("Type", info.getValue().typeName());
+                saved.putString("Scale", info.getValue().scaleName());
+                saved.putInt("Level", info.getValue().cityLevel());
+                saved.putInt("Border", info.getValue().borderRadius());
+                cityInfoList.add(saved);
+            }
+
+            planetTag.put("CityInfo", cityInfoList);
+
+            ListTag campInfoList = new ListTag();
+
+            for (Map.Entry<Long, CampInfo> info : entry.campInfo.entrySet()) {
+                CompoundTag saved = new CompoundTag();
+                saved.putLong("Pos", info.getKey());
+                saved.putString("Clan", info.getValue().clanName());
+                saved.putInt("Level", info.getValue().campLevel());
+                saved.putInt("Corruption", info.getValue().corruptionRadius());
+                campInfoList.add(saved);
+            }
+
+            planetTag.put("CampInfo", campInfoList);
+
+            planetList.add(planetTag);
         }
 
-        tag.put("CityInfo", cityInfoList);
-
-        ListTag campInfoList = new ListTag();
-
-        for (Map.Entry<Long, CampInfo> entry : this.campInfo.entrySet()) {
-            CompoundTag saved = new CompoundTag();
-            saved.putLong("Pos", entry.getKey());
-            saved.putString("Clan", entry.getValue().clanName());
-            saved.putInt("Level", entry.getValue().campLevel());
-            saved.putInt("Corruption", entry.getValue().corruptionRadius());
-            campInfoList.add(saved);
-        }
-
-        tag.put("CampInfo", campInfoList);
+        tag.put("Planets", planetList);
 
         return tag;
     }
 
-    public void recordCity(BlockPos pos) {
-        if (this.cities.add(pos.asLong())) {
-            this.territoryRevision++;
+    // ====================================================================================
+    // Writing
+    // ====================================================================================
+
+    private PlanetEntry entry(ResourceKey<Level> dimension) {
+        return this.planets.computeIfAbsent(dimension.location(), key -> new PlanetEntry());
+    }
+
+    @Nullable
+    private PlanetEntry existing(ResourceKey<Level> dimension) {
+        return this.planets.get(dimension.location());
+    }
+
+    public void recordCity(ResourceKey<Level> dimension, BlockPos pos) {
+        PlanetEntry entry = entry(dimension);
+
+        if (entry.cities.add(pos.asLong())) {
+            entry.territoryRevision++;
             setDirty();
         }
     }
 
-    public void recordCamp(BlockPos pos) {
-        if (this.camps.add(pos.asLong())) {
-            this.territoryRevision++;
+    public void recordCity(ServerLevel level, BlockPos pos) {
+        recordCity(level.dimension(), pos);
+    }
+
+    public void recordCamp(ResourceKey<Level> dimension, BlockPos pos) {
+        PlanetEntry entry = entry(dimension);
+
+        if (entry.camps.add(pos.asLong())) {
+            entry.territoryRevision++;
             setDirty();
         }
     }
 
-    public void removeCity(BlockPos pos) {
-        if (this.cities.remove(pos.asLong())) {
-            this.cityInfo.remove(pos.asLong());
-            this.territoryRevision++;
+    public void recordCamp(ServerLevel level, BlockPos pos) {
+        recordCamp(level.dimension(), pos);
+    }
+
+    public void removeCity(ResourceKey<Level> dimension, BlockPos pos) {
+        PlanetEntry entry = existing(dimension);
+
+        if (entry != null && entry.cities.remove(pos.asLong())) {
+            entry.cityInfo.remove(pos.asLong());
+            entry.territoryRevision++;
             setDirty();
         }
     }
 
-    public void removeCamp(BlockPos pos) {
-        if (this.camps.remove(pos.asLong())) {
-            this.campInfo.remove(pos.asLong());
-            this.territoryRevision++;
+    public void removeCity(ServerLevel level, BlockPos pos) {
+        removeCity(level.dimension(), pos);
+    }
+
+    public void removeCamp(ResourceKey<Level> dimension, BlockPos pos) {
+        PlanetEntry entry = existing(dimension);
+
+        if (entry != null && entry.camps.remove(pos.asLong())) {
+            entry.campInfo.remove(pos.asLong());
+            entry.territoryRevision++;
             setDirty();
         }
+    }
+
+    public void removeCamp(ServerLevel level, BlockPos pos) {
+        removeCamp(level.dimension(), pos);
     }
 
     /**
      * Publishes the territorial attributes of a city. Called from the Core's tick right after
-     * {@link #recordCity(BlockPos)}; a write that changes nothing is free and does <b>not</b> bump
-     * the revision, so a quiet city never triggers redecoration.
+     * {@link #recordCity}; a write that changes nothing is free and does <b>not</b> bump the
+     * revision, so a quiet city never triggers redecoration.
      */
-    public void recordCityInfo(BlockPos pos, ImperialCityType type, SettlementScale scale,
-                               int cityLevel, int borderRadius) {
+    public void recordCityInfo(ResourceKey<Level> dimension, BlockPos pos, ImperialCityType type,
+                               SettlementScale scale, int cityLevel, int borderRadius) {
         CityInfo info = new CityInfo(
                 type == null ? ImperialCityType.CIVILISED.name() : type.name(),
                 scale == null ? SettlementScale.TOWN.name() : scale.name(),
@@ -220,57 +341,205 @@ public class WorldWarMapData extends SavedData {
                 borderRadius
         );
 
-        if (info.equals(this.cityInfo.get(pos.asLong()))) {
+        PlanetEntry entry = entry(dimension);
+
+        if (info.equals(entry.cityInfo.get(pos.asLong()))) {
             return;
         }
 
-        this.cityInfo.put(pos.asLong(), info);
-        this.territoryRevision++;
+        entry.cityInfo.put(pos.asLong(), info);
+        entry.territoryRevision++;
         setDirty();
     }
 
+    public void recordCityInfo(ServerLevel level, BlockPos pos, ImperialCityType type,
+                               SettlementScale scale, int cityLevel, int borderRadius) {
+        recordCityInfo(level.dimension(), pos, type, scale, cityLevel, borderRadius);
+    }
+
     /** Publishes the territorial attributes of an Ork camp. See {@link #recordCityInfo}. */
-    public void recordCampInfo(BlockPos pos, OrkClan clan, int campLevel, int corruptionRadius) {
+    public void recordCampInfo(ResourceKey<Level> dimension, BlockPos pos, OrkClan clan,
+                               int campLevel, int corruptionRadius) {
         CampInfo info = new CampInfo(
                 clan == null ? OrkClan.GOFFS.name() : clan.name(),
                 campLevel,
                 corruptionRadius
         );
 
-        if (info.equals(this.campInfo.get(pos.asLong()))) {
+        PlanetEntry entry = entry(dimension);
+
+        if (info.equals(entry.campInfo.get(pos.asLong()))) {
             return;
         }
 
-        this.campInfo.put(pos.asLong(), info);
-        this.territoryRevision++;
+        entry.campInfo.put(pos.asLong(), info);
+        entry.territoryRevision++;
         setDirty();
     }
 
-    @Nullable
-    public CityInfo getCityInfo(long packedPos) {
-        return this.cityInfo.get(packedPos);
+    public void recordCampInfo(ServerLevel level, BlockPos pos, OrkClan clan,
+                               int campLevel, int corruptionRadius) {
+        recordCampInfo(level.dimension(), pos, clan, campLevel, corruptionRadius);
+    }
+
+    // ====================================================================================
+    // Reading
+    // ====================================================================================
+
+    public Set<Long> getCities(ResourceKey<Level> dimension) {
+        PlanetEntry entry = existing(dimension);
+        return entry == null ? Collections.emptySet() : Collections.unmodifiableSet(entry.cities);
+    }
+
+    public Set<Long> getCities(ServerLevel level) {
+        return getCities(level.dimension());
+    }
+
+    public Set<Long> getCamps(ResourceKey<Level> dimension) {
+        PlanetEntry entry = existing(dimension);
+        return entry == null ? Collections.emptySet() : Collections.unmodifiableSet(entry.camps);
+    }
+
+    public Set<Long> getCamps(ServerLevel level) {
+        return getCamps(level.dimension());
     }
 
     @Nullable
-    public CampInfo getCampInfo(long packedPos) {
-        return this.campInfo.get(packedPos);
+    public CityInfo getCityInfo(ResourceKey<Level> dimension, long packedPos) {
+        PlanetEntry entry = existing(dimension);
+        return entry == null ? null : entry.cityInfo.get(packedPos);
+    }
+
+    @Nullable
+    public CampInfo getCampInfo(ResourceKey<Level> dimension, long packedPos) {
+        PlanetEntry entry = existing(dimension);
+        return entry == null ? null : entry.campInfo.get(packedPos);
     }
 
     /**
-     * Monotonic counter over every change to the territorial picture: a settlement founded, razed or
-     * captured, or any of its published attributes changing. Never resets within a save.
+     * Monotonic counter over changes to <b>one planet's</b> territorial picture: a settlement
+     * founded, razed or captured there, or any of its published attributes changing. Never resets
+     * within a save.
      */
-    public int getTerritoryRevision() {
-        return this.territoryRevision;
+    public int getTerritoryRevision(ResourceKey<Level> dimension) {
+        PlanetEntry entry = existing(dimension);
+        return entry == null ? 0 : entry.territoryRevision;
     }
 
-
-    public Set<Long> getCities() {
-        return this.cities;
+    public int getTerritoryRevision(ServerLevel level) {
+        return getTerritoryRevision(level.dimension());
     }
 
-    public Set<Long> getCamps() {
-        return this.camps;
+    /** Every dimension this map holds settlements for. */
+    public Set<ResourceLocation> knownDimensions() {
+        return Collections.unmodifiableSet(this.planets.keySet());
     }
 
+    public int countCities(ResourceKey<Level> dimension) {
+        PlanetEntry entry = existing(dimension);
+        return entry == null ? 0 : entry.cities.size();
+    }
+
+    public int countCamps(ResourceKey<Level> dimension) {
+        PlanetEntry entry = existing(dimension);
+        return entry == null ? 0 : entry.camps.size();
+    }
+
+    /**
+     * Every Imperial city on every world, as located values.
+     *
+     * <p>For the War Table and the campaign layer, which are the only callers that legitimately want
+     * to cross a planet boundary. Anything asking "what is near me" wants
+     * {@link #getCities(ResourceKey)} instead.
+     */
+    public List<StrategicLocation> allCities() {
+        return collect(true);
+    }
+
+    /** Every Ork camp on every world. See {@link #allCities()}. */
+    public List<StrategicLocation> allCamps() {
+        return collect(false);
+    }
+
+    private List<StrategicLocation> collect(boolean cities) {
+        List<StrategicLocation> found = new ArrayList<>();
+
+        for (Map.Entry<ResourceLocation, PlanetEntry> planet : this.planets.entrySet()) {
+            ResourceKey<Level> dimension = StrategicLocation.dimensionKey(planet.getKey());
+
+            for (long packed : cities ? planet.getValue().cities : planet.getValue().camps) {
+                found.add(StrategicLocation.of(dimension, packed));
+            }
+        }
+
+        return found;
+    }
+
+    // ====================================================================================
+    // Upkeep
+    // ====================================================================================
+
+    /**
+     * Drops entries whose block is provably gone.
+     *
+     * <p>The map is written by settlements registering themselves and cleared by their block being
+     * broken, which leaves one hole: an entry that was never valid on this planet in the first place
+     * — most of all a format-2 save's entries, all of which were read into the default planet's
+     * bucket whether they belonged there or not. Those would sit on the map forever, pulling raid
+     * targeting and flora territory toward ground with nothing on it.
+     *
+     * <p>Only <b>loaded</b> chunks are examined, so this never forces terrain to load to answer a
+     * bookkeeping question. An entry in an unloaded chunk is left exactly where it is: absent is not
+     * the same as gone, and deleting a real city because nobody was standing near it would be a far
+     * worse bug than the one this fixes.
+     *
+     * @return how many entries were dropped
+     */
+    public int pruneOrphans(ServerLevel level) {
+        PlanetEntry entry = existing(level.dimension());
+
+        if (entry == null) {
+            return 0;
+        }
+
+        int removed = 0;
+
+        removed += pruneSet(level, entry.cities, entry.cityInfo, true);
+        removed += pruneSet(level, entry.camps, entry.campInfo, false);
+
+        if (removed > 0) {
+            entry.territoryRevision++;
+            setDirty();
+        }
+
+        return removed;
+    }
+
+    private static int pruneSet(ServerLevel level, Set<Long> positions,
+                                Map<Long, ?> info, boolean cities) {
+        List<Long> doomed = new ArrayList<>();
+
+        for (long packed : positions) {
+            BlockPos pos = BlockPos.of(packed);
+
+            if (!level.isLoaded(pos)) {
+                continue;
+            }
+
+            boolean present = cities
+                    ? level.getBlockEntity(pos) instanceof ImperialCommandCoreBlockEntity
+                    : level.getBlockEntity(pos) instanceof OrkCampBlockEntity;
+
+            if (!present) {
+                doomed.add(packed);
+            }
+        }
+
+        for (long packed : doomed) {
+            positions.remove(packed);
+            info.remove(packed);
+        }
+
+        return doomed.size();
+    }
 }

@@ -67,7 +67,7 @@ public final class FCProjectiles {
         bolt.setPos(muzzle.x, muzzle.y, muzzle.z);
         bolt.setBaseDamage(damage);
 
-        bolt.shoot(direction.x, direction.y, direction.z, velocity, spreadFor(accuracy));
+        bolt.shoot(direction.x, direction.y, direction.z, velocity, spreadUnderFire(shooter, accuracy));
 
         shooter.level().addFreshEntity(bolt);
         spawnMuzzleFlash(shooter, mount, ParticleTypes.END_ROD, 3);
@@ -94,9 +94,24 @@ public final class FCProjectiles {
         Vec3 direction = mount.firingDirection(shooter, aimPoint);
 
         projectile.setPos(muzzle.x, muzzle.y, muzzle.z);
-        projectile.shoot(direction.x, direction.y, direction.z, velocity, spreadFor(accuracy));
+        projectile.shoot(direction.x, direction.y, direction.z, velocity, spreadUnderFire(shooter, accuracy));
 
         shooter.level().addFreshEntity(projectile);
+    }
+
+    /**
+     * The spread of a shot taken by a shooter who is themselves being shot at.
+     *
+     * <p>Applied here rather than in each unit's {@code performRangedAttack} because every shooter in
+     * the mod already funnels through these two helpers to get a barrel-origin shot. One place means
+     * suppression cannot be accurate for a Guardsman and forgotten for an Ork.
+     *
+     * <p>A steady shooter pays nothing: {@link com.example.examplemod.ai.combat.FCSuppression#accuracyPenalty}
+     * is zero for anyone with no suppression, which is everyone outside a firefight.
+     */
+    private static float spreadUnderFire(LivingEntity shooter, float accuracy) {
+        return spreadFor(accuracy)
+                + com.example.examplemod.ai.combat.FCSuppression.accuracyPenalty(shooter);
     }
 
     /**

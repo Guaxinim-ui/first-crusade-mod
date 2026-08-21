@@ -1,0 +1,25 @@
+{
+  "type": "firstcrusade:fauna_site",
+  "config": {
+    "shape": "clearing",
+    "min_count": 1,
+    "max_count": 1,
+    "radius": 6,
+    "prop_tries": 42,
+    "props": [
+      {
+        "Name": "minecraft:dead_bush"
+      },
+      {
+        "Name": "minecraft:cobweb"
+      },
+      {
+        "Name": "firstcrusade:fallen_leaves"
+      }
+    ],
+    "mob": "firstcrusade:catachan_barking_toad",
+    "floor": {
+      "Name": "minecraft:mud"
+    }
+  }
+}

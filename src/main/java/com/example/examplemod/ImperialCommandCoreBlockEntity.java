@@ -304,10 +304,11 @@ public int receiveProducedResource(ImperialResourceType resourceType, int amount
 
        blockEntity.tickCounter = 0;
 WorldWarMapData warMap = WorldWarMapData.get(serverLevel);
-warMap.recordCity(blockEntity.worldPosition);
+warMap.recordCity(serverLevel, blockEntity.worldPosition);
 // Publish the territorial attributes the flora decorator resolves palettes from. Writing the
 // same values twice is free and does not mark the map dirty (see WorldWarMapData.recordCityInfo).
 warMap.recordCityInfo(
+        serverLevel,
         blockEntity.worldPosition,
         blockEntity.getCityType(),
         blockEntity.getSettlementScale(),
@@ -487,12 +488,12 @@ blockEntity.checkActiveOrkRaid(serverLevel);
 
         // First pass: how far out does the farthest settlement sit? That sets the zoom.
         int farthest = WAR_MAP_MIN_RANGE;
-        farthest = Math.max(farthest, farthestSettlement(map.getCities()));
-        farthest = Math.max(farthest, farthestSettlement(map.getCamps()));
+        farthest = Math.max(farthest, farthestSettlement(map.getCities(serverLevel)));
+        farthest = Math.max(farthest, farthestSettlement(map.getCamps(serverLevel)));
         this.statMapRange = Math.min(WAR_MAP_MAX_RANGE, farthest);
 
         // Second pass: plot the blips (imperial cities, then ork camps).
-        for (long packed : map.getCities()) {
+        for (long packed : map.getCities(serverLevel)) {
             if (packed == this.worldPosition.asLong()) {
                 continue; // this city is the centre marker, drawn separately
             }
@@ -500,7 +501,7 @@ blockEntity.checkActiveOrkRaid(serverLevel);
             addBlip(pos.getX() - this.worldPosition.getX(), pos.getZ() - this.worldPosition.getZ(), 1);
         }
 
-        for (long packed : map.getCamps()) {
+        for (long packed : map.getCamps(serverLevel)) {
             BlockPos pos = BlockPos.of(packed);
             addBlip(pos.getX() - this.worldPosition.getX(), pos.getZ() - this.worldPosition.getZ(), 2);
         }
@@ -2121,7 +2122,7 @@ public void buildAutonomousVillage(ServerLevel serverLevel) {
  * act that opens the next tier of Astartes surgery — and it costs one map write, not a tick.
  */
 private void applyStrategicAgeForLevel(ServerLevel serverLevel) {
-    WorldWarMapData.get(serverLevel).recordCity(this.worldPosition);
+    WorldWarMapData.get(serverLevel).recordCity(serverLevel, this.worldPosition);
 
     StrategicWarAIData warData = StrategicWarAIData.get(serverLevel);
     StrategicSettlementRecord record = warData.getOrCreateImperial(serverLevel, this.worldPosition);
@@ -2884,6 +2885,57 @@ public int getCityIntegrityValue() {
 
 public int getImperialWarSupportValue() {
     return this.imperialWarSupport;
+}
+
+/**
+ * Credits War Support earned outside this city's own raids — a completed campaign operation, most
+ * of all.
+ *
+ * <p>War Support was previously written only from inside this class, by the raid-victory path, so
+ * there was no way for the wider war to pay a city for anything. It uses the same ceiling that path
+ * does, so a reward cannot overflow the counter however many operations are finished.
+ *
+ * @return how much was actually credited, which is less than asked for at the cap
+ */
+public int addWarSupport(int amount) {
+    if (amount <= 0) {
+        return 0;
+    }
+
+    int before = this.imperialWarSupport;
+    this.imperialWarSupport = Math.min(999999, this.imperialWarSupport + amount);
+
+    int credited = this.imperialWarSupport - before;
+
+    if (credited > 0) {
+        setChanged();
+    }
+
+    return credited;
+}
+
+/**
+ * Spends War Support on something outside this city's own menu — a War Table order.
+ *
+ * <p>Checks and deducts in one call on purpose. The alternative, reading the value and subtracting
+ * it separately, leaves a window in which the amount can be spent twice, and the whole point of the
+ * War Table's order path is that the server decides the payment.
+ *
+ * @return true when the city could afford it and has been charged
+ */
+public boolean spendWarSupport(int amount) {
+    if (amount <= 0) {
+        return true;
+    }
+
+    if (this.imperialWarSupport < amount) {
+        return false;
+    }
+
+    this.imperialWarSupport -= amount;
+    setChanged();
+
+    return true;
 }
 
 public boolean hasActiveOrkRaid() {

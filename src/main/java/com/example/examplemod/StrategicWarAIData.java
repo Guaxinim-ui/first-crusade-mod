@@ -13,6 +13,28 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 
+/**
+ * The strategic bookkeeping of one world: a record per Imperial settlement, a record per Ork camp,
+ * and the construction projects queued on that world.
+ *
+ * <h2>Stored per level, not on the overworld</h2>
+ *
+ * Records are keyed by packed {@link BlockPos}, which is unique inside one world and meaningless
+ * across worlds. This used to resolve to the overworld's data storage no matter which level it was
+ * handed, so a city on Macragge and an Ork camp at the same coordinates on Armageddon shared one
+ * key — and {@link #syncWithWorldMap} then pruned every record whose settlement was not on whatever
+ * planet happened to be ticking, so each planet deleted the others' records in turn.
+ *
+ * <p>The fix is to store it where the settlements are. Unlike {@link WorldWarMapData}, nothing here
+ * has to be readable from another planet: the War Table draws positions and ownership (which the war
+ * map holds globally), never a governor's current plan.
+ *
+ * <p><b>Old saves:</b> the pre-campaign file sat on the overworld and every planet now reads a fresh
+ * one. Nothing is lost that does not come back: records are recreated by {@link #syncWithWorldMap}
+ * from the war map, and a settlement's Age is rewritten by its Core on the next tick
+ * ({@code applyStrategicAgeForLevel}). What does reset is the accumulated strategic resource bank of
+ * each camp — half a minute of income.
+ */
 public class StrategicWarAIData extends SavedData {
     private static final String NAME = "firstcrusade_strategic_war_ai";
 
@@ -24,9 +46,7 @@ public class StrategicWarAIData extends SavedData {
     }
 
     public static StrategicWarAIData get(ServerLevel level) {
-        ServerLevel overworld = level.getServer().overworld();
-
-        return overworld.getDataStorage().computeIfAbsent(
+        return level.getDataStorage().computeIfAbsent(
                 StrategicWarAIData::load,
                 StrategicWarAIData::new,
                 NAME
@@ -92,11 +112,8 @@ public class StrategicWarAIData extends SavedData {
         HashSet<Long> currentCities = new HashSet<>();
         HashSet<Long> currentCamps = new HashSet<>();
 
-        for (Object packedObject : map.getCities()) {
-            if (!(packedObject instanceof Long packed)) {
-                continue;
-            }
-
+        // This level's settlements only. The war map is global; these records are not.
+        for (long packed : map.getCities(level)) {
             currentCities.add(packed);
 
             imperialSettlements.computeIfAbsent(
@@ -105,11 +122,7 @@ public class StrategicWarAIData extends SavedData {
             );
         }
 
-        for (Object packedObject : map.getCamps()) {
-            if (!(packedObject instanceof Long packed)) {
-                continue;
-            }
-
+        for (long packed : map.getCamps(level)) {
             currentCamps.add(packed);
 
             orkCamps.computeIfAbsent(

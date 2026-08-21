@@ -79,6 +79,30 @@ def uv_rect(u, v, w, h, d, face):
     }[face]
 
 
+# Nome de face desta previa -> nome de face do Bedrock. O modelo olha para -z, e -z no Bedrock
+# e `north`; por isso "front" e north e nao south.
+BEDROCK_FACE = {"top": "up", "bottom": "down", "front": "north",
+                "back": "south", "right": "west", "left": "east"}
+
+
+def per_face_rect(uv_map, face):
+    """Retangulo de uma face num modelo de UV por face (`box_uv: false`).
+
+    Os modelos do dono usam este formato: cada face aponta o proprio canto e tamanho, e as
+    faces `up`/`down` vem com tamanho negativo (o flip que o Bedrock exige). Normalizar o
+    retangulo aqui e o que evita um crop invertido, que o PIL devolveria vazio.
+    """
+    entry = uv_map.get(BEDROCK_FACE[face])
+    if entry is None:
+        return None
+
+    u, v = entry["uv"]
+    du, dv = entry.get("uv_size", [0, 0])
+    x0, x1 = sorted((u, u + du))
+    y0, y1 = sorted((v, v + dv))
+    return (x0, y0, x1, y1)
+
+
 def average_colour(texture, rect):
     x0, y0, x1, y1 = (int(round(c)) for c in rect)
     x1, y1 = max(x1, x0 + 1), max(y1, y0 + 1)
@@ -108,9 +132,16 @@ def view(cubes, texture, camera_name):
     for cube in cubes:
         ox, oy, oz = cube["origin"]
         w, h, d = cube["size"]
-        u, v = cube["uv"]
+        uv = cube["uv"]
 
         for face, (corners, normal) in FACES.items():
+            if isinstance(uv, dict):
+                rect = per_face_rect(uv, face)
+                if rect is None:
+                    continue
+            else:
+                rect = uv_rect(uv[0], uv[1], w, h, d, face)
+
             points = []
             depth = 0.0
             for fx, fy, fz in corners:
@@ -120,7 +151,7 @@ def view(cubes, texture, camera_name):
                 # eixo ausente da tela; para a 3/4, a diagonal entre os dois.
                 depth += x * -sx_z + z * sx_x + y * 0.35
 
-            colour = average_colour(texture, uv_rect(u, v, w, h, d, face))
+            colour = average_colour(texture, rect)
             shade = SHADE[normal]
             polygons.append((depth / 4.0, points, tuple(int(c * shade) for c in colour)))
 

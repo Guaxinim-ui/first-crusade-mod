@@ -456,8 +456,8 @@ public class FCStrategicBattleData extends SavedData {
     private static FirstCrusadeFaction territoryHolder(ServerLevel level, BlockPos centre) {
         WorldWarMapData warMap = WorldWarMapData.get(level);
 
-        for (long packed : warMap.getCities()) {
-            WorldWarMapData.CityInfo info = warMap.getCityInfo(packed);
+        for (long packed : warMap.getCities(level)) {
+            WorldWarMapData.CityInfo info = warMap.getCityInfo(level.dimension(), packed);
             int radius = info == null ? 0 : info.borderRadius();
 
             if (radius > 0 && centre.closerThan(BlockPos.of(packed), radius)) {
@@ -465,8 +465,8 @@ public class FCStrategicBattleData extends SavedData {
             }
         }
 
-        for (long packed : warMap.getCamps()) {
-            WorldWarMapData.CampInfo info = warMap.getCampInfo(packed);
+        for (long packed : warMap.getCamps(level)) {
+            WorldWarMapData.CampInfo info = warMap.getCampInfo(level.dimension(), packed);
             int radius = info == null ? 0 : info.corruptionRadius();
 
             if (radius > 0 && centre.closerThan(BlockPos.of(packed), radius)) {

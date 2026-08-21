@@ -110,7 +110,7 @@ public final class SentinelWalkerEntity extends PathfinderMob implements GeoEnti
             this.level().addFreshEntity(bolt);
         }
 
-        this.level().playSound(null, this.blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.HOSTILE, 1.5F, 0.75F);
+        this.level().playSound(null, this.blockPosition(), com.example.examplemod.FCWeaponSounds.AUTOCANNON_FIRE.get(), SoundSource.HOSTILE, 1.5F, 0.75F);
         this.triggerAnim("action_controller", "shoot");
         this.normalShotCooldown = 18;
     }

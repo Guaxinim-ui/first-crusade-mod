@@ -73,7 +73,7 @@ public class KasrkinEntity extends AbstractImperialTroopEntity implements Ranged
                 this.getX(),
                 this.getY(),
                 this.getZ(),
-                SoundEvents.BLAZE_SHOOT,
+                com.example.examplemod.FCWeaponSounds.LASGUN_FIRE.get(),
                 SoundSource.HOSTILE,
                 0.6F,
                 1.5F

@@ -1,0 +1,25 @@
+{
+  "type": "firstcrusade:fauna_site",
+  "config": {
+    "shape": "clearing",
+    "min_count": 2,
+    "max_count": 5,
+    "radius": 9,
+    "prop_tries": 54,
+    "props": [
+      {
+        "Name": "firstcrusade:scattered_twigs"
+      },
+      {
+        "Name": "firstcrusade:rubble_pebbles"
+      },
+      {
+        "Name": "minecraft:dead_bush"
+      }
+    ],
+    "mob": "firstcrusade:duskhorn",
+    "floor": {
+      "Name": "minecraft:coarse_dirt"
+    }
+  }
+}

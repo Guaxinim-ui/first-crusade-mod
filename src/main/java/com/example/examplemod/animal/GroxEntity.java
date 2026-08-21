@@ -77,12 +77,35 @@ import software.bernie.geckolib.util.GeckoLibUtil;
  * the bottom and by a player's decisions at the top. That is deliberate: the Ork pod taught this mod
  * what an unattended breeding loop does to a planet.
  */
-public class GroxEntity extends FCAnimalEntity implements GeoEntity, NeutralMob {
+public class GroxEntity extends com.example.examplemod.fauna.FaunaEntity implements NeutralMob {
 
     private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("idle");
     private static final RawAnimation WALK = RawAnimation.begin().thenLoop("walk");
-    private static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("attack");
-    private static final RawAnimation GRAZE = RawAnimation.begin().thenPlay("graze");
+    private static final RawAnimation RUN = RawAnimation.begin().thenLoop("run");
+
+    /**
+     * A carga: abaixa a cabeca, raspa o chao, para, e corre em linha reta.
+     *
+     * <p>O modelo aprovado do dono trouxe {@code charge} e {@code attack_gore}, e as duas mudam o que
+     * um Grox provocado significa. Antes ele so perseguia; agora ele tem um golpe que o jogador pode
+     * evitar saindo da frente — e e essa possibilidade que transforma "levei dano" em "errei".
+     */
+    private static final com.example.examplemod.fauna.FaunaAbility CHARGE =
+            new com.example.examplemod.fauna.FaunaAbility("charge", 20, 30, 300);
+
+    /** A chifrada de perto. */
+    private static final com.example.examplemod.fauna.FaunaAbility GORE =
+            new com.example.examplemod.fauna.FaunaAbility("attack_gore", 6, 12, 80);
+
+    /** O aviso. Um Grox que vai carregar avisa primeiro; e gado, nao emboscada. */
+    private static final com.example.examplemod.fauna.FaunaAbility THREAT =
+            new com.example.examplemod.fauna.FaunaAbility("threat_display", 0, 30, 400);
+
+    private static final double CHARGE_SPEED = 0.55D;
+    private static final float CHARGE_DAMAGE = 10.0F;
+
+    /** Direcao congelada da carga. Runtime: uma carga nao continua depois de um reload. */
+    private net.minecraft.world.phys.Vec3 chargeDirection = net.minecraft.world.phys.Vec3.ZERO;
 
     /** How long a provoked Grox stays provoked. The vanilla neutral-mob range. */
     private static final UniformInt ANGER_TIME = TimeUtil.rangeOfSeconds(20, 39);
@@ -94,14 +117,13 @@ public class GroxEntity extends FCAnimalEntity implements GeoEntity, NeutralMob 
     private static final int GRAZE_ODDS_ADULT = 600;
     private static final int GRAZE_ODDS_CALF = 120;
 
-    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
-
     private int remainingPersistentAngerTime;
 
     @Nullable
     private UUID persistentAngerTarget;
 
-    public GroxEntity(EntityType<? extends GroxEntity> type, Level level) {
+    public GroxEntity(EntityType<? extends net.minecraft.world.entity.animal.Animal> type,
+                      Level level) {
         super(type, level);
     }
 
@@ -127,17 +149,21 @@ public class GroxEntity extends FCAnimalEntity implements GeoEntity, NeutralMob 
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new AlarmedPanicGoal(this, 1.6D));
-        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.15D, true));
-        this.goalSelector.addGoal(3, new BreedGoal(this, 1.0D));
-        this.goalSelector.addGoal(4, new TemptGoal(this, 1.1D,
+        // A carga acima do combate corpo-a-corpo: um Grox com espaco carrega, um Grox encurralado
+        // morde. A ordem das goals e o que decide isso, sem nenhuma linha de logica extra.
+        this.goalSelector.addGoal(2, new com.example.examplemod.fauna.goal.FaunaChargeGoal(
+                this, CHARGE, 5.0D, 16.0D));
+        this.goalSelector.addGoal(3, new MeleeAttackGoal(this, 1.15D, true));
+        this.goalSelector.addGoal(4, new BreedGoal(this, 1.0D));
+        this.goalSelector.addGoal(5, new TemptGoal(this, 1.1D,
                 Ingredient.of(FCAnimals.groxFeed()), false));
-        this.goalSelector.addGoal(5, new FollowParentGoal(this, 1.1D));
-        this.goalSelector.addGoal(6, new SeekWaterGoal(this, 1.0D));
-        this.goalSelector.addGoal(7, new GrazeGoal(this, GRAZE_ODDS_ADULT, GRAZE_ODDS_CALF));
-        this.goalSelector.addGoal(8, new HerdGoal(this, 1.0D));
-        this.goalSelector.addGoal(9, new WaterAvoidingRandomStrollGoal(this, 0.9D));
-        this.goalSelector.addGoal(10, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(11, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(6, new FollowParentGoal(this, 1.1D));
+        this.goalSelector.addGoal(7, new SeekWaterGoal(this, 1.0D));
+        this.goalSelector.addGoal(8, new GrazeGoal(this, GRAZE_ODDS_ADULT, GRAZE_ODDS_CALF));
+        this.goalSelector.addGoal(9, new HerdGoal(this, 1.0D));
+        this.goalSelector.addGoal(10, new WaterAvoidingRandomStrollGoal(this, 0.9D));
+        this.goalSelector.addGoal(11, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(12, new RandomLookAroundGoal(this));
 
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this).setAlertOthers());
         this.targetSelector.addGoal(2, new ResetUniversalAngerTargetGoal<>(this, true));
@@ -177,12 +203,116 @@ public class GroxEntity extends FCAnimalEntity implements GeoEntity, NeutralMob 
         }
     }
 
+    // ------------------------------------------------------------------ a carga
+
+    @Override
+    protected void awakeServerTick() {
+        if (!canUseAbility()) {
+            return;
+        }
+
+        LivingEntity target = this.getTarget();
+
+        if (target != null && this.distanceTo(target) <= 4.0D && this.random.nextInt(45) == 0) {
+            startAbility(GORE);
+            return;
+        }
+
+        // O aviso: alguem chegou perto de um Grox que nao esta bravo. Cooldown de 20 s.
+        if (target == null && this.random.nextInt(220) == 0 && nearestWatcher() != null) {
+            startAbility(THREAT);
+        }
+    }
+
+    @Override
+    protected void onAbilityStart(com.example.examplemod.fauna.FaunaAbility started) {
+        if (started == CHARGE) {
+            this.getNavigation().stop();
+            this.playSound(com.example.examplemod.fauna.FaunaSoundEvents.chargeRoar(), 1.2F, 0.9F);
+        } else if (started == THREAT) {
+            this.playSound(com.example.examplemod.fauna.FaunaSoundEvents.threatDisplay(), 1.0F, 1.0F);
+        }
+    }
+
+    /** Fim da preparacao: congela a direcao. Depois disso a carga nao vira mais. */
+    @Override
+    protected void onAbilityStrike(com.example.examplemod.fauna.FaunaAbility active) {
+        if (active == GORE) {
+            gore();
+            return;
+        }
+
+        if (active != CHARGE) {
+            return;
+        }
+
+        LivingEntity target = this.getTarget();
+        if (target == null) {
+            cancelAbility();
+            return;
+        }
+
+        net.minecraft.world.phys.Vec3 flat = new net.minecraft.world.phys.Vec3(
+                target.getX() - this.getX(), 0.0D, target.getZ() - this.getZ());
+
+        if (flat.lengthSqr() < 1.0E-4D) {
+            cancelAbility();
+            return;
+        }
+
+        this.chargeDirection = flat.normalize();
+        dustRing(1.1D, 6);
+    }
+
+    @Override
+    protected void onAbilityTick(com.example.examplemod.fauna.FaunaAbility active, int tickInPhase) {
+        if (active != CHARGE || this.chargeDirection.lengthSqr() < 1.0E-4D) {
+            return;
+        }
+
+        net.minecraft.world.phys.Vec3 current = this.getDeltaMovement();
+        this.setDeltaMovement(this.chargeDirection.x * CHARGE_SPEED, current.y,
+                this.chargeDirection.z * CHARGE_SPEED);
+
+        this.setYRot((float) (Math.atan2(this.chargeDirection.z, -this.chargeDirection.x)
+                * (180.0D / Math.PI)) - 90.0F);
+        this.yBodyRot = this.getYRot();
+
+        List<LivingEntity> hit = this.level().getEntitiesOfClass(LivingEntity.class,
+                this.getBoundingBox().inflate(0.35D), this::isAreaTarget);
+
+        if (hit.isEmpty()) {
+            return;
+        }
+
+        for (LivingEntity victim : hit) {
+            victim.hurt(this.damageSources().mobAttack(this), CHARGE_DAMAGE);
+            knockBack(victim, this, 1.9D, 0.45D);
+        }
+
+        dustRing(1.3D, 8);
+        tremor(0.3F, 8, 12.0D);
+
+        // Uma carga acerta uma vez. Sem isto, correr por cima do alvo aplicaria o dano a cada tick.
+        cancelAbility();
+    }
+
+    private void gore() {
+        LivingEntity target = this.getTarget();
+        if (target == null || this.distanceTo(target) > 5.0D) {
+            return;
+        }
+
+        target.hurt(this.damageSources().mobAttack(this), 8.0F);
+        knockBack(target, this, 0.9D, 0.4D);
+    }
+
     @Override
     public boolean doHurtTarget(Entity target) {
         boolean hit = super.doHurtTarget(target);
 
         if (hit && !this.level().isClientSide) {
-            this.triggerAnim("attack", "attack");
+            this.triggerAnim("ability", "attack");
         }
 
         return hit;
@@ -329,22 +459,22 @@ public class GroxEntity extends FCAnimalEntity implements GeoEntity, NeutralMob 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this, "movement", 5, state -> {
-            if (state.isMoving()) {
-                return state.setAndContinue(WALK);
+            if (!state.isMoving()) {
+                return state.setAndContinue(IDLE);
             }
-            return state.setAndContinue(IDLE);
+            return state.setAndContinue(
+                    isAlarmed() || this.getTarget() != null ? RUN : WALK);
         }));
 
-        controllers.add(new AnimationController<>(this, "attack", 0, state -> PlayState.STOP)
-                .triggerableAnim("attack", ATTACK));
-
-        controllers.add(new AnimationController<>(this, "graze", 0, state -> PlayState.STOP)
-                .triggerableAnim("graze", GRAZE));
-    }
-
-    @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() {
-        return this.cache;
+        // Um controlador so para tudo o que e disparado. Antes eram dois ("attack" e "graze"), e
+        // cada habilidade nova exigiria mais um: com um nome de gatilho por animacao, adicionar
+        // habilidade deixou de mexer na lista de controladores.
+        controllers.add(new AnimationController<>(this, "ability", 0, state -> PlayState.STOP)
+                .triggerableAnim("attack", RawAnimation.begin().thenPlay("attack"))
+                .triggerableAnim("attack_gore", RawAnimation.begin().thenPlay("attack_gore"))
+                .triggerableAnim("charge", RawAnimation.begin().thenPlay("charge"))
+                .triggerableAnim("threat_display", RawAnimation.begin().thenPlay("threat_display"))
+                .triggerableAnim("graze", RawAnimation.begin().thenPlay("graze")));
     }
 
     /**

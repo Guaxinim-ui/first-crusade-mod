@@ -44,6 +44,18 @@ public final class StrategicWarAIEvents {
             return;
         }
 
+        // Research is GLOBAL, so it counts down exactly once per server tick.
+        //
+        // It used to be called from inside the per-planet loop below. Every dimension on a server
+        // shares one game time (non-overworld levels read it through DerivedLevelData), so the
+        // "once per second" gate passed for all nine planets on the same tick and the countdown was
+        // charged nine times — a research the bench said would take four minutes finished in
+        // twenty-seven seconds, and got faster the more planets a save had loaded.
+        FactionResearchManager.tick(event.getServer().overworld());
+
+        // The planetary campaign: control, sectors, capture. Its own interval lives inside.
+        com.example.examplemod.campaign.PlanetCampaignManager.tick(event.getServer());
+
         // A guerra acontece nos planetas do mod. Era o overworld enquanto o mod era dono dele;
         // hoje o overworld e vanilla e nao deve receber cidade nem acampamento nenhum.
         for (net.minecraft.resources.ResourceKey<Level> planet
@@ -55,16 +67,17 @@ public final class StrategicWarAIEvents {
         }
     }
 
-    private static void tickWorld(ServerLevel overworld) {
-        long gameTime = overworld.getGameTime();
+    // Per-planet bookkeeping. Everything called here must act on the level it is handed and nothing
+    // else — anything global belongs in onServerTick above, called once.
+    private static void tickWorld(ServerLevel planet) {
+        long gameTime = planet.getGameTime();
 
         if (!ExampleMod.TEST_FIXED_WORLD) {
-            VanillaVillageImperializer.serverTick(overworld);
+            VanillaVillageImperializer.serverTick(planet);
         }
-        FactionResearchManager.tick(overworld);
 
         if (gameTime % STRATEGIC_AI_INTERVAL == 0) {
-            StrategicWarAIManager.lightStrategicTick(overworld);
+            StrategicWarAIManager.lightStrategicTick(planet);
         }
     }
 
@@ -76,17 +89,17 @@ public final class StrategicWarAIEvents {
                 Commands.literal("fcstrategy")
                         .requires(source -> source.hasPermission(2))
 
+                        // These four report on the war of ONE world, and that world is the one the
+                        // caller is standing on. They used to look up Level.OVERWORLD by name, which
+                        // was right while the mod owned the overworld and has been wrong since the
+                        // war moved to the planets: standing on Armageddon and typing
+                        // "/fcstrategy status" reported an empty vanilla overworld.
                         .then(Commands.literal("status")
                                 .executes(context -> {
                                     CommandSourceStack source = context.getSource();
-                                    ServerLevel level = source.getServer().getLevel(Level.OVERWORLD);
 
-                                    if (level == null) {
-                                        source.sendFailure(Component.literal("Overworld não encontrado."));
-                                        return 0;
-                                    }
-
-                                    for (Component line : StrategicWarAIManager.createStatusLines(level)) {
+                                    for (Component line
+                                            : StrategicWarAIManager.createStatusLines(source.getLevel())) {
                                         source.sendSuccess(() -> line, false);
                                     }
 
@@ -96,14 +109,9 @@ public final class StrategicWarAIEvents {
                         .then(Commands.literal("projects")
                                 .executes(context -> {
                                     CommandSourceStack source = context.getSource();
-                                    ServerLevel level = source.getServer().getLevel(Level.OVERWORLD);
 
-                                    if (level == null) {
-                                        source.sendFailure(Component.literal("Overworld não encontrado."));
-                                        return 0;
-                                    }
-
-                                    for (Component line : StrategicWarAIManager.createProjectLines(level)) {
+                                    for (Component line
+                                            : StrategicWarAIManager.createProjectLines(source.getLevel())) {
                                         source.sendSuccess(() -> line, false);
                                     }
 
@@ -113,17 +121,13 @@ public final class StrategicWarAIEvents {
                         .then(Commands.literal("tick")
                                 .executes(context -> {
                                     CommandSourceStack source = context.getSource();
-                                    ServerLevel level = source.getServer().getLevel(Level.OVERWORLD);
-
-                                    if (level == null) {
-                                        source.sendFailure(Component.literal("Overworld não encontrado."));
-                                        return 0;
-                                    }
+                                    ServerLevel level = source.getLevel();
 
                                     StrategicWarAIManager.lightStrategicTick(level);
 
                                     source.sendSuccess(
-                                            () -> Component.literal("IA estratégica executada manualmente."),
+                                            () -> Component.literal("IA estratégica executada em "
+                                                    + level.dimension().location().getPath() + "."),
                                             true
                                     );
 
@@ -136,14 +140,8 @@ public final class StrategicWarAIEvents {
                         .then(Commands.literal("reset")
                                 .executes(context -> {
                                     CommandSourceStack source = context.getSource();
-                                    ServerLevel level = source.getServer().getLevel(Level.OVERWORLD);
 
-                                    if (level == null) {
-                                        source.sendFailure(Component.literal("Overworld não encontrado."));
-                                        return 0;
-                                    }
-
-                                    StrategicWarAIManager.reset(level);
+                                    StrategicWarAIManager.reset(source.getLevel());
 
                                     source.sendSuccess(
                                             () -> Component.literal("IA estratégica resetada."),
@@ -152,6 +150,15 @@ public final class StrategicWarAIEvents {
 
                                     return 1;
                                 }))
+
+                        // The campaign layer: fronts, sectors and the global score. Attached to this
+                        // tree rather than registered as a root of its own - see CampaignCommands.
+                        .then(com.example.examplemod.campaign.CampaignCommands.planet())
+                        .then(com.example.examplemod.campaign.CampaignCommands.sector())
+                        .then(com.example.examplemod.campaign.CampaignCommands.operation())
+                        .then(com.example.examplemod.campaign.CampaignCommands.supply())
+                        .then(com.example.examplemod.campaign.CampaignCommands.raid())
+                        .then(com.example.examplemod.campaign.CampaignCommands.war())
 
                         // Plants an autonomous Imperial walled village ~48 blocks in the direction
                         // the player is looking. Works in any world (ignores the once-per-world
@@ -187,6 +194,7 @@ public final class StrategicWarAIEvents {
 
                                     BlockPos target = StrategicWarAIManager.findNearestCity(
                                             WorldWarMapData.get(level),
+                                            level,
                                             spot
                                     );
 

@@ -39,7 +39,7 @@ public class LasgunItem extends Item {
                 player.getX(),
                 player.getY(),
                 player.getZ(),
-                SoundEvents.BLAZE_SHOOT,
+                com.example.examplemod.FCWeaponSounds.LASGUN_FIRE.get(),
                 SoundSource.PLAYERS,
                 0.55F,
                 1.9F

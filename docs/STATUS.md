@@ -378,6 +378,364 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-08-21 (2): **A Mesa de Guerra foi aberta em jogo pela 1ª vez. 4 defeitos visíveis no
+  screenshot, corrigidos.** Build verde; a aba Logistics foi re-verificada em servidor, a tela em si
+  **ainda não** foi revista depois do conserto.
+
+  O dono abriu a aba LOGISTICS e mandou o print. Foi a primeira vez que essa tela existiu na tela de
+  alguém, e ela entregou de uma vez o que nenhuma leitura de código tinha pego:
+
+  - **O título dizia "Imperial Strategium".** A Mesa é explicitamente *não* o Strategium (pesquisa é
+    o que o Imperium constrói, a Mesa é a guerra que ele luta) — e o emaranhado era duplo, porque o
+    outro bloco se chamava **"Strategium (War Table)"** em en e **"Mesa de Estratégia"** em pt. Três
+    nomes para dois móveis. Agora: `screen…war_table` = "War Table"/"Mesa de Guerra",
+    `block…strategium` = "Strategium" nos dois idiomas. **O nome pt do Strategium mudou — se preferes
+    "Mesa de Estratégia" de volta, é uma linha.**
+  - **A linha "12 supply lane(s) cut" saía cortada pela moldura.** O cabeçalho reservava 26px para um
+    título mais duas linhas alinhadas à direita, e a segunda ia até y+26 enquanto o divisor era
+    desenhado em `HEADER_HEIGHT - 2` = y+24 — em cima do texto. `HEADER_HEIGHT` 26 → 32. Só aparece
+    quando há rota cortada, que é por que sobreviveu até um save real com doze delas.
+  - **Metade da tela estava em português dentro de uma UI em inglês.** `SupplyNetwork.reasonFor`
+    montava frases (`"spaceport de agri_world em mãos inimigas"`) no **servidor**, que não sabe o
+    idioma de quem lê. Agora a rota guarda **chave + argumento, ambos chaves de tradução**, e quem
+    desenha resolve. O truque que faz um caminho só servir para os dois casos: o argumento sempre
+    passa por `Component.translatable` — chave de planeta vira o nome do planeta, e nome de recurso
+    (`Food`) não tem entrada e sai como está. 3 chaves novas (`supply.firstcrusade.reason.*`).
+  - **De brinde, os planetas deixaram de aparecer como id cru:** era "spaceport de **agri_world**",
+    virou "spaceport de **Agri World Verdanis**", porque o argumento agora é a chave do planeta.
+  - **Acentos**: as chaves pt da campanha tinham sido escritas sem acento ("Logistica", "Operacoes",
+    "Forcas em movimento", "Destruida", "Deposito"). Corrigidas — acento renderiza bem, o próprio
+    print provou.
+
+  **Migração:** `SupplyRoute` ganhou `ReasonArg` no NBT. Save antigo tem a frase em português no campo
+  `Reason`; ela **não é migrada de propósito** — chave sem tradução renderiza como ela mesma, então
+  lê exatamente como lia, e o primeiro passe estratégico depois de carregar já a substitui.
+
+  **O que no print NÃO era bug:** o texto fantasma esmaecido atrás do rodapé é a **HUD do jogo**
+  (mensagem de actionbar) aparecendo através do escurecimento do `renderBackground` — o Minecraft
+  desenha a HUD antes da tela. Acontece com qualquer GUI aberta enquanto uma actionbar some.
+
+  **Verificado em servidor depois do conserto:** as duas formas de motivo resolvendo
+  ("Agri World Verdanis spaceport in enemy hands", "origin produces no Plasteel") no
+  `/fcstrategy supply list`, que passou a devolver `Component` em vez de `String` para não imprimir
+  chave crua na cara de ninguém. **Não verificado:** a tela desenhada com o cabeçalho novo.
+
+- 2026-08-21: **A camada de campanha foi finalmente EXECUTADA — servidor dedicado + RCON. 3 bugs
+  achados e corrigidos.** Build verde.
+
+  A camada inteira do dia 20 tinha sido escrita sem nunca rodar. Rodou agora, num servidor dedicado
+  (`level-name=campaigntest`, RCON, `server.properties` **restaurado** ao fim), dirigido pelo cliente
+  RCON de `tools/world_probe.py`. **Zero exceptions em toda a bateria.**
+
+  **O que foi visto funcionando de verdade** (não é leitura de código):
+  - As 10 frentes ativam e **cada planeta tem layout próprio** — Armageddon 11 setores (núcleo
+    industrial imperial × oeste Ork, 65/35), Cadia 9 (8 obras defensivas × 1 acampamento de cerco),
+    Ork World 8 (1 pad imperial × 7 Ork), Necromunda 5. **Nenhum vazamento entre planetas**: era
+    exatamente o bug de arquitetura que o bloco 1 dizia ter corrigido, e está corrigido.
+  - Controle recalculado dos setores, estado, intensidade, objetivo e `CrusadeScore`/`WarDominion`
+    reagindo a `sector capture` na hora.
+  - **A pressão de assentamento move o mapa sozinha**: com um Ork Camp posto em Armageddon, o planeta
+    saiu de 65/35/0 para 51/35/14 sem ninguém tocar em nada.
+  - **O ciclo Ork completo, no timer de 200 ticks e sem jogador nenhum no planeta**: WAAAGH! acumulou,
+    avisou uma vez em 75/100, lançou aos 100, e o deployment percorreu MUSTERING → MOVING →
+    COMMITTED → SPENT gastando a força contra o setor alvo. O `spend()` corrigido no bloco 4 segura.
+  - Logística: 14 rotas, produção por setor, `income` por frente.
+  - Operações automáticas por gatilho + `operation create`, e `RESCUE` recusando com o motivo certo
+    (`OperationTrigger.MANUAL`).
+  - **Cliente**: `runClient` carrega o mod inteiro com a Mesa de Guerra registrada — **zero** erro de
+    modelo, textura ou asset. Só isso; ver "não testado" abaixo.
+
+  **Bug 1 — `MANPOWER` não tinha produtor nenhum.** O tipo de recurso existia, 3 rotas da Colmeia
+  (armageddon/cadia/catachan) o consumiam, e **nenhum `SectorType` o produzia** — as três rotas ficavam
+  `DESTROYED` ("origem não produz Manpower") em todo save que existisse. Pior: o layout da própria
+  Necromunda **não tinha um único setor `HIVE`**. Agora `SectorType.HIVE` produz `MANPOWER` (a tithe de
+  um mundo-colmeia é gente — é o que a §10 e o comentário das rotas já diziam) e `upper_hive` é um
+  `HIVE`. As 3 rotas passaram a ACTIVE (12/12, 12/12, 10/10). **Efeito colateral a revisar:** Armageddon
+  não produz mais os 12 Iron que vinham da colmeia dele — nenhuma rota quebrou, e ele já *importa* iron
+  de Macragge, mas é uma mudança de economia que merece o teu olho.
+
+  **Bug 2 — `supply list <frente>` mentia no rodapé.** Listava as rotas da frente e imprimia o total de
+  quebradas **da rede inteira**: "4 rota(s), 3 sem entrega" com as 4 da tela todas ACTIVE. O contador
+  agora conta o que foi impresso (`brokenLanes(Collection)`; a versão global continua para a Mesa).
+
+  **Bug 3 — `/fcstrategy raid start` dizia "passe executado" e não fazia nada.** Numa mundo sem Ork
+  Camp — ou seja, **todo save novo, que é exatamente onde alguém testa** — o comando enchia o pool,
+  anunciava sucesso e deixava um `raid list` vazio sem dizer por quê. Agora `OrkOffensiveManager
+  .launchBlocker` nomeia qual das 4 checagens falhou, na mesma regra da Mesa de Guerra ("cada recusa
+  diz qual"). Verificado: cadia → "não há nenhum Ork Camp registrado", valhalla → "a frente está
+  AVAILABLE, que não é um estado engajado", armageddon → lança normalmente.
+
+  **Observação, não bug:** ativar Macragge e Cadia já as deixa `CONQUERED` (100% e 90%) e o Crusade
+  Score sobe para 26 sem ninguém lutar — são mundos imperiais na ficção, e nada é anunciado ao jogador,
+  mas "conquistados 2" aparece no `planet list` e na Mesa. Decisão de balanceamento, tua.
+
+  **NÃO testado (precisa de teclado humano):** a **tela da Mesa de Guerra** continua sem nunca ter sido
+  renderizada — o cliente sobe e registra tudo sem erro, mas o `--quickPlayMultiplayer` não conectou e
+  não dá para abrir a GUI por automação confiável (GLFW ignora clique sintético). A geometria foi
+  conferida na mão e fecha: botões de ordem em x 120–328 dentro da margem de 334, linha das ordens em
+  y+182–198 contra tabs em y+200–216 (sem sobreposição), `enableScissor` nos dois painéis, rótulos mais
+  longos ("Controle Imperial" ~86px em 105px disponíveis) cabendo. Também sem teste: o pacote de ordem
+  da Mesa, materialização de deployment perto do jogador, e a camada `ai/` (supressão/cover/esquadrão).
+
+  **Como repetir a bateria:** `run/server.properties` com `enable-rcon=true`, `rcon.password=fctest`,
+  `online-mode=false`, `level-name=campaigntest`, `max-tick-time=-1` (**restaurar depois**); subir
+  `runServer`; mandar comandos com o `Rcon` de `tools/world_probe.py`. `/fcstrategy planet activate
+  <frente>` **não precisa de jogador**, e `execute in firstcrusade:<planeta> run fcstrategy ...` resolve
+  os comandos que dependem da dimensão de quem chama.
+
+- 2026-08-20: **§29 — auditoria de modelos provisórios. NENHUM CÓDIGO MUDOU; é levantamento.**
+
+  A integração GeckoLib já está correta: `new FCGeoModel<>("ork_nob")` resolve geo + textura +
+  animação de um nome só. Trocar um renderer é **uma linha**. O que falta são os arquivos do
+  Blockbench, e inventar isso em Java é exatamente o que o §29 proíbe.
+
+  **A distinção que importa** — nem todo humanoide é placeholder:
+  - **Corretos, não mexer** (11): Guardsman, Skitarii Ranger, Kasrkin, Enforcer, Mine Guard, Agri
+    Militia, Sister of Battle, Penal Legionnaire, Jungle Fighter, Feudal Knight, City Commander.
+    São **humanos de armadura** — modelo humanoide é a forma certa. Precisam de textura melhor
+    algum dia, não de modelo.
+  - **Já com modelo próprio** (GeckoLib): Ork Boy, Warboss, Space Marine, Custodes, Guardsman
+    Rifleman/Sergeant, Primarch, Sentinel Walker, Valkyrie + toda a fauna (15 espécies).
+  - **Placeholder de verdade** (4): **Ork Nob**, **Meganob**, **Gretchin**, **Killa Kan**.
+
+  **A prioridade é o Ork Nob**, e não o Killa Kan que o brief cita: o Nob lidera um esquadrão de Ork
+  Boyz que **têm** modelo próprio, então todo esquadrão Ork do jogo tem um humanoide estranho parado
+  no meio. O Killa Kan é o mais errado em forma (é máquina, não humanoide) mas aparece muito menos.
+
+  **A armadilha, documentada para não custar uma tarde:** `ork_boy.geo.json` usa **UV próprio**
+  (cabeça 10×9×10 em [0,0], corpo 12×13×6 em [0,20]), não o layout de skin vanilla. As texturas
+  atuais de `ork_nob`/`meganob`/`gretchin`/`killa_kan` são 64×64 feitas para o humanoide vanilla e
+  ficariam **embaralhadas** se apontadas para esse geo. Não dá para reaproveitar sem repintar.
+
+  **Receita para resolver:** `tools/generate_geo_troop_textures.py` já **lê o .geo.json e pinta o
+  que encontrar** — foi escrito para os dois troopers imperiais justamente por isso. Estender ele
+  para os Orks é o caminho, e não editar PNG à mão.
+
+- 2026-08-20: **§27 — troféus de fauna ganharam uso.** Build verde.
+
+  Os 5 troféus caíam e **nada os lia** fora da própria loot table. Caçar um Cthellean Cudbear por uma
+  hora dava uma pilha de itens que não faziam nada — pior que não dropar, porque ensina que caçar não
+  vale a pena. Nenhum drop foi removido (§27).
+
+  - `FaunaTrophyValue`: 9 espécimes (5 troféus + ferrão, chifre, espinho, escama) valem **tempo de
+    pesquisa + XP de progressão**, via `FactionResearchManager.accelerate` e
+    `PlayerProgressionManager.awardXp` — nada escreve campo direto.
+  - **Entrega no Strategium**, que é onde a pesquisa é financiada: espécime avança o que o Imperium
+    sabe. Não paga War Support — carcaça de xenos não produz munição de artilharia.
+  - **Couro/pelo/presa/carapaça/carne ficam de fora de propósito.** São matéria-prima de crafting, e
+    aceitá-los aqui tornaria as receitas a pior opção para todos eles. A regra é: *entrega-se o que é
+    interessante, constrói-se com o que é útil.*
+  - A checagem entra **depois** dos dois depósitos existentes e **antes** do `openInterface`, então
+    quem chega de mão vazia abre o banco exatamente como sempre.
+
+- 2026-08-20: **§28 — auditoria de áudio das armas.** Build verde.
+
+  **O que já estava certo:** os 12 sons gravados (bolter fire/impact/aim/reload, chainsword ×4,
+  choppa ×2, power klaw ×2) e seus usuários — BolterItem, Custodes, GuardianSpear, SisterOfBattle,
+  SpaceMarine, LasgunShotEntity (impacto). Nada disso foi tocado.
+
+  **O que estava provisório:** 12 sítios ainda disparavam `SoundEvents.BLAZE_SHOOT` — 8 de lasgun
+  (AgriMilitia, Guardsman, JungleFighter, Kasrkin, SkitariiRanger, LasgunItem, GuardsmanRifleman,
+  GuardsmanSergeant), 1 de plasma, 1 de shoota, 2 de autocanhão (Sentinel, Valkyrie).
+
+  **O que NÃO fiz, de propósito:** apontar tudo isso para `BOLTER_FIRE`, que é a única gravação de
+  arma de fogo que o mod tem. Bolter dispara projétil explosivo de massa reativa; lasgun dispara luz.
+  Emprestar o bolter para toda arma faria o Imperium inteiro soar como uma arma só — pior que o
+  placeholder que substituiria.
+
+  **O que fiz:** 4 ids próprios (`lasgun_fire`, `plasma_fire`, `shoota_fire`, `autocannon_fire`)
+  lastreados por som vanilla no `sounds.json`, **exatamente o padrão que `PlanetSounds` já usa neste
+  mod**. O id é a costura: quando existir gravação de lasgun, é 1 `.ogg` em `sounds/weapon/` e 1
+  linha no `sounds.json` — zero Java. O lasgun continua com o mesmo áudio de hoje (blaze.shoot);
+  plasma, shoota e autocanhão ganharam sons distintos, porque três famílias de arma soando idênticas
+  era metade do problema. 8 subtítulos novos (en/pt).
+
+  Nenhum `BLAZE_SHOOT` restante no código.
+
+- 2026-08-20: **Bloco 5 — supressão, cobertura, liderança e ordens de esquadrão que valem.**
+  Build verde. **Nada testado em jogo.**
+
+  **Duas coisas que já existiam e não faziam nada — foi isso que mais rendeu:**
+  - `FCSquadOrder` (HOLD/MOVE/ATTACK/DEFEND/RETREAT/FOLLOW) existia desde a Fase C e o javadoc dele
+    dizia em voz alta que **nada escrevia nele**. `updateState` lia a ordem, mas só para regular a
+    frequência de pensamento — nenhum goal movia ninguém por causa dela. Esquadrão mandado recuar
+    reportava RETREATING parado no lugar, atirando. Agora `FCSquadOrderGoal` roda **no líder** e anda
+    até o destino; os seguidores não mudaram nada, porque `FCFormationGoal` já os posiciona em slots
+    relativos ao líder. Um goal num mob move o esquadrão inteiro.
+  - `FCCombatProfile.shouldRetreat` **não tinha nenhum chamador**. Coragem e limiar de recuo estavam
+    no perfil desde que foi escrito e ninguém nunca perguntou nada — tropa lutava até o último homem
+    independente dos próprios números. Agora `FCLeaderGoal.reconsiderNerve` decide, **o líder pela
+    esquadra toda** (1 checagem por esquadrão num tick já estrangulado, não 1 por soldado).
+
+  **§22 supressão (`FCSuppression`) — nenhuma unidade tica por isso:**
+  - Decaimento **preguiçoso**: a entrada guarda valor + timestamp, e o nível é calculado na leitura.
+    300 soldados numa batalha seriam 300 decrementos por tick para mexer num número que só importa
+    quando alguém lê. Nada é agendado; o único trabalho periódico é uma varredura a cada 600 ticks
+    num mapa que fora de tiroteio está vazio.
+  - Entrada: **acerto que conecta**, não near-miss por projétil. Perguntar a cada projétil, a cada
+    tick, quem está perto seriam centenas de queries por segundo para modelar o que um acerto já
+    implica. O choque se espalha para os vizinhos **do mesmo lado** (esquadrão não se suprime
+    ganhando). Só dano de projétil — levar chainsword é aterrorizante mas não é supressão, e unidade
+    em corpo-a-corpo que busca cobertura só morre andando.
+  - Efeitos: espalhamento de tiro (aplicado nos **dois helpers centrais** de `FCProjectiles`, então
+    não dá para ficar certo no Guardsman e esquecido no Ork), **para de avançar** aos 45 (não é
+    modificador de atributo — modificador deixado por unidade que morreu suprimida é debuff
+    permanente em nada que ninguém acha), busca cobertura aos 60, e quebra o nervo aos 80 **se já
+    estiver ferida** (senão linha de tiro nenhuma se sustenta).
+
+  **§21 cobertura (`FCCoverGoal`):** 16 raios num anel, **não** busca por pathfinding. Só roda com
+  supressão acima do limiar, com cooldown, e só se a unidade ainda tem linha de visão para a ameaça.
+
+  **§23 liderança:** Sergeant/Nob a 14 blocos cortam 45% da supressão que chega — lê a referência de
+  líder que o esquadrão já mantém, então acalmar um soldado custa um null check e uma distância.
+
+  **Bug meu, achado antes de fechar:** o goal de ordem ficava acima dos goals de combate (necessário
+  para RETREAT conseguir romper contato), mas isso valia para MOVE e DEFEND também — o esquadrão
+  marchava **através** de um inimigo parado no caminho sem dar um tiro. Agora só RETREAT ignora
+  combate; o resto cede, mesma regra que `FCFormationGoal` já usava.
+
+- 2026-08-20: **Bloco 4 — comandar tropas + invasões Ork estratégicas.** Build verde.
+  **Nada testado em jogo.**
+
+  **Uma peça só para os dois lados (`campaign/force/`):**
+  - `StrategicDeployment` + `DeploymentState` + `DeploymentManager`. Uma ordem do jogador e uma raid
+    Ork são a mesma coisa vista de dois lados: uma força sai de um lugar, demora para chegar, e
+    pressiona um setor até se gastar. Escrever como um tipo só é o que impede os dois de divergirem
+    — raid que resolve por regra diferente de ataque do jogador é problema de balanceamento sem
+    número comum para comparar.
+  - **As três distâncias em um lugar só.** Longe: só aritmética (pressão + desgaste), funciona em
+    planeta sem ninguém. Perto: materializa uma fatia **com teto** (config, padrão 12) — assalto de
+    40 não é 40 mobs, é uma dúzia e o resto continua conta. Voltar para longe: **nada a desfazer** —
+    são mobs comuns, e o `FCStrategicBattleData` já absorve sozinho quando o jogador sai.
+  - **Não faz pathfinding.** Uma força não anda: ela espera um tempo de viagem e chega. Navegação de
+    20 mobs por 400 blocos em chunk descarregado era a coisa mais cara que o sistema de raid antigo
+    fazia, e não comprava nada que um timer não compre.
+
+  **Ordens (§7) — `WarTableOrder` + `WarTableOrderPacket`:**
+  - Três ordens (DEFEND/ASSAULT/REINFORCE), não oito: "proteger a cidade" é defender o setor onde ela
+    está, "atacar o camp" é assaltar o setor que ele pressiona. Um caminho de validação, uma tabela
+    de custo. ESCORT e TRANSFER ficam **de fora** de propósito — precisam de comboio e de tropa com
+    localização, que a camada estratégica ainda não modela.
+  - **O cliente não afirma nada**: manda posição da mesa + ordem + setor, e o servidor re-checa
+    **seis coisas** (mesa/distância, setor existe, frente existe, dono do setor combina com a ordem,
+    teto de forças, Core que pague). Cada recusa diz **qual** falhou.
+  - Custo em **War Support** do Core mais próximo, via `spendWarSupport` (checa e debita numa chamada
+    só — ler e subtrair em passos separados deixa janela para a mesma reserva pagar duas ordens).
+    Nunca gene-seed.
+  - Botões **sempre habilitados**: se a ordem é legal é pergunta sobre o estado do servidor, e cliente
+    que acinzenta a partir de um snapshot decide isso por uma foto de segundos atrás.
+
+  **Invasões Ork (§9) — `OrkOffensiveManager`:**
+  - O sistema antigo **não foi religado**. `ORK_WAVES_ENABLED` continua onde estava, gateando o
+    caminho velho no `StrategicWarAIManager` — ligar um não pode ligar o outro em silêncio.
+  - WAAAGH! acumula **por frente** (não por camp): planeta com 8 camps lança antes e mais forte, e o
+    build-up inteiro é um inteiro em vez de máquina de estados por assentamento. Teto de 2× o limiar,
+    para planeta esquecido por uma semana não guardar uma raid impossível.
+  - Aviso em 75% com **trava** (`notePreparationWarning`) — testar o limiar direto transmitiria a
+    mesma linha a cada 10s até a raid chegar.
+  - Se está no teto de forças, o pool **fica cheio**: pressão adiada, nunca perdida.
+  - Respeita `TEST_WARRIOR_CAP` no mundo de teste.
+
+  **Bugs meus, achados antes de fechar:** `spend()` exigia `materialisedStrength == 0` para marcar
+  SPENT, e esse número só sobe — toda raid que pusesse um esquadrão no chão ficaria nos livros para
+  sempre, pressionando zero. E os 3 botões de ordem passavam por cima do "Atualizar" (x 162-318 vs
+  264-334); agora são duas fileiras.
+
+  Novos comandos: `/fcstrategy raid list|start`. Config: 6 valores novos em `[campaign]`.
+
+- 2026-08-20: **Bloco 3 — logística + Mesa de Guerra.** Build verde e datagen rodado.
+  **Nada testado em jogo.**
+
+  **Logística (`campaign/supply/`):**
+  - `SupplyRoute` (origem/destino/recurso/`amount`/`delivered`/estado/motivo) + `SupplyState`
+    (ACTIVE/DISRUPTED/BLOCKED/DESTROYED, cada um com o multiplicador de vazão que **é** o significado
+    dele). Nada viaja fisicamente: uma rota é uma afirmação sobre a guerra, não um caminhão.
+  - `SupplyNetwork`: **produção de uma frente é exatamente o que os setores imperiais dela produzem**,
+    nada mais — é isso que faz perder a refinaria de Armageddon ser sentido nos outros planetas.
+    14 rotas fixas (Verdanis alimenta, Forge World arma, Armageddon abastece de prometium, a Colmeia
+    manda gente). **Uma regra de bloqueio só**: spaceport de qualquer ponta em mãos inimigas corta a
+    rota; frente sob combate pesado reduz pela metade. Uma regra que o jogador aprende vence cinco
+    que ele tem que descobrir.
+  - `StrategicResourceType` ganhou `MANPOWER` (a Colmeia produz corpos, e a §10 pede isso).
+  - Comandos `/fcstrategy supply list [frente]` e `supply income [frente]`.
+
+  **Mesa de Guerra (`campaign/wartable/`) — bloco novo `firstcrusade:war_table`:**
+  - **Não substitui o Strategium.** O banco de pesquisa continua igual: pesquisa é o que o Imperium
+    *constrói*, a mesa é a guerra que ele *luta*.
+  - `WarTableSnapshot`: a guerra inteira num pacote (frentes, setores, operações, rotas, renda). A
+    tela **desenha o retrato e mais nada** — não calcula percentual, não decide dono, não valida. O
+    único pacote que ela manda é `WarTableRequestPacket` ("manda de novo"), e o servidor
+    **re-valida a posição do bloco e a distância** em cada pedido: entre abrir a tela e apertar
+    atualizar dá tempo de sair da sala.
+  - `WarTableScreen` (340×220, 2 abas): FRONTS com a lista de mundos + barra de controle de 3 partes,
+    e o detalhe da frente selecionada (estado, intensidade, %, bases, objetivo, operações, setores,
+    renda, último evento); LOGISTICS com todas as rotas e o motivo de cada corte.
+    Ambas as listas cortam com **`enableScissor`**, não só desenhando as linhas de dentro — ver
+    `docs/` sobre `GuiGraphics` enfileirar `drawString`.
+  - Assets sem PNG novo (§43): modelo usa `cartography_table_top` + `polished_blackstone_bricks` +
+    `gilded_blackstone`. Receita, loot e tag `mineable/pickaxe` vieram do **datagen** (rodado).
+  - Pacotes registrados **no fim** de `FirstCrusadeNetwork.register()` de propósito: o id é a posição
+    na lista, e inserir no meio renumeraria todos os seguintes.
+  - **Ainda não faz**: comandar tropas pela mesa (§7). Fica para a próxima fatia, como ação própria e
+    validada individualmente — botão que muda a guerra sem o servidor conferir o que o jogador tem
+    para mandar não entra.
+
+- 2026-08-20: **Camada de campanha planetária — blocos 1 e 2** (pacote `campaign/`). Build verde,
+  **nada testado em jogo**.
+
+  **Três bugs de arquitetura multiplanetária, corrigidos primeiro:**
+  - `WorldWarMapData` resolvia sempre no `overworld.getDataStorage()` e guardava `BlockPos` empacotado
+    **sem dimensão**. Os 9 planetas escreviam no mesmo balde: cidade em Macragge e camp em Armageddon
+    na mesma coordenada eram a mesma chave, e "o camp mais próximo" podia estar em outro planeta.
+    Agora é `Map<ResourceLocation, PlanetEntry>` (formato 3), **todo acessor exige a dimensão**, e
+    `territoryRevision` é por planeta (antes uma cidade em Cadia invalidava chunk decorado em
+    Catachan). Save antigo (formato 2) entra no balde de `FCPlanets.DEFAULT`; `pruneOrphans` (só
+    chunk carregado) limpa o que sobrar, e assentamento vivo se re-registra sozinho.
+  - `WorldSettlementData.planetSeeded` era **um booleano só**. O primeiro planeta visitado marcava
+    tudo como povoado e nenhum outro gerava assentamento nunca. Virou `Set<String>` de dimensões;
+    `PlanetSeeded=true` de save antigo migra para Macragge.
+  - `FactionResearchManager.tick` era chamado **dentro do laço por planeta**. Dimensões compartilham
+    o game time, então a pesquisa descontava 9× por segundo — 4 minutos viravam 27 segundos, e
+    acelerava com mais planetas carregados. Agora roda uma vez por tick do servidor.
+  - `StrategicWarAIData` também resolvia no overworld com chave = posição: cada planeta apagava os
+    registros dos outros em `syncWithWorldMap`. Passou a ser por nível.
+  - `/fcstrategy status|projects|tick|reset` procuravam `Level.OVERWORLD` pelo nome — reportavam um
+    overworld vanilla vazio. Agora usam o nível de quem chamou.
+
+  **Bloco 1 — multiplaneta + estado de guerra + setores:**
+  - `StrategicLocation` (dimensão + BlockPos). `distanceTo` entre dimensões devolve `MAX_VALUE`, não
+    a distância euclidiana — a resposta errada fica indisponível, não só improvável.
+  - `CampaignFront`/`CampaignFrontType` (PLANET/HIVE/VOID): a unidade da campanha é a *frente*, não o
+    planeta, para o Hive World e o Space Hulk futuro caberem sem sistema paralelo. Fronts vêm de
+    `FCPlanets.ALL` + Hive World.
+  - `PlanetWarState` por frente: controle Imperium/Orks/Necrons/contestado **recalculado dos setores**
+    (nunca acumulado), `PlanetCampaignState` (8), `WarIntensity` (5), objetivo, último evento,
+    `necronAwakening` 0-100 com 5 estágios (arquitetura só — nada spawna).
+  - `StrategicSector` + `SectorType` (36) + `PlanetSectorBlueprints`: **13 layouts, um por mundo**, e
+    é isso que dá identidade aos planetas — Cadia é 6 obras defensivas todas imperiais, Ork World é
+    1 pad imperial contra um Warboss, Verdanis tem 4 de 7 setores produzindo FOOD. Captura por
+    `contest` em [-100,100] dividido pela defesa do setor: sem essa banda a linha de frente pisca a
+    cada passe. Nada é construído no mundo.
+  - `CampaignData` (SavedData global no overworld, de propósito: a Mesa de Guerra precisa ler
+    Armageddon de Macragge sem carregar a dimensão). `CrusadeScore` recalcula o `WarDominion` global
+    a partir das frentes — o número virou leitura, não registro; `shift()` continua funcionando.
+  - `PlanetCampaignManager`: 1 passe a cada 200 ticks, **sem query de entidade, sem chunk, sem
+    pathfinding**. Pressão de assentamento move os setores sozinha.
+
+  **Bloco 2 — Operations + integração de captura:**
+  - `OperationType` (10) × `OperationTrigger`: **7 gatilhos ligados**, 3 (`RESCUE`/`ESCORT`/`RECOVER`)
+    declaram `MANUAL` e **nunca são gerados** — melhor do que aparecer na lista e ser impossível.
+  - Ordens saem da guerra: frente perdendo → DEFEND; sede inimiga intacta → ASSASSINATION; mundo
+    tranquilo → RECON. Pagam em economia existente (Iron/Scrap no Core, War Support, pesquisa via
+    `FactionResearchManager.accelerate`, XP, dominion, controle do setor). **Nunca gene-seed.**
+  - `LivingDeathEvent` só custa um `instanceof` + lookup num `Set` vazio quando não há ordem de kill.
+  - `CampaignIntegration`: camp arrasado, cidade perdida e kill entram por **uma porta só**.
+  - Novos: `ImperialCommandCoreBlockEntity.addWarSupport`, `FactionResearchManager.accelerate`.
+  - Comandos: `/fcstrategy planet list|status|activate|reseed|reset`, `sector list|capture`,
+    `operation list|create|complete`, `war tick|score|reset`.
+  - Config em `firstcrusade-server.toml`, seção `[campaign]` (9 valores).
+  - 85 chaves de tradução novas nos 2 idiomas.
+
 - 2026-08-11: **Progressão ORK do jogador terminada (Fases B, C, D)** — pacote `progression/ork/`,
   **38 nós** (o número 34 em qualquer comentário antigo está errado). Ver
   `docs/ORK_PLAYER_PROGRESSION.md` para o detalhe.

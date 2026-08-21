@@ -147,7 +147,7 @@ public final class ImperialAssaultManager {
         BlockPos best = null;
         double bestDistance = Double.MAX_VALUE;
 
-        for (long packed : WorldWarMapData.get(level).getCamps()) {
+        for (long packed : WorldWarMapData.get(level).getCamps(level)) {
             BlockPos pos = BlockPos.of(packed);
             double distance = pos.distSqr(from);
 
@@ -338,7 +338,7 @@ public final class ImperialAssaultManager {
 
         List<BlockPos> candidates = new ArrayList<>();
 
-        for (long packed : warMap.getCities()) {
+        for (long packed : warMap.getCities(level)) {
             BlockPos pos = BlockPos.of(packed);
             if (pos.distSqr(campPos) <= searchSqr) {
                 candidates.add(pos);
@@ -773,7 +773,11 @@ public final class ImperialAssaultManager {
             camp.setUnderAssault(false);
             camp.razeCamp(level, record.campPos());
         } else {
-            WorldWarMapData.get(level).removeCamp(record.campPos());
+            // The camp block is already gone (its chunk unloaded, or something else destroyed it),
+            // so razeCamp cannot run and the campaign would never hear about the win. Report it here
+            // instead, on the same path razeCamp would have used.
+            WorldWarMapData.get(level).removeCamp(level, record.campPos());
+            com.example.examplemod.campaign.CampaignIntegration.onCampRazed(level, record.campPos());
         }
 
         if (record.claimReward()) {

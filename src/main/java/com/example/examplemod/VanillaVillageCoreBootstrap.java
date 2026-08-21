@@ -78,7 +78,7 @@ public final class VanillaVillageCoreBootstrap {
 
                 placeCommandCore(level, corePos);
                 convertVillagers(level, corePos);
-                WorldWarMapData.get(level).recordCity(corePos);
+                WorldWarMapData.get(level).recordCity(level, corePos);
 
                 data.markProcessed(cellX, cellZ);
                 data.setDirty();

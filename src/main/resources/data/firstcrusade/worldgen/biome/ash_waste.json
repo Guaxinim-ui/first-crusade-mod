@@ -24,6 +24,24 @@
         "weight": 5,
         "minCount": 1,
         "maxCount": 3
+      },
+      {
+        "type": "firstcrusade:arthromite_duneskuttler",
+        "weight": 3,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "firstcrusade:dustback_helamite",
+        "weight": 4,
+        "minCount": 1,
+        "maxCount": 4
+      },
+      {
+        "type": "firstcrusade:ambull",
+        "weight": 1,
+        "minCount": 1,
+        "maxCount": 1
       }
     ],
     "ambient": [],
@@ -46,7 +64,12 @@
     [],
     [],
     [],
-    [],
+    [
+      "firstcrusade:site_ambull_burrow",
+      "firstcrusade:site_duneskuttler_nest",
+      "firstcrusade:site_helamite_post",
+      "firstcrusade:site_squig_pen"
+    ],
     [],
     [
       "minecraft:ore_dirt",

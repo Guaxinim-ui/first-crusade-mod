@@ -52,7 +52,11 @@
     [],
     [],
     [],
-    [],
+    [
+      "firstcrusade:site_ambull_burrow",
+      "firstcrusade:site_grox_ranch",
+      "firstcrusade:site_imperial_kennel"
+    ],
     [],
     [
       "minecraft:ore_dirt",

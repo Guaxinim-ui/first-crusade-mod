@@ -635,8 +635,29 @@ def merge_lang(path, entries):
     return added
 
 
+# Especies cujo modelo, animacao e textura passaram a vir do .bbmodel do dono, convertidos
+# por tools/bbmodel_to_geckolib.py. Este script NAO pode mais escrever os tres arquivos
+# delas — rodar sem esta guarda substituiria a arte aprovada no Blockbench por um modelo
+# parametrico gerado, e o sintoma seria "os bichos voltaram a ser blocos" sem erro nenhum.
+#
+# O que este script continua fazendo por elas: nada. Elas so ficam na tabela SPECIES porque
+# `sump_rat` ainda depende das funcoes de forma que a tabela alimenta.
+#
+# Um dono por arquivo. Ver a memoria [[worldgen-script-ownership]] — a mesma licao, na arte.
+OWNED_BY_BLOCKBENCH = {
+    "grox", "squig", "cyber_mastiff", "ambull", "ash_strider",
+}
+
+
 def main():
     wanted = sys.argv[1:] or sorted(SPECIES)
+
+    skipped = [name for name in wanted if name in OWNED_BY_BLOCKBENCH]
+    wanted = [name for name in wanted if name not in OWNED_BY_BLOCKBENCH]
+
+    if skipped:
+        print("pulados (arte do Blockbench, dono = bbmodel_to_geckolib.py): %s"
+              % ", ".join(sorted(skipped)))
 
     for directory in (GEO_DIR, ANIM_DIR, TEX_ENTITY, TEX_ITEM, MODEL_ITEM):
         os.makedirs(directory, exist_ok=True)

@@ -239,11 +239,18 @@ public final class FirstCrusadePerformanceCommand {
                     followerCapOf(mob),
                     squad.getFormation().name());
 
-            String body = String.format("      estado %s, ordem %s, alvo %s, destino %s, LOD %s, scan %d ticks",
+            // Suppression on the leader's line, because the leader is the one steadying everyone
+            // else: a squad whose sergeant is pinned is a squad about to break, and that is not
+            // visible from any other number here.
+            int suppression = com.example.examplemod.ai.combat.FCSuppression.level(mob);
+
+            String body = String.format(
+                    "      estado %s, ordem %s, alvo %s, destino %s, supressao %d, LOD %s, scan %d ticks",
                     squad.getState().name(),
                     squad.getOrder().name(),
                     shared == null ? "nenhum" : shared.getName().getString(),
                     destination == null ? "nenhum" : destination.toShortString(),
+                    suppression,
                     FirstCrusadeAiLod.forEntity(mob).name(),
                     squad.intervalFor(FirstCrusadePerformanceConfig.squadScanInterval()));
 

@@ -48,18 +48,25 @@ import software.bernie.geckolib.util.GeckoLibUtil;
  * No walk cycle — it has no legs worth the name. The movement animation is a hop, and the entity
  * jumps as it moves so the two agree.
  */
-public class SquigEntity extends FCAnimalEntity implements GeoEntity {
+public class SquigEntity extends com.example.examplemod.fauna.FaunaEntity {
 
     private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("idle");
     private static final RawAnimation HOP = RawAnimation.begin().thenLoop("walk");
-    private static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("attack");
+    private static final RawAnimation RUN = RawAnimation.begin().thenLoop("run");
+
+    /** O salto sobre o alvo — a habilidade que o modelo aprovado do dono trouxe. */
+    private static final com.example.examplemod.fauna.FaunaAbility LEAP =
+            new com.example.examplemod.fauna.FaunaAbility("leap_attack", 4, 14, 80);
+
+    /** O berro. Sem efeito mecanico: e o que faz um bando de squigs soar como um bando. */
+    private static final com.example.examplemod.fauna.FaunaAbility ROAR =
+            new com.example.examplemod.fauna.FaunaAbility("roar", 0, 20, 300);
 
     /** Ticks between hops while moving. Any faster and it reads as a bouncing ball. */
     private static final int HOP_INTERVAL = 14;
 
-    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
-
-    public SquigEntity(EntityType<? extends SquigEntity> type, Level level) {
+    public SquigEntity(EntityType<? extends net.minecraft.world.entity.animal.Animal> type,
+                       Level level) {
         super(type, level);
     }
 
@@ -75,9 +82,13 @@ public class SquigEntity extends FCAnimalEntity implements GeoEntity {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.2D, true));
-        this.goalSelector.addGoal(2, new WaterAvoidingRandomStrollGoal(this, 0.9D));
-        this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
+        // O salto acima da mordida: um squig que pula quando ha espaco e morde quando nao ha e a
+        // leitura correta do bicho, e ela sai de graca da ordem das goals.
+        this.goalSelector.addGoal(1, new com.example.examplemod.fauna.goal.FaunaLeapGoal(
+                this, LEAP, 3.0D, 7.0D, 2.0D));
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.2D, true));
+        this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.9D));
+        this.goalSelector.addGoal(4, new RandomLookAroundGoal(this));
 
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
         // Bites players, not the greenskins that farm it. The mod's Ork units are Monsters, so
@@ -104,12 +115,54 @@ public class SquigEntity extends FCAnimalEntity implements GeoEntity {
         }
     }
 
+    // ------------------------------------------------------------------ habilidades
+
+    @Override
+    protected void awakeServerTick() {
+        // O berro sai quando ha alguem por perto e nada acontecendo. Cooldown de 15 s no proprio
+        // FaunaAbility, entao um bando nao vira uma sirene.
+        if (this.getTarget() == null && canUseAbility() && this.random.nextInt(180) == 0) {
+            startAbility(ROAR);
+        }
+    }
+
+    @Override
+    protected void onAbilityStart(com.example.examplemod.fauna.FaunaAbility started) {
+        if (started == ROAR) {
+            this.playSound(net.minecraft.sounds.SoundEvents.HOGLIN_ANGRY, 1.0F, 1.6F);
+        }
+    }
+
+    @Override
+    protected void onAbilityStrike(com.example.examplemod.fauna.FaunaAbility active) {
+        if (active != LEAP) {
+            return;
+        }
+
+        LivingEntity target = this.getTarget();
+        if (target == null) {
+            return;
+        }
+
+        // Mira o torso, nao os pes: um salto rasteiro passa por baixo do alvo e o squig aterrissa
+        // atras dele sem tocar em nada.
+        double dx = target.getX() - this.getX();
+        double dz = target.getZ() - this.getZ();
+        double length = Math.sqrt(dx * dx + dz * dz);
+        if (length < 1.0E-4D) {
+            return;
+        }
+
+        this.setDeltaMovement(dx / length * 0.62D, 0.46D, dz / length * 0.62D);
+        this.playSound(net.minecraft.sounds.SoundEvents.SLIME_JUMP, 0.8F, 1.4F);
+    }
+
     @Override
     public boolean doHurtTarget(Entity target) {
         boolean hit = super.doHurtTarget(target);
 
         if (hit && !this.level().isClientSide) {
-            this.triggerAnim("attack", "attack");
+            this.triggerAnim("ability", "attack");
         }
 
         return hit;
@@ -144,16 +197,18 @@ public class SquigEntity extends FCAnimalEntity implements GeoEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "movement", 3, state ->
-                state.isMoving() ? state.setAndContinue(HOP) : state.setAndContinue(IDLE)));
+        controllers.add(new AnimationController<>(this, "movement", 3, state -> {
+            if (!state.isMoving()) {
+                return state.setAndContinue(IDLE);
+            }
+            return state.setAndContinue(this.getTarget() != null ? RUN : HOP);
+        }));
 
-        controllers.add(new AnimationController<>(this, "attack", 0, state -> PlayState.STOP)
-                .triggerableAnim("attack", ATTACK));
-    }
-
-    @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() {
-        return this.cache;
+        controllers.add(new AnimationController<>(this, "ability", 0, state -> PlayState.STOP)
+                .triggerableAnim("attack", RawAnimation.begin().thenPlay("attack"))
+                .triggerableAnim("leap_attack", RawAnimation.begin().thenPlay("leap_attack"))
+                .triggerableAnim("roar", RawAnimation.begin().thenPlay("roar"))
+                .triggerableAnim("eat", RawAnimation.begin().thenPlay("eat")));
     }
 
     /** The same filter as the target goal, so retaliation cannot make it bite an Ork either. */

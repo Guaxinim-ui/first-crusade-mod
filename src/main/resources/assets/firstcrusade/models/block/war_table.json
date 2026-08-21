@@ -1,0 +1,35 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "minecraft:block/polished_blackstone_bricks",
+    "map": "minecraft:block/cartography_table_top",
+    "frame": "minecraft:block/polished_blackstone_bricks",
+    "trim": "minecraft:block/gilded_blackstone"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 10, 16],
+      "faces": {
+        "north": { "texture": "#frame", "uv": [0, 6, 16, 16] },
+        "south": { "texture": "#frame", "uv": [0, 6, 16, 16] },
+        "east": { "texture": "#frame", "uv": [0, 6, 16, 16] },
+        "west": { "texture": "#frame", "uv": [0, 6, 16, 16] },
+        "up": { "texture": "#trim", "uv": [0, 0, 16, 16] },
+        "down": { "texture": "#frame", "uv": [0, 0, 16, 16], "cullface": "down" }
+      }
+    },
+    {
+      "from": [1, 10, 1],
+      "to": [15, 12, 15],
+      "faces": {
+        "north": { "texture": "#trim", "uv": [1, 4, 15, 6] },
+        "south": { "texture": "#trim", "uv": [1, 4, 15, 6] },
+        "east": { "texture": "#trim", "uv": [1, 4, 15, 6] },
+        "west": { "texture": "#trim", "uv": [1, 4, 15, 6] },
+        "up": { "texture": "#map", "uv": [1, 1, 15, 15] },
+        "down": { "texture": "#frame", "uv": [1, 1, 15, 15] }
+      }
+    }
+  ]
+}

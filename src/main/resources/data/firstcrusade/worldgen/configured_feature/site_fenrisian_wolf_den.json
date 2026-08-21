@@ -1,0 +1,22 @@
+{
+  "type": "firstcrusade:fauna_site",
+  "config": {
+    "shape": "den",
+    "min_count": 2,
+    "max_count": 5,
+    "radius": 5,
+    "prop_tries": 42,
+    "props": [
+      {
+        "Name": "firstcrusade:bone_fragments"
+      },
+      {
+        "Name": "firstcrusade:rubble_pebbles"
+      }
+    ],
+    "mob": "firstcrusade:fenrisian_wolf",
+    "frame": {
+      "Name": "minecraft:spruce_log"
+    }
+  }
+}

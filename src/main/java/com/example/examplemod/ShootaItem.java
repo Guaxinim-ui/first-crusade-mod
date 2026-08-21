@@ -49,7 +49,7 @@ public class ShootaItem extends Item {
                 player.getX(),
                 player.getY(),
                 player.getZ(),
-                SoundEvents.BLAZE_SHOOT,
+                com.example.examplemod.FCWeaponSounds.SHOOTA_FIRE.get(),
                 SoundSource.PLAYERS,
                 0.7F,
                 0.8F

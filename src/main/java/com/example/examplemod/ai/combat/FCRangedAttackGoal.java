@@ -194,6 +194,18 @@ public class FCRangedAttackGoal<T extends PathfinderMob & RangedAttackMob & Lasg
             return;
         }
 
+        // Pinned troops do not walk into fire. This is the movement half of suppression: the unit
+        // keeps its weapon on the target and stops closing, so a firing line under pressure stalls
+        // where it stands instead of marching cheerfully into a beaten zone.
+        //
+        // It stops advancing rather than being slowed by an attribute modifier, which would have to
+        // be added and removed as suppression crossed the threshold — and a modifier left behind by
+        // a unit that died mid-suppression is a permanent debuff on nothing that nobody can find.
+        if (FCSuppression.isPinned(this.shooter)) {
+            holdPosition();
+            return;
+        }
+
         moveToward(target, this.profile.chaseSpeed());
     }
 

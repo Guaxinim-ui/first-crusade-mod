@@ -53,6 +53,19 @@ public class FCRecipeProvider extends RecipeProvider {
                 .unlockedBy("has_crusadium_plate", has(FCRegistry.CRUSADIUM_PLATE.get()))
                 .save(writer);
 
+        // Mesa de Guerra. Custa uma placa de Crusadium e o mapa: o valor dela e a informacao, e
+        // por isso a receita e barata em metal e cara em cartografia.
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, FCRegistry.WAR_TABLE_ITEM.get())
+                .pattern("PMP")
+                .pattern("ICI")
+                .pattern("I I")
+                .define('P', FCRegistry.CRUSADIUM_PLATE.get())
+                .define('M', Items.FILLED_MAP)
+                .define('I', Items.IRON_INGOT)
+                .define('C', Items.CARTOGRAPHY_TABLE)
+                .unlockedBy("has_crusadium_plate", has(FCRegistry.CRUSADIUM_PLATE.get()))
+                .save(writer);
+
         ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, FCRegistry.SPACEPORT_ITEM.get())
                 .pattern("PIP")
                 .pattern("IEI")

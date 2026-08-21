@@ -391,6 +391,10 @@ public final class PlanetTravelManager {
             com.example.examplemod.WorldSettlementSeeder.seedPlanet(destination, landing);
         }
 
+        // The front becomes real on arrival rather than on the next strategic pass, so a traveller
+        // who lands and opens the War Table immediately sees the planet they are standing on.
+        com.example.examplemod.campaign.PlanetCampaignManager.onArrival(destination, landing);
+
         player.teleportTo(destination, x + 0.5D, landing.getY(), z + 0.5D,
                 player.getYRot(), player.getXRot());
 

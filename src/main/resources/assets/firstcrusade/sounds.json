@@ -176,5 +176,41 @@
         "stream": false
       }
     ]
+  },
+  "lasgun_fire": {
+    "subtitle": "subtitle.firstcrusade.lasgun_fire",
+    "sounds": [
+      {
+        "name": "minecraft:entity.blaze.shoot",
+        "stream": false
+      }
+    ]
+  },
+  "plasma_fire": {
+    "subtitle": "subtitle.firstcrusade.plasma_fire",
+    "sounds": [
+      {
+        "name": "minecraft:entity.guardian.attack",
+        "stream": false
+      }
+    ]
+  },
+  "shoota_fire": {
+    "subtitle": "subtitle.firstcrusade.shoota_fire",
+    "sounds": [
+      {
+        "name": "minecraft:entity.firework_rocket.blast",
+        "stream": false
+      }
+    ]
+  },
+  "autocannon_fire": {
+    "subtitle": "subtitle.firstcrusade.autocannon_fire",
+    "sounds": [
+      {
+        "name": "minecraft:entity.generic.explode",
+        "stream": false
+      }
+    ]
   }
 }

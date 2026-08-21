@@ -145,6 +145,44 @@ public final class FirstCrusadeNetwork {
                 com.example.examplemod.crusade.CrusadePanelPacket::handle
         );
 
+        // Tremor de tela da fauna. Servidor -> um jogador, uma vez por evento (pisao, carga,
+        // emergencia), nunca por tick. A magnitude ja vem atenuada pela distancia: quem decide quem
+        // sente e com que forca e o servidor, e o cliente so aplica no angulo da camera.
+        CHANNEL.registerMessage(
+                packetId++,
+                com.example.examplemod.fauna.effect.FaunaTremorPacket.class,
+                com.example.examplemod.fauna.effect.FaunaTremorPacket::encode,
+                com.example.examplemod.fauna.effect.FaunaTremorPacket::decode,
+                com.example.examplemod.fauna.effect.FaunaTremorPacket::handle
+        );
+
+        // Mesa de Guerra: pedido (cliente -> servidor) e retrato (servidor -> cliente).
+        // Registrados no FIM de propósito: o id de um pacote é a posição dele nesta lista, e
+        // inserir no meio renumeraria todos os que vêm depois.
+        CHANNEL.registerMessage(
+                packetId++,
+                com.example.examplemod.campaign.wartable.WarTableRequestPacket.class,
+                com.example.examplemod.campaign.wartable.WarTableRequestPacket::encode,
+                com.example.examplemod.campaign.wartable.WarTableRequestPacket::decode,
+                com.example.examplemod.campaign.wartable.WarTableRequestPacket::handle
+        );
+
+        CHANNEL.registerMessage(
+                packetId++,
+                com.example.examplemod.campaign.wartable.WarTableSnapshotPacket.class,
+                com.example.examplemod.campaign.wartable.WarTableSnapshotPacket::encode,
+                com.example.examplemod.campaign.wartable.WarTableSnapshotPacket::decode,
+                com.example.examplemod.campaign.wartable.WarTableSnapshotPacket::handle
+        );
+
+        CHANNEL.registerMessage(
+                packetId++,
+                com.example.examplemod.campaign.wartable.WarTableOrderPacket.class,
+                com.example.examplemod.campaign.wartable.WarTableOrderPacket::encode,
+                com.example.examplemod.campaign.wartable.WarTableOrderPacket::decode,
+                com.example.examplemod.campaign.wartable.WarTableOrderPacket::handle
+        );
+
         // Fails loudly at load if the tree is not the shape the design promises.
         com.example.examplemod.progression.PlayerProgressionTree.validate();
         com.example.examplemod.progression.ork.PlayerOrkProgressionTree.validate();

@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "firstcrusade:block/war_table" },
+    "facing=east": { "model": "firstcrusade:block/war_table", "y": 90 },
+    "facing=south": { "model": "firstcrusade:block/war_table", "y": 180 },
+    "facing=west": { "model": "firstcrusade:block/war_table", "y": 270 }
+  }
+}

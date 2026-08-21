@@ -109,7 +109,7 @@ public final class ValkyrieGunshipEntity extends PathfinderMob implements GeoEnt
         ValkyrieMultilaserBoltEntity bolt = new ValkyrieMultilaserBoltEntity(this.level(), this, aim);
         bolt.setPos(muzzle.x, muzzle.y, muzzle.z);
         this.level().addFreshEntity(bolt);
-        this.level().playSound(null, this.blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.HOSTILE, 1.2F, 1.45F);
+        this.level().playSound(null, this.blockPosition(), com.example.examplemod.FCWeaponSounds.AUTOCANNON_FIRE.get(), SoundSource.HOSTILE, 1.2F, 1.45F);
         this.triggerAnim("action_controller", "shoot");
         this.shotCooldown = 4;
     }

@@ -48,7 +48,7 @@ public class PlasmaGunItem extends Item {
                 player.getX(),
                 player.getY(),
                 player.getZ(),
-                SoundEvents.BLAZE_SHOOT,
+                com.example.examplemod.FCWeaponSounds.PLASMA_FIRE.get(),
                 SoundSource.PLAYERS,
                 0.7F,
                 1.3F

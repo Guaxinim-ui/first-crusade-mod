@@ -163,9 +163,22 @@ public class FCSquad {
         return this.order;
     }
 
-    /** Issues an order. A null order means FOLLOW, which is "stay with the leader". */
+    /**
+     * Issues an order. A null order means FOLLOW, which is "stay with the leader".
+     *
+     * <p>HOLD_POSITION with no destination is filled in with where the leader is standing right now.
+     * "Hold" has to name a place or it cannot be obeyed: without an anchor
+     * {@link FCSquadOrderGoal} has nothing to walk back to, and a squad told to hold would drift
+     * wherever its combat goals took it and still report that it was holding.
+     */
     public void setOrder(FCSquadOrder order, @Nullable BlockPos destination) {
         this.order = order == null ? FCSquadOrder.FOLLOW : order;
+
+        if (destination == null && this.order == FCSquadOrder.HOLD_POSITION && this.leader != null) {
+            this.destination = this.leader.blockPosition();
+            return;
+        }
+
         this.destination = destination;
     }
 

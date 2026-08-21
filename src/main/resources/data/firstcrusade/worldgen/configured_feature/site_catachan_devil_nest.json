@@ -1,0 +1,28 @@
+{
+  "type": "firstcrusade:fauna_site",
+  "config": {
+    "shape": "nest",
+    "min_count": 1,
+    "max_count": 1,
+    "radius": 8,
+    "prop_tries": 78,
+    "props": [
+      {
+        "Name": "firstcrusade:bone_fragments"
+      },
+      {
+        "Name": "minecraft:cobweb"
+      },
+      {
+        "Name": "minecraft:dead_bush"
+      },
+      {
+        "Name": "firstcrusade:scattered_twigs"
+      }
+    ],
+    "mob": "firstcrusade:catachan_devil",
+    "floor": {
+      "Name": "minecraft:coarse_dirt"
+    }
+  }
+}

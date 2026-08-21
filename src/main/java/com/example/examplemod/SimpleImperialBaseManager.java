@@ -54,7 +54,7 @@ public final class SimpleImperialBaseManager {
         buildFoundation(level, centre);
         placeProps(level, centre);
 
-        WorldWarMapData.get(level).recordCity(centre);
+        WorldWarMapData.get(level).recordCity(level, centre);
 
         // The base is raised by a regiment, and the regiment is decided once, here, from the kind of
         // world it stands on. It governs who fills the garrison's slots — never how many, which

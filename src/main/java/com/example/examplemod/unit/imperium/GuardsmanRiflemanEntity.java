@@ -300,6 +300,11 @@ public class GuardsmanRiflemanEntity extends PathfinderMob
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new OpenDoorGoal(this, true));
+        // Above the attack goal: a pinned soldier takes cover instead of shooting. The goal only
+        // runs while suppression is over its threshold, so it hands movement straight back once the
+        // fire lets up — which is what makes a firefight ebb rather than freeze.
+        this.goalSelector.addGoal(1, new com.example.examplemod.ai.combat.FCCoverGoal(this));
+
         this.goalSelector.addGoal(2, new FCRangedAttackGoal<>(this));
 
         // Below the attack goal on purpose: a trooper with an enemy in range fights instead of
@@ -407,7 +412,7 @@ public class GuardsmanRiflemanEntity extends PathfinderMob
         this.level().playSound(
                 null,
                 this.getX(), this.getY(), this.getZ(),
-                SoundEvents.BLAZE_SHOOT,
+                com.example.examplemod.FCWeaponSounds.LASGUN_FIRE.get(),
                 this.getSoundSource(),
                 0.7F,
                 1.6F + this.random.nextFloat() * 0.2F

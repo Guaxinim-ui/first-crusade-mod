@@ -18,6 +18,18 @@
         "weight": 6,
         "minCount": 1,
         "maxCount": 2
+      },
+      {
+        "type": "firstcrusade:arthromite_duneskuttler",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "firstcrusade:dustback_helamite",
+        "weight": 3,
+        "minCount": 1,
+        "maxCount": 3
       }
     ],
     "ambient": [],
@@ -40,7 +52,10 @@
     [],
     [],
     [],
-    [],
+    [
+      "firstcrusade:site_duneskuttler_nest",
+      "firstcrusade:site_helamite_post"
+    ],
     [],
     [
       "minecraft:ore_dirt",

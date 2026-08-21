@@ -127,7 +127,7 @@ public final class FloraCommands {
         FloraChunkSavedData.ChunkState state = floraData.getState(pos);
         FloraChunkQueue queue = FloraChunkQueue.get(level);
 
-        int currentRevision = WorldWarMapData.get(level).getTerritoryRevision();
+        int currentRevision = WorldWarMapData.get(level).getTerritoryRevision(level);
 
         source.sendSuccess(() -> Component.literal("--- First Crusade flora: chunk " + pos.x + ", " + pos.z + " ---"), false);
         source.sendSuccess(() -> Component.literal("  dimension:        " + level.dimension().location()), false);
@@ -517,7 +517,7 @@ public final class FloraCommands {
         source.sendSuccess(() -> Component.literal("  battlefields: " + floraData.battlefieldCount()
                 + ", chaos: " + floraData.chaosCount()), false);
         source.sendSuccess(() -> Component.literal("  territory:  " + FloraRegionResolver.countTerritorialSources(level)
-                + " settlement(s), revision " + WorldWarMapData.get(level).getTerritoryRevision()), false);
+                + " settlement(s), revision " + WorldWarMapData.get(level).getTerritoryRevision(level)), false);
 
         return 1;
     }

@@ -131,7 +131,7 @@ public class OrkCampBlockEntity extends BlockEntity {
         }
 
         // Put this camp on the world war map (so the Core's strategic map shows it).
-        WorldWarMapData.get(serverLevel).recordCamp(pos);
+        WorldWarMapData.get(serverLevel).recordCamp(serverLevel, pos);
 
         camp.foundIfNeeded(serverLevel, pos);
         camp.produceLoot(serverLevel, pos);
@@ -148,7 +148,7 @@ public class OrkCampBlockEntity extends BlockEntity {
 
         // Publish the camp's territorial attributes for the flora decorator. The corruption radius
         // is the one that just grew, so Ork vegetation follows the sculk halo outward by itself.
-        WorldWarMapData.get(serverLevel).recordCampInfo(pos, camp.clan, camp.campLevel, camp.sporeRadius);
+        WorldWarMapData.get(serverLevel).recordCampInfo(serverLevel, pos, camp.clan, camp.campLevel, camp.sporeRadius);
 
         camp.setChanged();
     }
@@ -489,11 +489,15 @@ public class OrkCampBlockEntity extends BlockEntity {
     /** Removes the camp from the world and the war map, and tips the war toward the Imperium. */
     public void razeCamp(ServerLevel serverLevel, BlockPos pos) {
         serverLevel.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
-        WorldWarMapData.get(serverLevel).removeCamp(pos);
+        WorldWarMapData.get(serverLevel).removeCamp(serverLevel, pos);
 
         OrkRaidManager.notifyNearbyPlayers(
                 serverLevel, pos, Component.translatable("msg.firstcrusade.bcast.camp_razed_imperial"));
         WarDominionManager.shift(serverLevel, 6);
+
+        // The strategic layer hears about it: the nearest sector is shoved toward the Imperium and
+        // any DESTROY order standing on this planet advances.
+        com.example.examplemod.campaign.CampaignIntegration.onCampRazed(serverLevel, pos);
     }
 
     // ===== player-started raid =====

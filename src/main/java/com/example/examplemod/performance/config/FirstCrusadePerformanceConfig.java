@@ -368,6 +368,17 @@ public final class FirstCrusadePerformanceConfig {
                     "first, because a missing casing is the least missed effect in a firefight.")
             .defineInRange("particles.debrisDensity", 100, 0, 100);
 
+    public static final ForgeConfigSpec.IntValue PARTICLE_FAUNA_DENSITY = BUILDER
+            .comment("Percentage of wildlife ability particles broadcast.",
+                    "Dust from an Ambull slam or a Duskhorn charge, sand from a Duneskuttler",
+                    "emerging, the Barking Toad's toxic cloud. Its own channel rather than sharing",
+                    "the combat ones because the two scale with different things: combat particles",
+                    "scale with how many soldiers are shooting, and these scale with how close the",
+                    "player is standing to one animal. Turning down a battle should not silently",
+                    "turn down the one Ambull the player came to fight.",
+                    "Damage, radius and knockback are decided on the server and never change with it.")
+            .defineInRange("particles.faunaDensity", 100, 0, 100);
+
     public static final ForgeConfigSpec.IntValue PARTICLE_MAX_SEND_DISTANCE = BUILDER
             .comment("Skip broadcasting an effect with no player within this many blocks.",
                     "32 is the ceiling on purpose, not an arbitrary cap: vanilla's own sendParticles",
@@ -439,6 +450,7 @@ public final class FirstCrusadePerformanceConfig {
     private static int explosionParticleDensity = 100;
     private static int smokeParticleDensity = 100;
     private static int debrisParticleDensity = 100;
+    private static int faunaParticleDensity = 100;
     private static int maxParticleSendDistance = 32;
     private static int maxParticleSendsPerTick = 256;
 
@@ -639,6 +651,10 @@ public final class FirstCrusadePerformanceConfig {
         return debrisParticleDensity;
     }
 
+    public static int faunaParticleDensity() {
+        return faunaParticleDensity;
+    }
+
     public static int maxParticleSendDistance() {
         return maxParticleSendDistance;
     }
@@ -720,6 +736,7 @@ public final class FirstCrusadePerformanceConfig {
         explosionParticleDensity = PARTICLE_EXPLOSION_DENSITY.get();
         smokeParticleDensity = PARTICLE_SMOKE_DENSITY.get();
         debrisParticleDensity = PARTICLE_DEBRIS_DENSITY.get();
+        faunaParticleDensity = PARTICLE_FAUNA_DENSITY.get();
         maxParticleSendDistance = PARTICLE_MAX_SEND_DISTANCE.get();
         maxParticleSendsPerTick = PARTICLE_MAX_SENDS_PER_TICK.get();
     }

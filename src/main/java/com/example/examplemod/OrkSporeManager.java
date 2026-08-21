@@ -55,7 +55,7 @@ public final class OrkSporeManager {
 
         double pressure = 0.0D;
 
-        for (long packed : warMap.getCamps()) {
+        for (long packed : warMap.getCamps(level)) {
             BlockPos camp = BlockPos.of(packed);
 
             double distance = Math.sqrt(camp.distSqr(centre));
@@ -64,7 +64,7 @@ public final class OrkSporeManager {
                 continue;
             }
 
-            WorldWarMapData.CampInfo info = warMap.getCampInfo(packed);
+            WorldWarMapData.CampInfo info = warMap.getCampInfo(level.dimension(), packed);
             int reach = info == null ? BASE_RADIUS : Math.max(BASE_RADIUS, info.corruptionRadius());
 
             // A camp presses hardest when its spore field actually overlaps the city's ground.

@@ -1,0 +1,25 @@
+{
+  "type": "firstcrusade:fauna_site",
+  "config": {
+    "shape": "pen",
+    "min_count": 3,
+    "max_count": 8,
+    "radius": 7,
+    "prop_tries": 30,
+    "props": [
+      {
+        "Name": "firstcrusade:scattered_twigs"
+      },
+      {
+        "Name": "firstcrusade:rubble_pebbles"
+      }
+    ],
+    "mob": "firstcrusade:grox",
+    "floor": {
+      "Name": "minecraft:coarse_dirt"
+    },
+    "frame": {
+      "Name": "minecraft:oak_fence"
+    }
+  }
+}

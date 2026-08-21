@@ -18,6 +18,12 @@
         "weight": 10,
         "minCount": 2,
         "maxCount": 4
+      },
+      {
+        "type": "firstcrusade:greater_malkavan_constrictor",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 1
       }
     ],
     "ambient": [],
@@ -42,7 +48,10 @@
     ],
     [],
     [],
-    [],
+    [
+      "firstcrusade:site_barking_toad_clearing",
+      "firstcrusade:site_constrictor_nest"
+    ],
     [],
     [
       "minecraft:ore_dirt",

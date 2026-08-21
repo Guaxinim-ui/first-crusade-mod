@@ -58,6 +58,23 @@
         }
       ],
       "rolls": 1.0
+    },
+    {
+      "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "chance": 0.25,
+          "condition": "minecraft:random_chance_with_looting",
+          "looting_multiplier": 0.08
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "firstcrusade:trophy_ambull"
+        }
+      ],
+      "rolls": 1.0
     }
   ],
   "random_sequence": "firstcrusade:entities/ambull"

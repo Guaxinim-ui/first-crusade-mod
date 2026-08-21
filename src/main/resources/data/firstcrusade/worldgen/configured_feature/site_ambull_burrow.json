@@ -1,0 +1,22 @@
+{
+  "type": "firstcrusade:fauna_site",
+  "config": {
+    "shape": "burrow",
+    "min_count": 1,
+    "max_count": 2,
+    "radius": 5,
+    "prop_tries": 48,
+    "props": [
+      {
+        "Name": "firstcrusade:bone_fragments"
+      },
+      {
+        "Name": "firstcrusade:rubble_pebbles"
+      }
+    ],
+    "mob": "firstcrusade:ambull",
+    "floor": {
+      "Name": "minecraft:coarse_dirt"
+    }
+  }
+}

@@ -561,7 +561,7 @@ this.targetSelector.addGoal(2, new FirstCrusadeNearestEnemyTargetGoal(this));
                 this.getX(),
                 this.getY(),
                 this.getZ(),
-                SoundEvents.BLAZE_SHOOT,
+                com.example.examplemod.FCWeaponSounds.LASGUN_FIRE.get(),
                 SoundSource.HOSTILE,
                 0.55F,
                 1.8F

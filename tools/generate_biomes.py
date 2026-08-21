@@ -41,16 +41,24 @@ UNDERGROUND_DECORATION = [
 ]
 
 
-# Etapas de feature que pertencem a generate_worldgen_features.py, nao a este script.
-# Elas sao PRESERVADAS quando o bioma ja existe em disco.
+# Etapas de feature que pertencem a OUTROS scripts. Elas sao PRESERVADAS quando o bioma ja
+# existe em disco.
+#
+#   1 e 9  -> generate_worldgen_features.py  (lagos e vegetacao)
+#   4      -> generate_fauna_sites.py        (tocas, ninhos, currais da fauna)
 #
 # Isto nao e zelo abstrato: este script escrevia a lista de features inteira, entao rodar
 # os dois na ordem errada (ou rodar so este) apagava silenciosamente toda a vegetacao dos
 # biomas. O sintoma e cruel — o mundo gera, os biomas aparecem, as cores estao certas, o
 # solo esta certo, e simplesmente nao existe uma planta em lugar nenhum. Custou um mundo de
-# teste inteiro para achar. Agora os dois scripts podem rodar em qualquer ordem.
+# teste inteiro para achar. Agora os tres scripts podem rodar em qualquer ordem.
+#
+# A etapa 4 entrou nesta lista junto com a fauna, pelo mesmo motivo e antes de custar a
+# mesma tarde: sem ela, rodar este script depois de generate_fauna_sites.py apagaria os
+# treze sitios e o sintoma seria "os bichos aparecem mas nunca ha uma toca".
 FOREIGN_STAGES = {
     1: "lakes",
+    4: "surface_structures",
     9: "vegetal_decoration",
 }
 
@@ -178,48 +186,116 @@ SQUIG = "firstcrusade:squig"
 SUMP_RAT = "firstcrusade:sump_rat"
 AMBULL = "firstcrusade:ambull"
 
+# ---------------------------------------------------------------- fauna do Blockbench
+#
+# As nove especies novas. A mesma regra de sempre: cada uma pertence a UM ambiente e a
+# densidade dela ali e maior do que em qualquer outro. Sem isso nao existe "a tundra" nem
+# "a selva" — existe fauna espalhada, que e a coisa que o briefing pede explicitamente
+# para evitar.
+#
+# A raridade vem toda do PESO, e a leitura da tabela e a seguinte:
+#
+#   8-10   comum       (Grox no pasto, Squig em territorio Ork)
+#   4-6    incomum     (lobo, helamite, knarloc, cyber-mastiff)
+#   2-3    raro        (Cudbear, Duneskuttler, Duskhorn, Constrictor)
+#   1      muito raro  (Ambull)
+#   -      apex        Barking Toad e Catachan Devil NAO tem spawn natural nenhum.
+#
+# Os dois apex sao a decisao que mais importa aqui: eles existem SO nas estruturas deles
+# (site_barking_toad_clearing, site_catachan_devil_nest, em generate_fauna_sites.py). Peso
+# de spawn natural, por menor que fosse, produziria Catachan Devils aleatorios pela selva —
+# e um apex que aparece sem o ninho dele perde a unica coisa que o torna um evento.
+FENRISIAN_WOLF = "firstcrusade:fenrisian_wolf"
+DUNESKUTTLER = "firstcrusade:arthromite_duneskuttler"
+DUSTBACK_HELAMITE = "firstcrusade:dustback_helamite"
+CTHELLEAN_CUDBEAR = "firstcrusade:cthellean_cudbear"
+DUSKHORN = "firstcrusade:duskhorn"
+KNARLOC = "firstcrusade:knarloc"
+CONSTRICTOR = "firstcrusade:greater_malkavan_constrictor"
+
 
 # ---------------------------------------------------------------------- os biomas
 
 BIOMES = {
     # A mata escura padrao: verde apagado, humido, a maior parte do mundo.
-    "dark_wilds": biome(0.6, 0.7, 0x4C7A3A, 0x3F6B32, 0x3F5E7A, 0xA8B4C0, 0x7CA8D8),
+    #
+    # E a savana/floresta aberta do mod, entao e onde o Knarloc Kroot cabe. O Cudbear entra em
+    # peso baixo: a floresta e o territorio dele, mas um urso territorial em cada clareira nao e
+    # um territorio, e uma populacao.
+    "dark_wilds": biome(0.6, 0.7, 0x4C7A3A, 0x3F6B32, 0x3F5E7A, 0xA8B4C0, 0x7CA8D8,
+                        fauna=[spawn(KNARLOC, 5, 1, 3),
+                               spawn(CTHELLEAN_CUDBEAR, 2, 1, 1),
+                               spawn(DUSKHORN, 2, 2, 3)],
+                        creature_probability=0.08),
 
     # Deserto de cinzas: grama cinza de verdade, ceu lavado, sem chuva.
+    #
+    # O bioma mais cheio de fauna do mod agora, e faz sentido: Ash Wastes e onde o Duneskuttler
+    # emboca e onde os nomades passam com os Helamites. O Ambull entra com peso 1, o mesmo do
+    # morro — infestacao, nao populacao.
     "ash_waste": biome(1.4, 0.0, 0x8A8A82, 0x77776E, 0x50565C, 0xB8B4AC, 0x9FAAB4,
                        fauna=[spawn(ASH_STRIDER, 6, 1, 3),
-                              spawn(SQUIG, 5, 1, 3)],
+                              spawn(SQUIG, 5, 1, 3),
+                              spawn(DUNESKUTTLER, 3, 1, 3),
+                              spawn(DUSTBACK_HELAMITE, 4, 1, 4),
+                              spawn(AMBULL, 1, 1, 1)],
                        creature_probability=0.07),
 
     # Mundo-morte: quente, encharcado, verde agressivo.
-    "death_jungle": biome(1.1, 1.0, 0x4E9440, 0x3E8235, 0x2E6B5A, 0x93B48A, 0x6FB0D4),
+    #
+    # Catachan. A serpente vive aqui e o Cudbear aparece na versao alienigena da floresta. Os
+    # dois apex (Barking Toad e Catachan Devil) NAO estao nesta lista de proposito: eles so
+    # existem nas estruturas deles.
+    "death_jungle": biome(1.1, 1.0, 0x4E9440, 0x3E8235, 0x2E6B5A, 0x93B48A, 0x6FB0D4,
+                          fauna=[spawn(CONSTRICTOR, 2, 1, 1),
+                                 spawn(CTHELLEAN_CUDBEAR, 2, 1, 1)],
+                          creature_probability=0.05),
 
     # Estepe palida: seca e aberta, o "entre" dos outros tres. E o pasto do mod — o unico bioma
     # com capim alto em campo aberto, entao e onde o Grox vive de verdade.
+    # O Duskhorn entra aqui com o peso mais alto que ele tem em qualquer bioma: a planicie
+    # alienigena e o habitat dele, e a manada atravessando campo aberto e a imagem que o
+    # briefing descreve. Grupos de 2 a 5, nunca solitario por spawn natural.
     "pale_steppe": biome(0.9, 0.2, 0x7E8C55, 0x6E7C48, 0x44607A, 0xC0BFA8, 0x8FB6DC,
                          fauna=[spawn(GROX, 8, 2, 4),
-                                spawn(CYBER_MASTIFF, 3, 1, 2)],
+                                spawn(CYBER_MASTIFF, 3, 1, 2),
+                                spawn(DUSKHORN, 3, 2, 5),
+                                spawn(KNARLOC, 2, 1, 2)],
                          creature_probability=CREATURE_PROBABILITY_DEFAULT),
 
     # ------------------------------------------------------------------ fase C
     #
     # Ferrofuste: fria, umida e azulada. A folhagem puxa para o azul-verde de proposito —
     # e o que separa esta mata da dark_wilds de longe, antes de dar para ver a arvore.
-    "ironwood_forest": biome(0.35, 0.8, 0x3E6A56, 0x33604E, 0x37536B, 0x8C9AA4, 0x6C90B4),
+    # Fria e umida: e a taiga do mod, e por isso e onde a matilha de Fenris entra. Peso 4 com
+    # grupo de 2 a 4 — uma matilha e um encontro incomum, nao um habitante da floresta.
+    "ironwood_forest": biome(0.35, 0.8, 0x3E6A56, 0x33604E, 0x37536B, 0x8C9AA4, 0x6C90B4,
+                             fauna=[spawn(FENRISIAN_WOLF, 4, 2, 4),
+                                    spawn(CTHELLEAN_CUDBEAR, 2, 1, 1)],
+                             creature_probability=0.06),
 
     # Pantano de sump: agua preta, ar parado. O fog escuro e baixo faz a visibilidade
     # cair sem custar uma unica particula.
+    # A serpente aqui e no death_jungle, com o mesmo peso: o pantano e a segunda casa dela, e
+    # nao a principal, mas as duas leem como "vegetacao densa e agua parada".
     "sump_marsh": biome(0.8, 0.9, 0x5E6B3A, 0x4F5C32, 0x21281F, 0x59604A, 0x6A8090,
-                        fauna=[spawn(SUMP_RAT, 10, 2, 4)],
+                        fauna=[spawn(SUMP_RAT, 10, 2, 4),
+                               spawn(CONSTRICTOR, 2, 1, 1)],
                         creature_probability=0.12),
 
     # Tundra ossuaria: tem precipitacao e temperatura abaixo de 0.15, que e o par que
     # o freeze_top_layer exige para cobrir de neve e congelar agua parada.
-    "ossuary_tundra": biome(0.0, 0.5, 0x8A9686, 0x76826F, 0x3D5A72, 0xC8D2D8, 0x9CBAD4),
+    # Neve e frio: o bioma de Fenris do mod, e onde o lobo tem o peso mais alto. E a unica
+    # criatura da tundra — um lugar onde so vive uma coisa e um lugar que se lembra.
+    "ossuary_tundra": biome(0.0, 0.5, 0x8A9686, 0x76826F, 0x3D5A72, 0xC8D2D8, 0x9CBAD4,
+                            fauna=[spawn(FENRISIAN_WOLF, 6, 2, 5)],
+                            creature_probability=0.07),
 
     # Ermo de sal: quente, sem chuva nenhuma, tudo lavado. Grama palida quase branca.
     "salt_waste": biome(1.6, 0.0, 0xB4B096, 0xA39F88, 0x6E7C74, 0xD8D4C4, 0xB0BCC0,
-                        fauna=[spawn(ASH_STRIDER, 6, 1, 2)],
+                        fauna=[spawn(ASH_STRIDER, 6, 1, 2),
+                               spawn(DUNESKUTTLER, 2, 1, 2),
+                               spawn(DUSTBACK_HELAMITE, 3, 1, 3)],
                         creature_probability=0.03),
 
     # ------------------------------------------------------- planetas (fase de planetas)

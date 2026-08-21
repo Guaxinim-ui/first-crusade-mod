@@ -109,7 +109,21 @@ public class FCEntityLootProvider extends EntityLootSubProvider {
         // suposto ser — matar um é uma decisão cara.
         add(FCAnimals.AMBULL.get(), LootTable.lootTable()
                 .withPool(drop(FCAnimals.CHITIN_PLATE.get(), 4.0F, 7.0F))
-                .withPool(drop(FCAnimals.SCAVENGED_MEAT.get(), 2.0F, 4.0F)));
+                .withPool(drop(FCAnimals.SCAVENGED_MEAT.get(), 2.0F, 4.0F))
+                // O Ambull ganhou trofeu junto com a fauna nova: e uma das cinco especies que o
+                // briefing lista, e a unica delas que ja existia.
+                .withPool(LootPool.lootPool()
+                        .setRolls(ConstantValue.exactly(1.0F))
+                        .add(LootItem.lootTableItem(
+                                com.example.examplemod.fauna.FirstCrusadeFaunaRegistry
+                                        .TROPHY_AMBULL.get()))
+                        .when(LootItemRandomChanceWithLootingCondition
+                                .randomChanceAndLootingBoost(0.25F, 0.08F))));
+
+        // As nove especies da integracao dos modelos do Blockbench. As tabelas delas vivem em
+        // FaunaLootTables — quinze especies dentro deste arquivo o tornariam ilegivel, e "o que cai
+        // de um Duskhorn" e decisao de design, nao de datagen.
+        com.example.examplemod.fauna.FaunaLootTables.register(this::add);
     }
 
     /** A calf has no horn yet; the drop should say so rather than let one appear from nowhere. */
@@ -154,6 +168,15 @@ public class FCEntityLootProvider extends EntityLootSubProvider {
                 FCAnimals.SQUIG.get(),
                 FCAnimals.SUMP_RAT.get(),
                 FCAnimals.ASH_STRIDER.get(),
-                FCAnimals.AMBULL.get());
+                FCAnimals.AMBULL.get(),
+                com.example.examplemod.fauna.FirstCrusadeFaunaRegistry.FENRISIAN_WOLF.get(),
+                com.example.examplemod.fauna.FirstCrusadeFaunaRegistry.DUNESKUTTLER.get(),
+                com.example.examplemod.fauna.FirstCrusadeFaunaRegistry.DUSTBACK_HELAMITE.get(),
+                com.example.examplemod.fauna.FirstCrusadeFaunaRegistry.CTHELLEAN_CUDBEAR.get(),
+                com.example.examplemod.fauna.FirstCrusadeFaunaRegistry.DUSKHORN.get(),
+                com.example.examplemod.fauna.FirstCrusadeFaunaRegistry.KNARLOC.get(),
+                com.example.examplemod.fauna.FirstCrusadeFaunaRegistry.CONSTRICTOR.get(),
+                com.example.examplemod.fauna.FirstCrusadeFaunaRegistry.BARKING_TOAD.get(),
+                com.example.examplemod.fauna.FirstCrusadeFaunaRegistry.CATACHAN_DEVIL.get());
     }
 }

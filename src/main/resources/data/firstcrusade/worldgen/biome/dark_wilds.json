@@ -12,7 +12,26 @@
   },
   "spawners": {
     "monster": [],
-    "creature": [],
+    "creature": [
+      {
+        "type": "firstcrusade:knarloc",
+        "weight": 5,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "firstcrusade:cthellean_cudbear",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 1
+      },
+      {
+        "type": "firstcrusade:duskhorn",
+        "weight": 2,
+        "minCount": 2,
+        "maxCount": 3
+      }
+    ],
     "ambient": [],
     "axolotls": [],
     "underground_water_creature": [],
@@ -33,7 +52,11 @@
     [],
     [],
     [],
-    [],
+    [
+      "firstcrusade:site_cudbear_den",
+      "firstcrusade:site_duskhorn_herd",
+      "firstcrusade:site_knarloc_pen"
+    ],
     [],
     [
       "minecraft:ore_dirt",
@@ -86,5 +109,6 @@
     [
       "minecraft:freeze_top_layer"
     ]
-  ]
+  ],
+  "creature_spawn_probability": 0.08
 }

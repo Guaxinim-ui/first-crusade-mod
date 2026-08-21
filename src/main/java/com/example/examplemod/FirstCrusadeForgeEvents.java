@@ -100,6 +100,100 @@ public final class FirstCrusadeForgeEvents {
         if (killer instanceof SpaceMarineEntity marine && marine.isNeophyte()) {
             marine.markBattleProven();
         }
+
+        reportKillToCampaign(event.getEntity());
+
+        // A dead soldier is not a suppressed one. Clearing here keeps the map from holding entries
+        // for entity ids that will be reused by something else.
+        com.example.examplemod.ai.combat.FCSuppression.clear(event.getEntity());
+    }
+
+    /**
+     * Incoming fire suppresses.
+     *
+     * <p>The hook is a hit landing rather than a projectile flying past, and that is a deliberate
+     * trade. Detecting near misses properly means asking every projectile, every tick, who is close
+     * to it — hundreds of box queries a second in a firefight, to model something a landed hit
+     * already implies. A shot that connects means the enemy has the range, and
+     * {@link com.example.examplemod.ai.combat.FCSuppression#applyHit} spreads the shock to the
+     * victim's neighbours, which is the "shots going past you" half.
+     *
+     * <p>Only ranged damage counts. Being hit with a chainsword is terrifying, but it is not
+     * suppression — a unit in melee that took cover instead of fighting would simply be killed while
+     * walking away.
+     */
+    @SubscribeEvent
+    public static void onLivingHurt(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+        if (event.getEntity().level().isClientSide) {
+            return;
+        }
+
+        if (!event.getSource().is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)) {
+            return;
+        }
+
+        com.example.examplemod.ai.combat.FCSuppression.applyHit(event.getEntity());
+    }
+
+    /**
+     * Tells the campaign about a dead enemy, for the orders that count them.
+     *
+     * <p>This handler fires for every death of every mob of every mod on the server, so the order of
+     * the tests is the whole design. The two {@code instanceof} chains below settle it for a vanilla
+     * cow without touching config, SavedData or the world; only an actual greenskin dying reaches
+     * {@link com.example.examplemod.campaign.CampaignIntegration}, which then declines in one lookup
+     * against a set that is empty unless a kill-driven order is really standing.
+     */
+    private static void reportKillToCampaign(net.minecraft.world.entity.LivingEntity dead) {
+        if (!(dead.level() instanceof net.minecraft.server.level.ServerLevel level)) {
+            return;
+        }
+
+        if (FirstCrusadeFactionManager.getFaction(dead) != FirstCrusadeFaction.ORKS) {
+            return;
+        }
+
+        // A "leader" is the thing an ASSASSINATION order is about: the Warboss above all, and the
+        // Nobz and Meganobz that run a camp in his absence.
+        boolean leader = dead instanceof WarbossEntity
+                || dead instanceof OrkNobEntity
+                || dead instanceof MeganobEntity;
+
+        com.example.examplemod.campaign.CampaignIntegration.onEnemyKilled(level, leader);
+    }
+
+    /**
+     * Clears the campaign's runtime watch sets when a server stops.
+     *
+     * <p>They are static, and a single-player client starts a second server in the same JVM every
+     * time a world is opened. Without this, orders from the last world would still be watched in the
+     * next one — counting kills toward operations that no longer exist.
+     */
+    @SubscribeEvent
+    public static void onServerStopping(net.minecraftforge.event.server.ServerStoppingEvent event) {
+        com.example.examplemod.campaign.operation.OperationManager.clearWatch();
+        com.example.examplemod.ai.combat.FCSuppression.reset();
+    }
+
+    /**
+     * Drops suppression entries that have decayed to nothing.
+     *
+     * <p>Every 600 ticks, because the map only ever holds units that were shot at in the last dozen
+     * seconds — a sweep is a walk over a handful of entries, and outside a battle over none at all.
+     * Suppression itself needs no tick: it decays from a timestamp when somebody reads it.
+     */
+    @SubscribeEvent
+    public static void onServerTickSuppression(
+            net.minecraftforge.event.TickEvent.ServerTickEvent event) {
+        if (event.phase != net.minecraftforge.event.TickEvent.Phase.END) {
+            return;
+        }
+
+        net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
+
+        if (overworld.getGameTime() % 600L == 0L) {
+            com.example.examplemod.ai.combat.FCSuppression.sweep(overworld.getGameTime());
+        }
     }
 
     // Ork growth is hostile ground for the Imperium: any Imperial unit standing in it is slowed and

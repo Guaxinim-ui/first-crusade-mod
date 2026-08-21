@@ -73,7 +73,7 @@ public class AgriMilitiaEntity extends AbstractImperialTroopEntity implements Ra
                 this.getX(),
                 this.getY(),
                 this.getZ(),
-                SoundEvents.BLAZE_SHOOT,
+                com.example.examplemod.FCWeaponSounds.LASGUN_FIRE.get(),
                 SoundSource.HOSTILE,
                 0.5F,
                 1.9F

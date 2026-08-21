@@ -103,6 +103,15 @@ public class ExampleMod {
     // Registrado depois de FCFruits porque o Grox se alimenta da vagem da Fase D.
     com.example.examplemod.animal.FCAnimals.register(modEventBus);
 
+    // A fauna dos modelos do Blockbench: as nove especies novas, os drops delas e os trofeus.
+    // Registro proprio ao lado de FCAnimals, e nao dentro dele — ver o javadoc da classe para o
+    // porque as seis da Fase E nao foram movidas.
+    com.example.examplemod.fauna.FirstCrusadeFaunaRegistry.register(modEventBus);
+
+    // As estruturas da fauna: uma Feature so, treze sitios em datapack. Roda na geracao do chunk e
+    // nunca mais — e por isso que nao existe manager nenhum verificando se ja gerou.
+    com.example.examplemod.fauna.world.FaunaStructureRegistry.register(modEventBus);
+
     net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
             net.minecraftforge.fml.config.ModConfig.Type.SERVER, FirstCrusadeServerConfig.SPEC);
 

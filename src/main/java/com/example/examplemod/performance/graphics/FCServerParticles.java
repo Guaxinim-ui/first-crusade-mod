@@ -86,7 +86,17 @@ public final class FCServerParticles {
         /** Smoke from detonations, stomps and missile trails. */
         SMOKE,
         /** Spent casings and impact fragments. One per shot fired. */
-        DEBRIS;
+        DEBRIS,
+        /**
+         * Wildlife abilities: dust, sand, chitin, toxic clouds.
+         *
+         * <p>Separate from the three above because it scales with something else entirely. Combat
+         * particles grow with the size of a battle; these grow with how close one player is standing
+         * to one animal, and there is never more than a handful of them at once. Sharing a channel
+         * would mean a server that turned particles down for a war also thinned the single Ambull
+         * a player crossed a desert to find.
+         */
+        FAUNA;
 
         /** This channel's own percentage, before the master is applied. */
         public int density() {
@@ -95,6 +105,7 @@ public final class FCServerParticles {
                 case EXPLOSION -> FirstCrusadePerformanceConfig.explosionParticleDensity();
                 case SMOKE -> FirstCrusadePerformanceConfig.smokeParticleDensity();
                 case DEBRIS -> FirstCrusadePerformanceConfig.debrisParticleDensity();
+                case FAUNA -> FirstCrusadePerformanceConfig.faunaParticleDensity();
             };
         }
     }

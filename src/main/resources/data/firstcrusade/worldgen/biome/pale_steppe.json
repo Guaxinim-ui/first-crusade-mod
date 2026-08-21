@@ -24,6 +24,18 @@
         "weight": 3,
         "minCount": 1,
         "maxCount": 2
+      },
+      {
+        "type": "firstcrusade:duskhorn",
+        "weight": 3,
+        "minCount": 2,
+        "maxCount": 5
+      },
+      {
+        "type": "firstcrusade:knarloc",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 2
       }
     ],
     "ambient": [],
@@ -46,7 +58,12 @@
     [],
     [],
     [],
-    [],
+    [
+      "firstcrusade:site_duskhorn_herd",
+      "firstcrusade:site_grox_ranch",
+      "firstcrusade:site_imperial_kennel",
+      "firstcrusade:site_knarloc_pen"
+    ],
     [],
     [
       "minecraft:ore_dirt",

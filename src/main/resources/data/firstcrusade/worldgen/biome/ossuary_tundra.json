@@ -12,7 +12,14 @@
   },
   "spawners": {
     "monster": [],
-    "creature": [],
+    "creature": [
+      {
+        "type": "firstcrusade:fenrisian_wolf",
+        "weight": 6,
+        "minCount": 2,
+        "maxCount": 5
+      }
+    ],
     "ambient": [],
     "axolotls": [],
     "underground_water_creature": [],
@@ -33,7 +40,9 @@
     [],
     [],
     [],
-    [],
+    [
+      "firstcrusade:site_fenrisian_wolf_den"
+    ],
     [],
     [
       "minecraft:ore_dirt",
@@ -84,5 +93,6 @@
     [
       "minecraft:freeze_top_layer"
     ]
-  ]
+  ],
+  "creature_spawn_probability": 0.07
 }

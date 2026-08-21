@@ -43,6 +43,9 @@ public class FCLeaderGoal extends Goal {
     /** How far a follower may be from its slot before the squad counts as scattered. */
     private static final double SCATTERED_DISTANCE = 12.0D;
 
+    /** How far a broken squad tries to get from whatever broke it. */
+    private static final double FALLBACK_DISTANCE = 24.0D;
+
     private final PathfinderMob leader;
     private final FCSquad squad;
     private final int maxFollowers;
@@ -60,6 +63,9 @@ public class FCLeaderGoal extends Goal {
 
     /** Last enemy head-count, reused between counts. */
     private int cachedEnemyCount;
+
+    /** True while the squad is falling back because it broke, not because it was told to. */
+    private boolean brokeOnItsOwn;
 
     public FCLeaderGoal(PathfinderMob leader, FCSquad squad, int maxFollowers) {
         this.leader = leader;
@@ -123,6 +129,8 @@ public class FCLeaderGoal extends Goal {
 
         this.squad.setFormation(this.squad.chooseFormation(inCombat, false, this.cachedEnemyCount));
 
+        reconsiderNerve(target);
+
         // A countdown rather than a modulo of the world tick. The obvious
         // `(tickCount + getId()) % INTERVAL == 0` form is broken here: because this goal declares
         // requiresUpdateEveryTick() == false, vanilla only calls tick() on every other server tick,
@@ -137,6 +145,59 @@ public class FCLeaderGoal extends Goal {
         this.recruitCountdown = this.squad.intervalFor(
                 FirstCrusadePerformanceConfig.squadRecruitInterval());
         recruit();
+    }
+
+    /**
+     * Decides whether the squad has had enough, and un-decides it when the fire lets up.
+     *
+     * <p>This is the consumer {@link com.example.examplemod.unit.profile.FCCombatProfile#shouldRetreat}
+     * never had. The profile has carried courage and a retreat threshold since it was written, and
+     * nothing ever asked it anything — troops fought to the last man regardless of what their own
+     * numbers said.
+     *
+     * <p><b>The leader decides for everyone</b>, which is the point of having one: the sergeant's
+     * nerve is the squad's nerve. It also means the check runs once per squad on an already
+     * throttled tick, rather than once per soldier — the brief's "do not run heavy checks every
+     * tick" applied to the obvious place it would otherwise happen.
+     *
+     * <p>Only a squad that broke on its own is un-broken here. An order issued from the strategic
+     * layer — a War Table withdrawal — must not be cancelled because the shooting stopped, so a
+     * RETREAT this method did not set is left exactly where it is.
+     */
+    private void reconsiderNerve(LivingEntity target) {
+        boolean shaken = com.example.examplemod.ai.combat.FCSuppression.breaksNerve(
+                this.leader, this.leader.getHealth() / Math.max(1.0F, this.leader.getMaxHealth()));
+
+        if (shaken && this.squad.getOrder() != FCSquadOrder.RETREAT) {
+            this.brokeOnItsOwn = true;
+            this.squad.setOrder(FCSquadOrder.RETREAT, fallbackPoint(target));
+            return;
+        }
+
+        if (!shaken && this.brokeOnItsOwn && this.squad.getOrder() == FCSquadOrder.RETREAT) {
+            this.brokeOnItsOwn = false;
+            this.squad.setOrder(FCSquadOrder.FOLLOW, null);
+        }
+    }
+
+    /**
+     * Somewhere to fall back to: straight away from the threat.
+     *
+     * <p>Not a pathfound safe position — that is a search, and a broken squad does not do research.
+     * A point directly away is what a frightened soldier picks, and if it is unreachable the
+     * navigation simply gets as close as it can, which is also what a frightened soldier does.
+     */
+    private net.minecraft.core.BlockPos fallbackPoint(LivingEntity target) {
+        if (target == null) {
+            return this.leader.blockPosition();
+        }
+
+        net.minecraft.world.phys.Vec3 away = this.leader.position()
+                .subtract(target.position())
+                .normalize()
+                .scale(FALLBACK_DISTANCE);
+
+        return net.minecraft.core.BlockPos.containing(this.leader.position().add(away));
     }
 
     /**

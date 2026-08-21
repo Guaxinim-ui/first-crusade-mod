@@ -2,6 +2,7 @@ package com.example.examplemod;
 
 import com.example.examplemod.client.render.GuardsmanRiflemanRenderer;
 import com.example.examplemod.client.render.GuardsmanSergeantRenderer;
+import com.example.examplemod.fauna.FirstCrusadeFaunaRegistry;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
@@ -100,6 +101,26 @@ public final class FirstCrusadeClientEvents {
                 "ash_strider", 0.5F);
         registerAnimal(event, com.example.examplemod.animal.FCAnimals.AMBULL.get(),
                 "ambull", 0.8F);
+
+        // A fauna dos modelos do Blockbench. Renderer proprio (FaunaGeoRenderer) porque duas
+        // especies tem estado visual: enterrado nao desenha, camuflado desenha mais escuro. O nome
+        // continua sendo o unico parametro — e o mesmo nome dos tres arquivos de asset.
+        registerFauna(event, FirstCrusadeFaunaRegistry.FENRISIAN_WOLF.get(),
+                "fenrisian_wolf", 0.6F);
+        registerFauna(event, FirstCrusadeFaunaRegistry.DUNESKUTTLER.get(),
+                "arthromite_duneskuttler", 0.7F);
+        registerFauna(event, FirstCrusadeFaunaRegistry.DUSTBACK_HELAMITE.get(),
+                "dustback_helamite", 0.7F);
+        registerFauna(event, FirstCrusadeFaunaRegistry.CTHELLEAN_CUDBEAR.get(),
+                "cthellean_cudbear", 0.7F);
+        registerFauna(event, FirstCrusadeFaunaRegistry.DUSKHORN.get(), "duskhorn", 1.0F);
+        registerFauna(event, FirstCrusadeFaunaRegistry.KNARLOC.get(), "knarloc", 0.7F);
+        registerFauna(event, FirstCrusadeFaunaRegistry.CONSTRICTOR.get(),
+                "greater_malkavan_constrictor", 0.7F);
+        registerFauna(event, FirstCrusadeFaunaRegistry.BARKING_TOAD.get(),
+                "catachan_barking_toad", 0.6F);
+        registerFauna(event, FirstCrusadeFaunaRegistry.CATACHAN_DEVIL.get(),
+                "catachan_devil", 1.0F);
     }
 
     private static <T extends net.minecraft.world.entity.Mob
@@ -107,5 +128,12 @@ public final class FirstCrusadeClientEvents {
             EntityRenderersEvent.RegisterRenderers event,
             net.minecraft.world.entity.EntityType<T> type, String name, float shadow) {
         event.registerEntityRenderer(type, context -> new FCGeoRenderer<>(context, name, shadow));
+    }
+
+    private static <T extends com.example.examplemod.fauna.FaunaEntity> void registerFauna(
+            EntityRenderersEvent.RegisterRenderers event,
+            net.minecraft.world.entity.EntityType<T> type, String name, float shadow) {
+        event.registerEntityRenderer(type, context ->
+                new com.example.examplemod.fauna.client.FaunaGeoRenderer<>(context, name, shadow));
     }
 }

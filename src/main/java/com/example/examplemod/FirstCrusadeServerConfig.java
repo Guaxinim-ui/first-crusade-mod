@@ -42,6 +42,13 @@ public final class FirstCrusadeServerConfig {
             .comment("Seed starting settlements (Imperial cities + Ork camps) the first time a player joins a world.")
             .define("seedStartingSettlements", true);
 
+    // The campaign layer's own section, appended before the spec is sealed. It lives in this file
+    // rather than one of its own because it is simulation: fronts, sector capture and raid rates are
+    // server decisions, and they belong beside the other server decisions.
+    static {
+        com.example.examplemod.campaign.CampaignConfig.build(BUILDER);
+    }
+
     public static final ForgeConfigSpec SPEC = BUILDER.build();
 
     private FirstCrusadeServerConfig() {

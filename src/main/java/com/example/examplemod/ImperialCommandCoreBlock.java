@@ -53,7 +53,7 @@ public class ImperialCommandCoreBlock extends BaseEntityBlock {
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock()) && level instanceof ServerLevel serverLevel) {
-            WorldWarMapData.get(serverLevel).removeCity(pos);
+            WorldWarMapData.get(serverLevel).removeCity(serverLevel, pos);
         }
 
         super.onRemove(state, level, pos, newState, movedByPiston);

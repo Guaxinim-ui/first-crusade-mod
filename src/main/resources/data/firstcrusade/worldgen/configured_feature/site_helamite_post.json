@@ -1,0 +1,25 @@
+{
+  "type": "firstcrusade:fauna_site",
+  "config": {
+    "shape": "camp",
+    "min_count": 2,
+    "max_count": 5,
+    "radius": 6,
+    "prop_tries": 24,
+    "props": [
+      {
+        "Name": "firstcrusade:ash_layer"
+      },
+      {
+        "Name": "firstcrusade:scattered_twigs"
+      }
+    ],
+    "mob": "firstcrusade:dustback_helamite",
+    "floor": {
+      "Name": "minecraft:coarse_dirt"
+    },
+    "frame": {
+      "Name": "minecraft:brown_wool"
+    }
+  }
+}

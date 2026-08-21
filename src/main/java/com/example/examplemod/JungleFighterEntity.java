@@ -73,7 +73,7 @@ public class JungleFighterEntity extends AbstractImperialTroopEntity implements 
                 this.getX(),
                 this.getY(),
                 this.getZ(),
-                SoundEvents.BLAZE_SHOOT,
+                com.example.examplemod.FCWeaponSounds.LASGUN_FIRE.get(),
                 SoundSource.HOSTILE,
                 0.55F,
                 1.6F

@@ -182,9 +182,9 @@ public final class FloraRegionResolver {
 
         // The settlement count in this mod is measured in tens, so a linear scan is cheaper than
         // any index would be — and it happens once per chunk task, not once per plant.
-        for (long packed : warMap.getCities()) {
+        for (long packed : warMap.getCities(level)) {
             BlockPos pos = BlockPos.of(packed);
-            WorldWarMapData.CityInfo info = warMap.getCityInfo(packed);
+            WorldWarMapData.CityInfo info = warMap.getCityInfo(level.dimension(), packed);
 
             int settlementRadius = settlementRadius(info);
             int territoryRadius = settlementRadius * TERRITORY_MULTIPLIER + TERRITORY_BONUS;
@@ -209,9 +209,9 @@ public final class FloraRegionResolver {
 
         float orkDensity = (float) (double) FloraConfig.ORK_FUNGUS_FREQUENCY.get();
 
-        for (long packed : warMap.getCamps()) {
+        for (long packed : warMap.getCamps(level)) {
             BlockPos pos = BlockPos.of(packed);
-            WorldWarMapData.CampInfo info = warMap.getCampInfo(packed);
+            WorldWarMapData.CampInfo info = warMap.getCampInfo(level.dimension(), packed);
 
             // The camp's own reach is the sculk halo it has actually grown, so the fungus follows
             // the corruption outward instead of appearing at some invented radius.
@@ -506,6 +506,6 @@ public final class FloraRegionResolver {
     public static int countTerritorialSources(ServerLevel level) {
         WorldWarMapData warMap = WorldWarMapData.get(level);
 
-        return warMap.getCities().size() + warMap.getCamps().size();
+        return warMap.getCities(level).size() + warMap.getCamps(level).size();
     }
 }

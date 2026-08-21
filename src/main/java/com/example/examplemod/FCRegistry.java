@@ -198,6 +198,21 @@ public static final RegistryObject<Item> PLANETARY_NAVIGATION_TERMINAL_ITEM =
         ITEMS.register("planetary_navigation_terminal",
                 () -> new BlockItem(PLANETARY_NAVIGATION_TERMINAL.get(), new Item.Properties()));
 
+// Mesa de Guerra — o mapa da Cruzada inteira. Fica ao lado do Strategium: o banco de pesquisa
+// continua sendo o que o Imperium CONSTROI, e esta e a guerra que ele LUTA. Ver WarTableBlock.
+public static final RegistryObject<Block> WAR_TABLE =
+        BLOCKS.register("war_table",
+                () -> new com.example.examplemod.campaign.wartable.WarTableBlock(
+                        BlockBehaviour.Properties.of()
+                                .strength(4.0F, 900.0F)
+                                .requiresCorrectToolForDrops()
+                                .sound(SoundType.METAL)
+                                .lightLevel(state -> 6)));
+
+public static final RegistryObject<Item> WAR_TABLE_ITEM =
+        ITEMS.register("war_table",
+                () -> new BlockItem(WAR_TABLE.get(), new Item.Properties()));
+
 public static final RegistryObject<MenuType<com.example.examplemod.planet.PlanetNavigationMenu>>
         PLANET_NAVIGATION_MENU = MENU_TYPES.register("planet_navigation_menu",
                 () -> IForgeMenuType.create((windowId, inventory, data) ->
@@ -1023,6 +1038,7 @@ public static final RegistryObject<Item> ROBOUTE_GUILLIMAN_SPAWN_EGG =
                         output.accept(STRATEGIUM_ITEM.get());
                         output.accept(SPACEPORT_ITEM.get());
                         output.accept(PLANETARY_NAVIGATION_TERMINAL_ITEM.get());
+                        output.accept(WAR_TABLE_ITEM.get());
 
                         output.accept(CRUSADIUM_INGOT.get());
                         output.accept(CRUSADIUM_PLATE.get());
@@ -1084,6 +1100,10 @@ output.accept(CITY_COMMANDER_SPAWN_EGG.get());
 
                         // Fase E: a fauna registra-se em .animal, e so a vitrine passa por aqui.
                         com.example.examplemod.animal.FCAnimals.addToCreativeTab(output);
+
+                        // A fauna dos modelos do Blockbench, no mesmo padrao.
+                        com.example.examplemod.fauna.FirstCrusadeFaunaRegistry
+                                .addToCreativeTab(output);
                     })
                     .build());
 

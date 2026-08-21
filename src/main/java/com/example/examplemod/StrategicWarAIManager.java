@@ -52,6 +52,18 @@ public final class StrategicWarAIManager {
         StrategicWarAIData data = StrategicWarAIData.get(level);
         WorldWarMapData warMap = WorldWarMapData.get(level);
 
+        // Drop map entries whose block is provably gone before anything reads the map. This is what
+        // clears out a pre-campaign save, whose settlements were all read into the default planet's
+        // bucket whether they were on it or not. Only loaded chunks are examined, so it never forces
+        // terrain to load and never deletes a real city just because nobody is standing near it.
+        int pruned = warMap.pruneOrphans(level);
+
+        if (pruned > 0) {
+            com.example.examplemod.campaign.CampaignLog.war(
+                    "{} war map: dropped {} settlement record(s) with nothing standing on them",
+                    level.dimension().location(), pruned);
+        }
+
         data.syncWithWorldMap(level, warMap);
 
         tickImperialSettlements(level, data);
@@ -119,7 +131,7 @@ public final class StrategicWarAIManager {
     ) {
         record.generateOrkIncome(level);
 
-        BlockPos nearestCity = findNearestCity(warMap, campPos);
+        BlockPos nearestCity = findNearestCity(warMap, level, campPos);
 
         if (nearestCity == null) {
             return;
@@ -145,7 +157,7 @@ public final class StrategicWarAIManager {
     ) {
         int maxExtraCampsNearCity = 2 + tier * 2;
 
-        if (countCampsNear(warMap, nearestCity, 220) >= maxExtraCampsNearCity) {
+        if (countCampsNear(warMap, level, nearestCity, 220) >= maxExtraCampsNearCity) {
             return;
         }
 
@@ -172,7 +184,7 @@ public final class StrategicWarAIManager {
             return;
         }
 
-        WorldWarMapData.get(level).recordCamp(child);
+        WorldWarMapData.get(level).recordCamp(level, child);
         WarDominionManager.shift(level, -6);
 
         StrategicCoreMessageBus.sendToNearestOpenCore(
@@ -293,14 +305,10 @@ public final class StrategicWarAIManager {
     ) {
         List<Long> capturedCities = new ArrayList<>();
 
-        for (Object packedObject : new HashSet<>(warMap.getCities())) {
-            if (!(packedObject instanceof Long packed)) {
-                continue;
-            }
-
+        for (long packed : new HashSet<>(warMap.getCities(level))) {
             BlockPos cityPos = BlockPos.of(packed);
 
-            if (countCampsNear(warMap, cityPos, CAPTURE_CHECK_CAMP_RANGE) <= 0) {
+            if (countCampsNear(warMap, level, cityPos, CAPTURE_CHECK_CAMP_RANGE) <= 0) {
                 continue;
             }
 
@@ -342,7 +350,7 @@ public final class StrategicWarAIManager {
     ) {
         level.setBlock(cityPos, Blocks.AIR.defaultBlockState(), 3);
 
-        warMap.removeCity(cityPos);
+        warMap.removeCity(level, cityPos);
         data.removeImperial(cityPos);
 
         BlockPos campSite = StrategicConstructionPlanner.ground(
@@ -357,7 +365,7 @@ public final class StrategicWarAIManager {
         BlockPos newCamp = OrkCampManager.seedWorldCamp(level, campSite, cityPos);
 
         if (newCamp != null) {
-            warMap.recordCamp(newCamp);
+            warMap.recordCamp(level, newCamp);
         }
 
         // The ground has changed hands. Flag the fallen city's whole territory so the Imperial
@@ -367,6 +375,9 @@ public final class StrategicWarAIManager {
         com.example.examplemod.flora.runtime.FloraTransitionManager.onTerritoryCaptured(level, cityPos, 160);
 
         WarDominionManager.shift(level, -20);
+
+        // The strategic layer hears about it: the nearest sector is shoved toward the Orks.
+        com.example.examplemod.campaign.CampaignIntegration.onCityLost(level, cityPos);
 
         StrategicCoreMessageBus.sendToNearestOpenCore(
         level,
@@ -426,11 +437,7 @@ public final class StrategicWarAIManager {
     ) {
         int threat = 0;
 
-        for (Object packedObject : warMap.getCamps()) {
-            if (!(packedObject instanceof Long packed)) {
-                continue;
-            }
-
+        for (long packed : warMap.getCamps(level)) {
             BlockPos campPos = BlockPos.of(packed);
             double distance = Math.sqrt(campPos.distSqr(cityPos));
 
@@ -457,15 +464,11 @@ public final class StrategicWarAIManager {
         return threat;
     }
 
-    private static BlockPos findNearestCamp(WorldWarMapData warMap, BlockPos from) {
+    private static BlockPos findNearestCamp(WorldWarMapData warMap, ServerLevel level, BlockPos from) {
         BlockPos nearest = null;
         double nearestDistance = Double.MAX_VALUE;
 
-        for (Object packedObject : warMap.getCamps()) {
-            if (!(packedObject instanceof Long packed)) {
-                continue;
-            }
-
+        for (long packed : warMap.getCamps(level)) {
             BlockPos pos = BlockPos.of(packed);
             double distance = pos.distSqr(from);
 
@@ -478,15 +481,18 @@ public final class StrategicWarAIManager {
         return nearest;
     }
 
-    public static BlockPos findNearestCity(WorldWarMapData warMap, BlockPos from) {
+    /**
+     * The nearest Imperial city <b>on this level</b>.
+     *
+     * <p>The level argument is not a convenience. Before the war map was bucketed by dimension this
+     * walked every settlement in the save, so an Ork camp on Ork World could pick a city on Macragge
+     * as its march target and send a war party at coordinates that mean nothing where it stands.
+     */
+    public static BlockPos findNearestCity(WorldWarMapData warMap, ServerLevel level, BlockPos from) {
         BlockPos nearest = null;
         double nearestDistance = Double.MAX_VALUE;
 
-        for (Object packedObject : warMap.getCities()) {
-            if (!(packedObject instanceof Long packed)) {
-                continue;
-            }
-
+        for (long packed : warMap.getCities(level)) {
             BlockPos pos = BlockPos.of(packed);
             double distance = pos.distSqr(from);
 
@@ -499,15 +505,11 @@ public final class StrategicWarAIManager {
         return nearest;
     }
 
-    private static int countCampsNear(WorldWarMapData warMap, BlockPos center, int radius) {
+    private static int countCampsNear(WorldWarMapData warMap, ServerLevel level, BlockPos center, int radius) {
         int count = 0;
         int radiusSqr = radius * radius;
 
-        for (Object packedObject : warMap.getCamps()) {
-            if (!(packedObject instanceof Long packed)) {
-                continue;
-            }
-
+        for (long packed : warMap.getCamps(level)) {
             BlockPos pos = BlockPos.of(packed);
 
             if (pos.distSqr(center) <= radiusSqr) {

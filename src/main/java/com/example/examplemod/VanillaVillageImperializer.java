@@ -83,7 +83,7 @@ public final class VanillaVillageImperializer {
                     buildCentralImperialPlaza(level, corePos);
                     buildVillageWall(level, corePos, wallRadius);
 
-                    WorldWarMapData.get(level).recordCity(corePos);
+                    WorldWarMapData.get(level).recordCity(level, corePos);
                 }
 
                 // Mark processed whether or not a village was here: a fully-loaded cell is fully

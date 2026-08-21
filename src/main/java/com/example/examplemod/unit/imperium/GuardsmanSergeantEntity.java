@@ -275,8 +275,19 @@ public class GuardsmanSergeantEntity extends PathfinderMob
 
         // Squad bookkeeping sits at the top but claims no goal flags, so it runs alongside combat
         // rather than displacing it.
+        // Above the leader's own combat goals: an order the enemy can veto is not an order, and
+        // a squad told to fall back has to be able to break contact. It only engages when the order
+        // points somewhere the leader is not already standing — see FCSquadOrderGoal.
+        this.goalSelector.addGoal(0,
+                new com.example.examplemod.ai.formation.FCSquadOrderGoal(this, getSquad()));
+
         this.goalSelector.addGoal(1, new FCLeaderGoal(this, getSquad(),
                 FirstCrusadePerformanceConfig.squadFollowerCap(getUnitFaction(), PROFILE.maxFollowers())));
+
+        // Above the attack goal: a pinned soldier takes cover instead of shooting. The goal only
+        // runs while suppression is over its threshold, so it hands movement straight back once the
+        // fire lets up — which is what makes a firefight ebb rather than freeze.
+        this.goalSelector.addGoal(1, new com.example.examplemod.ai.combat.FCCoverGoal(this));
 
         this.goalSelector.addGoal(2, new FCRangedAttackGoal<>(this));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
@@ -368,7 +379,7 @@ public class GuardsmanSergeantEntity extends PathfinderMob
         this.level().playSound(
                 null,
                 this.getX(), this.getY(), this.getZ(),
-                SoundEvents.BLAZE_SHOOT,
+                com.example.examplemod.FCWeaponSounds.LASGUN_FIRE.get(),
                 this.getSoundSource(),
                 0.6F,
                 1.9F + this.random.nextFloat() * 0.2F

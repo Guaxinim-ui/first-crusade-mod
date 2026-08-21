@@ -106,6 +106,12 @@ public class OrkNobEntity extends Monster implements FCUnit, FCSquadLeader {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         // Sets no goal flags, so it layers under the melee goal rather than competing with it: a
         // Nob fights normally and the mob organises itself around wherever it ends up.
+        // Above the leader's own combat goals: an order the enemy can veto is not an order, and
+        // a squad told to fall back has to be able to break contact. It only engages when the order
+        // points somewhere the leader is not already standing — see FCSquadOrderGoal.
+        this.goalSelector.addGoal(0,
+                new com.example.examplemod.ai.formation.FCSquadOrderGoal(this, getSquad()));
+
         this.goalSelector.addGoal(1, new FCLeaderGoal(this, getSquad(),
                 FirstCrusadePerformanceConfig.squadFollowerCap(
                         getUnitFaction(), PROFILE.maxFollowers())));

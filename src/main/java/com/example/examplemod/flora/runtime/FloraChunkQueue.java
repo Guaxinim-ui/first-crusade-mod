@@ -142,7 +142,7 @@ public final class FloraChunkQueue {
      */
     private void drainIntake(ServerLevel level) {
         FloraChunkSavedData floraData = FloraChunkSavedData.get(level);
-        int currentRevision = WorldWarMapData.get(level).getTerritoryRevision();
+        int currentRevision = WorldWarMapData.get(level).getTerritoryRevision(level);
 
         boolean redecorationEnabled = FloraConfig.DYNAMIC_REDECORATION_ENABLED.get();
         boolean neutralEnabled = FloraConfig.NEUTRAL_CHUNK_DECORATION_ENABLED.get();
@@ -227,7 +227,7 @@ public final class FloraChunkQueue {
         }
 
         FloraChunkSavedData floraData = FloraChunkSavedData.get(level);
-        int currentRevision = WorldWarMapData.get(level).getTerritoryRevision();
+        int currentRevision = WorldWarMapData.get(level).getTerritoryRevision(level);
 
         while (chunkBudget > 0 && attemptBudget > 0 && !this.ready.isEmpty()) {
             long key = takeNearestToPlayer(level);

@@ -71,15 +71,23 @@ public final class WorldSettlementSeeder {
         }
     }
 
-    // Populates the planet dimension the first time a traveller lands there (around their landing).
+    // Populates a planet dimension the first time a traveller lands there (around their landing).
+    //
+    // The seeded flag is per dimension. It used to be one boolean for the whole save, so whichever
+    // planet was visited first was also the only one that ever got settlements — every later world
+    // was landed on, marked as "the planet is seeded", and left empty.
     public static void seedPlanet(ServerLevel planet, BlockPos center) {
         WorldSettlementData data = WorldSettlementData.get(planet);
-        if (data.isPlanetSeeded()) {
+        if (data.isPlanetSeeded(planet.dimension())) {
             return;
         }
-        data.markPlanetSeeded();
+        // Mark first so a mid-way failure never re-runs (and double-populates) on the next arrival.
+        data.markPlanetSeeded(planet.dimension());
 
         seedRing(planet, center);
+
+        com.example.examplemod.campaign.CampaignLog.war("{} seeded with starting settlements around {}",
+                planet.dimension().location(), center);
     }
 
     // Scatters CITY_COUNT autonomous cities and CAMP_COUNT Ork camps in a ring around a centre.

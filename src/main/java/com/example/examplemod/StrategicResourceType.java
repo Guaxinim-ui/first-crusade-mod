@@ -6,6 +6,11 @@ public enum StrategicResourceType {
     SCRAP("Scrap"),
     COAL("Coal"),
 
+    // Bodies, not materials. The Crusade's supply lines carry replacements the same way they carry
+    // ammunition, and a Hive World's whole strategic purpose is producing them — which is why this
+    // is a supply resource rather than a number on a city.
+    MANPOWER("Manpower"),
+
     FERROCRETE("Ferrocrete"),
     PLASTEEL("Plasteel"),
     PROMETHIUM("Promethium"),

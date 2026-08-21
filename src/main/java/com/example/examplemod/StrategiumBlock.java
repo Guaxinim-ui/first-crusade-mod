@@ -60,6 +60,17 @@ public class StrategiumBlock extends BaseEntityBlock {
             return InteractionResult.SUCCESS;
         }
 
+        // Xenos specimens are studied here, which is the point of the bench. Before this, the five
+        // fauna trophies were read by exactly one thing — the loot table that made them — so hunting
+        // the big beasts produced items that did nothing at all.
+        //
+        // Checked before openInterface and after the two deposits, so it cannot shadow an existing
+        // interaction: a player holding nothing still opens the bench exactly as they always did.
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
+                && com.example.examplemod.fauna.FaunaTrophyValue.handIn(serverPlayer, held)) {
+            return InteractionResult.SUCCESS;
+        }
+
         bench.openInterface(player);
         return InteractionResult.SUCCESS;
     }
