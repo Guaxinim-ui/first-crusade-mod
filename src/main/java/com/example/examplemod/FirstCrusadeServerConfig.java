@@ -38,6 +38,12 @@ public final class FirstCrusadeServerConfig {
             .comment("Seal the Nether and the End: travel to either dimension is cancelled.")
             .define("sealNetherAndEnd", true);
 
+    public static final ForgeConfigSpec.BooleanValue PLANET_HAZARDS_ENABLED = BUILDER
+            .comment("Planet environmental hazards (cold on Valhalla, ash on Armageddon/Forge World,",
+                     "spores on the Ork world, toxic flora on Catachan, the tombs under Sekhet).",
+                     "Players only: the worlds' own inhabitants are from there.")
+            .define("planetHazardsEnabled", true);
+
     public static final ForgeConfigSpec.BooleanValue SEED_STARTING_SETTLEMENTS = BUILDER
             .comment("Seed starting settlements (Imperial cities + Ork camps) the first time a player joins a world.")
             .define("seedStartingSettlements", true);
@@ -75,5 +81,6 @@ public final class FirstCrusadeServerConfig {
         ExampleMod.WORLD_BORDER_SIZE = WORLD_BORDER_SIZE.get();
         ExampleMod.SEAL_NETHER_AND_END = SEAL_NETHER_AND_END.get();
         ExampleMod.SEED_STARTING_SETTLEMENTS = SEED_STARTING_SETTLEMENTS.get();
+        ExampleMod.PLANET_HAZARDS_ENABLED = PLANET_HAZARDS_ENABLED.get();
     }
 }

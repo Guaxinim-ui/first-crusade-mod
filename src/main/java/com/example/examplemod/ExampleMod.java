@@ -165,5 +165,6 @@ public static boolean ORK_WAVES_ENABLED = false;
 public static double WORLD_BORDER_SIZE = 5000.0D;
 public static boolean SEAL_NETHER_AND_END = true;
 public static boolean SEED_STARTING_SETTLEMENTS = true;
+public static boolean PLANET_HAZARDS_ENABLED = true;
 
 }

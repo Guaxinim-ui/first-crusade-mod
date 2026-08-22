@@ -1713,5 +1713,11 @@
   "msg.firstcrusade.ork.built_squig_pen": "Da boyz penned up some squigs! More mouths can be fed.",
   "msg.firstcrusade.ork.squig_pen_exists": "Da camp already has a Squig Pen.",
   "msg.firstcrusade.ork.built_mek_workshop": "Da Mek set up shop! Da next WAAAGH! will be bigger.",
-  "msg.firstcrusade.ork.mek_workshop_exists": "Da camp already has a Mek Shop."
+  "msg.firstcrusade.ork.mek_workshop_exists": "Da camp already has a Mek Shop.",
+  "hazard.firstcrusade.cold": "The cold is getting through. Find a fire.",
+  "hazard.firstcrusade.ash": "Ash fills your lungs. Cover your face.",
+  "hazard.firstcrusade.spores": "Ork spores in the air. Cover your face.",
+  "hazard.firstcrusade.toxic_flora": "Something in the undergrowth got you.",
+  "hazard.firstcrusade.tomb_chill": "The cold down here is not weather.",
+  "death.attack.firstcrusade.ash_choke": "%1$s choked on the ash"
 }

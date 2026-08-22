@@ -378,6 +378,37 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-08-22: **§5 — identidade dos planetas em runtime (1ª fatia): perigos ambientais.**
+  Build verde. **Não testado com jogador** (precisa de cliente num planeta).
+
+  `worldType` e `dangerLevel` do `PlanetDefinition` eram lidos **só pelo terminal de navegação** —
+  dava para voar até Valhalla, cuja própria descrição diz que a temperatura nunca sobe acima de zero,
+  e sentir exactamente o que se sentia no mundo agrícola. As descrições já eram uma promessa; isto é
+  a primeira coisa que a cumpre.
+
+  **`PlanetHazard`** — 5 assinaturas, uma por mundo: **frio** (Valhalla), **cinza** (Armageddon e
+  Forge World), **esporos** (Ork World), **flora tóxica** (Catachan), **as tumbas** (Sekhet).
+  Macragge, Cadia e Verdanis **não têm nenhum, de propósito**: sem um sítio onde o mundo não te tenta
+  matar, "hostil" deixa de significar coisa nenhuma.
+
+  **Só o jogador sofre.** Um Valhallano não congela em Valhalla. Aplicar isto a toda entidade viva
+  seria pior ficção *e* centenas de mobs a pagar por uma checagem que quase sempre não faz nada.
+
+  **Cada perigo tem contra-medida, e elas rimam** para se aprenderem de uma vez: o que vem pelo ar
+  (cinza, esporos) para-se com um **elmo**; o **frio** para-se com **luz de bloco** (fogueira ou
+  interior); Catachan **não tem contra-medida** — é o que um mundo de morte é — e por isso é uma
+  *chance* e não uma regra.
+
+  Enganchado no `PlayerTickEvent` com o mesmo throttle de 40 ticks do crescimento Ork, e faz a
+  pergunta barata primeiro: `PlanetHazard.of` são comparações de chave e devolve null no overworld e
+  nos três planetas sem perigo, portanto nenhum bloco é lido antes disso. Config
+  `planetHazardsEnabled` (padrão ligado).
+
+  **Damage type próprio** (`firstcrusade:ash_choke`): a mensagem de morte faz parte do tipo, e
+  sufocar na cinza com `dryOut` diria "ressecou" — mensagem errada no momento em que o jogador mais
+  repara. **Verificado no servidor**: o `/damage` aceita `firstcrusade:ash_choke` e recusa um id
+  inventado, ou seja a entrada de datapack está registada.
+
 - 2026-08-21 (4): **§24 COMPLETO — Squig Pen e Mek Workshop.** Build verde, `runData` rodado.
   A fatia 1 foi confirmada em jogo pelo dono; estas duas peças **ainda não**.
 

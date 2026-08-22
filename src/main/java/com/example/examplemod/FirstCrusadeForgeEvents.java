@@ -245,6 +245,28 @@ public final class FirstCrusadeForgeEvents {
         }
     }
 
+    /**
+     * §5: the planet does something to you for standing on it.
+     *
+     * <p>Throttled to the same 40 ticks the Ork-growth check uses, and — like it — asks the cheap
+     * question first. {@code PlanetHazard.of} is a handful of key comparisons and returns null for
+     * the overworld and for the three planets that have no hazard, so a player anywhere else pays
+     * that and nothing more. No block is read until a planet with a hazard is established.
+     */
+    @SubscribeEvent
+    public static void onPlayerHazardTick(net.minecraftforge.event.TickEvent.PlayerTickEvent event) {
+        if (event.phase != net.minecraftforge.event.TickEvent.Phase.END
+                || !ExampleMod.PLANET_HAZARDS_ENABLED
+                || event.player.level().isClientSide
+                || event.player.tickCount % 40 != 0) {
+            return;
+        }
+
+        if (event.player instanceof net.minecraft.server.level.ServerPlayer player) {
+            com.example.examplemod.planet.PlanetHazard.tick(player);
+        }
+    }
+
     @SubscribeEvent
     public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
         if (event.getLevel().isClientSide) {

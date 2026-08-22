@@ -1707,5 +1707,11 @@
   "msg.firstcrusade.ork.built_squig_pen": "Os boyz encurralaram uns squigs! Dá pra alimentar mais boca.",
   "msg.firstcrusade.ork.squig_pen_exists": "O campo já tem um Curral de Squigs.",
   "msg.firstcrusade.ork.built_mek_workshop": "O Mek montou a oficina! A próxima WAAAGH! vai ser maior.",
-  "msg.firstcrusade.ork.mek_workshop_exists": "O campo já tem uma Oficina do Mek."
+  "msg.firstcrusade.ork.mek_workshop_exists": "O campo já tem uma Oficina do Mek.",
+  "hazard.firstcrusade.cold": "O frio está passando. Acha uma fogueira.",
+  "hazard.firstcrusade.ash": "Cinza enchendo os pulmões. Cubra o rosto.",
+  "hazard.firstcrusade.spores": "Esporos Ork no ar. Cubra o rosto.",
+  "hazard.firstcrusade.toxic_flora": "Alguma coisa no mato te pegou.",
+  "hazard.firstcrusade.tomb_chill": "O frio aqui embaixo não é clima.",
+  "death.attack.firstcrusade.ash_choke": "%1$s sufocou na cinza"
 }
