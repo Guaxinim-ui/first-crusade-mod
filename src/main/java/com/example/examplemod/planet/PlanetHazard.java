@@ -116,8 +116,13 @@ public enum PlanetHazard {
     TOMB_CHILL("tomb_chill") {
         @Override
         boolean bites(ServerPlayer player, Level level, BlockPos at) {
-            // Only below the surface. The dead salt desert above is merely empty; the tombs are not.
-            return at.getY() < 50 && !level.canSeeSky(at);
+            // Underground while the tomb sleeps; everywhere once it is properly awake. The tomb
+            // world is the one planet whose hazard is not a constant — it is a clock, and the
+            // awakening is what the clock reads. That is also the only feedback a player gets that
+            // the number is moving, since the Necrons have no bodies to show them yet.
+            boolean underground = at.getY() < 50 && !level.canSeeSky(at);
+
+            return underground || awakeAtSurface(level);
         }
 
         @Override
@@ -146,6 +151,27 @@ public enum PlanetHazard {
 
     private static boolean hasHelmet(ServerPlayer player) {
         return !player.getItemBySlot(EquipmentSlot.HEAD).isEmpty();
+    }
+
+    /**
+     * True once the tomb world's awakening has reached TOMB_DEFENCES, at which point the chill is no
+     * longer something you only meet underground.
+     *
+     * <p>Reads the campaign rather than caching a copy: the awakening moves on the strategic pass,
+     * and a hazard holding its own stale idea of it would tell the player the tomb is asleep while
+     * the map says otherwise. Only reached on the tomb world, so no other planet pays for the
+     * lookup.
+     */
+    private static boolean awakeAtSurface(Level level) {
+        if (!(level instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
+            return false;
+        }
+
+        var state = com.example.examplemod.campaign.CampaignData.get(serverLevel)
+                .existingState(FCPlanets.NECRON_TOMB_WORLD.location());
+
+        return state != null && state.necronStage().ordinal()
+                >= com.example.examplemod.campaign.planet.PlanetWarState.NecronStage.TOMB_DEFENCES.ordinal();
     }
 
     /**

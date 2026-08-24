@@ -119,6 +119,22 @@ public class StrategicSector {
      * @return the previous owner if this pass changed hands, otherwise null
      */
     public WarFaction applyPressure(int pressure, long gameTime) {
+        // The Orks are the default attacker because settlement pressure — the caller this was
+        // written for — is Ork camps against Imperial cities.
+        return applyPressure(pressure, gameTime, WarFaction.ORKS);
+    }
+
+    /**
+     * The same, naming which enemy the negative end hands ground to.
+     *
+     * <p>Added when the Necron awakening started pushing on its own planet. Before that the negative
+     * end was hard-coded to the Orks — correct while they were the only enemy that pushed, and
+     * quietly wrong the moment another one did: a waking tomb would have handed its own landing zone
+     * to a WAAAGH! that does not exist, on a world with no Orks on it.
+     *
+     * @param attacker who takes the sector if the contest reaches the negative threshold
+     */
+    public WarFaction applyPressure(int pressure, long gameTime, WarFaction attacker) {
         if (pressure == 0) {
             // No one is pushing: the ground settles back toward its holder rather than freezing
             // wherever the last fight left it. This is what lets a line that was nearly broken
@@ -138,12 +154,11 @@ public class StrategicSector {
             return changeOwner(WarFaction.IMPERIUM, gameTime);
         }
 
-        // The negative end hands ground to the Orks, because they are the only enemy with units on
-        // the board. The guard is "not already an enemy" rather than "not the Orks": a tomb world's
-        // sector sitting at full negative contest would otherwise be handed from the Necrons to the
-        // Orks every pass, inventing a WAAAGH! nobody launched on a planet with no Orks on it.
+        // The guard is "not already an enemy" rather than "not the attacker": a sector sitting at
+        // full negative contest would otherwise be handed back and forth between the two enemy
+        // factions every pass, on a planet where only one of them is actually pushing.
         if (this.contest <= -CAPTURE_THRESHOLD && !this.owner.isEnemyOfImperium()) {
-            return changeOwner(WarFaction.ORKS, gameTime);
+            return changeOwner(attacker, gameTime);
         }
 
         return null;

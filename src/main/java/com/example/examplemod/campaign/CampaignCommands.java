@@ -111,6 +111,16 @@ public final class CampaignCommands {
                                     return activate(context.getSource(), level);
                                 })))
 
+                // The awakening only climbs with a player standing on the tomb world, which makes
+                // the one system with a hundred-point clock the hardest thing in the campaign to
+                // watch. This winds it forward.
+                .then(Commands.literal("awaken")
+                        .then(Commands.argument("amount",
+                                com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 100))
+                                .executes(context -> awaken(context.getSource(),
+                                        com.mojang.brigadier.arguments.IntegerArgumentType
+                                                .getInteger(context, "amount")))))
+
                 .then(Commands.literal("reseed")
                         .executes(context -> {
                             CommandSourceStack source = context.getSource();
@@ -239,6 +249,29 @@ public final class CampaignCommands {
             source.sendSuccess(() -> Component.literal("Último evento: " + state.lastEvent())
                     .withStyle(ChatFormatting.GRAY), false);
         }
+
+        return 1;
+    }
+
+    private static int awaken(CommandSourceStack source, int amount) {
+        CampaignFront tomb = CampaignFronts.byDimension(
+                com.example.examplemod.planet.FCPlanets.NECRON_TOMB_WORLD).orElse(null);
+
+        if (tomb == null) {
+            source.sendFailure(Component.literal("O mundo-tumba não existe nesta instalação."));
+            return 0;
+        }
+
+        CampaignData campaign = CampaignData.get(source.getLevel());
+        PlanetWarState state = campaign.stateOf(tomb);
+
+        List<PlanetWarState.NecronStage> crossed = state.raiseNecronAwakening(amount);
+        campaign.setDirty();
+
+        source.sendSuccess(() -> Component.literal("Despertar Necron: " + state.necronAwakening()
+                + "%  (estágio " + state.necronStage().name() + ")"
+                + (crossed.isEmpty() ? "" : "  cruzou " + crossed.size() + " estágio(s)"))
+                .withStyle(ChatFormatting.AQUA), true);
 
         return 1;
     }

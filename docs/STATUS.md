@@ -378,6 +378,34 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-08-24 (2): **§26 — os Necrons entram na guerra sem uma única textura.**
+  Build verde e **verificado em servidor** (única fatia recente que foi vista a correr).
+
+  O despertar era 0-100 com 5 estágios, e cruzar um **escrevia uma linha de log**. Mais nada lia.
+  As entidades não existem e **não podem ser inventadas aqui** (é o que o §29 proíbe) — mas uma facção
+  não precisa de corpos para tomar chão, e o mapa deste planeta já tinha `NECRONS` em 6 dos 7 setores.
+
+  Agora uma tumba a acordar empurra o próprio planeta **pelo mesmo `applyPressure`** que os
+  assentamentos usam, dividido pela mesma defesa de setor. Abaixo de WARRIORS não faz nada (escaravelho
+  não toma pouso); daí para cima a pressão cresce um degrau por estágio. Nada spawna: o planeta
+  simplesmente deixa de ser teu.
+
+  **O bug que isto quase criou, e que era invisível até haver um segundo inimigo:** `applyPressure`
+  entregava o extremo negativo **sempre aos ORKS** — correcto enquanto eles eram o único inimigo que
+  empurrava, e errado no instante em que outro passou a empurrar. A tumba teria entregado a própria
+  zona de pouso a uma WAAAGH! inexistente, num mundo sem Orks. Agora o atacante é um parâmetro; a
+  versão de 2 argumentos delega com ORKS, portanto **nenhum chamador existente mudou**.
+
+  **Medido:** SCARABS não mexe; WARRIORS vira o `landing_zone` de +12 para -12; em OVERLORD o log diz
+  `LANDING_PAD changed IMPERIUM -> NECRONS` (**não** ORKS) e o planeta fecha 100% Necron.
+
+  `TOMB_CHILL` (§5) passou a ler o despertar: subterrâneo enquanto a tumba dorme, **à superfície**
+  a partir de TOMB_DEFENCES. É o único retorno que o jogador tem de que o número está a mexer,
+  já que os Necrons ainda não têm corpo para lho mostrar.
+
+  Comando novo `/fcstrategy planet awaken <n>`: o despertar só sobe com jogador no mundo-tumba, o que
+  fazia do único relógio de 100 pontos da campanha a coisa mais difícil de observar.
+
 - 2026-08-24: **§14-15 — veículos ligados à economia.** Build verde. **Não testado em jogo.**
 
   O Battle Tank existia e só se obtinha por **spawn egg**. Ao mesmo tempo `SectorType.VEHICLE_FACTORY`

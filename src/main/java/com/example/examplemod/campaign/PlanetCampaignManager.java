@@ -121,6 +121,10 @@ public final class PlanetCampaignManager {
             advanceNecronAwakening(front, state, gameTime);
         }
 
+        // Applied whether or not anyone is standing there: once the tomb is awake it keeps taking
+        // its planet back, and coming home to find the landing zone gone is the point.
+        applyNecronAwakeningPressure(campaign, front, state, sectors, gameTime);
+
         PlanetCampaignState previous = state.recompute(sectors, front);
         state.refreshObjective(sectors);
 
@@ -218,6 +222,58 @@ public final class PlanetCampaignManager {
         }
 
         return total;
+    }
+
+    /**
+     * What the awakening actually does (§26).
+     *
+     * <h2>Necrons without a single model</h2>
+     *
+     * The awakening was a number from 0 to 100 with five named stages, and crossing one wrote a log
+     * line. Nothing else read it. The entities it is eventually for do not exist and cannot be
+     * invented here — but a faction does not need bodies to take ground, and this planet's map
+     * already has {@link WarFaction#NECRONS} holding six of its seven sectors.
+     *
+     * <p>So a waking tomb pushes on its own planet exactly the way a settlement pushes: through
+     * {@link StrategicSector#applyPressure}, the same call, divided by the same sector defence. The
+     * Imperial landing zone stops being a safe corner the moment the tomb reaches WARRIORS, and a
+     * player who leaves the tomb world alone long enough loses their foothold on it. Nothing spawns;
+     * the planet simply stops being theirs.
+     *
+     * <p>{@code applySettlementPressure} was already written against {@code isEnemyOfImperium}
+     * rather than against ORKS so that Necron ground would defend itself — the seam for this was
+     * left open on purpose, and this is the other half of it.
+     */
+    private static void applyNecronAwakeningPressure(CampaignData campaign, CampaignFront front,
+                                                     PlanetWarState state, List<StrategicSector> sectors,
+                                                     long gameTime) {
+        if (!front.dimension().equals(com.example.examplemod.planet.FCPlanets.NECRON_TOMB_WORLD)) {
+            return;
+        }
+
+        PlanetWarState.NecronStage stage = state.necronStage();
+
+        // Below WARRIORS the tomb is stirring, not fighting. Scarabs do not take a landing pad.
+        if (stage.ordinal() < PlanetWarState.NecronStage.WARRIORS.ordinal()) {
+            return;
+        }
+
+        // One step per stage above SCARABS, so the pressure grows as the tomb does rather than
+        // arriving all at once at the top.
+        int pressure = (stage.ordinal() - PlanetWarState.NecronStage.SCARABS.ordinal())
+                * CampaignConfig.pressurePerSettlement();
+
+        for (StrategicSector sector : sectors) {
+            if (sector.owner() == WarFaction.NECRONS) {
+                continue;
+            }
+
+            WarFaction previous = sector.applyPressure(-pressure, gameTime, WarFaction.NECRONS);
+
+            if (previous != null) {
+                announceCapture(campaign, front, sector, previous, gameTime);
+            }
+        }
     }
 
     private static void advanceNecronAwakening(CampaignFront front, PlanetWarState state, long gameTime) {

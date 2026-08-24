@@ -271,6 +271,24 @@ public class PlanetWarState {
     }
 
     /** The stages a tomb world wakes through. Nothing spawns them yet — architecture only. */
+    /**
+     * The stage the awakening currently sits at — the highest one it has reached.
+     *
+     * <p>Read by everything that scales with how awake the tomb is: the pressure the Necrons put on
+     * their own planet, and the bite of the chill under it.
+     */
+    public NecronStage necronStage() {
+        NecronStage current = NecronStage.SILENT;
+
+        for (NecronStage stage : NecronStage.values()) {
+            if (this.necronAwakening >= stage.threshold()) {
+                current = stage;
+            }
+        }
+
+        return current;
+    }
+
     public enum NecronStage {
         SILENT(0),
         SCARABS(25),
