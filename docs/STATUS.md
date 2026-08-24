@@ -8,7 +8,12 @@
 > mudanças grandes, **verifique o estado real** com `git log --oneline -8`, `git status` e um
 > `Glob` em `src/main/java/com/example/examplemod/*.java` — não confie só neste arquivo.
 
-Última atualização: **2026-08-11** · branch `main` · remoto `github.com/Guaxinim-ui/first-crusade-mod`
+Última atualização: **2026-08-24** · branch `performance-layer` (pushed) · remoto
+`github.com/Guaxinim-ui/first-crusade-mod`
+
+> **Entrada rápida:** o changelog (§7) está em ordem cronológica inversa e as entradas de 2026-08-21
+> a 2026-08-24 são o estado atual. A §4 abaixo guarda o roadmap histórico das Fases A–E, que foi
+> superado pela numeração `§N` do brief — o que realmente falta está em **§4.1**.
 
 ---
 
@@ -97,6 +102,20 @@ SpaceMarineUpgrade, **tipos de cidade** (`ImperialCityType`), **clãs Ork** (`Or
 `ImperialCityLevelStats`.
 
 ## 4. Metas / Roadmap
+
+### 4.1 O que falta AGORA (2026-08-24)
+
+Tudo o resto nesta secção é histórico. Isto é a lista viva.
+
+| Item | Estado | Nota |
+|---|---|---|
+| **ESCORT / comboios** | destrancado, por fazer | O bloqueio era "falta logística"; a logística existe desde 2026-08-20. `StrategicDeployment` já modela força com origem, destino e tempo de viagem. |
+| **§5 fatia 2 — ambiência** | por fazer | Sons e spawns por planeta. Sem arte nova. A fatia 1 (perigos ambientais) está feita. |
+| **§18-19 Hive vertical** | por avaliar | A maior das que sobram e a única que ainda não olhei. |
+| **RESCUE / RECOVER** | bloqueado | Esperam por esquadrões resgatáveis e por mais artefactos. O `RECOVER` ficou mais perto agora que existe um artefacto. |
+| **Cadia e Ork World** | bloqueado | Continuam atrás de `TRIGGER_CAMPAIGN`, que nada dispara. O mundo-tumba saiu dessa lista em 2026-08-24. |
+
+### 4.2 Roadmap histórico (Fases A–E)
 
 Fonte: `docs/DESIGN_WORLD_CITIES_FACTIONS.md` (fases A–E). Marque o que concluir.
 

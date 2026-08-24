@@ -1,6 +1,10 @@
 # ROADMAP — First Crusade
 
-> Programação do que falta no mod. Atualizado em 2026-07-10.
+> ⚠️ **HISTÓRICO — não é a lista viva.** Escrito em 2026-07-10, antes da camada de campanha, dos
+> planetas como dimensões e da numeração `§N` do brief. Para o que falta hoje, ver
+> `docs/STATUS.md` §4.1; para retomar depois de um `/clear`, ver `docs/HANDOFF.md`.
+>
+> Programação do que faltava no mod em 2026-07-10.
 > Legenda: **[DONO]** = modelos/animações/estruturas/testes no runClient · **[CLAUDE]** = código, integração, texturas por script.
 > Regra combinada: **estruturas** o dono ainda vai fazer e mandar o modelo; **animações de mobs e armas** são do dono.
 
