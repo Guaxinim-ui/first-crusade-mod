@@ -64,12 +64,78 @@ public final class FirstCrusadePerformanceCommand {
         root.then(Commands.literal("squad")
                 .executes(context -> reportSquads(context.getSource())));
 
+        // §21/§22 tem 2500 linhas que nunca foram observadas. Supressao e um numero que decai na
+        // LEITURA, entao nao ha log a emitir e nada no mundo que a mostre — sem isto a unica forma
+        // de saber se funciona e confiar que funciona.
+        root.then(Commands.literal("suppression")
+                .executes(context -> reportSuppression(context.getSource())));
+
         root.then(Commands.literal("strategic")
                 .executes(context -> reportStrategic(context.getSource()))
                 .then(Commands.literal("sweep")
                         .executes(context -> forceSweep(context.getSource()))));
 
         event.getDispatcher().register(root);
+    }
+
+    // ==================================================================== /fc suppression
+
+    /**
+     * Who is suppressed, and by how much.
+     *
+     * <p>Suppression decays lazily — the value is computed when read and nothing ticks — so there is
+     * no log line it could have emitted and no state in the world that shows it. Without this the
+     * only way to know §22 works is to trust that it does.
+     */
+    private static int reportSuppression(CommandSourceStack source) {
+        ServerLevel level = source.getLevel();
+
+        int suppressed = 0;
+        int pinned = 0;
+        int seekingCover = 0;
+        int total = 0;
+        int highest = 0;
+        String worst = "-";
+
+        for (Entity entity : level.getAllEntities()) {
+            if (!(entity instanceof Mob mob) || !isModCombatant(mob)) {
+                continue;
+            }
+
+            total++;
+
+            int value = com.example.examplemod.ai.combat.FCSuppression.level(mob);
+
+            if (value <= 0) {
+                continue;
+            }
+
+            suppressed++;
+
+            if (com.example.examplemod.ai.combat.FCSuppression.isPinned(mob)) {
+                pinned++;
+            }
+
+            if (com.example.examplemod.ai.combat.FCSuppression.wantsCover(mob)) {
+                seekingCover++;
+            }
+
+            if (value > highest) {
+                highest = value;
+                worst = mob.getType().toShortString() + " @ " + mob.blockPosition().toShortString();
+            }
+        }
+
+        header(source, "First Crusade — supressao (" + level.dimension().location() + ")");
+        line(source, "Combatentes", Integer.toString(total));
+        line(source, "Sob supressao", suppressed + " (>0)");
+        line(source, "  Presos (>=" + com.example.examplemod.ai.combat.FCSuppression.PINNED_LEVEL + ")",
+                Integer.toString(pinned));
+        line(source, "  Buscando cobertura (>=" + com.example.examplemod.ai.combat.FCSuppression.COVER_LEVEL + ")",
+                Integer.toString(seekingCover));
+        line(source, "Maior nivel", highest + "  " + worst);
+
+        return 1;
     }
 
     // ==================================================================== /fc perf

@@ -378,6 +378,40 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-08-24 (4): **§29 FECHADO + a camada `ai/` finalmente OBSERVADA.** Build verde.
+
+  **A camada `ai/` (§20-23) foi vista a funcionar pela primeira vez — 2500 linhas que nunca tinham
+  sido exercidas.** O caminho para lá chegar foi o achado do dia:
+
+  - `/fc suppression` novo. Supressão decai **na leitura** e nada tica por ela, portanto não há linha
+    de log que pudesse emitir nem estado no mundo que a mostrasse. Sem este comando a única forma de
+    saber se o §22 funciona era acreditar que sim.
+  - **A IA não corre sem jogador, por desenho.** As 40 unidades da primeira tentativa saíram todas em
+    `IA estratégica` com "1 batalha abstraída" — o `FCStrategicBattleData` absorveu-as. Foi preciso
+    desligar `[ai.lod] enabled` e `[strategic] enabled` no toml do mundo de teste para a IA real
+    correr. **Isto é a optimização a fazer o seu trabalho, não um bug** — mas é a razão por que
+    ninguém tinha conseguido testar esta camada.
+
+  **Medido, com muro e duas passagens, 20×20:** supressão a acumular em 16 unidades, a atravessar o
+  limiar de PRESO (≥45) em 2 e o de COBERTURA (≥60) em 2, com pico de nível 60 — e a **decair sozinha
+  até 0** quando a batalha acaba, sem nada a ticá-la. `/fc squad` com um Nob: esquadrão formado,
+  6/16 membros, formação COLUMN, ordem FOLLOW, LOD FULL. §20, §21 e §22 confirmados vivos.
+
+  **§29 — os 4 placeholders ganharam modelo** (`tools/generate_ork_assets.py`, que **importa** o
+  empacotador do script Necron em vez de o duplicar — mesmo gesto que o `generate_geo_troop_textures`
+  já faz sobre o `generate_troop_textures`). Referência de proporção: o `ork_boy.geo.json`, porque um
+  Nob que não é obviamente um Boy maior é só um Boy de outra cor.
+  - **Ork Nob**: 14 de largura contra os 12 do Boy, pauldrons e a power klaw — a assimetria é o que o
+    torna encontrável dentro de um esquadrão dos próprios Boyz dele.
+  - **Meganob**: parede que anda. Cabeça afundada entre blocos de ombro, pernas curtas.
+  - **Gretchin**: cabeça e orelhas sobre um corpo que mal existe. A proporção é a piada.
+  - **Killa Kan**: **não humanoide**, que era o ponto todo — caldeira sobre duas pernas de ave, sem
+    cabeça nenhuma (a fenda de visão está no casco), serra num braço e canhão no outro.
+
+  As 4 classes passaram a `GeoEntity`; os 4 renderers humanoides foram **apagados** (`HumanoidModel`,
+  zero referências restantes) e substituídos por uma linha de `FCGeoRenderer` cada. Os PNG antigos,
+  pintados para o layout vanilla, foram sobrescritos pelos novos — não fica textura obsoleta.
+
 - 2026-08-24 (3): **§26 COMPLETO — os Necrons ganharam corpo. Modelos, UVs, texturas e animações.**
   Build verde. Servidor verificado; **render não visto** (precisa de cliente).
 

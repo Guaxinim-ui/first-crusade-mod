@@ -71,11 +71,11 @@ public final class FirstCrusadeClientEvents {
         event.registerEntityRenderer(FCRegistry.CUSTODES.get(), CustodesRenderer::new);
         event.registerEntityRenderer(FCRegistry.PRIMARCH.get(), PrimarchRenderer::new);
         event.registerEntityRenderer(FCRegistry.ORK_BOY.get(), OrkBoyRenderer::new);
-        event.registerEntityRenderer(FCRegistry.ORK_NOB.get(), OrkNobRenderer::new);
+        registerAnimal(event, FCRegistry.ORK_NOB.get(), "ork_nob", 0.6F);
         event.registerEntityRenderer(FCRegistry.WARBOSS.get(), WarbossRenderer::new);
-        event.registerEntityRenderer(FCRegistry.MEGANOB.get(), MeganobRenderer::new);
-        event.registerEntityRenderer(FCRegistry.GRETCHIN.get(), GretchinRenderer::new);
-        event.registerEntityRenderer(FCRegistry.KILLA_KAN.get(), KillaKanRenderer::new);
+        registerAnimal(event, FCRegistry.MEGANOB.get(), "meganob", 0.7F);
+        registerAnimal(event, FCRegistry.GRETCHIN.get(), "gretchin", 0.35F);
+        registerAnimal(event, FCRegistry.KILLA_KAN.get(), "killa_kan", 0.8F);
         event.registerEntityRenderer(FCRegistry.ROBOUTE_GUILLIMAN.get(), RobouteGuillimanRenderer::new);
         event.registerEntityRenderer(FCRegistry.SKITARII_RANGER.get(), SkitariiRangerRenderer::new);
         event.registerEntityRenderer(FCRegistry.KASRKIN.get(), KasrkinRenderer::new);

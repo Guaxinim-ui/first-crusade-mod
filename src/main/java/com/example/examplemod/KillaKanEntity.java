@@ -17,12 +17,19 @@ import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.RawAnimation;
+import software.bernie.geckolib.core.object.PlayState;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 /**
  * Killa Kan — a small Ork walker: a Grot-piloted scrap-metal war machine. Slow, heavily armoured
  * and a serious threat (weight 20). Fielded by big WAAAGH!s and Dread/Deathskull-style camps.
  */
-public class KillaKanEntity extends Monster {
+public class KillaKanEntity extends Monster implements GeoEntity {
     public KillaKanEntity(EntityType<? extends KillaKanEntity> entityType, Level level) {
         super(entityType, level);
     }
@@ -83,5 +90,41 @@ public class KillaKanEntity extends Monster {
         }
 
         super.setTarget(target);
+    }
+    // ===== GeckoLib (§29) =====
+    //
+    // Os nomes abaixo tem de bater com as chaves dentro de
+    // assets/firstcrusade/animations/killa_kan.animation.json, que sao geradas por
+    // tools/generate_ork_assets.py. Mexer num sem o outro e o unico jeito de partir isto.
+
+    private static final RawAnimation FC_IDLE = RawAnimation.begin().thenLoop("idle");
+    private static final RawAnimation FC_WALK = RawAnimation.begin().thenLoop("walk");
+    private static final RawAnimation FC_ATTACK = RawAnimation.begin().thenPlay("attack");
+
+    private final AnimatableInstanceCache fcCache = GeckoLibUtil.createInstanceCache(this);
+
+    @Override
+    public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
+        boolean hit = super.doHurtTarget(target);
+
+        if (hit) {
+            triggerAnim("attack", "attack");
+        }
+
+        return hit;
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "movement", 5, state ->
+                state.isMoving() ? state.setAndContinue(FC_WALK) : state.setAndContinue(FC_IDLE)));
+
+        controllers.add(new AnimationController<>(this, "attack", 0, state -> PlayState.STOP)
+                .triggerableAnim("attack", FC_ATTACK));
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.fcCache;
     }
 }
