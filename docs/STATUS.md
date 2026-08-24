@@ -111,9 +111,27 @@ Tudo o resto nesta secção é histórico. Isto é a lista viva.
 |---|---|---|
 | **ESCORT / comboios** | **FEITO** (2026-08-24) | Pacote `campaign/convoy/`. Medido em servidor de ponta a ponta. Falta ver o ramo com jogador presente — precisa de cliente. |
 | **§5 fatia 2 — ambiência** | **FEITO** (2026-08-24) | `PlanetAmbience`: 6 sons de mundo + guarnição selvagem lida do controlo inimigo. Nada visto/ouvido — precisa de cliente. |
-| **§18-19 Hive vertical** | por avaliar | A maior das que sobram e a única que ainda não olhei. |
+| **§18-19 Hive vertical** | **avaliado 2026-08-24 — parece já entregue** | Ver nota abaixo. Precisa de uma palavra do dono para fechar ou reabrir. |
 | **RESCUE / RECOVER** | bloqueado | Esperam por esquadrões resgatáveis e por mais artefactos. O `RECOVER` ficou mais perto agora que existe um artefacto. |
 | **Cadia e Ork World** | bloqueado | Continuam atrás de `TRIGGER_CAMPAIGN`, que nada dispara. O mundo-tumba saiu dessa lista em 2026-08-24. |
+
+**Nota sobre o "§18-19 Hive vertical" (avaliação de 2026-08-24).** Fui procurar o que era e as três
+coisas que o rótulo pode significar **já estão no repositório**:
+
+- **spec §18** — o `docs/HIVE_CITY.md` cita-o para justificar o subpacote isolado
+  `com.example.examplemod.hive`, "para permitir a futura renomeação de pacote sem dor". O pacote
+  existe e está isolado (registo próprio, ligado por uma linha no `ExampleMod`).
+- **spec §19** — citado para a "validação estática distrito→módulo→template→assets". Foi feita na
+  FASE 11 e os **dois validadores estão commitados**: `tools/hive_city_validate.py` e
+  `tools/HiveCityValidate.java` (a porta Java existe porque o ambiente não tinha Python).
+- **"vertical"** — o `dimension_type/hive_world.json` tem `min_y -64`, `height 576` e
+  `logical_height 576`, que é exactamente a altura que o `HIVE_CITY.md` diz que a spec pedia.
+
+⚠️ **A ressalva honesta:** a numeração `§` do changelog (§5, §14-15, §20-23, §24, §26, §29) vem de um
+documento de spec **que não está em `docs/`** — o dono tem-no fora do repositório. Portanto isto é a
+melhor leitura possível a partir do que está commitado, não uma conferência contra a spec. Se o
+"§18-19" queria dizer outra coisa (por exemplo: circular a Hive **a pé** pelos 576 blocos, elevadores
+entre níveis, ou o Spire ligado ao resto), **é preciso colar essas duas secções** e o item reabre.
 
 ### 4.2 Roadmap histórico (Fases A–E)
 
