@@ -58,7 +58,17 @@ public enum FaunaSiteShape implements StringRepresentable {
      *
      * <p>Ash Nomad Helamite Post. E o unico sitio da fauna feito por gente, e tem de parecer isso.
      */
-    CAMP("camp");
+    CAMP("camp"),
+
+    /**
+     * Ruina: um anel de parede partida meio afundado no terreno, com uma peca no centro.
+     *
+     * <p>Feita para a tumba Necron sob o sal, mas nao e Necron: e "construcao antiga que ficou".
+     * A diferenca para o CAMP e que o CAMP foi montado e esta de pe, e esta foi construida e caiu —
+     * por isso a parede tem falhas em vez de porta, e o piso desce um degrau. O bloco do centro e o
+     * unico motivo de o jogador entrar.
+     */
+    RUIN("ruin");
 
     public static final Codec<FaunaSiteShape> CODEC =
             StringRepresentable.fromEnum(FaunaSiteShape::values);

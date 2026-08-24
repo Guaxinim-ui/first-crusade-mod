@@ -1,0 +1,60 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "plinth": "minecraft:block/polished_deepslate",
+    "trim": "minecraft:block/deepslate_tiles",
+    "glow": "minecraft:block/sculk_catalyst_bottom",
+    "particle": "minecraft:block/polished_deepslate"
+  },
+  "elements": [
+    {
+      "name": "base",
+      "from": [1, 0, 1],
+      "to": [15, 3, 15],
+      "faces": {
+        "down":  {"texture": "#plinth", "cullface": "down"},
+        "up":    {"texture": "#plinth"},
+        "north": {"texture": "#plinth"},
+        "south": {"texture": "#plinth"},
+        "west":  {"texture": "#plinth"},
+        "east":  {"texture": "#plinth"}
+      }
+    },
+    {
+      "name": "column",
+      "from": [4, 3, 4],
+      "to": [12, 10, 12],
+      "faces": {
+        "up":    {"texture": "#trim"},
+        "north": {"texture": "#trim"},
+        "south": {"texture": "#trim"},
+        "west":  {"texture": "#trim"},
+        "east":  {"texture": "#trim"}
+      }
+    },
+    {
+      "name": "cradle",
+      "from": [3, 10, 3],
+      "to": [13, 12, 13],
+      "faces": {
+        "up":    {"texture": "#plinth"},
+        "north": {"texture": "#plinth"},
+        "south": {"texture": "#plinth"},
+        "west":  {"texture": "#plinth"},
+        "east":  {"texture": "#plinth"}
+      }
+    },
+    {
+      "name": "artefact",
+      "from": [6, 12, 6],
+      "to": [10, 16, 10],
+      "faces": {
+        "up":    {"texture": "#glow"},
+        "north": {"texture": "#glow"},
+        "south": {"texture": "#glow"},
+        "west":  {"texture": "#glow"},
+        "east":  {"texture": "#glow"}
+      }
+    }
+  ]
+}

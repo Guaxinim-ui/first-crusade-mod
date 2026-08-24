@@ -58,8 +58,38 @@ public final class FCNecrons {
                             .clientTrackingRange(8)
                             .build(ExampleMod.MODID + ":necron_scarab"));
 
+    public static final DeferredRegister<net.minecraft.world.level.block.Block> BLOCKS =
+            DeferredRegister.create(ForgeRegistries.BLOCKS, ExampleMod.MODID);
+
+    public static final DeferredRegister<net.minecraft.world.item.Item> ITEMS =
+            DeferredRegister.create(ForgeRegistries.ITEMS, ExampleMod.MODID);
+
+    /** The plinth in the middle of a ruin. Right-clicked once, then dark forever. */
+    public static final RegistryObject<net.minecraft.world.level.block.Block> NECRON_RELIQUARY =
+            BLOCKS.register("necron_reliquary",
+                    () -> new NecronReliquaryBlock(
+                            net.minecraft.world.level.block.state.BlockBehaviour.Properties.of()
+                                    .strength(-1.0F, 3600000.0F)   // unbreakable: taken by hand only
+                                    .lightLevel(state -> 7)
+                                    .sound(net.minecraft.world.level.block.SoundType.DEEPSLATE)));
+
+    /**
+     * The artefact itself.
+     *
+     * <p>No use of its own on purpose. It is a key and a trophy: the unlock is granted the moment it
+     * is taken, so the item can be dropped, stored or lost without closing the door again.
+     */
+    public static final RegistryObject<net.minecraft.world.item.Item> NECRON_ARTEFACT =
+            ITEMS.register("necron_artefact",
+                    () -> new net.minecraft.world.item.Item(
+                            new net.minecraft.world.item.Item.Properties()
+                                    .stacksTo(1)
+                                    .rarity(net.minecraft.world.item.Rarity.EPIC)));
+
     public static void register(IEventBus modEventBus) {
         ENTITY_TYPES.register(modEventBus);
+        BLOCKS.register(modEventBus);
+        ITEMS.register(modEventBus);
         modEventBus.addListener(FCNecrons::registerAttributes);
     }
 

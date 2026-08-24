@@ -82,7 +82,11 @@ public class FaunaSiteFeature extends Feature<FaunaSiteConfig> {
             case PEN -> buildPen(level, random, origin, config);
             case NEST -> buildNest(level, random, origin, config);
             case CAMP -> buildCamp(level, random, origin, config);
+            case RUIN -> buildRuin(level, random, origin, config);
         }
+
+        // Depois das formas e antes dos props, para que o centro nunca seja soterrado por detrito.
+        config.centre().ifPresent(state -> put(level, origin, state));
 
         scatterProps(level, random, origin, config);
         spawnResidents(level, random, origin, config);
@@ -95,6 +99,64 @@ public class FaunaSiteFeature extends Feature<FaunaSiteConfig> {
     }
 
     // ==================================================================== formas
+
+    /**
+     * Ruina: anel de parede partida, piso um degrau abaixo do terreno.
+     *
+     * <p>As falhas na parede sao sorteadas em vez de uma porta no meio de um lado. Uma porta diz
+     * "alguem construiu isto para entrar"; uma parede com pedacos em falta diz "isto caiu", que e a
+     * leitura que se quer — e de brinde resolve o problema do CAMP, onde uma porta virada para o
+     * lado errado deixa o jogador a dar a volta ao sitio.
+     */
+    private void buildRuin(WorldGenLevel level, RandomSource random, BlockPos origin,
+                           FaunaSiteConfig config) {
+        int radius = config.radius();
+
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                if (dx * dx + dz * dz > radius * radius) {
+                    continue;
+                }
+
+                BlockPos floor = origin.offset(dx, -1, dz);
+
+                config.floor().ifPresent(state -> put(level, floor, state));
+
+                // Limpa o que estiver de pe dentro do anel.
+                for (int dy = 0; dy <= 2; dy++) {
+                    put(level, origin.offset(dx, dy, dz), Blocks.AIR.defaultBlockState());
+                }
+            }
+        }
+
+        if (config.frame().isEmpty()) {
+            return;
+        }
+
+        BlockState wall = config.frame().get();
+
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                int distance = dx * dx + dz * dz;
+
+                if (distance > radius * radius || distance < (radius - 1) * (radius - 1)) {
+                    continue;
+                }
+
+                // Um terco da parede em falta, e a altura varia — uma parede de altura constante
+                // com buracos le-se como dano, uma de altura irregular le-se como idade.
+                if (random.nextInt(3) == 0) {
+                    continue;
+                }
+
+                int height = 1 + random.nextInt(3);
+
+                for (int dy = 0; dy < height; dy++) {
+                    put(level, origin.offset(dx, dy, dz), wall);
+                }
+            }
+        }
+    }
 
     /** Clareira: limpa a vegetacao e marca o chao pisado. */
     private void buildClearing(WorldGenLevel level, RandomSource random, BlockPos origin,

@@ -1,0 +1,28 @@
+{
+  "type": "firstcrusade:fauna_site",
+  "config": {
+    "shape": "ruin",
+    "min_count": 2,
+    "max_count": 4,
+    "radius": 6,
+    "prop_tries": 20,
+    "props": [
+      {
+        "Name": "firstcrusade:salt_crust"
+      },
+      {
+        "Name": "minecraft:polished_deepslate"
+      }
+    ],
+    "mob": "firstcrusade:necron_scarab",
+    "floor": {
+      "Name": "minecraft:polished_deepslate"
+    },
+    "frame": {
+      "Name": "minecraft:deepslate_tiles"
+    },
+    "centre": {
+      "Name": "firstcrusade:necron_reliquary"
+    }
+  }
+}

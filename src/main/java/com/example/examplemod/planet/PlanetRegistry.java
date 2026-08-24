@@ -161,7 +161,7 @@ public final class PlanetRegistry {
                 .atmosphere(0xFF2A6A4A)
                 .moons(2)
                 .dimension(FCPlanets.NECRON_TOMB_WORLD)
-                .requires(PlanetUnlockRequirement.TRIGGER_CAMPAIGN,
+                .requires(PlanetUnlockRequirement.TRIGGER_NECRON_ARTEFACT,
                         "planet.firstcrusade.requirement.necron_artefact")
                 .cost(FCRegistry.CRUSADIUM_PLATE, 8)
                 .sortOrder(70)

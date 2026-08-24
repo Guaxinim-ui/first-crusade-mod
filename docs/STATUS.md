@@ -378,6 +378,41 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-08-24 (5): **A relíquia Necron existe — o Mundo-Tumba deixou de ser inalcançável.**
+  Build verde, `runData` rodado, **sítio verificado em servidor**.
+
+  O dono perguntou onde se apanha a relíquia. Resposta: **em lado nenhum, ela nunca foi feita.** O
+  mundo-tumba pedia `TRIGGER_CAMPAIGN`, cujo javadoc dizia "nothing fires this yet; it exists so the
+  requirement can be shown honestly". Três planetas estavam nessa situação (Cadia, Ork World e o
+  mundo-tumba); agora são dois.
+
+  **Gatilho próprio, e a razão importa.** `TRIGGER_NECRON_ARTEFACT` novo em vez de reusar o
+  `TRIGGER_CAMPAIGN`: os três planetas partilhavam aquele, portanto disparar-lo abriria Cadia e o Ork
+  World também — uma relíquia a destrancar três mundos, dois deles sem nada a ver com ela.
+
+  **A ruína** (`site_necron_ruin`): forma `RUIN` nova no sistema de sítios, anel de parede partida um
+  degrau abaixo do terreno, escaravelhos de guarda e o relicário no centro. As falhas na parede são
+  sorteadas em vez de haver uma porta — porta diz "construíram isto para entrar", parede com pedaços
+  em falta diz "isto caiu", que é a leitura certa.
+
+  **Onde:** bioma `salt_waste`, que existe em Armageddon (30%), Forge World (25%) e no próprio
+  mundo-tumba (60%). As tumbas estão sob o sal em todo o lado e o mundo-tumba é só onde são mais
+  densas — e resolve o ciclo fechado óbvio (precisar do artefacto para chegar ao planeta onde estão
+  os Necrons). Raridade 220, alta: é uma chave, não mobília.
+
+  **Não criei um segundo dono de worldgen.** A etapa 4 de cada bioma pertence ao
+  `generate_fauna_sites.py`, e dois geradores no mesmo ficheiro já apagaram toda a vegetação uma vez
+  ([[worldgen-script-ownership]]). O sítio Necron foi acrescentado **à tabela desse script**.
+
+  **O relicário é pegado à mão, não partido**: `use()` e não loot table, bloco indestrutível, e
+  substituído por deepslate ao ser esvaziado. O desbloqueio é concedido **no momento em que se tira**,
+  não por ter o item — quem perder o artefacto depois não perde o mundo que já ganhou. Tirar acorda
+  os escaravelhos a 24 blocos.
+
+  **Medido:** `/place feature` construiu **1 relicário** (exactamente um, no centro), **66** blocos de
+  parede e **117** de piso, com guarda vivo. (A primeira busca falhou por eu procurar em y 58-82 e o
+  chão do mundo-tumba ali estar por volta de y 55 — o sítio estava certo, a minha janela é que não.)
+
 - 2026-08-24 (4): **§29 FECHADO + a camada `ai/` finalmente OBSERVADA.** Build verde.
 
   **A camada `ai/` (§20-23) foi vista a funcionar pela primeira vez — 2500 linhas que nunca tinham

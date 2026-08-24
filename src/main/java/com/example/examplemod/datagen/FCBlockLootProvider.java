@@ -45,6 +45,8 @@ public class FCBlockLootProvider extends BlockLootSubProvider {
         List<Block> blocks = new ArrayList<>();
         FCRegistry.BLOCKS.getEntries().stream().map(RegistryObject::get).forEach(blocks::add);
         HiveBlocks.BLOCKS.getEntries().stream().map(RegistryObject::get).forEach(blocks::add);
+        com.example.examplemod.necron.FCNecrons.BLOCKS.getEntries().stream()
+                .map(RegistryObject::get).forEach(blocks::add);
         return blocks;
     }
 }

@@ -1731,5 +1731,8 @@
   "entity.firstcrusade.necron_overlord": "Necron Overlord",
   "entity.firstcrusade.necron_scarab": "Canoptek Scarab",
   "msg.firstcrusade.necron.overlord_rises": "The tomb has given up its Overlord. It is awake, and it is looking for you.",
-  "msg.firstcrusade.necron.overlord_down": "The Overlord falls. The protocols around you go quiet."
+  "msg.firstcrusade.necron.overlord_down": "The Overlord falls. The protocols around you go quiet.",
+  "block.firstcrusade.necron_reliquary": "Necron Reliquary",
+  "item.firstcrusade.necron_artefact": "Necron Artefact",
+  "msg.firstcrusade.necron.artefact_taken": "You lift the artefact. Somewhere far below, something registers that it is gone — the Tomb World is on your charts now."
 }

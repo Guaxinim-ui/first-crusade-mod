@@ -77,6 +77,26 @@ def state(name):
 #   apex         1 em 500-900  (Barking Toad, Catachan Devil)
 
 SITES = [
+    # ---------------------------------------------------------------- necron
+    #
+    # A ruina que abre o mundo-tumba. Fica no salt_waste, que existe em Armageddon (30%), Forge
+    # World (25%) e no proprio mundo-tumba (60%) — as tumbas estao sob o sal em todo o lado, e o
+    # mundo-tumba e so onde sao mais densas. Raridade alta de proposito: e uma chave, nao mobilia.
+    dict(
+        name="site_necron_ruin",
+        shape="ruin",
+        mob=f"{MODID}:necron_scarab",
+        min_count=2, max_count=4,
+        radius=6,
+        props=[f"{MODID}:salt_crust", "minecraft:polished_deepslate"],
+        prop_tries=20,
+        floor="minecraft:polished_deepslate",
+        frame="minecraft:deepslate_tiles",
+        centre=f"{MODID}:necron_reliquary",
+        rarity=220,
+        biomes=["salt_waste"],
+    ),
+
     # ---------------------------------------------------------------- imperial
     dict(
         name="site_grox_ranch",
@@ -292,6 +312,8 @@ def configured(site):
         config["floor"] = state(site["floor"])
     if site.get("frame"):
         config["frame"] = state(site["frame"])
+    if site.get("centre"):
+        config["centre"] = state(site["centre"])
 
     return {"type": f"{MODID}:fauna_site", "config": config}
 

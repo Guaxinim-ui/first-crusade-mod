@@ -36,6 +36,15 @@ public record PlanetUnlockRequirement(String trigger, String descriptionKey) {
     /** Granted by visiting a hive district — reserved for the Hive layer to fire. */
     public static final String TRIGGER_HIVE_SURVEYED = "hive_surveyed";
 
+    /**
+     * Granted by taking the artefact off a Necron reliquary in a ruin.
+     *
+     * <p>Its own trigger and not {@link #TRIGGER_CAMPAIGN}: three planets shared that one, so
+     * firing it would have opened Cadia and the Ork World too — one relic unlocking three worlds,
+     * two of which it has nothing to do with.
+     */
+    public static final String TRIGGER_NECRON_ARTEFACT = "necron_artefact";
+
     /** Nothing in the mod fires this yet; it exists so the requirement can be shown honestly. */
     public static final String TRIGGER_CAMPAIGN = "campaign";
 

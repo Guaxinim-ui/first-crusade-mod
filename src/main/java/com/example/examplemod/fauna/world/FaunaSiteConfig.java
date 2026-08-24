@@ -42,7 +42,8 @@ public record FaunaSiteConfig(
         List<BlockState> props,
         int propTries,
         Optional<BlockState> floor,
-        Optional<BlockState> frame) implements FeatureConfiguration {
+        Optional<BlockState> frame,
+        Optional<BlockState> centre) implements FeatureConfiguration {
 
     public static final Codec<FaunaSiteConfig> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
@@ -60,7 +61,11 @@ public record FaunaSiteConfig(
                     Codec.intRange(0, 128).optionalFieldOf("prop_tries", 12)
                             .forGetter(FaunaSiteConfig::propTries),
                     BlockState.CODEC.optionalFieldOf("floor").forGetter(FaunaSiteConfig::floor),
-                    BlockState.CODEC.optionalFieldOf("frame").forGetter(FaunaSiteConfig::frame)
+                    BlockState.CODEC.optionalFieldOf("frame").forGetter(FaunaSiteConfig::frame),
+                    // Um bloco no meio do sitio. Opcional e generico de proposito: "este sitio tem
+                    // uma peca no centro" serve para o relicario Necron e para o que vier depois,
+                    // e um campo chamado reliquary dentro do pacote da fauna seria uma mentira.
+                    BlockState.CODEC.optionalFieldOf("centre").forGetter(FaunaSiteConfig::centre)
             ).apply(instance, FaunaSiteConfig::new));
 
     /** Quantos moradores este sitio cria nesta geracao. */

@@ -663,6 +663,42 @@ def write_json(path, data):
         handle.write("\n")
 
 
+def artefact_sprite():
+    """
+    O sprite 16x16 do artefacto: um glifo verde numa placa de necrodermis.
+
+    Aqui e o mesmo principio do resto do ficheiro — o PNG e gerado, nao pintado a mao, para que
+    mudar a paleta num sitio mude tudo. Um item de inventario nao tem UV para bater com nada, mas
+    continua a ser melhor ter um dono so.
+    """
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    px = img.load()
+
+    for x in range(3, 13):
+        for y in range(1, 15):
+            edge = x in (3, 12) or y in (1, 14)
+            px[x, y] = (VOID if edge else METAL_DARK) + (255,)
+
+    # Chanfro iluminado no topo e sombra em baixo: da espessura a placa.
+    for x in range(4, 12):
+        px[x, 2] = METAL + (255,)
+        px[x, 13] = VOID + (255,)
+
+    # O glifo: um T invertido com o travessao a meio, que e a forma que le como "Necron" a 16px.
+    for y in range(4, 12):
+        px[8, y] = GAUSS + (255,)
+    for x in range(5, 12):
+        px[x, 7] = GAUSS + (255,)
+    px[8, 7] = GAUSS_HOT + (255,)
+    px[8, 4] = GAUSS_HOT + (255,)
+
+    # Halo fraco a volta do glifo.
+    for x, y in ((7, 7), (9, 7), (8, 6), (8, 8)):
+        px[x, y] = GAUSS_DEEP + (255,)
+
+    return img
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--sheet", action="store_true", help="also write a contact sheet preview")
@@ -684,6 +720,12 @@ def main():
         used = sum(1 for bone in bones for _ in bone.cubes)
         print("%-16s %2d cubos  folha %dx%d" % (name, used, sheet, sheet))
         sheets.append((name, canvas.img))
+
+    sprite = artefact_sprite()
+    sprite_path = os.path.join(ASSETS, "textures", "item", "necron_artefact.png")
+    os.makedirs(os.path.dirname(sprite_path), exist_ok=True)
+    sprite.save(sprite_path)
+    print("%-16s sprite 16x16" % "necron_artefact")
 
     if args.sheet:
         pad = 8

@@ -76,6 +76,9 @@ public class FCItemModelProvider extends ItemModelProvider {
                 "trophy_greater_malkavan_constrictor", "trophy_cthellean_cudbear"}) {
             flatItem(drop);
         }
+
+        // A chave do Mundo-Tumba. Sprite gerado por tools/generate_necron_assets.py.
+        flatItem("necron_artefact");
     }
 
     private void spawnEgg(String name) {

@@ -48,6 +48,13 @@ public class FCBlockStateProvider extends BlockStateProvider {
         existingModel(FCRegistry.ORK_LOOT_PIT);
         existingModel(FCRegistry.ORK_SQUIG_PEN);
         existingModel(FCRegistry.ORK_MEK_WORKSHOP);
+
+        // O relicario Necron vive noutro DeferredRegister (FCNecrons), entao o helper por
+        // RegistryObject<Block> de FCRegistry nao lhe serve; e o mesmo modelo escrito a mao.
+        // simpleBlock e nao simpleBlockWithItem: o relicario nao tem BlockItem de proposito — nasce
+        // no worldgen, e um que se pudesse guardar no bolso seria uma chave duplicavel.
+        simpleBlock(com.example.examplemod.necron.FCNecrons.NECRON_RELIQUARY.get(),
+                models().getExistingFile(modLoc("block/necron_reliquary")));
     }
 
     private void cubeAll(RegistryObject<Block> block, net.minecraft.resources.ResourceLocation texture) {

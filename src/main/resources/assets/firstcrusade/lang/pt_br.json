@@ -1725,5 +1725,8 @@
   "entity.firstcrusade.necron_overlord": "Senhor Necron",
   "entity.firstcrusade.necron_scarab": "Escaravelho Canoptek",
   "msg.firstcrusade.necron.overlord_rises": "A tumba entregou o seu Senhor. Está acordada, e está a procurar-te.",
-  "msg.firstcrusade.necron.overlord_down": "O Senhor cai. Os protocolos à tua volta silenciam."
+  "msg.firstcrusade.necron.overlord_down": "O Senhor cai. Os protocolos à tua volta silenciam.",
+  "block.firstcrusade.necron_reliquary": "Relicário Necron",
+  "item.firstcrusade.necron_artefact": "Artefato Necron",
+  "msg.firstcrusade.necron.artefact_taken": "Levantas o artefato. Muito abaixo, algo regista que ele saiu — o Mundo-Tumba está nas tuas cartas agora."
 }
