@@ -80,6 +80,7 @@ public class ExampleMod {
 
     // Imperial Battle Tank vehicle pack — self-contained registry in .registry.
     com.example.examplemod.registry.ModVehicleEntities.register(modEventBus);
+    com.example.examplemod.necron.FCNecrons.register(modEventBus);
 
     // Valkyrie Gunship + Sentinel Walker combat-vehicle mobs — self-contained registry in .registry.
     com.example.examplemod.registry.ModCombatVehicleContent.register(modEventBus);

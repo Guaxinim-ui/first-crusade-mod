@@ -1720,5 +1720,10 @@
   "msg.firstcrusade.armour.at_cap": "Esta cidade já tem %s tanques em campo.",
   "msg.firstcrusade.armour.no_space": "Não há chão livre ao lado do Núcleo para pousar um tanque.",
   "msg.firstcrusade.armour.no_support": "War Support insuficiente: um tanque custa %s.",
-  "msg.firstcrusade.armour.built": "Blindado entregue, construído na %s."
+  "msg.firstcrusade.armour.built": "Blindado entregue, construído na %s.",
+  "entity.firstcrusade.necron_warrior": "Guerreiro Necron",
+  "entity.firstcrusade.necron_overlord": "Senhor Necron",
+  "entity.firstcrusade.necron_scarab": "Escaravelho Canoptek",
+  "msg.firstcrusade.necron.overlord_rises": "A tumba entregou o seu Senhor. Está acordada, e está a procurar-te.",
+  "msg.firstcrusade.necron.overlord_down": "O Senhor cai. Os protocolos à tua volta silenciam."
 }

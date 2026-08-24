@@ -88,6 +88,15 @@ public final class FirstCrusadeClientEvents {
         event.registerEntityRenderer(FCRegistry.FEUDAL_KNIGHT.get(), FeudalKnightRenderer::new);
         event.registerEntityRenderer(FCRegistry.CITY_COMMANDER.get(), CityCommanderRenderer::new);
 
+        // §26 — Necrons. Mesmo caminho da fauna: um nome resolve geo + textura + animacao, entao
+        // cada unidade e uma linha e nao ha classe de renderer nenhuma.
+        registerAnimal(event, com.example.examplemod.necron.FCNecrons.NECRON_WARRIOR.get(),
+                "necron_warrior", 0.5F);
+        registerAnimal(event, com.example.examplemod.necron.FCNecrons.NECRON_OVERLORD.get(),
+                "necron_overlord", 0.8F);
+        registerAnimal(event, com.example.examplemod.necron.FCNecrons.NECRON_SCARAB.get(),
+                "necron_scarab", 0.4F);
+
         // Fase E — fauna. Sem uma classe de renderer por bicho: FCGeoRenderer ja resolve os tres
         // caminhos de asset pelo nome, entao cada especie e uma linha e o nome aqui e o mesmo
         // nome dos arquivos em geo/, textures/entity/ e animations/.

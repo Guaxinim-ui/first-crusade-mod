@@ -1726,5 +1726,10 @@
   "msg.firstcrusade.armour.at_cap": "This city already fields %s tanks.",
   "msg.firstcrusade.armour.no_space": "No open ground beside the Core to set a tank down on.",
   "msg.firstcrusade.armour.no_support": "Not enough War Support: a tank costs %s.",
-  "msg.firstcrusade.armour.built": "Armour delivered, built at the %s."
+  "msg.firstcrusade.armour.built": "Armour delivered, built at the %s.",
+  "entity.firstcrusade.necron_warrior": "Necron Warrior",
+  "entity.firstcrusade.necron_overlord": "Necron Overlord",
+  "entity.firstcrusade.necron_scarab": "Canoptek Scarab",
+  "msg.firstcrusade.necron.overlord_rises": "The tomb has given up its Overlord. It is awake, and it is looking for you.",
+  "msg.firstcrusade.necron.overlord_down": "The Overlord falls. The protocols around you go quiet."
 }

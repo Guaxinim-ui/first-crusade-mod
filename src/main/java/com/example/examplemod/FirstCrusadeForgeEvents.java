@@ -264,6 +264,10 @@ public final class FirstCrusadeForgeEvents {
 
         if (event.player instanceof net.minecraft.server.level.ServerPlayer player) {
             com.example.examplemod.planet.PlanetHazard.tick(player);
+
+            // §26. Its own interval (600 ticks) inside this one, because what the tomb sends is an
+            // event and not a per-two-second effect — and it leaves immediately on any other world.
+            com.example.examplemod.necron.NecronAwakeningSpawner.tick(player);
         }
     }
 

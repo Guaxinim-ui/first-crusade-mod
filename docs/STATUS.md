@@ -378,6 +378,53 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-08-24 (3): **§26 COMPLETO — os Necrons ganharam corpo. Modelos, UVs, texturas e animações.**
+  Build verde. Servidor verificado; **render não visto** (precisa de cliente).
+
+  O dono autorizou explicitamente fazer a arte e mandou duas referências (falange de Guerreiros sob
+  céu verde com escaravelhos no chão; Senhor com ceptro, manto e coroa). Isto **substitui** a regra
+  anterior de que os modelos eram trabalho dele — vale para os Necrons, não retroactivamente para os
+  4 placeholders Ork do §29.
+
+  **`tools/generate_necron_assets.py` — o gerador ATRIBUI as UVs, não as lê.** É a diferença que
+  importa: `generate_geo_troop_textures.py` lê um modelo feito por humano e pinta as UVs que
+  encontrar. Aqui ninguém fez o modelo — nasce no script. Então `pack()` deita a rede de seis faces
+  de cada cubo na folha, escreve o (u,v) escolhido **no .geo.json** e entrega **os mesmos
+  rectângulos** ao pintor. Não há segunda cópia do layout, logo a armadilha documentada nos Orks
+  (`ork_nob.png` pintado para o layout vanilla contra um geo com UV próprio) é **impossível por
+  construção**: um cubo que se mexeu não pode ser pintado no sítio antigo, porque o sítio antigo
+  deixou de existir como número em lado nenhum.
+
+  **Três unidades, porque os estágios já as nomeavam.** `NecronStage` lê SILENT → SCARABS →
+  WARRIORS → TOMB_DEFENCES → OVERLORD desde que a camada de campanha foi escrita. Construir outra
+  coisa primeiro seria construir para um relógio que a campanha não tem.
+
+  - **Warrior** (30 HP, armadura 6): **protocolos de reanimação** — recusa a morte até 2× com 50% de
+    hipótese. Feito no `die()` e não a cancelar o dano, para o abate continuar a contar: uma operação
+    que precisa de 3 Necrons mortos não é enganada por um corpo que se levantou duas vezes.
+  - **Scarab** (4 HP, veloz): fraco de propósito. A ameaça é aritmética.
+  - **Overlord** (120 HP): não dá dano extra — **zera a contagem de reanimações** dos Guerreiros a 16
+    blocos. Reset e não cura, porque cura seria uma segunda barra de vida invisível; reset lê-se como
+    "levantaram-se outra vez", que o jogador vê e pode responder. A jogada que daí sai é a certa:
+    matar a coroa primeiro.
+
+  **Zero alterações ao `FirstCrusadeFactionManager`**: qualquer `Monster` que ele não reconhece cai em
+  `HOSTILE`, o que é exactamente certo — os Necrons não são inimigos do Imperium, são de toda a gente,
+  e os Orks descobrem isso sozinhos. A decisão documentada de não alargar `FirstCrusadeFaction`
+  aguenta-se.
+
+  **Sem spawn eggs, de propósito.** Todas as outras facções têm; a dos Necrons chega quando a tumba
+  decide. Um ovo tornaria o relógio de 100 pontos uma coisa que se salta.
+  `NecronAwakeningSpawner` põe-nos em anel de 20-32 blocos, com teto do que está **vivo** por perto
+  (14), a cada 600 ticks, e só em chunk já carregado.
+
+  **Medido em servidor:** as três invocam e os nomes resolvem; seis Guerreiros levaram 1000 de dano
+  cada e **quatro sobreviveram** (50% esperado, dentro da margem). Zero exceptions.
+
+  **Reproporcionei os dois humanoides depois de ver o preview:** torso 8×10 lê como frigorífico à
+  escala do Minecraft. A correcção foi partir o tronco em peito estreito sobre cintura mais estreita
+  ainda — esse estrangulamento é a única coisa que separa "esqueleto" de "robô" a vinte blocos.
+
 - 2026-08-24 (2): **§26 — os Necrons entram na guerra sem uma única textura.**
   Build verde e **verificado em servidor** (única fatia recente que foi vista a correr).
 
