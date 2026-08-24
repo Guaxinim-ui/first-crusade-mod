@@ -269,6 +269,10 @@ public final class FirstCrusadeForgeEvents {
             // §26. Its own interval (600 ticks) inside this one, because what the tomb sends is an
             // event and not a per-two-second effect — and it leaves immediately on any other world.
             com.example.examplemod.necron.NecronAwakeningSpawner.tick(player);
+
+            // §5 fatia 2. Same shape again: its own intervals inside this one, and it declines on
+            // the same cheap key comparison the hazards use.
+            com.example.examplemod.planet.PlanetAmbience.tick(player);
         }
     }
 

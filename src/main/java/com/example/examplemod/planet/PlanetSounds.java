@@ -56,6 +56,35 @@ public final class PlanetSounds {
     /** A launch refused by the server. */
     public static final RegistryObject<SoundEvent> TRAVEL_ERROR = register("planet_travel_error");
 
+    // ------------------------------------------------------------------ §5 fatia 2: ambience
+    //
+    // The signature of a world, played occasionally to anyone standing on it. Same split as the
+    // terminal's seven: mod-owned ids, vanilla files behind them in sounds.json, so real audio is a
+    // one-line change per sound and no Java at all.
+    //
+    // Each source was chosen for what it is rather than for what it is called: the deep, slow
+    // vanilla cave and nether ambiences carry a room's worth of space with them, which is exactly
+    // what "this planet is big and you are alone on it" needs.
+
+    /** Armageddon: the ash never settles. */
+    public static final RegistryObject<SoundEvent> AMBIENT_ASH = register("planet_ambient_ash");
+
+    /** Valhalla: wind with nothing to break it. */
+    public static final RegistryObject<SoundEvent> AMBIENT_WIND = register("planet_ambient_wind");
+
+    /** The Forge World: machinery you cannot see, running for someone else. */
+    public static final RegistryObject<SoundEvent> AMBIENT_FORGE = register("planet_ambient_forge");
+
+    /** Catachan: the jungle is busy and none of it is friendly. */
+    public static final RegistryObject<SoundEvent> AMBIENT_JUNGLE = register("planet_ambient_jungle");
+
+    /** The Ork world: something is always shouting, somewhere. */
+    public static final RegistryObject<SoundEvent> AMBIENT_ORK_WORLD =
+            register("planet_ambient_ork_world");
+
+    /** The tomb world: the sound of a machine the size of a planet, idling. */
+    public static final RegistryObject<SoundEvent> AMBIENT_TOMB = register("planet_ambient_tomb");
+
     private static RegistryObject<SoundEvent> register(String name) {
         ResourceLocation id = new ResourceLocation(ExampleMod.MODID, name);
         return SOUND_EVENTS.register(name, () -> SoundEvent.createVariableRangeEvent(id));

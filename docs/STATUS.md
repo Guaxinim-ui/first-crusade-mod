@@ -110,7 +110,7 @@ Tudo o resto nesta secção é histórico. Isto é a lista viva.
 | Item | Estado | Nota |
 |---|---|---|
 | **ESCORT / comboios** | **FEITO** (2026-08-24) | Pacote `campaign/convoy/`. Medido em servidor de ponta a ponta. Falta ver o ramo com jogador presente — precisa de cliente. |
-| **§5 fatia 2 — ambiência** | por fazer | Sons e spawns por planeta. Sem arte nova. A fatia 1 (perigos ambientais) está feita. Metade do trabalho de spawns já existe: os 11 biomas do mod têm `creature` povoado pela fauna; o que está vazio em quase todos é `monster`. |
+| **§5 fatia 2 — ambiência** | **FEITO** (2026-08-24) | `PlanetAmbience`: 6 sons de mundo + guarnição selvagem lida do controlo inimigo. Nada visto/ouvido — precisa de cliente. |
 | **§18-19 Hive vertical** | por avaliar | A maior das que sobram e a única que ainda não olhei. |
 | **RESCUE / RECOVER** | bloqueado | Esperam por esquadrões resgatáveis e por mais artefactos. O `RECOVER` ficou mais perto agora que existe um artefacto. |
 | **Cadia e Ork World** | bloqueado | Continuam atrás de `TRIGGER_CAMPAIGN`, que nada dispara. O mundo-tumba saiu dessa lista em 2026-08-24. |
@@ -396,6 +396,51 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 - Mensagens de commit em pt-BR, terminar com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
 ## 7. Changelog (mais recente no topo)
+
+- 2026-08-24 (7): **§5 fatia 2 — o planeta passou a soar, e a guerra passou a sentir-se debaixo dos
+  pés.** Build verde. **O som e o spawn em si não foram vistos** — precisam de cliente.
+
+  **Onde isto NÃO foi feito, e porquê.** O sítio óbvio para spawns selvagens é o bloco `spawners` do
+  bioma, e o `generate_biomes.py` até deixa a porta aberta ("*Mobs hostis vanilla ficam de fora: o mod
+  povoa o mundo com as duas faccoes*"). O problema é que **biomas são partilhados**: `salt_waste` é 30%
+  de Armageddon, 25% do Forge World e **60% do mundo-tumba**; `ash_waste` está em Armageddon, no Forge
+  World e no Ork World. Pôr Orks em qualquer um deles punha Orks **no mundo-tumba** e minava o relógio
+  de 100 pontos em que todo o desenho Necron assenta. É exactamente a armadilha que o `PlanetHazard` já
+  tinha escrito: uma tabela chaveada por algo quase-mas-não-totalmente único é uma tabela que vai estar
+  errada exactamente uma vez. Então isto é chaveado por **dimensão**, em Java, como os perigos.
+
+  **A guarnição é lida da guerra, não de uma lista.** Quem anda num planeta não é propriedade fixa
+  dele: é o `enemyControl` que a campanha já recalcula dos setores todo passe. Segura 90% de Armageddon
+  e o ermo cala-se; perde-o de volta para 70% Ork e voltas a encontrá-los entre os setores. **É este o
+  ponto da fatia inteira** — até agora as percentagens da campanha eram coisa que se lia na Mesa e
+  nunca se sentia no chão: tomar um setor mexia numa barra. Agora muda quem está de pé na cinza.
+
+  **Os Necrons ficam deliberadamente de fora.** O mundo-tumba não spawna nada por aqui: o
+  `NecronAwakeningSpawner` é dono do que sai daquele chão, com portão no despertar, e é a mesma razão
+  por que os Necrons não têm spawn eggs. Uma segunda fonte, guiada por controlo, faria do relógio uma
+  coisa que se passa ao lado.
+
+  **Seis sons**, no mesmo padrão que os sete do terminal: id do mod, ficheiro vanilla por trás no
+  `sounds.json`, portanto trocar por áudio a sério é uma linha por som e zero Java. Macragge, Cadia e
+  Verdanis não levam som nem inimigos, pelo mesmo argumento dos perigos.
+
+  **Os roamers não são persistentes**, ao contrário dos Necrons — e a diferença é o ponto: aqueles são
+  um acontecimento e não podem evaporar-se a meio de uma luta, estes são população. Quem se afasta
+  deixa-os para trás em vez de rebocar uma cauda de Orks pelo planeta.
+
+  **Medido:** build verde; servidor arranca com o gancho novo e **zero exceptions do mod** (só as duas
+  conhecidas do netty); `sounds.json` válido com 29 entradas e as 6 novas lá; **en/pt sincronizados a
+  1755 chaves cada** (fechou de caminho um buraco antigo de 6 legendas que só existiam em inglês); e os
+  números que a porta lê, contra dados reais — Armageddon 70% inimigo (manda 2, com hipótese de Nob),
+  Ork World 91% (manda 3), Macragge 0% e Cadia 10% (calados, abaixo do limiar de 20).
+
+  **Não medido:** o som a tocar e os roamers a nascer. Ambos precisam de um jogador num planeta.
+
+  **Armadilha nova, para ninguém repetir:** tentei provar o registo dos sons com
+  `/playsound firstcrusade:<id>` e **não serve** — o comando aceitou na mesma um id inventado
+  (`planet_ambient_inventado`), porque em 1.20.1 o `PlaySoundCommand` só lê um `ResourceLocation` e
+  não o valida contra o registo. Ao contrário do `/damage`, que **recusa** um damage type que não
+  exista e por isso serviu de prova em 2026-08-22. Não confundir os dois.
 
 - 2026-08-24 (6): **ESCORT existe — o comboio que se pode perder.** Build verde,
   **medido em servidor de ponta a ponta**.

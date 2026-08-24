@@ -212,5 +212,65 @@
         "stream": false
       }
     ]
+  },
+  "planet_ambient_ash": {
+    "subtitle": "subtitle.firstcrusade.planet_ambient_ash",
+    "sounds": [
+      {
+        "name": "minecraft:ambient.cave",
+        "type": "event",
+        "stream": false
+      }
+    ]
+  },
+  "planet_ambient_wind": {
+    "subtitle": "subtitle.firstcrusade.planet_ambient_wind",
+    "sounds": [
+      {
+        "name": "minecraft:ambient.underwater.loop",
+        "type": "event",
+        "stream": false
+      }
+    ]
+  },
+  "planet_ambient_forge": {
+    "subtitle": "subtitle.firstcrusade.planet_ambient_forge",
+    "sounds": [
+      {
+        "name": "minecraft:ambient.nether_wastes.loop",
+        "type": "event",
+        "stream": false
+      }
+    ]
+  },
+  "planet_ambient_jungle": {
+    "subtitle": "subtitle.firstcrusade.planet_ambient_jungle",
+    "sounds": [
+      {
+        "name": "minecraft:ambient.crimson_forest.loop",
+        "type": "event",
+        "stream": false
+      }
+    ]
+  },
+  "planet_ambient_ork_world": {
+    "subtitle": "subtitle.firstcrusade.planet_ambient_ork_world",
+    "sounds": [
+      {
+        "name": "minecraft:ambient.soul_sand_valley.loop",
+        "type": "event",
+        "stream": false
+      }
+    ]
+  },
+  "planet_ambient_tomb": {
+    "subtitle": "subtitle.firstcrusade.planet_ambient_tomb",
+    "sounds": [
+      {
+        "name": "minecraft:ambient.basalt_deltas.loop",
+        "type": "event",
+        "stream": false
+      }
+    ]
   }
 }

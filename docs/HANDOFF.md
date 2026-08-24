@@ -30,13 +30,15 @@ formar-se à volta de um Nob; ruína Necron a construir-se com 1 relicário, 66 
 **NUNCA visto (precisa de cliente):** o render dos **sete modelos novos** (3 Necrons + 4 Orks) e do
 relicário; a **aba FRONTS da Mesa de Guerra**; o pacote de ordem da Mesa; a materialização de
 deployment perto do jogador; a requisição de blindado; os quatro botões novos do Ork Camp; os
-perigos ambientais dos planetas.
+perigos ambientais dos planetas; os **comboios na aba Logistics** e o ramo do ESCORT com jogador
+presente; e os **seis sons de planeta** e os roamers da §5 fatia 2.
 
 ## O QUE FALTA
 
-Ver `docs/STATUS.md` §4.1. Resumo: **§5 fatia 2** (ambiência: sons e spawns por planeta) e
-**§18-19 Hive vertical** (por avaliar). **ESCORT/comboios ficou feito em 2026-08-24** e está medido.
-Bloqueados por coisas que não existem: RESCUE, RECOVER, e os desbloqueios de Cadia e Ork World.
+Ver `docs/STATUS.md` §4.1. Resumo: sobra **§18-19 Hive vertical** (por avaliar) — a maior das que
+faltavam e a única que ainda ninguém olhou. **ESCORT/comboios** e a **§5 fatia 2** ficaram feitos em
+2026-08-24. Bloqueados por coisas que não existem: RESCUE, RECOVER, e os desbloqueios de Cadia e
+Ork World.
 
 ## COMO CONSTRUIR E TESTAR
 
@@ -94,6 +96,11 @@ Comandos úteis: `/fc perf`, `/fc squad`, `/fc suppression`, `/fcstrategy planet
    `>`, `:` e `@`, que aquele leitor recusa) — todos nomeiam uma **frente**.
 10. **Sem jar do mod em `run/mods`** — o jar de `build/libs` é reobfuscado e dá `NoSuchFieldError`
     no dev.
+11. **Bioma não serve de chave por planeta.** `salt_waste` é 30% de Armageddon, 25% do Forge World e
+    60% do mundo-tumba; `ash_waste` está em três mundos. Qualquer coisa que tenha de valer *por
+    planeta* — perigo, som, spawn — é chaveada por **dimensão** em Java, nunca pelo bioma.
+12. **`/playsound` não valida o id do som** (aceita um inventado), portanto não prova registo.
+    O `/damage` **valida** e por isso serve. Não trocar um pelo outro.
 
 ## COMO TRABALHAR
 
