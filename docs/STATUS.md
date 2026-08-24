@@ -378,6 +378,36 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-08-24: **§14-15 — veículos ligados à economia.** Build verde. **Não testado em jogo.**
+
+  O Battle Tank existia e só se obtinha por **spawn egg**. Ao mesmo tempo `SectorType.VEHICLE_FACTORY`
+  existia, estava no blueprint do Forge World, e produzia plasteel que ninguém gastava. Duas metades
+  de uma feature, cada uma completa, sem nada no meio.
+
+  **`ArmourRequisition`** + botão **Requisitar Blindado** na aba Military do Core.
+
+  **O gate não é um total de recurso — é a posse de um lugar.** O Imperium põe blindado em campo
+  porque segura uma fábrica de veículos algures na Cruzada; se os Orks tomarem esse setor, os tanques
+  param **em todo o lado**. É a primeira coisa no mod em que perder chão num planeta se sente nas mãos
+  noutro, que é para o que a camada de campanha foi construída. Fábrica **disputada não conta** —
+  fábrica com combate dentro não despacha.
+
+  **Atenção, é um ponto único:** `forge_world.vehicle_factory` é o **único** VEHICLE_FACTORY do jogo.
+  Consequência deliberada e dramática, mas convém saber. Consequência secundária que **não** era
+  óbvia: numa save onde ninguém visitou o Forge World a frente nunca foi ativada, logo o setor **não
+  existe** e não há tanque. Isso é um gate de progressão razoável, mas a mensagem de recusa foi
+  reescrita para o dizer ("o Forge World tem a única — chega lá, segura...") em vez de deixar o jogador
+  a achar que é bug.
+
+  Paga em **War Support** pelo `spendWarSupport` (checa e debita numa chamada só, como as ordens da
+  Mesa), custo 60 = 6× um ASSAULT, porque um tanque tem de ler como o maior compromisso que a cidade
+  faz. **Teto de 2 por cidade**, e teto e não cooldown: cooldown deixa um jogador paciente acumular
+  blindado sem limite.
+
+  O tanque já era facção IMPERIUM, então nasce alinhado sem código novo. A posição vem do
+  `getBlockPos()` do próprio Core e não do pacote — o servidor já tem o valor, não há por que confiar
+  no cliente para ele.
+
 - 2026-08-22: **§5 — identidade dos planetas em runtime (1ª fatia): perigos ambientais.**
   Build verde. **Não testado com jogador** (precisa de cliente num planeta).
 

@@ -21,6 +21,9 @@ public enum ImperialCommandCoreAction {
     RECRUIT_GUARDSMAN,
     CYCLE_SPECIALIST,
     PROMOTE_SPECIALIST,
+
+    /** Commission a Battle Tank from the Crusade's vehicle industry (see ArmourRequisition). */
+    REQUISITION_ARMOUR,
     UPGRADE_CITY,
     REPAIR_CORE,
     CALL_REINFORCEMENTS,

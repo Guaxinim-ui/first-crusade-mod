@@ -1713,5 +1713,12 @@
   "hazard.firstcrusade.spores": "Esporos Ork no ar. Cubra o rosto.",
   "hazard.firstcrusade.toxic_flora": "Alguma coisa no mato te pegou.",
   "hazard.firstcrusade.tomb_chill": "O frio aqui embaixo não é clima.",
-  "death.attack.firstcrusade.ash_choke": "%1$s sufocou na cinza"
+  "death.attack.firstcrusade.ash_choke": "%1$s sufocou na cinza",
+  "gui.firstcrusade.button.requisition_armour": "Requisitar Blindado",
+  "msg.firstcrusade.armour.campaign_off": "A camada de campanha está desligada, então não há indústria de guerra de onde tirar.",
+  "msg.firstcrusade.armour.no_factory": "Nenhuma fábrica de veículos funcionando na Cruzada. O Forge World tem a única — chega lá, segura, e mantém o combate longe dela.",
+  "msg.firstcrusade.armour.at_cap": "Esta cidade já tem %s tanques em campo.",
+  "msg.firstcrusade.armour.no_space": "Não há chão livre ao lado do Núcleo para pousar um tanque.",
+  "msg.firstcrusade.armour.no_support": "War Support insuficiente: um tanque custa %s.",
+  "msg.firstcrusade.armour.built": "Blindado entregue, construído na %s."
 }

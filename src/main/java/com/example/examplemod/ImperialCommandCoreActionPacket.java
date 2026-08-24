@@ -109,6 +109,17 @@ public class ImperialCommandCoreActionPacket {
 
             case PROMOTE_SPECIALIST -> commandCore.promoteSpecialist(player);
 
+            // The rules live in ArmourRequisition, which owns the payment too, so there is
+            // exactly one place a tank can come from and one place its cost can be wrong.
+            case REQUISITION_ARMOUR -> {
+                Component refusal = com.example.examplemod.campaign.force.ArmourRequisition
+                        .requisition(player, commandCore);
+
+                if (refusal != null) {
+                    player.displayClientMessage(refusal, true);
+                }
+            }
+
             case UPGRADE_CITY -> {
                 ItemStack plateStack = findItemStack(player, FCRegistry.CRUSADIUM_PLATE.get());
 

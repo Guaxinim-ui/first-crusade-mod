@@ -1719,5 +1719,12 @@
   "hazard.firstcrusade.spores": "Ork spores in the air. Cover your face.",
   "hazard.firstcrusade.toxic_flora": "Something in the undergrowth got you.",
   "hazard.firstcrusade.tomb_chill": "The cold down here is not weather.",
-  "death.attack.firstcrusade.ash_choke": "%1$s choked on the ash"
+  "death.attack.firstcrusade.ash_choke": "%1$s choked on the ash",
+  "gui.firstcrusade.button.requisition_armour": "Requisition Armour",
+  "msg.firstcrusade.armour.campaign_off": "The campaign layer is disabled, so there is no war industry to draw on.",
+  "msg.firstcrusade.armour.no_factory": "No working vehicle factory in the Crusade. The Forge World has the only one — reach it, hold it, and keep the fighting off it.",
+  "msg.firstcrusade.armour.at_cap": "This city already fields %s tanks.",
+  "msg.firstcrusade.armour.no_space": "No open ground beside the Core to set a tank down on.",
+  "msg.firstcrusade.armour.no_support": "Not enough War Support: a tank costs %s.",
+  "msg.firstcrusade.armour.built": "Armour delivered, built at the %s."
 }

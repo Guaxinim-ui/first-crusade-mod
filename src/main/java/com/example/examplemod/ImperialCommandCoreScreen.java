@@ -170,6 +170,7 @@ public class ImperialCommandCoreScreen extends AbstractContainerScreen<ImperialC
         this.recruitButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.recruit", ImperialCommandCoreAction.RECRUIT_GUARDSMAN);
         this.cycleSpecialistButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.cycle_specialist", ImperialCommandCoreAction.CYCLE_SPECIALIST);
         this.promoteSpecialistButton = addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.promote_specialist", ImperialCommandCoreAction.PROMOTE_SPECIALIST);
+        addActionButton(buttonX(), buttonY(row++), 148, 18, "gui.firstcrusade.button.requisition_armour", ImperialCommandCoreAction.REQUISITION_ARMOUR);
     }
 
     private void initDefenseTab() {
