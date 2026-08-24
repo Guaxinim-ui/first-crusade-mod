@@ -363,6 +363,124 @@ public final class OperationManager {
         campaign.setDirty();
     }
 
+    // ====================================================================================
+    // Convoys
+    // ====================================================================================
+
+    /**
+     * Raises the ESCORT order that belongs to a convoy just dispatched.
+     *
+     * <h2>Why the convoy issues the order and not {@link #maybeIssue}</h2>
+     *
+     * Every other order is chosen from the shape of the front: the generator reads who holds what and
+     * asks for the thing that situation calls for. ESCORT is the one order that is <i>about</i> a
+     * particular object, and an ESCORT with no convoy behind it could never be completed — which is
+     * exactly the failure {@link OperationTrigger} was written to prevent. So the convoy raises its
+     * own order and hands over its id, and the pairing is a field rather than a guess.
+     *
+     * <p>The per-front cap is deliberately not consulted. That cap limits how many orders the
+     * generator may invent for a quiet front; this one is not invented, it is the record of something
+     * that has already happened, and suppressing it would leave a convoy in the air that the player is
+     * never told to defend. Turning operations off entirely ({@code maxOperationsPerFront = 0}) does
+     * still suppress it — the convoy runs unescorted and unannounced, which is a coherent thing to
+     * have asked for.
+     */
+    public static void issueEscort(net.minecraft.server.MinecraftServer server, CampaignData campaign,
+                                   CampaignFront front,
+                                   com.example.examplemod.campaign.convoy.Convoy convoy,
+                                   long gameTime) {
+        if (CampaignConfig.maxOperationsPerFront() <= 0) {
+            return;
+        }
+
+        OperationType type = OperationType.ESCORT;
+
+        PlanetWarState state = campaign.stateOf(front);
+        double heat = state.intensity().raidRate();
+
+        Operation operation = new Operation(
+                front.path() + ".op." + gameTime + ".escort",
+                type,
+                front.id(),
+                "",
+                null,
+                1,
+                OperationReward.scaled(3, type.rewardScale() * heat),
+                gameTime,
+                // The order stands exactly as long as the run does, plus a pass of slack so it cannot
+                // lapse on the same tick the convoy lands. An escort with a deadline of its own could
+                // expire while the thing it is about is still on the road.
+                convoy.arrivesAt() + CampaignConfig.strategicIntervalTicks());
+
+        campaign.addOperation(operation);
+        convoy.setEscortOperationId(operation.id());
+
+        CampaignLog.war("{} escort order {} raised for convoy {}",
+                front.path(), operation.id(), convoy.id());
+
+        ServerLevel level = server.getLevel(front.dimension());
+
+        announce(level, Component.translatable("msg.firstcrusade.operation.issued",
+                type.displayName(), operation.describe()).withStyle(ChatFormatting.GOLD));
+    }
+
+    /**
+     * A convoy reached the end of its run, one way or the other. Resolves the order it was raised for.
+     *
+     * <p>Resolves <b>that</b> order by id rather than every ESCORT standing on the front: two convoys
+     * can be in the air at once, and the first to land completing both would pay a player for a run
+     * that is still being shot at.
+     */
+    public static void onConvoyResolved(net.minecraft.server.MinecraftServer server,
+                                        CampaignData campaign,
+                                        com.example.examplemod.campaign.convoy.Convoy convoy,
+                                        boolean arrived, long gameTime) {
+        if (!convoy.hasEscortOrder()) {
+            return;
+        }
+
+        Operation operation = campaign.operation(convoy.escortOperationId());
+
+        if (operation == null || !operation.isActive()) {
+            return;
+        }
+
+        CampaignFront front = com.example.examplemod.campaign.CampaignFronts
+                .byId(convoy.destination()).orElse(null);
+
+        if (front == null) {
+            return;
+        }
+
+        ServerLevel level = server.getLevel(front.dimension());
+
+        if (!arrived) {
+            operation.fail(gameTime);
+            reportUnfinished(level, front, operation);
+            campaign.setDirty();
+            return;
+        }
+
+        // Arrived, but nobody was ever there. The cargo landed — logistics does not need a witness —
+        // and the order lapses unpaid, because "see the convoy through" is a thing a person does.
+        //
+        // Without this the escort was an idle income: a save with eleven cut lanes lands a convoy
+        // every couple of minutes forever, and each one would have paid research and dominion with no
+        // action attached to it. Measured on a headless server, which is exactly where it showed.
+        if (!convoy.wasEscorted()) {
+            operation.expire(gameTime);
+            reportUnfinished(level, front, operation);
+            campaign.setDirty();
+            return;
+        }
+
+        if (operation.complete(gameTime)) {
+            finish(server.overworld(), campaign, front, operation, level, gameTime);
+        }
+
+        campaign.setDirty();
+    }
+
     /**
      * Rebuilds the death-handler's fast-path set from the orders currently standing.
      *
@@ -473,10 +591,11 @@ public final class OperationManager {
     }
 
     /**
-     * The nearest Imperial Core to the order's target that is actually loaded.
+     * The nearest loaded Imperial Core to the order's target.
      *
-     * <p>Reads the war map for candidates — which is now bucketed by dimension, so this cannot pick
-     * a Core on another planet — and only touches the world for ones whose chunk is already loaded.
+     * <p>The war-map walk itself lives in {@link com.example.examplemod.campaign.CampaignIntegration},
+     * which is where the strategic layer is supposed to reach into the world. All this adds is the
+     * question specific to an order: which position to measure from.
      */
     @Nullable
     private static ImperialCommandCoreBlockEntity nearestLoadedCore(ServerLevel level,
@@ -488,29 +607,7 @@ public final class OperationManager {
 
         BlockPos from = target != null ? target.pos() : level.getSharedSpawnPos();
 
-        ImperialCommandCoreBlockEntity best = null;
-        double bestDistance = Double.MAX_VALUE;
-
-        for (long packed : WorldWarMapData.get(level).getCities(level)) {
-            BlockPos pos = BlockPos.of(packed);
-
-            if (!level.isLoaded(pos)) {
-                continue;
-            }
-
-            double distance = pos.distSqr(from);
-
-            if (distance >= bestDistance) {
-                continue;
-            }
-
-            if (level.getBlockEntity(pos) instanceof ImperialCommandCoreBlockEntity core) {
-                bestDistance = distance;
-                best = core;
-            }
-        }
-
-        return best;
+        return com.example.examplemod.campaign.CampaignIntegration.nearestLoadedCore(level, from);
     }
 
     // ====================================================================================
@@ -554,6 +651,14 @@ public final class OperationManager {
     @Nullable
     public static Operation issueByHand(ServerLevel level, CampaignFront front, OperationType type) {
         if (!type.trigger().isWired()) {
+            return null;
+        }
+
+        // ESCORT is wired, but only to a convoy. Handing one out by itself would put an order on the
+        // board that nothing can ever complete — the exact failure the trigger split exists to
+        // prevent, arriving through the back door now that the type is no longer MANUAL. Dispatch a
+        // convoy instead: /fcstrategy convoy dispatch raises the order with it.
+        if (type == OperationType.ESCORT) {
             return null;
         }
 

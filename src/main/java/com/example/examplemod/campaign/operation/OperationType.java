@@ -14,7 +14,10 @@ import net.minecraft.network.chat.Component;
  * already held offers RECON on the ground nobody has walked. That is the difference between missions
  * that describe the war and missions that are wallpaper over it.
  *
- * @see OperationTrigger for why three of these are defined but not yet issued
+ * <p>ESCORT is the one exception to "generated from the war": it is raised by the convoy layer for a
+ * particular convoy rather than chosen from the front's shape. See its own note.
+ *
+ * @see OperationTrigger for why two of these are defined but not yet issued
  */
 public enum OperationType {
 
@@ -39,13 +42,20 @@ public enum OperationType {
     /** Kill the thing running the enemy war effort here. */
     ASSASSINATION("assassination", OperationTrigger.KILL_LEADER, 1, 24_000, 1.8D, ChatFormatting.DARK_RED),
 
+    /**
+     * See a relief convoy through to this front.
+     *
+     * <p>The one order that is not chosen from the shape of the war: it is raised by
+     * {@link com.example.examplemod.campaign.convoy.ConvoyManager} when a cut lane forces a shipment
+     * through, and it names that one convoy. Required is always 1 — a convoy either lands or it does
+     * not — and the play is in the integrity it lands with, not in a counter.
+     */
+    ESCORT("escort", OperationTrigger.CONVOY_ARRIVED, 1, 12_000, 1.2D, ChatFormatting.WHITE),
+
     // ------------------------------------------------------------------ defined, not yet issued
 
     /** Reach a cut-off force. Waiting on rescuable squads existing as a thing the world can hold. */
     RESCUE("rescue", OperationTrigger.MANUAL, 1, 12_000, 1.2D, ChatFormatting.WHITE),
-
-    /** See a convoy through. Waiting on convoys, which the roadmap places after logistics. */
-    ESCORT("escort", OperationTrigger.MANUAL, 1, 12_000, 1.2D, ChatFormatting.WHITE),
 
     /** Bring something back. Waiting on the artefacts it would be about. */
     RECOVER("recover", OperationTrigger.MANUAL, 1, 24_000, 1.5D, ChatFormatting.WHITE);

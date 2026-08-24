@@ -7,6 +7,8 @@ import java.util.Map;
 import com.example.examplemod.WorldSettlementData;
 import com.example.examplemod.StrategicResourceType;
 import com.example.examplemod.WorldWarMapData;
+import com.example.examplemod.campaign.convoy.Convoy;
+import com.example.examplemod.campaign.convoy.ConvoyManager;
 import com.example.examplemod.campaign.force.StrategicDeployment;
 import com.example.examplemod.campaign.operation.Operation;
 import com.example.examplemod.campaign.operation.OperationManager;
@@ -755,6 +757,195 @@ public final class CampaignCommands {
                                     "Campanha apagada: todas as frentes serão remontadas."), true);
                             return 1;
                         }));
+    }
+
+    // ====================================================================================
+    // /fcstrategy convoy ...
+    // ====================================================================================
+    //
+    // No id ever appears as an argument. A convoy id is `agri_world>armageddon:FOOD@1234`, and
+    // Brigadier's unquoted word reader accepts none of `>`, `:` or `@` — the same trap the sector ids
+    // hit with `/`. Every one of these names a FRONT instead and acts on the convoys bound for it.
+
+    public static LiteralArgumentBuilder<CommandSourceStack> convoy() {
+        return Commands.literal("convoy")
+
+                .then(Commands.literal("list")
+                        .executes(context -> listConvoys(context.getSource(), null))
+                        .then(Commands.argument("front", StringArgumentType.word())
+                                .suggests(FRONT_NAMES)
+                                .executes(context -> {
+                                    CampaignFront front = requireFront(context);
+                                    if (front == null) {
+                                        return 0;
+                                    }
+                                    return listConvoys(context.getSource(), front);
+                                })))
+
+                // Forces a run without waiting for the pass to pick this lane. The whole point of
+                // convoys is that they are rare and reactive, which also makes them the hardest thing
+                // in the logistics layer to sit and watch happen.
+                .then(Commands.literal("dispatch")
+                        .then(Commands.argument("front", StringArgumentType.word())
+                                .suggests(FRONT_NAMES)
+                                .executes(context -> {
+                                    CampaignFront front = requireFront(context);
+                                    if (front == null) {
+                                        return 0;
+                                    }
+                                    return dispatchConvoy(context.getSource(), front);
+                                })))
+
+                // Takes integrity off everything heading for a front. Exists so the loss path can be
+                // reached in a test without waiting out a whole run at a war intensity high enough to
+                // kill one.
+                .then(Commands.literal("strike")
+                        .then(Commands.argument("front", StringArgumentType.word())
+                                .suggests(FRONT_NAMES)
+                                .then(Commands.argument("amount",
+                                        com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 100))
+                                        .executes(context -> {
+                                            CampaignFront front = requireFront(context);
+                                            if (front == null) {
+                                                return 0;
+                                            }
+                                            return strikeConvoys(context.getSource(), front,
+                                                    com.mojang.brigadier.arguments.IntegerArgumentType
+                                                            .getInteger(context, "amount"));
+                                        }))));
+    }
+
+    private static int listConvoys(CommandSourceStack source, CampaignFront front) {
+        CampaignData campaign = CampaignData.get(source.getLevel());
+        long gameTime = source.getLevel().getGameTime();
+
+        List<Convoy> convoys = front == null
+                ? new ArrayList<>(campaign.allConvoys())
+                : ConvoyManager.convoysTouching(campaign, front.id());
+
+        if (convoys.isEmpty()) {
+            source.sendSuccess(() -> Component.literal(
+                    "Nenhum comboio. Eles saem sozinhos quando uma rota é cortada; "
+                            + "/fcstrategy convoy dispatch <frente> força um."), false);
+            return 1;
+        }
+
+        source.sendSuccess(() -> Component.literal("=== Comboios"
+                + (front == null ? "" : ": " + front.path()) + " ===")
+                .withStyle(ChatFormatting.GOLD), false);
+
+        for (Convoy convoy : convoys) {
+            source.sendSuccess(() -> convoy.shortText(gameTime).copy()
+                    .withStyle(convoy.state().colour()), false);
+        }
+
+        // Counted over what was printed, not over the whole campaign — the same correction the supply
+        // list already carries. With a front filter the two differ, and a global number printed under
+        // a filtered list reads as a claim about the lines above it.
+        int live = 0;
+
+        for (Convoy convoy : convoys) {
+            if (convoy.isInTransit()) {
+                live++;
+            }
+        }
+
+        final int inTheAir = live;
+
+        source.sendSuccess(() -> Component.literal(convoys.size() + " comboio(s), "
+                + inTheAir + " no ar").withStyle(ChatFormatting.GRAY), false);
+
+        return 1;
+    }
+
+    /**
+     * Sends a convoy into a front, or says which check refused it.
+     *
+     * <p>Reports the refusal of the <i>best</i> candidate lane rather than a generic "no". A player
+     * who is told only that nothing happened reports a bug; one who is told "that lane is still
+     * delivering" has learned the rule.
+     */
+    private static int dispatchConvoy(CommandSourceStack source, CampaignFront front) {
+        ServerLevel level = source.getLevel();
+        CampaignData campaign = CampaignData.get(level);
+
+        List<SupplyRoute> into = new ArrayList<>();
+
+        for (SupplyRoute route : campaign.supplyRoutes()) {
+            if (route.destination().equals(front.id())) {
+                into.add(route);
+            }
+        }
+
+        if (into.isEmpty()) {
+            source.sendFailure(Component.literal("Nenhuma rota entrega em " + front.path()
+                    + ". Rode /fcstrategy war tick para a rede ser calculada."));
+            return 0;
+        }
+
+        Component lastRefusal = null;
+
+        for (SupplyRoute route : into) {
+            Component refusal = ConvoyManager.refuse(campaign, route);
+
+            if (refusal != null) {
+                lastRefusal = refusal;
+                continue;
+            }
+
+            Convoy convoy = ConvoyManager.dispatch(level.getServer(), campaign, route,
+                    level.getGameTime());
+
+            source.sendSuccess(() -> Component.literal("Comboio despachado: "
+                    + convoy.id()).withStyle(ChatFormatting.GREEN), false);
+            source.sendSuccess(() -> convoy.shortText(level.getGameTime()).copy(), false);
+
+            return 1;
+        }
+
+        final Component refusal = lastRefusal;
+
+        source.sendFailure(Component.literal("Nenhuma das " + into.size()
+                + " rota(s) para " + front.path() + " pode despachar. Último motivo: ")
+                .copy().append(refusal == null ? Component.literal("desconhecido") : refusal));
+
+        return 0;
+    }
+
+    private static int strikeConvoys(CommandSourceStack source, CampaignFront front, int amount) {
+        ServerLevel level = source.getLevel();
+        CampaignData campaign = CampaignData.get(level);
+        long gameTime = level.getGameTime();
+
+        int hit = 0;
+
+        for (Convoy convoy : campaign.inTransitConvoys()) {
+            if (!convoy.destination().equals(front.id())) {
+                continue;
+            }
+
+            hit++;
+
+            // Route the kill through the manager rather than calling lose() here, so the order is
+            // failed and the announcement is made exactly as it would be on a real attrition pass.
+            if (convoy.damage(amount)) {
+                ConvoyManager.killByHand(level.getServer(), campaign, convoy, gameTime);
+            }
+        }
+
+        campaign.setDirty();
+
+        final int total = hit;
+
+        if (total == 0) {
+            source.sendFailure(Component.literal("Nenhum comboio a caminho de " + front.path() + "."));
+            return 0;
+        }
+
+        source.sendSuccess(() -> Component.literal(total + " comboio(s) atingido(s) em "
+                + amount + " de integridade.").withStyle(ChatFormatting.YELLOW), false);
+
+        return 1;
     }
 
     // ====================================================================================

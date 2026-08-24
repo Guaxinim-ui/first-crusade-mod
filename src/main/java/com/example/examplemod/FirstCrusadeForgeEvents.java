@@ -172,6 +172,7 @@ public final class FirstCrusadeForgeEvents {
     @SubscribeEvent
     public static void onServerStopping(net.minecraftforge.event.server.ServerStoppingEvent event) {
         com.example.examplemod.campaign.operation.OperationManager.clearWatch();
+        com.example.examplemod.campaign.convoy.ConvoyManager.clearWatch();
         com.example.examplemod.ai.combat.FCSuppression.reset();
     }
 

@@ -1,5 +1,9 @@
 package com.example.examplemod.campaign;
 
+import javax.annotation.Nullable;
+
+import com.example.examplemod.ImperialCommandCoreBlockEntity;
+import com.example.examplemod.WorldWarMapData;
 import com.example.examplemod.campaign.operation.OperationManager;
 import com.example.examplemod.campaign.sector.StrategicSector;
 import com.example.examplemod.campaign.war.WarFaction;
@@ -74,11 +78,13 @@ public final class CampaignIntegration {
     }
 
     /**
-     * An enemy died on a front. Advances ASSAULT, and ASSASSINATION when it was a leader.
+     * An enemy died on a front. Advances ASSAULT, ASSASSINATION when it was a leader, and repairs
+     * any convoy heading here.
      *
-     * <p>Runs for every death on the server, so it must be cheap to decline —
-     * {@link OperationManager#onEnemyKilled} answers on one lookup against a set that is empty
-     * unless a kill-driven order is actually standing.
+     * <p>Runs for every death on the server, so it must be cheap to decline. Both listeners answer on
+     * one lookup against a set that is empty unless the thing they watch for is actually happening —
+     * see {@link OperationManager#onEnemyKilled} and
+     * {@link com.example.examplemod.campaign.convoy.ConvoyManager#onEnemyKilled}.
      */
     public static void onEnemyKilled(ServerLevel level, boolean leader) {
         if (!CampaignConfig.enabled()) {
@@ -86,6 +92,53 @@ public final class CampaignIntegration {
         }
 
         OperationManager.onEnemyKilled(level, leader);
+
+        // Killing what is shooting at the convoy is what escorting one actually is; this is the only
+        // lever the player has on it beyond being present.
+        com.example.examplemod.campaign.convoy.ConvoyManager.onEnemyKilled(level);
+    }
+
+    // ====================================================================================
+    // Finding somewhere for the strategic layer to pay into
+    // ====================================================================================
+
+    /**
+     * The nearest Imperial Command Core to a position that is actually loaded, or null.
+     *
+     * <p>Lives here rather than in either of its callers because it is exactly this class's stated
+     * job — the place where something strategic reaches into the physical world. It was private to
+     * {@link OperationManager} and shaped around an {@code Operation}; the convoy layer needed the
+     * same answer from a plain position, and a second copy of a war-map walk is precisely the kind of
+     * duplicate that drifts.
+     *
+     * <p>Reads the war map for candidates — bucketed by dimension, so this cannot pick a Core on
+     * another planet — and touches the world only for the ones whose chunk is already loaded.
+     */
+    @Nullable
+    public static ImperialCommandCoreBlockEntity nearestLoadedCore(ServerLevel level, BlockPos from) {
+        ImperialCommandCoreBlockEntity best = null;
+        double bestDistance = Double.MAX_VALUE;
+
+        for (long packed : WorldWarMapData.get(level).getCities(level)) {
+            BlockPos pos = BlockPos.of(packed);
+
+            if (!level.isLoaded(pos)) {
+                continue;
+            }
+
+            double distance = pos.distSqr(from);
+
+            if (distance >= bestDistance) {
+                continue;
+            }
+
+            if (level.getBlockEntity(pos) instanceof ImperialCommandCoreBlockEntity core) {
+                bestDistance = distance;
+                best = core;
+            }
+        }
+
+        return best;
     }
 
     // ====================================================================================

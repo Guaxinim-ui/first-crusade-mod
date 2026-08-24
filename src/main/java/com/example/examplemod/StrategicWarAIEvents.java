@@ -157,6 +157,7 @@ public final class StrategicWarAIEvents {
                         .then(com.example.examplemod.campaign.CampaignCommands.sector())
                         .then(com.example.examplemod.campaign.CampaignCommands.operation())
                         .then(com.example.examplemod.campaign.CampaignCommands.supply())
+                        .then(com.example.examplemod.campaign.CampaignCommands.convoy())
                         .then(com.example.examplemod.campaign.CampaignCommands.raid())
                         .then(com.example.examplemod.campaign.CampaignCommands.war())
 

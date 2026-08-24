@@ -34,6 +34,13 @@ public final class CampaignConfig {
     public static ForgeConfigSpec.IntValue MAX_DEPLOYMENTS_PER_SIDE;
     public static ForgeConfigSpec.IntValue ORK_RAID_THRESHOLD;
     public static ForgeConfigSpec.IntValue ORK_RAID_BUILD_PER_CAMP;
+    public static ForgeConfigSpec.IntValue MAX_LIVE_CONVOYS;
+    public static ForgeConfigSpec.IntValue CONVOY_TRAVEL_TICKS;
+    public static ForgeConfigSpec.IntValue CONVOY_ATTRITION_PER_PASS;
+    public static ForgeConfigSpec.IntValue CONVOY_DEFENCE_PER_KILL;
+    public static ForgeConfigSpec.IntValue CONVOY_CARGO_PASSES;
+    public static ForgeConfigSpec.IntValue CONVOY_COOLDOWN_TICKS;
+    public static ForgeConfigSpec.DoubleValue CONVOY_WAR_SUPPORT_PER_CARGO;
 
     private CampaignConfig() {
     }
@@ -116,6 +123,46 @@ public final class CampaignConfig {
                         "by that planet war intensity.")
                 .defineInRange("orkRaidBuildPerCamp", 3, 0, 1000);
 
+        MAX_LIVE_CONVOYS = builder
+                .comment("Relief convoys that may be in the air across the whole Crusade at once.",
+                        "0 turns convoys and their ESCORT orders off without disturbing the ordinary",
+                        "supply lanes, which keep delivering exactly as before.")
+                .defineInRange("maxLiveConvoys", 2, 0, 10);
+
+        CONVOY_TRAVEL_TICKS = builder
+                .comment("Ticks a convoy spends on the run. Nothing travels: this is a timer, not",
+                        "pathfinding. 2400 = 2 minutes = 12 strategic passes at the default interval.")
+                .defineInRange("convoyTravelTicks", 2400, 200, 48_000);
+
+        CONVOY_ATTRITION_PER_PASS = builder
+                .comment("Integrity (out of 100) a convoy loses per pass on a CONTESTED front, before",
+                        "the destination war intensity scales it. A player standing on the front halves",
+                        "it. Raise this to make convoys harder to bring in undefended.")
+                .defineInRange("convoyAttritionPerPass", 4, 0, 50);
+
+        CONVOY_DEFENCE_PER_KILL = builder
+                .comment("Integrity a convoy recovers for each enemy killed on the front it is heading",
+                        "for. This is what escorting actually is; 0 leaves presence as the only lever.")
+                .defineInRange("convoyDefencePerKill", 3, 0, 50);
+
+        CONVOY_CARGO_PASSES = builder
+                .comment("How many passes of the lane rated throughput one convoy carries. The point of",
+                        "the multiple is that a convoy has to be worth defending; at 1 it would be a",
+                        "rounding error a player could rationally ignore.")
+                .defineInRange("convoyCargoPasses", 6, 1, 50);
+
+        CONVOY_COOLDOWN_TICKS = builder
+                .comment("How long after a convoy finishes before that same lane may send another.",
+                        "Doubles as how long a finished convoy stays visible on the War Table and in",
+                        "/fcstrategy convoy list - the record IS the cooldown.")
+                .defineInRange("convoyCooldownTicks", 6000, 0, 72_000);
+
+        CONVOY_WAR_SUPPORT_PER_CARGO = builder
+                .comment("War Support paid into the destination Command Core per unit of cargo that",
+                        "actually landed. Cargo that arrives is already scaled by surviving integrity,",
+                        "so this is the rate on what got through, not on what set out.")
+                .defineInRange("convoyWarSupportPerCargo", 0.25D, 0.0D, 10.0D);
+
         builder.pop();
     }
 
@@ -185,5 +232,33 @@ public final class CampaignConfig {
 
     public static int orkRaidBuildPerCamp() {
         return ORK_RAID_BUILD_PER_CAMP == null ? 3 : ORK_RAID_BUILD_PER_CAMP.get();
+    }
+
+    public static int maxLiveConvoys() {
+        return MAX_LIVE_CONVOYS == null ? 2 : MAX_LIVE_CONVOYS.get();
+    }
+
+    public static int convoyTravelTicks() {
+        return CONVOY_TRAVEL_TICKS == null ? 2400 : CONVOY_TRAVEL_TICKS.get();
+    }
+
+    public static int convoyAttritionPerPass() {
+        return CONVOY_ATTRITION_PER_PASS == null ? 4 : CONVOY_ATTRITION_PER_PASS.get();
+    }
+
+    public static int convoyDefencePerKill() {
+        return CONVOY_DEFENCE_PER_KILL == null ? 3 : CONVOY_DEFENCE_PER_KILL.get();
+    }
+
+    public static int convoyCargoPasses() {
+        return CONVOY_CARGO_PASSES == null ? 6 : CONVOY_CARGO_PASSES.get();
+    }
+
+    public static int convoyCooldownTicks() {
+        return CONVOY_COOLDOWN_TICKS == null ? 6000 : CONVOY_COOLDOWN_TICKS.get();
+    }
+
+    public static double convoyWarSupportPerCargo() {
+        return CONVOY_WAR_SUPPORT_PER_CARGO == null ? 0.25D : CONVOY_WAR_SUPPORT_PER_CARGO.get();
     }
 }

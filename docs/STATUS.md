@@ -109,8 +109,8 @@ Tudo o resto nesta secção é histórico. Isto é a lista viva.
 
 | Item | Estado | Nota |
 |---|---|---|
-| **ESCORT / comboios** | destrancado, por fazer | O bloqueio era "falta logística"; a logística existe desde 2026-08-20. `StrategicDeployment` já modela força com origem, destino e tempo de viagem. |
-| **§5 fatia 2 — ambiência** | por fazer | Sons e spawns por planeta. Sem arte nova. A fatia 1 (perigos ambientais) está feita. |
+| **ESCORT / comboios** | **FEITO** (2026-08-24) | Pacote `campaign/convoy/`. Medido em servidor de ponta a ponta. Falta ver o ramo com jogador presente — precisa de cliente. |
+| **§5 fatia 2 — ambiência** | por fazer | Sons e spawns por planeta. Sem arte nova. A fatia 1 (perigos ambientais) está feita. Metade do trabalho de spawns já existe: os 11 biomas do mod têm `creature` povoado pela fauna; o que está vazio em quase todos é `monster`. |
 | **§18-19 Hive vertical** | por avaliar | A maior das que sobram e a única que ainda não olhei. |
 | **RESCUE / RECOVER** | bloqueado | Esperam por esquadrões resgatáveis e por mais artefactos. O `RECOVER` ficou mais perto agora que existe um artefacto. |
 | **Cadia e Ork World** | bloqueado | Continuam atrás de `TRIGGER_CAMPAIGN`, que nada dispara. O mundo-tumba saiu dessa lista em 2026-08-24. |
@@ -396,6 +396,70 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 - Mensagens de commit em pt-BR, terminar com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
 ## 7. Changelog (mais recente no topo)
+
+- 2026-08-24 (6): **ESCORT existe — o comboio que se pode perder.** Build verde,
+  **medido em servidor de ponta a ponta**.
+
+  Era o único item destrancado da lista viva. O bloqueio antigo dizia "falta logística" e a logística
+  existe desde 2026-08-20; o que faltava era decidir **o que um comboio é**.
+
+  **A tensão que decidiu o desenho, e ela estava escrita no código.** O javadoc do `SupplyRoute` diz
+  em letra de forma: *"Nothing travels. There is no convoy entity crossing five thousand blocks and no
+  cargo to intercept"* — porque um camião a andar vinte minutos por chunks descarregados é custo de
+  tick sem jogo agarrado. Mas o `OperationTrigger` dizia que o ESCORT ligava quando existisse *"a
+  convoy entity"*. Duas notas em contradição. Ganhou a primeira: um comboio é um **registo com
+  relógio**, exactamente como o `StrategicDeployment` já era. Nada spawna, nada faz pathfinding,
+  nenhum chunk é tocado.
+
+  **O comboio é o que o Imperium faz quando a aritmética falha.** Uma rota saudável nunca manda um —
+  seria recompensa de graça sem nada em risco. Um comboio sai precisamente da rota que a guerra
+  **cortou**, leva seis passes de carga numa corrida só, e pode não chegar. `DESTROYED` não conta:
+  armazém vazio não é bloqueio, e mandar um comboio para lá seria pôr no quadro uma ordem a mandar o
+  jogador defender um armazém vazio. Essa distinção o `SupplyNetwork` já tinha feito o trabalho de
+  fazer; isto lê-a em vez de a achatar.
+
+  **Integridade, não força.** Um comboio não luta: 0-100, desce com a guerra e sobe com quem o
+  defende. A carga que aterra é **escalada pela integridade que sobrou** em vez de tudo-ou-nada —
+  tudo-ou-nada faria cada ponto acima de zero valer o mesmo, ou seja, faria defender um comboio que ia
+  chegar de qualquer maneira não valer nada.
+
+  **Escoltar é matar o que está a atirar.** Presença no planeta corta a mordida a metade; cada inimigo
+  morto na frente de destino devolve integridade. O gancho entra pela mesma porta única
+  (`CampaignIntegration.onEnemyKilled`) e recusa num só lookup contra um conjunto vazio — o mesmo
+  dispositivo que as ordens por abate já usavam, e pela mesma razão: corre em toda morte de todo mob.
+
+  **O buraco que a medição encontrou, e que a leitura de código não tinha visto.** Numa save com onze
+  rotas cortadas aterra um comboio a cada dois minutos, para sempre. Cada um completava a ordem ESCORT
+  **sem jogador nenhum**, pagando pesquisa e domínio num temporizador. Agora uma chegada que ninguém
+  escoltou **entrega a carga e deixa a ordem expirar**: logística não precisa de testemunha, mas
+  "levar o comboio até ao fim" é coisa que uma pessoa faz.
+
+  **Pago em War Support, e a razão não é preguiça.** As rotas levam FOOD, MANPOWER, PLASTEEL,
+  PROMETHIUM e CERAMITE; um Core guarda IRON, COAL, SCRAP, GOLD, EMERALD e CRUSADIUM. As duas listas
+  quase não se cruzam, então "entregar a carga" obrigaria a inventar um câmbio entre promécio e ferro
+  que este mod nunca teve. War Support é o único sumidouro onde toda carga aterra com honestidade — é
+  o que o comandante gasta para agir, e a Mesa e a requisição de blindado já bebem dele.
+
+  **Medido** (servidor dedicado, mundo `campaigntest`, sem cliente): despacho automático no passe com
+  a ordem ESCORT levantada junto; atrição a descer 100 → 61% ao longo da corrida; chegada a entregar
+  **146 de 240** FOOD (61% de 240 = 146) com a ordem a COMPLETAR e a pagar; `convoy strike` a matar um
+  comboio com a ordem a **FALHAR**; chegada sem jogador a entregar **130 de 180** e a ordem a
+  **EXPIRAR** sem pagar; teto de 2 no ar respeitado; cooldown por rota a empurrar o despacho seguinte
+  para outra rota; e as três recusas a dizerem qual verificação falhou ("já há 2 no ar", "Forge World
+  Ferrum não produz nada", "Forge World Ferrum nunca foi ativada"). Zero exceptions.
+
+  **Não medido:** o ramo com **jogador presente** — marcar a escolta, cortar a mordida a metade e o
+  reparo por abate. O caminho de completar-e-pagar foi medido antes de a porta ser acrescentada; a
+  porta em si precisa de cliente.
+
+  **Um duplicado evitado:** `nearestLoadedCore` estava privado no `OperationManager` e moldado a um
+  `Operation`. O comboio precisava da mesma resposta a partir de uma posição, então foi generalizado
+  para o `CampaignIntegration` — que é exactamente o ficheiro cujo trabalho declarado é a camada
+  estratégica alcançar o mundo físico.
+
+  **Armadilha nova, anotada:** um id de comboio é `agri_world>armageddon:FOOD@1234`, e o leitor de
+  palavra sem aspas do Brigadier não aceita `>`, `:` nem `@` — a mesma cova dos ids de setor com `/`.
+  **Nenhum comando aceita id**; todos nomeiam uma **frente**.
 
 - 2026-08-24 (5): **A relíquia Necron existe — o Mundo-Tumba deixou de ser inalcançável.**
   Build verde, `runData` rodado, **sítio verificado em servidor**.

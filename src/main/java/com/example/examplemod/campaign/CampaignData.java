@@ -9,6 +9,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import com.example.examplemod.StrategicResourceType;
+import com.example.examplemod.campaign.convoy.Convoy;
 import com.example.examplemod.campaign.force.StrategicDeployment;
 import com.example.examplemod.campaign.operation.Operation;
 import com.example.examplemod.campaign.planet.PlanetWarState;
@@ -61,6 +62,7 @@ public class CampaignData extends SavedData {
     private final Map<String, Operation> operations = new LinkedHashMap<>();
     private final Map<String, SupplyRoute> routes = new LinkedHashMap<>();
     private final Map<String, StrategicDeployment> deployments = new LinkedHashMap<>();
+    private final Map<String, Convoy> convoys = new LinkedHashMap<>();
 
     public CampaignData() {
     }
@@ -352,6 +354,84 @@ public class CampaignData extends SavedData {
     }
 
     // ====================================================================================
+    // Convoys
+    // ====================================================================================
+
+    public void addConvoy(Convoy convoy) {
+        this.convoys.put(convoy.id(), convoy);
+        setDirty();
+    }
+
+    @Nullable
+    public Convoy convoy(String id) {
+        return this.convoys.get(id);
+    }
+
+    public Collection<Convoy> allConvoys() {
+        return this.convoys.values();
+    }
+
+    /**
+     * The convoys currently in the air, as a copy.
+     *
+     * <p>A copy for the same reason {@link #activeOperationsOn} returns one: the caller damages and
+     * resolves convoys while iterating, and resolving one completes an order, which can issue another.
+     */
+    public List<Convoy> inTransitConvoys() {
+        List<Convoy> found = new ArrayList<>();
+
+        for (Convoy convoy : this.convoys.values()) {
+            if (convoy.isInTransit()) {
+                found.add(convoy);
+            }
+        }
+
+        return found;
+    }
+
+    public int countLiveConvoys() {
+        int count = 0;
+
+        for (Convoy convoy : this.convoys.values()) {
+            if (convoy.isInTransit()) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /**
+     * True when this lane has a convoy on it, or had one recently enough that it may not send
+     * another.
+     *
+     * <p>The finished record <i>is</i> the cooldown — there is no separate timestamp per lane. That
+     * is deliberate: a second structure holding "when did this lane last dispatch" would have to be
+     * kept in step with the convoy list through loading, retirement and {@link #reset}, and the one
+     * thing it could say is already derivable from the list itself.
+     */
+    public boolean hasRecentConvoyOn(String laneId) {
+        return this.convoys.values().stream().anyMatch(convoy -> convoy.laneId().equals(laneId));
+    }
+
+    /**
+     * Drops convoys whose cooldown has run out.
+     *
+     * <p>Global rather than per front, because a convoy belongs to a lane between two fronts and
+     * sweeping it per front would either miss it or visit it twice.
+     */
+    public void retireFinishedConvoys(long gameTime) {
+        long grace = CampaignConfig.convoyCooldownTicks();
+
+        boolean removed = this.convoys.values().removeIf(convoy ->
+                convoy.state().isFinished() && gameTime - convoy.finishedAt() > grace);
+
+        if (removed) {
+            setDirty();
+        }
+    }
+
+    // ====================================================================================
     // Supply
     // ====================================================================================
 
@@ -452,6 +532,18 @@ public class CampaignData extends SavedData {
             data.routes.put(route.id(), route);
         }
 
+        ListTag convoyList = tag.getList("Convoys", Tag.TAG_COMPOUND);
+
+        for (int i = 0; i < convoyList.size(); i++) {
+            Convoy convoy = Convoy.load(convoyList.getCompound(i));
+
+            if (convoy == null || convoy.id().isEmpty()) {
+                continue;
+            }
+
+            data.convoys.put(convoy.id(), convoy);
+        }
+
         return data;
     }
 
@@ -499,6 +591,14 @@ public class CampaignData extends SavedData {
 
         tag.put("Routes", routeList);
 
+        ListTag convoyList = new ListTag();
+
+        for (Convoy convoy : this.convoys.values()) {
+            convoyList.add(convoy.save());
+        }
+
+        tag.put("Convoys", convoyList);
+
         return tag;
     }
 
@@ -509,6 +609,7 @@ public class CampaignData extends SavedData {
         this.operations.clear();
         this.routes.clear();
         this.deployments.clear();
+        this.convoys.clear();
         setDirty();
     }
 
@@ -518,6 +619,11 @@ public class CampaignData extends SavedData {
         removed |= this.sectors.keySet().removeIf(id -> id.startsWith(front.path() + "."));
         removed |= this.operations.values().removeIf(op -> op.frontId().equals(front.id()));
         removed |= this.deployments.values().removeIf(d -> d.frontId().equals(front.id()));
+
+        // Either end, because a convoy is a run between two fronts and one of them ceasing to exist
+        // as far as the campaign is concerned leaves the run with nowhere to come from or go to.
+        removed |= this.convoys.values().removeIf(c ->
+                c.origin().equals(front.id()) || c.destination().equals(front.id()));
 
         if (removed) {
             setDirty();

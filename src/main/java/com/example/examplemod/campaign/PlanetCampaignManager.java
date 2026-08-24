@@ -85,6 +85,10 @@ public final class PlanetCampaignManager {
         // so asking it before the fronts are up to date would answer about last pass's war.
         com.example.examplemod.campaign.supply.SupplyNetwork.recompute(campaign);
 
+        // Convoys after the lanes, for the same reason one step further along: a convoy is dispatched
+        // because a lane is cut, so it has to be asked after this pass decided which ones are.
+        com.example.examplemod.campaign.convoy.ConvoyManager.tick(server, campaign, gameTime);
+
         // The galaxy-wide picture is a function of the fronts, so it is recomputed here — after
         // them, and only here.
         CrusadeScore.recompute(overworld, campaign);

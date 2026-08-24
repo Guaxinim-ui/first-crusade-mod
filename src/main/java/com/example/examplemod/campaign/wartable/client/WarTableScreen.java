@@ -12,6 +12,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 
 /**
  * Imperial Strategium — the map of the whole Crusade.
@@ -454,6 +455,44 @@ public class WarTableScreen extends Screen {
         graphics.enableScissor(x, y, right, bottom);
 
         int line = y + 4 - this.detailScroll;
+
+        // Convoys first, above the lanes. They are the exception — a run that can be lost — and the
+        // lanes underneath are the routine the exception was raised against. Putting them below the
+        // dozen lanes would mean the one thing a player can act on right now is the one thing they
+        // have to scroll to find.
+        if (!this.snapshot.convoys().isEmpty()) {
+            graphics.drawString(this.font,
+                    Component.translatable("screen." + ExampleMod.MODID + ".war_table.convoys")
+                            .withStyle(ChatFormatting.GOLD),
+                    x + 6, line, 0xFFFFFFFF, false);
+            line += 11;
+
+            for (WarTableSnapshot.ConvoyEntry convoy : this.snapshot.convoys()) {
+                Component origin = Component.translatable(
+                        "planet." + ExampleMod.MODID + "." + convoy.originPath());
+                Component destination = Component.translatable(
+                        "planet." + ExampleMod.MODID + "." + convoy.destinationPath());
+
+                // Cargo as dispatched, then integrity, then the clock. The integrity is the number
+                // that decides whether to go and do something, so it is not buried behind the cargo.
+                MutableComponent text = origin.copy().append(" -> ").append(destination)
+                        .append("  " + convoy.resource().getDisplayName())
+                        .append("  x" + convoy.cargo())
+                        .append("  " + convoy.integrity() + "%");
+
+                if (convoy.state() == com.example.examplemod.campaign.convoy.ConvoyState.IN_TRANSIT) {
+                    text.append("  " + (convoy.ticksLeft() / 20L) + "s");
+                } else {
+                    text.append("  ").append(convoy.state().displayName());
+                }
+
+                graphics.drawString(this.font, text.withStyle(convoy.state().colour()),
+                        x + 6, line, 0xFFFFFFFF, false);
+                line += 10;
+            }
+
+            line += 4;
+        }
 
         if (this.snapshot.routes().isEmpty()) {
             graphics.drawString(this.font,

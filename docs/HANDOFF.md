@@ -34,8 +34,8 @@ perigos ambientais dos planetas.
 
 ## O QUE FALTA
 
-Ver `docs/STATUS.md` §4.1. Resumo: **ESCORT/comboios** (destrancado — a logística já existe),
-**§5 fatia 2** (ambiência: sons e spawns por planeta), **§18-19 Hive vertical** (por avaliar).
+Ver `docs/STATUS.md` §4.1. Resumo: **§5 fatia 2** (ambiência: sons e spawns por planeta) e
+**§18-19 Hive vertical** (por avaliar). **ESCORT/comboios ficou feito em 2026-08-24** e está medido.
 Bloqueados por coisas que não existem: RESCUE, RECOVER, e os desbloqueios de Cadia e Ork World.
 
 ## COMO CONSTRUIR E TESTAR
@@ -66,7 +66,8 @@ cobertura e esquadrões num teste headless é preciso desligar `[ai.lod] enabled
 ter ficado 2500 linhas sem nunca ser observada.
 
 Comandos úteis: `/fc perf`, `/fc squad`, `/fc suppression`, `/fcstrategy planet list|activate|awaken`,
-`/fcstrategy sector list`, `/fcstrategy war tick`, `/fcstrategy supply list`, `/fcstrategy raid start`,
+`/fcstrategy sector list`, `/fcstrategy war tick`, `/fcstrategy supply list`,
+`/fcstrategy convoy list|dispatch <frente>|strike <frente> <n>`, `/fcstrategy raid start`,
 `/firstcrusade planet unlock|travel`.
 
 ## REGRAS QUE VALEM (não reverter sem entender)
@@ -88,7 +89,9 @@ Comandos úteis: `/fc perf`, `/fc squad`, `/fc suppression`, `/fcstrategy planet
 7. **Cada recusa diz qual checagem falhou.** Vale para a Mesa de Guerra, o Ork Camp, a requisição de
    blindado e o `raid start`. "Não aconteceu nada" é o que o jogador reporta como bug.
 8. Pacote de rede novo vai **no fim** de `FirstCrusadeNetwork.register()` — o id é a posição.
-9. Setor usa `.` e não `/` no id: o leitor de string sem aspas do Brigadier para na barra.
+9. Setor usa `.` e não `/` no id: o leitor de string sem aspas do Brigadier para na barra. Pela
+   mesma razão **nenhum comando de comboio aceita um id** (`agri_world>armageddon:FOOD@1234` tem
+   `>`, `:` e `@`, que aquele leitor recusa) — todos nomeiam uma **frente**.
 10. **Sem jar do mod em `run/mods`** — o jar de `build/libs` é reobfuscado e dá `NoSuchFieldError`
     no dev.
 

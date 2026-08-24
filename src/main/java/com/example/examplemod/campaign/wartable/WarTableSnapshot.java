@@ -50,7 +50,8 @@ import net.minecraft.server.level.ServerPlayer;
  */
 public record WarTableSnapshot(int crusadeScore, int dominion, int conquered, int lost,
                                int brokenLanes, String currentFront, BlockPos tablePos,
-                               List<FrontEntry> fronts, List<RouteEntry> routes) {
+                               List<FrontEntry> fronts, List<RouteEntry> routes,
+                               List<ConvoyEntry> convoys) {
 
     /** One world's line on the table. */
     public record FrontEntry(String frontId, String frontPath, PlanetCampaignState state,
@@ -87,6 +88,20 @@ public record WarTableSnapshot(int crusadeScore, int dominion, int conquered, in
     }
 
     public record ResourceEntry(StrategicResourceType resource, int amount) {
+    }
+
+    /**
+     * A relief convoy, in the air or recently finished.
+     *
+     * <p>Carries {@code cargo} as dispatched and {@code integrity} separately rather than only the
+     * amount that would land. The table's job here is to make the run defensible, and a player who
+     * only sees "72 arriving" cannot tell whether that is a healthy run or a wreck that started at
+     * 180 — which is exactly the number that decides whether to go and do something about it.
+     */
+    public record ConvoyEntry(String originPath, String destinationPath,
+                              StrategicResourceType resource, int cargo, int integrity,
+                              com.example.examplemod.campaign.convoy.ConvoyState state,
+                              long ticksLeft) {
     }
 
     // ====================================================================================
@@ -171,6 +186,15 @@ public record WarTableSnapshot(int crusadeScore, int dominion, int conquered, in
                     route.reason(), route.reasonArg()));
         }
 
+        List<ConvoyEntry> convoys = new ArrayList<>();
+        long now = level.getGameTime();
+
+        for (com.example.examplemod.campaign.convoy.Convoy convoy : campaign.allConvoys()) {
+            convoys.add(new ConvoyEntry(convoy.origin().getPath(), convoy.destination().getPath(),
+                    convoy.resource(), convoy.cargo(), convoy.integrity(), convoy.state(),
+                    convoy.ticksRemaining(now)));
+        }
+
         return new WarTableSnapshot(
                 CrusadeScore.targetFor(campaign),
                 WarDominionData.get(level).getDominion(),
@@ -180,7 +204,8 @@ public record WarTableSnapshot(int crusadeScore, int dominion, int conquered, in
                 level.dimension().location().toString(),
                 tablePos,
                 fronts,
-                routes);
+                routes,
+                convoys);
     }
 
     // ====================================================================================
@@ -265,6 +290,18 @@ public record WarTableSnapshot(int crusadeScore, int dominion, int conquered, in
             buffer.writeEnum(route.state());
             buffer.writeUtf(route.reason(), 200);
             buffer.writeUtf(route.reasonArg(), 200);
+        }
+
+        buffer.writeVarInt(this.convoys.size());
+
+        for (ConvoyEntry convoy : this.convoys) {
+            buffer.writeUtf(convoy.originPath(), 80);
+            buffer.writeUtf(convoy.destinationPath(), 80);
+            buffer.writeEnum(convoy.resource());
+            buffer.writeVarInt(convoy.cargo());
+            buffer.writeVarInt(convoy.integrity());
+            buffer.writeEnum(convoy.state());
+            buffer.writeVarLong(Math.max(0L, convoy.ticksLeft()));
         }
     }
 
@@ -385,8 +422,25 @@ public record WarTableSnapshot(int crusadeScore, int dominion, int conquered, in
                     routeState, reason, reasonArg));
         }
 
+        int convoyCount = buffer.readVarInt();
+        List<ConvoyEntry> convoys = new ArrayList<>(convoyCount);
+
+        for (int i = 0; i < convoyCount; i++) {
+            String origin = buffer.readUtf(80);
+            String destination = buffer.readUtf(80);
+            StrategicResourceType resource = buffer.readEnum(StrategicResourceType.class);
+            int cargo = buffer.readVarInt();
+            int integrity = buffer.readVarInt();
+            com.example.examplemod.campaign.convoy.ConvoyState convoyState =
+                    buffer.readEnum(com.example.examplemod.campaign.convoy.ConvoyState.class);
+            long ticksLeft = buffer.readVarLong();
+
+            convoys.add(new ConvoyEntry(origin, destination, resource, cargo, integrity,
+                    convoyState, ticksLeft));
+        }
+
         return new WarTableSnapshot(crusadeScore, dominion, conquered, lost, brokenLanes,
-                currentFront, tablePos, fronts, routes);
+                currentFront, tablePos, fronts, routes, convoys);
     }
 
     /** The index of the front the player is standing on, or 0 when they are not on one. */
