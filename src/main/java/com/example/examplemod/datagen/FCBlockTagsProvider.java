@@ -95,6 +95,10 @@ public class FCBlockTagsProvider extends BlockTagsProvider {
                 // this it would break slowly and drop nothing — the exact failure this whole
                 // section exists to prevent.
                 com.example.examplemod.hive.HiveBlocks.HIVE_TRANSIT_LIFT.get(),
+                // A alvenaria da tumba (§26). Todas usam requiresCorrectToolForDrops.
+                com.example.examplemod.necron.FCNecrons.NECRON_STONE.get(),
+                com.example.examplemod.necron.FCNecrons.NECRON_CONDUIT.get(),
+                com.example.examplemod.necron.FCNecrons.NECRON_GLYPH.get(),
                 // Petrified wood, so a pickaxe rather than an axe — and it must stay out of
                 // logs_that_burn, which is why it is not in logs().
                 FCFloraTrees.FOSSILIZED_TRUNK.get());

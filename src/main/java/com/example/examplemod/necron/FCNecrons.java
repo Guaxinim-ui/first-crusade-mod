@@ -103,6 +103,59 @@ public final class FCNecrons {
     // order, so an egg registered against a DeferredRegister declared further down the file would
     // dereference null at class-load — a crash on startup, not a compile error.
 
+    // =========================================================================================
+    // TOMB MASONRY
+    //
+    // The faction's own material, so a tomb stops being deepslate with Necrons standing on it.
+    // Read off the reference plates: the stone is almost black and ALL the shape comes from the
+    // green light running through it. A pale stone with a green line on it reads as decoration; a
+    // black one with a lit channel reads as a machine that is still powered.
+    //
+    // Textures are painted by tools/generate_necron_assets.py, from the same palette as the
+    // entities — the architecture and the bodies are the same alloy, and two palettes would make
+    // the Overlord look like a guest in his own tomb.
+    // =========================================================================================
+
+    /** The black plate the whole tomb is cut from. No light of its own. */
+    public static final RegistryObject<net.minecraft.world.level.block.Block> NECRON_STONE =
+            BLOCKS.register("necron_stone", () -> new net.minecraft.world.level.block.Block(
+                    net.minecraft.world.level.block.state.BlockBehaviour.Properties.of()
+                            .mapColor(net.minecraft.world.level.material.MapColor.COLOR_BLACK)
+                            .strength(35.0F, 1200.0F)   // tomb-grade: obsidian territory, minable
+                            .requiresCorrectToolForDrops()
+                            .sound(net.minecraft.world.level.block.SoundType.DEEPSLATE_TILES)));
+
+    /** The lit channel. This is what a tomb is lit by — nothing else in it glows. */
+    public static final RegistryObject<net.minecraft.world.level.block.Block> NECRON_CONDUIT =
+            BLOCKS.register("necron_conduit", () -> new net.minecraft.world.level.block.Block(
+                    net.minecraft.world.level.block.state.BlockBehaviour.Properties.of()
+                            .mapColor(net.minecraft.world.level.material.MapColor.COLOR_GREEN)
+                            .strength(35.0F, 1200.0F)
+                            .requiresCorrectToolForDrops()
+                            .lightLevel(state -> 15)
+                            .sound(net.minecraft.world.level.block.SoundType.DEEPSLATE_TILES)));
+
+    /** The dynastic mark. Glows, but dimmer: it is a signature, not a lamp. */
+    public static final RegistryObject<net.minecraft.world.level.block.Block> NECRON_GLYPH =
+            BLOCKS.register("necron_glyph", () -> new net.minecraft.world.level.block.Block(
+                    net.minecraft.world.level.block.state.BlockBehaviour.Properties.of()
+                            .mapColor(net.minecraft.world.level.material.MapColor.COLOR_BLACK)
+                            .strength(35.0F, 1200.0F)
+                            .requiresCorrectToolForDrops()
+                            .lightLevel(state -> 10)
+                            .sound(net.minecraft.world.level.block.SoundType.DEEPSLATE_TILES)));
+
+    // BlockItems for the three, so they can be carried and placed. The reliquary deliberately has
+    // none: it is taken by hand and never held.
+    static {
+        for (RegistryObject<net.minecraft.world.level.block.Block> block
+                : java.util.List.of(NECRON_STONE, NECRON_CONDUIT, NECRON_GLYPH)) {
+            ITEMS.register(block.getId().getPath(),
+                    () -> new net.minecraft.world.item.BlockItem(block.get(),
+                            new net.minecraft.world.item.Item.Properties()));
+        }
+    }
+
     /** The plinth in the middle of a ruin. Right-clicked once, then dark forever. */
     public static final RegistryObject<net.minecraft.world.level.block.Block> NECRON_RELIQUARY =
             BLOCKS.register("necron_reliquary",
@@ -125,10 +178,45 @@ public final class FCNecrons {
                                     .stacksTo(1)
                                     .rarity(net.minecraft.world.item.Rarity.EPIC)));
 
+    // =========================================================================================
+    // CREATIVE TAB
+    //
+    // The spawn eggs were registered as items and put in NO tab at all, which is why the owner
+    // still could not find them after they were added — an item nobody can reach in the menu is an
+    // item that does not exist as far as anyone playing is concerned. Registering it is only half
+    // the job; being findable is the other half.
+    //
+    // A tab of their own rather than a corner of the Imperial one: the Necrons are not a wing of
+    // the Crusade, and their masonry is a building set somebody will want to browse on its own.
+    // =========================================================================================
+
+    public static final DeferredRegister<net.minecraft.world.item.CreativeModeTab> CREATIVE_MODE_TABS =
+            DeferredRegister.create(net.minecraft.core.registries.Registries.CREATIVE_MODE_TAB,
+                    ExampleMod.MODID);
+
+    public static final RegistryObject<net.minecraft.world.item.CreativeModeTab> NECRON_TAB =
+            CREATIVE_MODE_TABS.register("necron_tab",
+                    () -> net.minecraft.world.item.CreativeModeTab.builder()
+                            .withTabsBefore(net.minecraft.world.item.CreativeModeTabs.SPAWN_EGGS)
+                            .title(net.minecraft.network.chat.Component
+                                    .translatable("itemGroup.firstcrusade.necron_tab"))
+                            .icon(() -> NECRON_ARTEFACT.get().getDefaultInstance())
+                            .displayItems((parameters, output) -> {
+                                output.accept(NECRON_STONE.get());
+                                output.accept(NECRON_CONDUIT.get());
+                                output.accept(NECRON_GLYPH.get());
+                                output.accept(NECRON_ARTEFACT.get());
+                                output.accept(NECRON_WARRIOR_SPAWN_EGG.get());
+                                output.accept(NECRON_OVERLORD_SPAWN_EGG.get());
+                                output.accept(NECRON_SCARAB_SPAWN_EGG.get());
+                            })
+                            .build());
+
     public static void register(IEventBus modEventBus) {
         ENTITY_TYPES.register(modEventBus);
         BLOCKS.register(modEventBus);
         ITEMS.register(modEventBus);
+        CREATIVE_MODE_TABS.register(modEventBus);
         modEventBus.addListener(FCNecrons::registerAttributes);
     }
 

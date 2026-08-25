@@ -8,22 +8,25 @@
     "prop_tries": 14,
     "props": [
       {
-        "Name": "minecraft:deepslate_tiles"
+        "Name": "firstcrusade:necron_stone"
       },
       {
-        "Name": "minecraft:polished_deepslate"
+        "Name": "firstcrusade:necron_glyph"
       }
     ],
     "mob": "firstcrusade:necron_warrior",
     "floor": {
-      "Name": "minecraft:polished_deepslate"
+      "Name": "firstcrusade:necron_stone"
     },
     "frame": {
-      "Name": "minecraft:deepslate_tiles"
+      "Name": "firstcrusade:necron_stone"
     },
     "centre": {
-      "Name": "minecraft:lodestone"
+      "Name": "firstcrusade:necron_glyph"
     },
-    "champion": "firstcrusade:necron_overlord"
+    "champion": "firstcrusade:necron_overlord",
+    "glow": {
+      "Name": "firstcrusade:necron_conduit"
+    }
   }
 }

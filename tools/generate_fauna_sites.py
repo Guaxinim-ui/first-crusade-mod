@@ -114,11 +114,12 @@ SITES = [
         mob=f"{MODID}:necron_warrior",
         min_count=4, max_count=6,
         radius=9,
-        props=["minecraft:deepslate_tiles", "minecraft:polished_deepslate"],
+        props=["firstcrusade:necron_stone", "firstcrusade:necron_glyph"],
         prop_tries=14,
-        floor="minecraft:polished_deepslate",
-        frame="minecraft:deepslate_tiles",
-        centre="minecraft:lodestone",
+        floor=f"{MODID}:necron_stone",
+        frame=f"{MODID}:necron_stone",
+        centre=f"{MODID}:necron_glyph",
+        glow=f"{MODID}:necron_conduit",
         champion=f"{MODID}:necron_overlord",
         rarity=900,
         biomes=["salt_waste"],
@@ -343,6 +344,8 @@ def configured(site):
         config["centre"] = state(site["centre"])
     if site.get("champion"):
         config["champion"] = site["champion"]
+    if site.get("glow"):
+        config["glow"] = state(site["glow"])
 
     return {"type": f"{MODID}:fauna_site", "config": config}
 

@@ -430,6 +430,46 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-08-25 (4): **Os Necrons ganharam arquitectura própria — e a tumba ganhou luz.**
+  Build verde, `runData` rodado, **medido em servidor**.
+
+  O dono mandou duas placas de referência e um pedido: *"precisa de luz, e a facção necron precisa
+  ter essa estética aqui, construções assim"*. O que as placas mostram, e o que isto persegue: um
+  **zigurate preto de degraus rectos**, quase toda a forma dada por **costuras verdes acesas**, e a
+  luz a correr **dentro** da estrutura em vez de pendurada nela.
+
+  **Três blocos novos**, pintados por `tools/generate_necron_assets.py` — o mesmo ficheiro que já
+  pinta os corpos, com a **mesma paleta**, porque a arquitectura e as entidades são a mesma liga e
+  duas paletas fariam o Senhor parecer visita na casa dele:
+  - **Necrodermis Plating** (`necron_stone`) — a placa preta cortada à máquina, sem luz.
+  - **Gauss Conduit** (`necron_conduit`) — a mesma placa com um canal aceso a atravessá-la, **luz 15**.
+    É a única iluminação da tumba.
+  - **Dynastic Glyph** (`necron_glyph`) — luz 10. O mesmo T invertido do artefacto, para o glifo do
+    mod ser **um** glifo e não dois.
+
+  A regra que decidiu as texturas: **a pedra é quase preta**. Numa placa clara com uma risca verde,
+  o verde vira decoração; numa placa preta com um canal aceso, lê-se como máquina ainda ligada.
+
+  **A boca da tumba virou pirâmide escalonada.** Era um anel raso emoldurado — que não se vê de
+  lado nenhum, e a entrada de uma tumba tem de ser encontrável. Agora são 4 degraus com a costura
+  acesa no meio de cada face, o vão a descer do topo, anéis acesos no poço de quatro em quatro
+  blocos, e **pilastras acesas** do chão ao tecto nos quatro eixos da câmara.
+
+  **Campo `glow` novo na config do sítio**, data-driven pela mesma razão que o `centre`: "de que cor
+  é a luz desta facção" é decisão de arte, e trocá-la não devia obrigar a recompilar.
+
+  **A falha que isto corrigiu de caminho, e era minha:** os ovos Necron acrescentados horas antes
+  estavam registados **e em aba criativa nenhuma**. Por isso o dono continuava a não os ver — um item
+  que ninguém alcança no menu não existe para quem joga. Registar é metade do trabalho; ser
+  encontrável é a outra. Há agora uma aba **First Crusade: Necrons** com os três blocos, o artefacto
+  e os três ovos.
+
+  **Medido** (servidor, `/place feature` no mundo-tumba, contagem por `fill … replace`):
+  uma tumba = **1154** de necrodermis, **72** condutas acesas e **4** glifos — 1230 blocos, dos quais
+  72 são fonte de luz 15, portanto a câmara e a descida estão iluminadas. Perfil vertical por fatias
+  de quatro blocos: **12 / 12 / 316 / 40 / 0 / 0** de baixo para cima — anéis do poço, base larga, os
+  degraus a afunilar, e nada acima. É um zigurate. O Senhor continua a nascer no centro da câmara.
+
 - 2026-08-25 (3): **A tumba deixou de ser um número: agora é um lugar, e o Senhor mora nela.**
   Build verde, **medido em servidor**.
 

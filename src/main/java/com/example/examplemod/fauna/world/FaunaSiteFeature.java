@@ -190,30 +190,51 @@ public class FaunaSiteFeature extends Feature<FaunaSiteConfig> {
                                FaunaSiteConfig config) {
         BlockState frame = config.frame().orElse(Blocks.DEEPSLATE_TILES.defaultBlockState());
         BlockState floor = config.floor().orElse(Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+        BlockState glow = config.glow().orElse(Blocks.SEA_LANTERN.defaultBlockState());
 
         int radius = config.radius();
 
-        // ---- a boca: um anel emoldurado, um degrau abaixo do terreno ----
+        // ---- a boca: uma piramide escalonada ----
         //
-        // Emoldurada e nao apenas um buraco, porque o jogador tem de a reconhecer de longe como
-        // construida. Um buraco no sal e uma caverna.
-        for (int dx = -3; dx <= 3; dx++) {
-            for (int dz = -3; dz <= 3; dz++) {
-                int distance = dx * dx + dz * dz;
+        // Nao um anel raso. A silhueta que diz "Necron" a duzentos blocos e o zigurate preto de
+        // degraus rectos com as costuras acesas — e a unica coisa nas placas de referencia que se
+        // reconhece antes de se distinguir um unico guerreiro. Um buraco emoldurado no chao nao se
+        // ve de lado nenhum, e a entrada de uma tumba tem de ser encontravel.
+        int tiers = 4;
+        int baseWidth = radius - 1;
 
-                if (distance > 9) {
-                    continue;
+        for (int tier = 0; tier < tiers; tier++) {
+            int half = baseWidth - tier * 2;
+
+            if (half < 2) {
+                break;
+            }
+
+            for (int dx = -half; dx <= half; dx++) {
+                for (int dz = -half; dz <= half; dz++) {
+                    boolean shell = Math.abs(dx) == half || Math.abs(dz) == half;
+
+                    // Só a casca de cada degrau vira bloco: o interior fica para o degrau de cima,
+                    // e o miolo é escavado a seguir para o vão.
+                    if (!shell && tier > 0) {
+                        continue;
+                    }
+
+                    BlockPos step = origin.offset(dx, tier, dz);
+
+                    // Costura acesa no meio de cada face do degrau — a luz que dá a forma.
+                    boolean seam = shell && (dx == 0 || dz == 0);
+
+                    put(level, step, seam ? glow : frame);
                 }
+            }
+        }
 
-                BlockPos rim = origin.offset(dx, 0, dz);
-
-                if (distance >= 4) {
-                    put(level, rim.below(), frame);
-                    put(level, rim, frame);
-                } else {
-                    // O vao. Aberto ate ao poco.
-                    put(level, rim, Blocks.CAVE_AIR.defaultBlockState());
-                    put(level, rim.below(), Blocks.CAVE_AIR.defaultBlockState());
+        // O vão no topo do zigurate, descendo até ao poço.
+        for (int dy = tiers; dy >= -1; dy--) {
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    put(level, origin.offset(dx, dy, dz), Blocks.CAVE_AIR.defaultBlockState());
                 }
             }
         }
@@ -234,14 +255,18 @@ public class FaunaSiteFeature extends Feature<FaunaSiteConfig> {
                 }
             }
 
-            // Um anel de moldura a cada quatro blocos: dá escala à descida e evita que o poço
-            // se leia como um buraco natural.
+            // Um anel a cada quatro blocos, com as quatro faces acesas: dá escala à descida, evita
+            // que o poço se leia como buraco natural, e — o que importa mais — faz a descida ser
+            // iluminada de degrau em degrau em vez de um mergulho no escuro.
             if (down % 4 == 0) {
                 for (int dx = -2; dx <= 2; dx++) {
                     for (int dz = -2; dz <= 2; dz++) {
-                        if (Math.abs(dx) == 2 || Math.abs(dz) == 2) {
-                            put(level, shaft.offset(dx, 0, dz), frame);
+                        if (Math.abs(dx) != 2 && Math.abs(dz) != 2) {
+                            continue;
                         }
+
+                        boolean lit = (dx == 0 || dz == 0);
+                        put(level, shaft.offset(dx, 0, dz), lit ? glow : frame);
                     }
                 }
             }
@@ -264,8 +289,13 @@ public class FaunaSiteFeature extends Feature<FaunaSiteConfig> {
                 put(level, chamberFloor.offset(dx, -1, dz), floor);
 
                 for (int up = 0; up < height; up++) {
+                    // Pilastras acesas nos quatro eixos da parede, do chao ao tecto. Sao a unica
+                    // luz da camara, e e de proposito que sejam colunas e nao lampadas soltas: nas
+                    // placas a luz Necron corre DENTRO da estrutura, nunca pendurada nela.
+                    boolean pilaster = wall && (dx == 0 || dz == 0);
+
                     put(level, chamberFloor.offset(dx, up, dz),
-                            wall ? frame : Blocks.CAVE_AIR.defaultBlockState());
+                            wall ? (pilaster ? glow : frame) : Blocks.CAVE_AIR.defaultBlockState());
                 }
 
                 put(level, chamberFloor.offset(dx, height, dz), frame);

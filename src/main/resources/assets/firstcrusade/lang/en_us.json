@@ -1777,5 +1777,9 @@
   "msg.firstcrusade.necron.overlord_down": "The Overlord falls. The protocols around you go quiet.",
   "block.firstcrusade.necron_reliquary": "Necron Reliquary",
   "item.firstcrusade.necron_artefact": "Necron Artefact",
+  "block.firstcrusade.necron_stone": "Necrodermis Plating",
+  "block.firstcrusade.necron_conduit": "Gauss Conduit",
+  "block.firstcrusade.necron_glyph": "Dynastic Glyph",
+  "itemGroup.firstcrusade.necron_tab": "First Crusade: Necrons",
   "msg.firstcrusade.necron.artefact_taken": "You lift the artefact. Somewhere far below, something registers that it is gone — the Tomb World is on your charts now."
 }

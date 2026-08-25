@@ -44,7 +44,8 @@ public record FaunaSiteConfig(
         Optional<BlockState> floor,
         Optional<BlockState> frame,
         Optional<BlockState> centre,
-        Optional<EntityType<?>> champion) implements FeatureConfiguration {
+        Optional<EntityType<?>> champion,
+        Optional<BlockState> glow) implements FeatureConfiguration {
 
     public static final Codec<FaunaSiteConfig> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
@@ -71,7 +72,11 @@ public record FaunaSiteConfig(
                     // Separado de `mob` porque `mob` e uma populacao (min/max, espalhada) e este e
                     // uma pessoa: o Senhor no trono. Um sitio com um campeao tem um, nunca tres.
                     BuiltInRegistries.ENTITY_TYPE.byNameCodec().optionalFieldOf("champion")
-                            .forGetter(FaunaSiteConfig::champion)
+                            .forGetter(FaunaSiteConfig::champion),
+                    // O bloco aceso da estrutura. Data-driven porque "de que cor e a luz desta
+                    // faccao" e uma decisao de arte, e trocar a luz da tumba nao devia obrigar a
+                    // recompilar o mod.
+                    BlockState.CODEC.optionalFieldOf("glow").forGetter(FaunaSiteConfig::glow)
             ).apply(instance, FaunaSiteConfig::new));
 
     /** Quantos moradores este sitio cria nesta geracao. */

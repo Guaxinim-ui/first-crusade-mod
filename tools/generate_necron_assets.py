@@ -699,6 +699,98 @@ def artefact_sprite():
     return img
 
 
+# =============================================================================== blocos
+#
+# As texturas de bloco da tumba. Mesma paleta das entidades, de proposito: a arquitectura e o
+# corpo dos Necrons sao a mesma liga, e duas paletas fariam o Senhor parecer visita na casa dele.
+#
+# As placas sao ESCURAS. Nas placas de referencia a pedra Necron le-se quase preta e e a luz verde
+# que da a forma — se a pedra ja for clara, o verde deixa de brilhar e vira decoracao.
+
+
+def _plate(px, base, edge, seam=True):
+    """Uma placa cortada a maquina: chanfro claro em cima, sombra em baixo, junta a meio."""
+    for x in range(16):
+        for y in range(16):
+            px[x, y] = base + (255,)
+
+    for x in range(16):
+        px[x, 0] = edge + (255,)
+        px[x, 15] = VOID + (255,)
+    for y in range(16):
+        px[0, y] = edge + (255,)
+        px[15, y] = VOID + (255,)
+
+    if seam:
+        # A junta horizontal: e o que impede o bloco de ler como pedra e o faz ler como painel.
+        for x in range(1, 15):
+            px[x, 7] = VOID + (255,)
+            px[x, 8] = edge + (255,)
+
+
+def necron_stone_sprite():
+    """A pedra da tumba: necrodermis fosca, sem luz. O preto de que a piramide e feita."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    px = img.load()
+    _plate(px, METAL_DARK, METAL)
+
+    # Rebites nos cantos. Quatro pixeis que dizem "isto foi montado", nao "isto e rocha".
+    for x, y in ((3, 3), (12, 3), (3, 12), (12, 12)):
+        px[x, y] = METAL_LIT + (255,)
+
+    return img
+
+
+def necron_conduit_sprite():
+    """Conduta gauss: a mesma placa com um canal aceso a atravessa-la. E a luz da tumba."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    px = img.load()
+    _plate(px, METAL_DARK, METAL, seam=False)
+
+    # O canal vertical, com nucleo quente e derrame nas bordas — um verde chapado le como tinta.
+    for y in range(16):
+        px[6, y] = GAUSS_DEEP + (255,)
+        px[7, y] = GAUSS + (255,)
+        px[8, y] = GAUSS_HOT + (255,)
+        px[9, y] = GAUSS + (255,)
+        px[10, y] = GAUSS_DEEP + (255,)
+
+    # Braçadeiras: interrompem o canal e dao-lhe escala.
+    for y in (3, 12):
+        for x in range(5, 11):
+            px[x, y] = VOID + (255,)
+        px[8, y] = GAUSS_DEEP + (255,)
+
+    return img
+
+
+def necron_glyph_sprite():
+    """Placa com o glifo dinastico. Menos luz que a conduta: e marca, nao iluminacao."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    px = img.load()
+    _plate(px, VOID, METAL_DARK, seam=False)
+
+    # O mesmo T invertido do artefacto, para que o glifo do mod seja UM glifo e nao dois.
+    for y in range(4, 13):
+        px[8, y] = GAUSS + (255,)
+    for x in range(4, 13):
+        px[x, 6] = GAUSS + (255,)
+    px[8, 6] = GAUSS_HOT + (255,)
+    px[8, 4] = GAUSS_HOT + (255,)
+
+    for x, y in ((7, 6), (9, 6), (8, 5), (8, 7)):
+        px[x, y] = GAUSS_DEEP + (255,)
+
+    return img
+
+
+BLOCK_SPRITES = [
+    ("necron_stone", necron_stone_sprite),
+    ("necron_conduit", necron_conduit_sprite),
+    ("necron_glyph", necron_glyph_sprite),
+]
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--sheet", action="store_true", help="also write a contact sheet preview")
@@ -726,6 +818,12 @@ def main():
     os.makedirs(os.path.dirname(sprite_path), exist_ok=True)
     sprite.save(sprite_path)
     print("%-16s sprite 16x16" % "necron_artefact")
+
+    for block_name, fn in BLOCK_SPRITES:
+        block_path = os.path.join(ASSETS, "textures", "block", block_name + ".png")
+        os.makedirs(os.path.dirname(block_path), exist_ok=True)
+        fn().save(block_path)
+        print("%-16s bloco 16x16" % block_name)
 
     if args.sheet:
         pad = 8
