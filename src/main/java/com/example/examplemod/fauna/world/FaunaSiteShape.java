@@ -68,7 +68,20 @@ public enum FaunaSiteShape implements StringRepresentable {
      * por isso a parede tem falhas em vez de porta, e o piso desce um degrau. O bloco do centro e o
      * unico motivo de o jogador entrar.
      */
-    RUIN("ruin");
+    RUIN("ruin"),
+
+    /**
+     * Tumba: uma boca emoldurada a superficie, um poco, e uma camara selada no fundo.
+     *
+     * <p>E a unica forma que constroi DOIS lugares e os liga. As outras sao um sitio; esta e uma
+     * entrada que leva a algum lado, porque uma entrada que nao leva a nada e cenario e uma camara
+     * sem entrada e um segredo que so um jogador com pa encontra.
+     *
+     * <p>Tambem e a unica cujos moradores NAO nascem a superficie: {@code spawnResidents} usa
+     * {@code surfaceAt}, portanto sem uma ancora propria o Senhor da tumba apareceria de pe no sal,
+     * a 30 blocos por cima do trono dele.
+     */
+    TOMB("tomb");
 
     public static final Codec<FaunaSiteShape> CODEC =
             StringRepresentable.fromEnum(FaunaSiteShape::values);

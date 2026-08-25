@@ -3,7 +3,6 @@ package com.example.examplemod.necron;
 import java.util.List;
 
 import com.example.examplemod.campaign.CampaignData;
-import com.example.examplemod.campaign.CampaignLog;
 import com.example.examplemod.campaign.planet.PlanetWarState;
 import com.example.examplemod.planet.FCPlanets;
 
@@ -106,22 +105,20 @@ public final class NecronAwakeningSpawner {
                 spawn(level, player, FCNecrons.NECRON_WARRIOR.get(), 3 + level.random.nextInt(2));
             }
 
+            // The top of the clock sends the tomb's whole garrison — and NOT the Overlord.
+            //
+            // He used to be spawned here, in a ring around whoever happened to be standing on the
+            // planet, guarded by a 128-block check for another one. That was the best available
+            // answer while the tomb was only a number: there was nowhere for him to be.
+            //
+            // Now there is. `site_necron_tomb` builds a shaft and a sealed chamber and puts him on
+            // the throne with a Warrior guard, so the Overlord is a PLACE THE PLAYER GOES TO rather
+            // than a thing that walks up behind them. Keeping both would have meant two Overlords on
+            // one planet the moment the chamber sat in an unloaded chunk, because the old check can
+            // only see loaded entities.
             case OVERLORD -> {
                 spawn(level, player, FCNecrons.NECRON_SCARAB.get(), 3);
-                spawn(level, player, FCNecrons.NECRON_WARRIOR.get(), 4);
-
-                // One Overlord on the planet at a time. He is the objective, not a spawn.
-                if (level.getEntitiesOfClass(NecronOverlordEntity.class,
-                        player.getBoundingBox().inflate(128.0D)).isEmpty()) {
-                    spawn(level, player, FCNecrons.NECRON_OVERLORD.get(), 1);
-
-                    CampaignLog.war("necron overlord risen near {}", player.blockPosition());
-
-                    level.players().forEach(p -> p.sendSystemMessage(
-                            net.minecraft.network.chat.Component
-                                    .translatable("msg.firstcrusade.necron.overlord_rises")
-                                    .withStyle(net.minecraft.ChatFormatting.DARK_GREEN)));
-                }
+                spawn(level, player, FCNecrons.NECRON_WARRIOR.get(), 5);
             }
 
             default -> {

@@ -115,6 +115,13 @@ Comandos úteis: `/fc perf`, `/fc squad`, `/fc suppression`, `/fcstrategy planet
 13. **`registerGoals()` corre dentro do `super(...)`** do `Mob`, antes de qualquer campo da subclasse
     existir. Nunca ler um campo próprio ali — derivar do `getType()`, que o construtor do `Entity`
     já preencheu. Custou um "Unable to summon entity" sem mais explicação nas unidades da Hive.
+14. **Não contar Necrons com `/kill`.** Os Guerreiros reanimam até 2× com 50%, portanto `kill @e`
+    sucessivos devolvem números que não são a população (146 → 6 → 4, ainda com vivos). Para contar,
+    matar várias vezes até dar zero **antes** de montar o teste.
+15. **Um sítio de raio grande é recusado por declive.** `FaunaSiteFeature.groundAt` devolve null
+    acima de `MAX_SLOPE` medido nas quatro pontas do raio — a tumba (raio 9) falha em terreno onde a
+    ruína (raio 6) passa. Se um `/place feature` diz "Failed to place feature", procure chão plano
+    antes de procurar bug.
 
 ## COMO TRABALHAR
 

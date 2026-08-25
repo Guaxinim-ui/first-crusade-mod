@@ -43,7 +43,8 @@ public record FaunaSiteConfig(
         int propTries,
         Optional<BlockState> floor,
         Optional<BlockState> frame,
-        Optional<BlockState> centre) implements FeatureConfiguration {
+        Optional<BlockState> centre,
+        Optional<EntityType<?>> champion) implements FeatureConfiguration {
 
     public static final Codec<FaunaSiteConfig> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
@@ -65,7 +66,12 @@ public record FaunaSiteConfig(
                     // Um bloco no meio do sitio. Opcional e generico de proposito: "este sitio tem
                     // uma peca no centro" serve para o relicario Necron e para o que vier depois,
                     // e um campo chamado reliquary dentro do pacote da fauna seria uma mentira.
-                    BlockState.CODEC.optionalFieldOf("centre").forGetter(FaunaSiteConfig::centre)
+                    BlockState.CODEC.optionalFieldOf("centre").forGetter(FaunaSiteConfig::centre),
+                    // Um unico morador posto EXACTAMENTE no centro, ao lado do bloco de centro.
+                    // Separado de `mob` porque `mob` e uma populacao (min/max, espalhada) e este e
+                    // uma pessoa: o Senhor no trono. Um sitio com um campeao tem um, nunca tres.
+                    BuiltInRegistries.ENTITY_TYPE.byNameCodec().optionalFieldOf("champion")
+                            .forGetter(FaunaSiteConfig::champion)
             ).apply(instance, FaunaSiteConfig::new));
 
     /** Quantos moradores este sitio cria nesta geracao. */

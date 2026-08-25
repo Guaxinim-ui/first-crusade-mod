@@ -430,6 +430,61 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-08-25 (3): **A tumba deixou de ser um número: agora é um lugar, e o Senhor mora nela.**
+  Build verde, **medido em servidor**.
+
+  O dono chegou ao mundo-tumba e perguntou onde estavam os Necrons e se eles tinham uma base. As
+  duas respostas eram más: os Necrons **não estão lá** até o relógio de despertar subir (SILENT não
+  manda nada, e ~4 min de pé no planeta até aos escaravelhos), e base **não havia nenhuma** — os
+  sete setores do planeta (`tomb_entrance`, `overlord_chamber`, `resurrection_chamber`…) só existiam
+  como nomes no `PlanetSectorBlueprints` e no `SectorType`. Andar até à posição do
+  `overlord_chamber` dava terreno vazio.
+
+  **Uma forma, não duas.** A tentação era fazer dois sítios, um para a entrada e outro para a
+  câmara. Dois sítios sorteados de forma independente dão **uma entrada que não leva a nada e uma
+  câmara sem entrada** — a primeira é cenário, a segunda só a encontra quem anda com pá. A forma
+  `TOMB` nova constrói as duas pontas **e o poço entre elas**: boca emoldurada à superfície, poço de
+  20-28 blocos com anéis de moldura a cada quatro, e uma câmara selada de raio 9 e cinco de altura
+  com o trono no meio.
+
+  **`champion` novo na config do sítio.** `mob` é uma *população* (min/max, espalhada); o Senhor é
+  uma *pessoa*. Um sítio com campeão tem um, nunca três. E ele é posto **em cima** do bloco de
+  centro, não nele — ver o bug abaixo.
+
+  **O Senhor saiu do despertar.** O `NecronAwakeningSpawner` invocava-o num anel à volta do jogador
+  ao chegar a 100, com uma checagem de 128 blocos para não haver dois. Isso era o melhor possível
+  enquanto a tumba era só um número: não havia onde ele estar. Agora há, e manter os dois daria dois
+  Senhores no planeta no instante em que a câmara ficasse num chunk descarregado — a checagem antiga
+  só vê entidades carregadas. **O topo do relógio passa a mandar mais Guerreiros; o Senhor é um sítio
+  aonde se vai.**
+
+  **Dois bugs que a medição apanhou:**
+  1. **O campeão nascia dentro do trono.** Posto na âncora exacta, o Senhor spawnava dentro do bloco
+     de lodestone e o motor de colisão empurrava-o — apareceu a **seis blocos** do meio da câmara.
+     Um degrau acima resolve e é a leitura que se quer.
+  2. **A guarda podia nascer dentro da parede.** O anel usava `radius-1`, e a parede da câmara
+     começa exactamente em `radius-1`. Sítios fechados passaram a `radius-3`.
+
+  **Medido** (servidor, `execute in firstcrusade:necron_tomb_world`, `/place feature`):
+  - geometria **5/5**: trono (lodestone) no centro da câmara, piso de polished_deepslate por baixo,
+    parede de deepslate_tiles no raio 9, e o poço a atravessar o tecto **e** a continuar acima;
+  - o Senhor nasce em **80.5 / 34.0 / -79.5** para uma tumba centrada em 80,-80 — ou seja, no centro
+    exacto, um degrau acima do trono;
+  - a guarda de Guerreiros nasce **na câmara**, ao nível do piso, não à superfície — que era o ponto
+    da âncora (`spawnResidents` usa `surfaceAt`, e sem ela o Senhor apareceria trinta blocos acima do
+    trono dele, no sal).
+
+  **Armadilha de medição, anotada:** contar Necrons com `/kill` **não funciona**. Os Guerreiros têm
+  protocolos de reanimação (recusam a morte até 2× com 50%), portanto três `kill @e` sucessivos
+  devolveram 146 → 6 → 4 e ainda sobravam vivos. Qualquer contagem de guarda feita assim vem
+  inflacionada pelos sobreviventes da anterior.
+
+  **Consequência a saber:** com raio 9 a tumba é **bem mais exigente com o terreno** que a ruína
+  (raio 6) — o `groundAt` recusa declive acima do limite, e várias tentativas de `/place` falharam em
+  terreno acidentado antes de encontrar chão plano. Isso torna a raridade efectiva mais alta que os
+  900 declarados, o que é o efeito desejado (uma tumba dessas por planeta, não uma por vale) mas não
+  está calibrado por medição.
+
 - 2026-08-25 (2): **§19 — a Hive ganhou gente, e os Necrons ganharam ovos.** Build verde, `runData`
   rodado, **medido em servidor**.
 

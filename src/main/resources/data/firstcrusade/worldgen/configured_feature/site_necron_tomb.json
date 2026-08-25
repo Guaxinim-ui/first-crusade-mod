@@ -1,0 +1,29 @@
+{
+  "type": "firstcrusade:fauna_site",
+  "config": {
+    "shape": "tomb",
+    "min_count": 4,
+    "max_count": 6,
+    "radius": 9,
+    "prop_tries": 14,
+    "props": [
+      {
+        "Name": "minecraft:deepslate_tiles"
+      },
+      {
+        "Name": "minecraft:polished_deepslate"
+      }
+    ],
+    "mob": "firstcrusade:necron_warrior",
+    "floor": {
+      "Name": "minecraft:polished_deepslate"
+    },
+    "frame": {
+      "Name": "minecraft:deepslate_tiles"
+    },
+    "centre": {
+      "Name": "minecraft:lodestone"
+    },
+    "champion": "firstcrusade:necron_overlord"
+  }
+}

@@ -97,6 +97,33 @@ SITES = [
         biomes=["salt_waste"],
     ),
 
+    # A tumba a serio: boca a superficie, poco, e a camara do Senhor no fundo.
+    #
+    # Separada da ruina de proposito. A ruina e a CHAVE (relicario, raridade 220, espalhada por tres
+    # planetas); esta e o LUGAR, e so faz sentido no proprio mundo-tumba. Por isso o bioma e o mesmo
+    # salt_waste — que e 60% de Sekhet — mas a raridade e muito mais alta: uma tumba dessas por
+    # planeta e o que se quer, nao uma por vale.
+    #
+    # `champion` poe o Senhor exactamente no trono e `mob` poe a guarda de Guerreiros a volta dele.
+    # Os escaravelhos ficam de fora aqui: eles sao o que o despertar manda ao jogador la fora, e
+    # enche-los na camara tiraria o contraste entre "a tumba mandou-te alguma coisa" e "chegaste ao
+    # fundo dela".
+    dict(
+        name="site_necron_tomb",
+        shape="tomb",
+        mob=f"{MODID}:necron_warrior",
+        min_count=4, max_count=6,
+        radius=9,
+        props=["minecraft:deepslate_tiles", "minecraft:polished_deepslate"],
+        prop_tries=14,
+        floor="minecraft:polished_deepslate",
+        frame="minecraft:deepslate_tiles",
+        centre="minecraft:lodestone",
+        champion=f"{MODID}:necron_overlord",
+        rarity=900,
+        biomes=["salt_waste"],
+    ),
+
     # ---------------------------------------------------------------- imperial
     dict(
         name="site_grox_ranch",
@@ -314,6 +341,8 @@ def configured(site):
         config["frame"] = state(site["frame"])
     if site.get("centre"):
         config["centre"] = state(site["centre"])
+    if site.get("champion"):
+        config["champion"] = site["champion"]
 
     return {"type": f"{MODID}:fauna_site", "config": config}
 

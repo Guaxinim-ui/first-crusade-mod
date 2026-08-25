@@ -75,6 +75,11 @@ public class FaunaSiteFeature extends Feature<FaunaSiteConfig> {
             return false;
         }
 
+        // Onde ficam o bloco de centro, os props e os moradores. E a origem para toda forma que se
+        // constroi a superficie, e o chao da camara para a TOMB — que e a unica que tem um "dentro"
+        // longe da boca. Sem isto o Senhor nasceria em cima do sal, trinta blocos acima do trono.
+        BlockPos anchor = origin;
+
         switch (config.shape()) {
             case CLEARING -> buildClearing(level, random, origin, config);
             case DEN -> buildDen(level, random, origin, config);
@@ -83,13 +88,17 @@ public class FaunaSiteFeature extends Feature<FaunaSiteConfig> {
             case NEST -> buildNest(level, random, origin, config);
             case CAMP -> buildCamp(level, random, origin, config);
             case RUIN -> buildRuin(level, random, origin, config);
+            case TOMB -> anchor = buildTomb(level, random, origin, config);
         }
 
-        // Depois das formas e antes dos props, para que o centro nunca seja soterrado por detrito.
-        config.centre().ifPresent(state -> put(level, origin, state));
+        boolean enclosed = config.shape() == FaunaSiteShape.TOMB;
+        BlockPos at = anchor;
 
-        scatterProps(level, random, origin, config);
-        spawnResidents(level, random, origin, config);
+        // Depois das formas e antes dos props, para que o centro nunca seja soterrado por detrito.
+        config.centre().ifPresent(state -> put(level, at, state));
+
+        scatterProps(level, random, anchor, config, enclosed);
+        spawnResidents(level, random, anchor, config, enclosed);
 
         // Um sitio que nao escreveu bloco nenhum nao foi construido, e dizer "coloquei" seria
         // mentir para o jogo — e para quem estiver depurando com /place.
@@ -156,6 +165,122 @@ public class FaunaSiteFeature extends Feature<FaunaSiteConfig> {
                 }
             }
         }
+    }
+
+    /**
+     * Tumba: boca emoldurada a superficie, poco, e camara selada no fundo.
+     *
+     * <h2>Porque e uma so forma e nao duas</h2>
+     *
+     * O mapa da campanha nomeia {@code tomb_entrance} e {@code overlord_chamber} como setores
+     * separados, e a tentacao era fazer dois sitios. Dois sitios sorteados de forma independente
+     * dariam uma entrada que nao leva a nada e uma camara sem entrada — a primeira e cenario, a
+     * segunda so a encontra quem anda com pa. Uma forma que constroi as duas pontas e o tunel entre
+     * elas e a unica que produz um lugar.
+     *
+     * <h2>Selada, e essa e a leitura</h2>
+     *
+     * A camara e fechada em cima e em volta pelo {@code frame}. Nao ha janela nem clarabóia: a unica
+     * luz e a que a tumba traz consigo, e a unica forma de entrar e o poco. Uma camara com buracos
+     * leria como caverna.
+     *
+     * @return o chao da camara, que passa a ser a ancora do centro, dos props e dos moradores
+     */
+    private BlockPos buildTomb(WorldGenLevel level, RandomSource random, BlockPos origin,
+                               FaunaSiteConfig config) {
+        BlockState frame = config.frame().orElse(Blocks.DEEPSLATE_TILES.defaultBlockState());
+        BlockState floor = config.floor().orElse(Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+
+        int radius = config.radius();
+
+        // ---- a boca: um anel emoldurado, um degrau abaixo do terreno ----
+        //
+        // Emoldurada e nao apenas um buraco, porque o jogador tem de a reconhecer de longe como
+        // construida. Um buraco no sal e uma caverna.
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+                int distance = dx * dx + dz * dz;
+
+                if (distance > 9) {
+                    continue;
+                }
+
+                BlockPos rim = origin.offset(dx, 0, dz);
+
+                if (distance >= 4) {
+                    put(level, rim.below(), frame);
+                    put(level, rim, frame);
+                } else {
+                    // O vao. Aberto ate ao poco.
+                    put(level, rim, Blocks.CAVE_AIR.defaultBlockState());
+                    put(level, rim.below(), Blocks.CAVE_AIR.defaultBlockState());
+                }
+            }
+        }
+
+        // ---- o poco ----
+        //
+        // Fundo o bastante para a camara ficar em pedra a serio, e limitado pelo fundo do mundo,
+        // porque um poco que atravessa o bedrock e um poco que cai no vazio.
+        int depth = Math.min(20 + random.nextInt(9),
+                Math.max(4, origin.getY() - level.getMinBuildHeight() - 10));
+
+        for (int down = 0; down <= depth; down++) {
+            BlockPos shaft = origin.below(down);
+
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    put(level, shaft.offset(dx, 0, dz), Blocks.CAVE_AIR.defaultBlockState());
+                }
+            }
+
+            // Um anel de moldura a cada quatro blocos: dá escala à descida e evita que o poço
+            // se leia como um buraco natural.
+            if (down % 4 == 0) {
+                for (int dx = -2; dx <= 2; dx++) {
+                    for (int dz = -2; dz <= 2; dz++) {
+                        if (Math.abs(dx) == 2 || Math.abs(dz) == 2) {
+                            put(level, shaft.offset(dx, 0, dz), frame);
+                        }
+                    }
+                }
+            }
+        }
+
+        // ---- a camara ----
+        BlockPos chamberFloor = origin.below(depth);
+        int height = 5;
+
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                int distance = dx * dx + dz * dz;
+
+                if (distance > radius * radius) {
+                    continue;
+                }
+
+                boolean wall = distance >= (radius - 1) * (radius - 1);
+
+                put(level, chamberFloor.offset(dx, -1, dz), floor);
+
+                for (int up = 0; up < height; up++) {
+                    put(level, chamberFloor.offset(dx, up, dz),
+                            wall ? frame : Blocks.CAVE_AIR.defaultBlockState());
+                }
+
+                put(level, chamberFloor.offset(dx, height, dz), frame);
+            }
+        }
+
+        // O poco tem de atravessar o tecto que acabou de ser posto, ou a camara fica selada de quem
+        // vem de cima — que e exactamente o erro que esta forma existe para nao cometer.
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                put(level, chamberFloor.offset(dx, height, dz), Blocks.CAVE_AIR.defaultBlockState());
+            }
+        }
+
+        return chamberFloor;
     }
 
     /** Clareira: limpa a vegetacao e marca o chao pisado. */
@@ -367,7 +492,7 @@ public class FaunaSiteFeature extends Feature<FaunaSiteConfig> {
      * precisa haver.
      */
     private void scatterProps(WorldGenLevel level, RandomSource random, BlockPos origin,
-                              FaunaSiteConfig config) {
+                              FaunaSiteConfig config, boolean enclosed) {
         if (config.props().isEmpty()) {
             return;
         }
@@ -382,7 +507,12 @@ public class FaunaSiteFeature extends Feature<FaunaSiteConfig> {
                 continue;
             }
 
-            BlockPos surface = surfaceAt(level, origin.offset(dx, 0, dz));
+            // Dentro de uma camara o chao E a ancora. surfaceAt subiria ate ao ceu aberto e
+            // espalharia os props no telhado do sitio.
+            BlockPos surface = enclosed
+                    ? origin.offset(dx, 0, dz)
+                    : surfaceAt(level, origin.offset(dx, 0, dz));
+
             if (!level.getBlockState(surface).isAir()
                     || !level.getBlockState(surface.below()).isSolidRender(level, surface.below())) {
                 continue;
@@ -401,41 +531,73 @@ public class FaunaSiteFeature extends Feature<FaunaSiteConfig> {
      * nasceria vazia, e a estrutura ficaria contando uma historia sobre um bicho que nunca existiu.
      */
     private void spawnResidents(WorldGenLevel level, RandomSource random, BlockPos origin,
-                                FaunaSiteConfig config) {
+                                FaunaSiteConfig config, boolean enclosed) {
+        // O campeao primeiro, e EM CIMA do bloco de centro e nao dentro dele.
+        //
+        // Medido: posto no proprio centro, o Senhor nasce dentro do trono, e o motor de colisao
+        // empurra-o para fora — apareceu a seis blocos do meio da camara. Um degrau acima ele fica
+        // de pe no trono, que alem de funcionar e a leitura que se quer.
+        BlockPos seat = config.centre().isPresent() ? origin.above() : origin;
+        config.champion().ifPresent(type -> place(level, random, seat, type));
+
         if (config.mob().isEmpty()) {
             return;
         }
 
         EntityType<?> type = config.mob().get();
         int count = config.rollCount(random);
-        int radius = Math.max(1, config.radius() - 1);
+
+        // Dentro de uma camara a parede comeca em raio-1, portanto uma guarda sorteada ate raio-1
+        // nasce dentro dela. Tres blocos de folga mantem o anel no chao livre.
+        int radius = Math.max(1, config.radius() - (enclosed ? 3 : 1));
 
         for (int i = 0; i < count; i++) {
             int dx = random.nextInt(radius * 2 + 1) - radius;
             int dz = random.nextInt(radius * 2 + 1) - radius;
 
-            BlockPos spot = surfaceAt(level, origin.offset(dx, 0, dz));
-            Entity entity = type.create(level.getLevel());
+            BlockPos spot = enclosed
+                    ? origin.offset(dx, 0, dz)
+                    : surfaceAt(level, origin.offset(dx, 0, dz));
 
-            if (entity == null) {
+            if (!place(level, random, spot, type)) {
                 return;             // tipo invalido: nao adianta tentar mais nenhum
             }
-
-            entity.moveTo(spot.getX() + 0.5D, spot.getY(), spot.getZ() + 0.5D,
-                    random.nextFloat() * 360.0F, 0.0F);
-
-            if (entity instanceof Mob mob) {
-                mob.finalizeSpawn(level, level.getCurrentDifficultyAt(spot),
-                        MobSpawnType.STRUCTURE, null, null);
-                mob.setPersistenceRequired();
-            }
-
-            if (entity instanceof FaunaEntity fauna) {
-                fauna.markFromStructure();
-            }
-
-            level.addFreshEntity(entity);
         }
+    }
+
+    /**
+     * Cria um morador numa posicao.
+     *
+     * <p>Extraido porque o campeao e a populacao precisam do mesmo tratamento — {@code STRUCTURE}
+     * como motivo, persistencia ligada — e duas copias disso e onde uma delas esquece o
+     * {@code setPersistenceRequired} e o Senhor da tumba desaparece na primeira vez que o jogador
+     * se afasta.
+     *
+     * @return false quando o tipo nao pode ser criado
+     */
+    private boolean place(WorldGenLevel level, RandomSource random, BlockPos spot,
+                          EntityType<?> type) {
+        Entity entity = type.create(level.getLevel());
+
+        if (entity == null) {
+            return false;
+        }
+
+        entity.moveTo(spot.getX() + 0.5D, spot.getY(), spot.getZ() + 0.5D,
+                random.nextFloat() * 360.0F, 0.0F);
+
+        if (entity instanceof Mob mob) {
+            mob.finalizeSpawn(level, level.getCurrentDifficultyAt(spot),
+                    MobSpawnType.STRUCTURE, null, null);
+            mob.setPersistenceRequired();
+        }
+
+        if (entity instanceof FaunaEntity fauna) {
+            fauna.markFromStructure();
+        }
+
+        level.addFreshEntity(entity);
+        return true;
     }
 
     // ==================================================================== terreno
