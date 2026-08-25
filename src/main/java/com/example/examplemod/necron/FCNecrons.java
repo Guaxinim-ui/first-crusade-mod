@@ -58,11 +58,50 @@ public final class FCNecrons {
                             .clientTrackingRange(8)
                             .build(ExampleMod.MODID + ":necron_scarab"));
 
-    public static final DeferredRegister<net.minecraft.world.level.block.Block> BLOCKS =
-            DeferredRegister.create(ForgeRegistries.BLOCKS, ExampleMod.MODID);
+    // =========================================================================================
+    // SPAWN EGGS
+    //
+    // These were deliberately left out when the Necrons were built: the argument was that an egg
+    // makes the tomb's hundred-point awakening a thing you can skip. The owner asked where they
+    // were, and on reflection the argument does not hold up.
+    //
+    // A spawn egg is a creative-tab item. It cannot be reached in a survival campaign, so it never
+    // touches the clock that gates the tomb — and every other faction in the mod has eggs, so their
+    // absence read as an oversight rather than as a rule. Against that, the three Necron models had
+    // no way of being LOOKED AT: they only appear through NecronAwakeningSpawner, which needs a tomb
+    // world, a player standing on it, and a hundred points of awakening first. Making a mod's own art
+    // unreachable to the person who has to review it is a real cost for a rule that protected
+    // nothing.
+    // =========================================================================================
 
     public static final DeferredRegister<net.minecraft.world.item.Item> ITEMS =
             DeferredRegister.create(ForgeRegistries.ITEMS, ExampleMod.MODID);
+
+    /** Necron green over gunmetal — the palette the asset generator paints them in. */
+    public static final RegistryObject<net.minecraft.world.item.Item> NECRON_WARRIOR_SPAWN_EGG =
+            ITEMS.register("necron_warrior_spawn_egg",
+                    () -> new net.minecraftforge.common.ForgeSpawnEggItem(
+                            NECRON_WARRIOR, 0x3A4046, 0x7FD69A,
+                            new net.minecraft.world.item.Item.Properties()));
+
+    public static final RegistryObject<net.minecraft.world.item.Item> NECRON_OVERLORD_SPAWN_EGG =
+            ITEMS.register("necron_overlord_spawn_egg",
+                    () -> new net.minecraftforge.common.ForgeSpawnEggItem(
+                            NECRON_OVERLORD, 0x2B3036, 0xC8A93A,
+                            new net.minecraft.world.item.Item.Properties()));
+
+    public static final RegistryObject<net.minecraft.world.item.Item> NECRON_SCARAB_SPAWN_EGG =
+            ITEMS.register("necron_scarab_spawn_egg",
+                    () -> new net.minecraftforge.common.ForgeSpawnEggItem(
+                            NECRON_SCARAB, 0x4A5056, 0x7FD69A,
+                            new net.minecraft.world.item.Item.Properties()));
+
+    public static final DeferredRegister<net.minecraft.world.level.block.Block> BLOCKS =
+            DeferredRegister.create(ForgeRegistries.BLOCKS, ExampleMod.MODID);
+
+    // ITEMS is declared ABOVE the spawn eggs on purpose. Static fields initialise in declaration
+    // order, so an egg registered against a DeferredRegister declared further down the file would
+    // dereference null at class-load — a crash on startup, not a compile error.
 
     /** The plinth in the middle of a ruin. Right-clicked once, then dark forever. */
     public static final RegistryObject<net.minecraft.world.level.block.Block> NECRON_RELIQUARY =

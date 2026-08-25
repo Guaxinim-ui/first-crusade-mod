@@ -73,6 +73,9 @@ public class ExampleMod {
     // block set was removed; the new decorative kit registers itself via the three classes below.
     com.example.examplemod.hive.HiveBlocks.register(modEventBus);
 
+    // Hive population (spec §19): the five dweller roles, their spawn eggs and attributes.
+    com.example.examplemod.hive.pop.FCHiveDwellers.register(modEventBus);
+
     // New Hive decorative kit (133 blocks across three self-contained registries + creative tabs).
     com.example.examplemod.hive.HiveEssentialBlocks.register(modEventBus);
     com.example.examplemod.hive.HiveConcreteBlocks.register(modEventBus);

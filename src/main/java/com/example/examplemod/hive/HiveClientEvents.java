@@ -31,6 +31,14 @@ public final class HiveClientEvents {
     @SubscribeEvent
     public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(HiveEntities.SEAT.get(), NoopRenderer::new);
+
+        // Spec §19. One renderer class for all five roles — it reads the texture off the role.
+        for (com.example.examplemod.hive.pop.HiveRole role
+                : com.example.examplemod.hive.pop.HiveRole.values()) {
+            event.registerEntityRenderer(
+                    com.example.examplemod.hive.pop.FCHiveDwellers.typeFor(role),
+                    com.example.examplemod.hive.pop.HiveDwellerRenderer::new);
+        }
     }
 
     @SubscribeEvent

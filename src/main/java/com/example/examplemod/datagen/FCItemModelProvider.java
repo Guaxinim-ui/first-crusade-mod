@@ -50,6 +50,18 @@ public class FCItemModelProvider extends ItemModelProvider {
         spawnEgg("valkyrie_gunship_spawn_egg");
         spawnEgg("sentinel_walker_spawn_egg");
 
+        // §26 Necrons. Faltavam por decisao antiga (nenhum ovo); o dono pediu, e eles voltaram.
+        spawnEgg("necron_warrior_spawn_egg");
+        spawnEgg("necron_overlord_spawn_egg");
+        spawnEgg("necron_scarab_spawn_egg");
+
+        // §19 — os cinco moradores da Hive.
+        spawnEgg("hive_worker_spawn_egg");
+        spawnEgg("hive_merchant_spawn_egg");
+        spawnEgg("hive_mechanicus_worker_spawn_egg");
+        spawnEgg("hive_priest_spawn_egg");
+        spawnEgg("hive_gang_member_spawn_egg");
+
         // Fase E — fauna.
         spawnEgg("grox_spawn_egg");
         spawnEgg("cyber_mastiff_spawn_egg");

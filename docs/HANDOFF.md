@@ -35,11 +35,16 @@ presente; e os **seis sons de planeta** e os roamers da §5 fatia 2.
 
 ## O QUE FALTA
 
-Ver `docs/STATUS.md` §4.1. **ESCORT/comboios** e a **§5 fatia 2** ficaram feitos em 2026-08-24, e a
-**§18 fatia 1** (circulação vertical da Hive) em 2026-08-25. Sobra: o **DEEP HIVE** e pôr o elevador
-nos módulos dos distritos (§18 fatia 2), e a **§19 — população da Hive**, que parou na fatia 1 com 2
-papéis distintos dos 8 que a spec pede. Bloqueados por coisas que não existem: RESCUE, RECOVER, e os
-desbloqueios de Cadia e Ork World.
+Ver `docs/STATUS.md` §4.1. **ESCORT/comboios** e a **§5 fatia 2** ficaram feitos em 2026-08-24; a
+**§18 fatia 1** (circulação vertical da Hive) e as **unidades da §19** em 2026-08-25. Sobra: o **DEEP
+HIVE** e pôr o elevador nos módulos dos distritos (§18 fatia 2); um marker para o Priest, o
+`COMMANDER_POINT` e as patrulhas a andar (§19). Bloqueados por coisas que não existem: RESCUE,
+RECOVER, e os desbloqueios de Cadia e Ork World.
+
+⚠️ **O que a §19 precisa a seguir é a cidade construída, não código.** As oito unidades existem e
+sete estão ligadas aos markers que os distritos plantam, mas `/fchive validate markers` responde
+"Nenhuma cidade persistida ainda" — o caminho marker→spawn não pode ser medido antes de
+`/fchive city generate`.
 
 ⚠️ **A numeração `§` vem de uma spec que NÃO está em `docs/`** — o dono cola-a no chat. Não adivinhe o
 que uma secção quer dizer a partir das citações internas do `HIVE_CITY.md`: foi assim que a avaliação
@@ -106,7 +111,10 @@ Comandos úteis: `/fc perf`, `/fc squad`, `/fc suppression`, `/fcstrategy planet
     60% do mundo-tumba; `ash_waste` está em três mundos. Qualquer coisa que tenha de valer *por
     planeta* — perigo, som, spawn — é chaveada por **dimensão** em Java, nunca pelo bioma.
 12. **`/playsound` não valida o id do som** (aceita um inventado), portanto não prova registo.
-    O `/damage` **valida** e por isso serve. Não trocar um pelo outro.
+    O `/damage`, o `/setblock`, o `/summon` e o `/item replace` **validam** e por isso servem.
+13. **`registerGoals()` corre dentro do `super(...)`** do `Mob`, antes de qualquer campo da subclasse
+    existir. Nunca ler um campo próprio ali — derivar do `getType()`, que o construtor do `Entity`
+    já preencheu. Custou um "Unable to summon entity" sem mais explicação nas unidades da Hive.
 
 ## COMO TRABALHAR
 

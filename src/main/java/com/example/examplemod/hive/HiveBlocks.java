@@ -116,6 +116,13 @@ public final class HiveBlocks {
                     .displayItems((parameters, output) -> {
                         output.accept(TOXIC_SLUDGE_BUCKET.get());
                         output.accept(HIVE_TRANSIT_LIFT.get());
+
+                        // Spec §19 — the five dweller eggs live with the Hive, not with the troops.
+                        for (com.example.examplemod.hive.pop.HiveRole role
+                                : com.example.examplemod.hive.pop.HiveRole.values()) {
+                            output.accept(com.example.examplemod.hive.pop.FCHiveDwellers.eggFor(role));
+                        }
+
                         for (HiveMarkers.MarkerType type : HiveMarkers.MarkerType.values()) {
                             output.accept(MARKERS.get(type).get());
                         }

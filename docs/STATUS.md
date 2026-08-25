@@ -112,7 +112,7 @@ Tudo o resto nesta secção é histórico. Isto é a lista viva.
 | **ESCORT / comboios** | **FEITO** (2026-08-24) | Pacote `campaign/convoy/`. Medido em servidor de ponta a ponta. Falta ver o ramo com jogador presente — precisa de cliente. |
 | **§5 fatia 2 — ambiência** | **FEITO** (2026-08-24) | `PlanetAmbience`: 6 sons de mundo + guarnição selvagem lida do controlo inimigo. Nada visto/ouvido — precisa de cliente. |
 | **§18 — Hive vertical** | fatia 1 **FEITA** (2026-08-25) | `HiveTier` + `hive_transit_lift`: já se circula entre os 5 níveis. Falta o **DEEP HIVE** (nenhum distrito gera abaixo do Underhive) e pôr o elevador nos módulos dos distritos. |
-| **§19 — População da Hive** | fatia 1 feita, faltam 5 papéis | `HivePopulationManager` cobre Citizen/Worker/Guardsman — e Citizen e Worker são **a mesma entidade**. Faltam Merchant, Enforcer, Gang Member, Mechanicus Worker, Priest, mais ENEMY_SPAWN e as patrulhas. |
+| **§19 — População da Hive** | **unidades FEITAS** (2026-08-25) | 8 papéis existem e 7 estão ligados a markers. Falta ver em jogo — precisa da **cidade construída**, que o dono ainda vai fazer. O Priest não tem marker (nenhum distrito planta um). Faltam ainda `COMMANDER_POINT` e as patrulhas a andar. |
 | **RESCUE / RECOVER** | bloqueado | Esperam por esquadrões resgatáveis e por mais artefactos. O `RECOVER` ficou mais perto agora que existe um artefacto. |
 | **Cadia e Ork World** | bloqueado | Continuam atrás de `TRIGGER_CAMPAIGN`, que nada dispara. O mundo-tumba saiu dessa lista em 2026-08-24. |
 
@@ -429,6 +429,74 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 - Mensagens de commit em pt-BR, terminar com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
 ## 7. Changelog (mais recente no topo)
+
+- 2026-08-25 (2): **§19 — a Hive ganhou gente, e os Necrons ganharam ovos.** Build verde, `runData`
+  rodado, **medido em servidor**.
+
+  **Os ovos Necron voltaram, e a razão antiga não se aguentava.** Foram deixados de fora de propósito
+  em 2026-08-24: "um ovo tornaria o relógio de 100 pontos uma coisa que se salta". O dono perguntou
+  por eles, e a reflexão dá-lhe razão — um ovo é item de **aba criativa**, inalcançável numa campanha
+  de sobrevivência, portanto nunca toca no relógio que fecha a tumba. Contra isso: os três modelos
+  Necron **não tinham como ser olhados**, porque só aparecem pelo `NecronAwakeningSpawner`, que exige
+  mundo-tumba, jogador em cima e cem pontos de despertar primeiro. Tornar a arte do próprio mod
+  inalcançável a quem tem de a rever é um custo real por uma regra que não protegia nada.
+
+  **Oito papéis, cinco entidades novas.** A spec nomeia Citizen, Worker, Guardsman, Merchant,
+  Enforcer, Gang Member, Mechanicus Worker e Priest. Três já existiam (`imperial_citizen`,
+  `guardsman`, `enforcer` — este último nunca tinha sido ligado a nada). Os cinco que faltavam são
+  **uma classe** `HiveDwellerEntity` com um `HiveRole`, não cinco classes: são a mesma criatura com
+  roupa diferente e um bit de diferença (se atacam). É a mesma forma que o `ImperialTroopAppearance`
+  já usa para as onze tropas.
+
+  **O bug que estava lá desde a fatia 1:** `CIVIL_SPAWN` e `WORKER_SPAWN` resolviam **ambos** para
+  `imperial_citizen`. Os geradores plantam 26 markers civis e **16 de trabalhador**, e a distinção que
+  os templates se deram ao trabalho de marcar era invisível no jogo. Agora o trabalhador é uma pessoa
+  de macacão e colete de risco.
+
+  **Sete dos oito estão ligados a markers que os distritos realmente plantam** (contados nos
+  geradores): civil 26, patrulha 31, loot 22, trabalhador 16, comandante 15, comércio 13, guardsman
+  13, defesa 9, inimigo 8, veículo 6, cobertura 4, construção 3. O mapeamento novo: trabalho→Worker,
+  comércio→Merchant, construção→Adepto do Mechanicus, defesa→**Enforcer** (que já existia e não era
+  usado), inimigo→Gangueiro. **O Priest não tem marker** — nenhum distrito planta um santuário — logo
+  existe com ovo e pode ser posto à mão, mas não nasce sozinho até os geradores de distrito ganharem
+  um marker para ele.
+
+  **Gangueiro só na Subcolmeia.** `ENEMY_SPAWN` é o único marker cuja resposta depende de onde está, e
+  o teste passa pelo `HiveTier` da fatia anterior — a mesma escada que o elevador anda, não uma
+  segunda opinião sobre que Y é que andar. Uma gangue no Administratum não é uma gangue, é um
+  incidente.
+
+  **Texturas pelo gerador, e o gerador IMPORTA o outro.** `tools/generate_hive_dweller_textures.py`
+  traz o Canvas, o layout de UV e os verbos de pintura do `generate_troop_textures.py` em vez de os
+  repetir — mesmo gesto do script Ork sobre o Necron. **A primeira tentativa apontava para as texturas
+  de profissão de aldeão vanilla e estava errada:** aquelas são *camadas* que o renderer vanilla
+  desenha por cima de uma base, e sozinhas desenham uma pessoa quase transparente.
+
+  **O bug que a medição apanhou, e a leitura de código não teria.** Os cinco registavam-se e o
+  `/summon` respondia só "Unable to summon entity". O log tinha a resposta: `registerGoals()` é
+  chamado **dentro** do construtor do `Mob`, ou seja durante o `super(...)`, **antes** de qualquer
+  campo da subclasse ser atribuído — o papel passado ao construtor era null na própria lista de goals.
+  Agora o papel é derivado do `EntityType`, que o construtor do `Entity` já preencheu nessa altura.
+
+  **Medido em servidor** (`execute in firstcrusade:hive_world`):
+  - os cinco moradores e os três Necrons **nascem**, com os nomes traduzidos a resolver ("Hive
+    Worker", "Ministorum Priest", "Underhive Ganger", "Canoptek Scarab"...), e um id inventado é
+    recusado com "Can't find element";
+  - os **ovos existem como itens**: `item replace` aceitou `hive_worker_spawn_egg` e
+    `necron_overlord_spawn_egg` e recusou `hive_inventado_spawn_egg`;
+  - **facção e papéis**: com um Guardsman posto sem IA ao lado, o Gangueiro **matou-o** em 30 s — o
+    que exige o `getUnitFaction()` a devolver HOSTILE e os goals de alvo a funcionar — e o
+    Trabalhador ao lado ficou nos **20/20 intactos**, porque civil não luta e não é alvo;
+  - zero `NullPointerException` no arranque depois da correcção.
+
+  **Não medido:** o caminho **marker → spawn**, que é como estes aparecem numa cidade a sério.
+  `/fchive validate markers` responde "Nenhuma cidade persistida ainda", e gerar a cidade inteira é o
+  passo que o dono disse que ainda vai dar. O `HivePopulationManager` está ligado e reporta 0 activos.
+  Também não vistos: as cinco texturas em jogo (precisa de cliente).
+
+  **Decisão anotada:** o Gangueiro tem por alvo o jogador, o Guardsman e o Cidadão — **não** os outros
+  moradores. Deixá-lo caçar trabalhadores faria da população da Subcolmeia uma esteira de nascer e
+  morrer contra o cooldown de 60 s do manager, em vez de uma ameaça ao jogador e à guarnição.
 
 - 2026-08-25: **§18 fatia 1 — a Hive deixou de ser cinco lajes empilhadas.** Build verde, `runData`
   rodado, **medido em servidor**.

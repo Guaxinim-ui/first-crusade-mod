@@ -63,6 +63,12 @@ public final class HivePopulationManager {
     private static final int CAP_CIVIL = 120;
     private static final int CAP_WORKER = 60;
     private static final int CAP_GUARDSMAN = 60;
+    // Spec §19, second slice. The four new kinds are deliberately scarcer than the crowd: a hive is
+    // mostly workers and civilians, and a city where every third person is a priest reads as a joke.
+    private static final int CAP_MERCHANT = 20;
+    private static final int CAP_MECHANICUS = 12;
+    private static final int CAP_ENFORCER = 24;
+    private static final int CAP_GANG = 24;
     /** At most this many new spawns per evaluation, so a first activation ramps up over seconds. */
     private static final int SPAWNS_PER_PASS = 6;
 
@@ -72,7 +78,11 @@ public final class HivePopulationManager {
     public static boolean isEnabled() { return enabled; }
 
     private static boolean isSpawnType(MarkerType t) {
-        return t == MarkerType.CIVIL_SPAWN || t == MarkerType.WORKER_SPAWN || t == MarkerType.GUARDSMAN_SPAWN;
+        return switch (t) {
+            case CIVIL_SPAWN, WORKER_SPAWN, GUARDSMAN_SPAWN,
+                 TRADE_POINT, CONSTRUCTION_POINT, DEFENSE_POINT, ENEMY_SPAWN -> true;
+            default -> false;
+        };
     }
 
     private static int capFor(MarkerType t) {
@@ -80,6 +90,10 @@ public final class HivePopulationManager {
             case CIVIL_SPAWN -> CAP_CIVIL;
             case WORKER_SPAWN -> CAP_WORKER;
             case GUARDSMAN_SPAWN -> CAP_GUARDSMAN;
+            case TRADE_POINT -> CAP_MERCHANT;
+            case CONSTRUCTION_POINT -> CAP_MECHANICUS;
+            case DEFENSE_POINT -> CAP_ENFORCER;
+            case ENEMY_SPAWN -> CAP_GANG;
             default -> 0;
         };
     }
@@ -129,7 +143,7 @@ public final class HivePopulationManager {
             if (!nearAnyPlayer(level, m.pos)) continue;
             if (!isSafeSpawn(level, m.pos)) continue;
 
-            Mob mob = createFor(m.type, level);
+            Mob mob = createFor(m.type, level, m.pos);
             if (mob == null) continue;
             mob.moveTo(m.pos.getX() + 0.5D, m.pos.getY(), m.pos.getZ() + 0.5D,
                     level.random.nextFloat() * 360.0F, 0.0F);
@@ -143,10 +157,45 @@ public final class HivePopulationManager {
         }
     }
 
-    private static Mob createFor(MarkerType type, ServerLevel level) {
+    /**
+     * The body a marker puts in the world (spec §19).
+     *
+     * <h2>The bug this fixed on the way past</h2>
+     *
+     * {@code CIVIL_SPAWN} and {@code WORKER_SPAWN} both used to return {@code imperial_citizen}, so
+     * the sixteen worker markers the district generators place produced the same person the
+     * twenty-six civil markers did. The templates had been marking a distinction the game never
+     * showed.
+     *
+     * <h2>Gangers only live at the bottom</h2>
+     *
+     * {@code ENEMY_SPAWN} is the one marker whose answer depends on where it is. A gang in the
+     * Administratum is not a gang, it is an incident; the Underhive is the whole reason the role
+     * exists. The test goes through {@link HiveTier}, so it is the same level ladder the transit
+     * lift rides rather than a second opinion about which Y is which floor.
+     *
+     * <p>An enemy marker above the Underhive returns null and the marker simply stays empty — the
+     * spec's own note for that marker is "needs the invasion/sector-state gate", and when that gate
+     * exists this is where it hangs.
+     */
+    private static Mob createFor(MarkerType type, ServerLevel level, BlockPos at) {
         return switch (type) {
-            case CIVIL_SPAWN, WORKER_SPAWN -> FCRegistry.IMPERIAL_CITIZEN.get().create(level);
+            case CIVIL_SPAWN -> FCRegistry.IMPERIAL_CITIZEN.get().create(level);
             case GUARDSMAN_SPAWN -> FCRegistry.GUARDSMAN.get().create(level);
+            case DEFENSE_POINT -> FCRegistry.ENFORCER.get().create(level);
+
+            case WORKER_SPAWN -> com.example.examplemod.hive.pop.FCHiveDwellers
+                    .typeFor(com.example.examplemod.hive.pop.HiveRole.WORKER).create(level);
+            case TRADE_POINT -> com.example.examplemod.hive.pop.FCHiveDwellers
+                    .typeFor(com.example.examplemod.hive.pop.HiveRole.MERCHANT).create(level);
+            case CONSTRUCTION_POINT -> com.example.examplemod.hive.pop.FCHiveDwellers
+                    .typeFor(com.example.examplemod.hive.pop.HiveRole.MECHANICUS_WORKER).create(level);
+
+            case ENEMY_SPAWN -> HiveTier.of(at.getY()) == HiveTier.UNDERHIVE
+                    ? com.example.examplemod.hive.pop.FCHiveDwellers
+                            .typeFor(com.example.examplemod.hive.pop.HiveRole.GANG_MEMBER).create(level)
+                    : null;
+
             default -> null;
         };
     }
