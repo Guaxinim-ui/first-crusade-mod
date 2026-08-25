@@ -91,6 +91,10 @@ public class FCBlockTagsProvider extends BlockTagsProvider {
                 FCRegistry.PLANETARY_NAVIGATION_TERMINAL.get(),
                 FCRegistry.WAR_TABLE.get(),
                 FCRegistry.ORK_CAMP.get(),
+                // The Hive's lift (spec §18). It uses requiresCorrectToolForDrops(), so without
+                // this it would break slowly and drop nothing — the exact failure this whole
+                // section exists to prevent.
+                com.example.examplemod.hive.HiveBlocks.HIVE_TRANSIT_LIFT.get(),
                 // Petrified wood, so a pickaxe rather than an axe — and it must stay out of
                 // logs_that_burn, which is why it is not in logs().
                 FCFloraTrees.FOSSILIZED_TRUNK.get());

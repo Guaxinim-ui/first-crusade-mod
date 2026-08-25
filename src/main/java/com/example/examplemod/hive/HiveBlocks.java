@@ -67,6 +67,21 @@ public final class HiveBlocks {
             () -> new BucketItem(HiveFluids.TOXIC_SLUDGE,
                     new Item.Properties().stacksTo(1).craftRemainder(Items.BUCKET)));
 
+    /**
+     * The Hive's vertical circulation (spec §18) — see {@link HiveTransitLiftBlock}.
+     *
+     * <p>Registered here rather than in {@link HiveEssentialBlocks} because that class is glass,
+     * grates and lumens: things you look at. This one has behaviour, and this class is where the
+     * Hive's functional blocks already live.
+     */
+    public static final RegistryObject<Block> HIVE_TRANSIT_LIFT = registerBlock("hive_transit_lift",
+            () -> new HiveTransitLiftBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(5.0F, 12.0F)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.METAL)
+                    .lightLevel(state -> 7)));
+
     // =========================================================================================
     // STRUCTURE MARKERS (spec §13) — dev-only blocks the HiveMarkerProcessor converts to air on
     // placement, capturing their positions. Kept because the NBT templates + persistent-marker /
@@ -100,6 +115,7 @@ public final class HiveBlocks {
                     .icon(() -> TOXIC_SLUDGE_BUCKET.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(TOXIC_SLUDGE_BUCKET.get());
+                        output.accept(HIVE_TRANSIT_LIFT.get());
                         for (HiveMarkers.MarkerType type : HiveMarkers.MarkerType.values()) {
                             output.accept(MARKERS.get(type).get());
                         }

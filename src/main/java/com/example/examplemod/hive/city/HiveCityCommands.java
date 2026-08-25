@@ -51,6 +51,15 @@ public final class HiveCityCommands {
         return Commands.literal("city")
                 .requires(src -> src.hasPermission(2))
                 .then(Commands.literal("tp").executes(HiveCityCommands::cmdTp))
+
+                // Spec §18. Riding a lift needs somebody to click it, which is the one thing a
+                // headless test cannot do — so this asks the block's own question from a position.
+                .then(Commands.literal("lift")
+                        .then(Commands.argument("pos", net.minecraft.commands.arguments.coordinates
+                                .BlockPosArgument.blockPos())
+                                .executes(ctx -> cmdLift(ctx, true))
+                                .then(Commands.literal("up").executes(ctx -> cmdLift(ctx, true)))
+                                .then(Commands.literal("down").executes(ctx -> cmdLift(ctx, false)))))
                 .then(Commands.literal("status").executes(HiveCityCommands::cmdStatus))
                 .then(Commands.literal("cancel").executes(HiveCityCommands::cmdCancel))
                 .then(Commands.literal("preview").executes(HiveCityCommands::cmdPreview))
@@ -80,6 +89,54 @@ public final class HiveCityCommands {
     }
 
     // ---- tp ----
+    /**
+     * Answers what a transit lift at this position would do, without anyone riding it.
+     *
+     * <p>Prints the level the position is on, the level the ride would target, and the landing the
+     * block's own search returns — or says which check refused. Calls
+     * {@link com.example.examplemod.hive.HiveTransitLiftBlock#findLanding} rather than repeating the
+     * search, so what this reports is what a player would actually get.
+     */
+    private static int cmdLift(CommandContext<CommandSourceStack> ctx, boolean up) {
+        CommandSourceStack src = ctx.getSource();
+        BlockPos pos = net.minecraft.commands.arguments.coordinates.BlockPosArgument
+                .getBlockPos(ctx, "pos");
+
+        ServerLevel hive = src.getServer().getLevel(HiveWorld.LEVEL);
+
+        if (hive == null) {
+            src.sendFailure(Component.literal("hive_world dimension not found — datapack not loaded."));
+            return 0;
+        }
+
+        HiveTier from = HiveTier.of(pos.getY());
+        HiveTier to = up ? from.above() : from.below();
+
+        src.sendSuccess(() -> Component.literal("y=" + pos.getY() + " -> nivel " + from.key()
+                + " (piso y=" + from.baseY() + ", zona " + from.zoneKey() + ")"), false);
+
+        if (to == null) {
+            src.sendFailure(Component.literal("Sem nivel " + (up ? "acima" : "abaixo")
+                    + " de " + from.key() + " — e o " + (up ? "topo" : "fundo") + " da Colmeia."));
+            return 0;
+        }
+
+        BlockPos landing = com.example.examplemod.hive.HiveTransitLiftBlock
+                .findLanding(hive, pos, to);
+
+        if (landing == null) {
+            src.sendFailure(Component.literal("Destino " + to.key() + " (piso y=" + to.baseY()
+                    + ") sem desembarque livre em x=" + pos.getX() + " z=" + pos.getZ() + "."));
+            return 0;
+        }
+
+        src.sendSuccess(() -> Component.literal("Desembarque em " + to.key() + ": "
+                + landing.getX() + " " + landing.getY() + " " + landing.getZ()
+                + "  (desvio " + (landing.getY() - to.baseY()) + " do piso)"), false);
+
+        return 1;
+    }
+
     private static int cmdTp(CommandContext<CommandSourceStack> ctx) {
         CommandSourceStack src = ctx.getSource();
         MinecraftServer server = src.getServer();

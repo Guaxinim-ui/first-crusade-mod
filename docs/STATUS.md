@@ -111,27 +111,42 @@ Tudo o resto nesta secção é histórico. Isto é a lista viva.
 |---|---|---|
 | **ESCORT / comboios** | **FEITO** (2026-08-24) | Pacote `campaign/convoy/`. Medido em servidor de ponta a ponta. Falta ver o ramo com jogador presente — precisa de cliente. |
 | **§5 fatia 2 — ambiência** | **FEITO** (2026-08-24) | `PlanetAmbience`: 6 sons de mundo + guarnição selvagem lida do controlo inimigo. Nada visto/ouvido — precisa de cliente. |
-| **§18-19 Hive vertical** | **avaliado 2026-08-24 — parece já entregue** | Ver nota abaixo. Precisa de uma palavra do dono para fechar ou reabrir. |
+| **§18 — Hive vertical** | fatia 1 **FEITA** (2026-08-25) | `HiveTier` + `hive_transit_lift`: já se circula entre os 5 níveis. Falta o **DEEP HIVE** (nenhum distrito gera abaixo do Underhive) e pôr o elevador nos módulos dos distritos. |
+| **§19 — População da Hive** | fatia 1 feita, faltam 5 papéis | `HivePopulationManager` cobre Citizen/Worker/Guardsman — e Citizen e Worker são **a mesma entidade**. Faltam Merchant, Enforcer, Gang Member, Mechanicus Worker, Priest, mais ENEMY_SPAWN e as patrulhas. |
 | **RESCUE / RECOVER** | bloqueado | Esperam por esquadrões resgatáveis e por mais artefactos. O `RECOVER` ficou mais perto agora que existe um artefacto. |
 | **Cadia e Ork World** | bloqueado | Continuam atrás de `TRIGGER_CAMPAIGN`, que nada dispara. O mundo-tumba saiu dessa lista em 2026-08-24. |
 
-**Nota sobre o "§18-19 Hive vertical" (avaliação de 2026-08-24).** Fui procurar o que era e as três
-coisas que o rótulo pode significar **já estão no repositório**:
+**Nota sobre §18-19 (corrigida em 2026-08-25 — a spec apareceu).**
 
-- **spec §18** — o `docs/HIVE_CITY.md` cita-o para justificar o subpacote isolado
-  `com.example.examplemod.hive`, "para permitir a futura renomeação de pacote sem dor". O pacote
-  existe e está isolado (registo próprio, ligado por uma linha no `ExampleMod`).
-- **spec §19** — citado para a "validação estática distrito→módulo→template→assets". Foi feita na
-  FASE 11 e os **dois validadores estão commitados**: `tools/hive_city_validate.py` e
-  `tools/HiveCityValidate.java` (a porta Java existe porque o ambiente não tinha Python).
-- **"vertical"** — o `dimension_type/hive_world.json` tem `min_y -64`, `height 576` e
-  `logical_height 576`, que é exactamente a altura que o `HIVE_CITY.md` diz que a spec pedia.
+⚠️ **A avaliação de 2026-08-24 estava errada e o item foi reaberto.** Nessa altura o documento de
+spec não estava em `docs/` e eu li o "§18-19" como as citações internas do `HIVE_CITY.md` (subpacote
+isolado + validação estática), concluindo que estava tudo entregue. **Não é isso.** Com a spec à
+frente:
 
-⚠️ **A ressalva honesta:** a numeração `§` do changelog (§5, §14-15, §20-23, §24, §26, §29) vem de um
-documento de spec **que não está em `docs/`** — o dono tem-no fora do repositório. Portanto isto é a
-melhor leitura possível a partir do que está commitado, não uma conferência contra a spec. Se o
-"§18-19" queria dizer outra coisa (por exemplo: circular a Hive **a pé** pelos 576 blocos, elevadores
-entre níveis, ou o Spire ligado ao resto), **é preciso colar essas duas secções** e o item reabre.
+- **§18 = HIVE WORLD** — progressão vertical **UPPER / MID / UNDERHIVE / DEEP HIVE**, ligada por
+  "elevadores, portas, corredores, gates, botões, transições".
+- **§19 = POPULAÇÃO DA HIVE** — expandir os markers para Citizen, Worker, Guardsman, Merchant,
+  Enforcer, Gang Member, Mechanicus Worker, Priest.
+
+**O que a auditoria de 2026-08-25 encontrou de facto:**
+
+Os níveis **existem como geometria** e o `HiveCityLayout` empilha-os: Underhive em `y=-64`,
+Manufactorum em `y=0`, Hab em `+64`, Administratum em `+128`, Spire em `+192` (`LEVEL_HEIGHT = 64`).
+Mapeando à spec: UPPER = Admin+Spire, MID = Hab+Manufactorum, UNDERHIVE = Underhive. **DEEP HIVE não
+existe** — não há nível abaixo do Underhive.
+
+**O buraco real era a circulação.** Uma busca por `elevator|lift|shaft` no pacote `hive/` e nos
+módulos devolvia: `lift_rail` — que **nem sequer é um bloco**, é um nome sobrado numa lista de string
+do `HiveCommands` (do kit decorativo apagado) — um único módulo que menciona `shaft`
+(`cargo/military_depot_01`), e o comentário do `HiveCityLayout` a dizer que o Underhive "connects to
+the gate district's underhive shaft". **Entre manufactorum → hab → admin → spire não havia nada.**
+Cinco lajes de 64 blocos empilhadas que o jogador não consegue percorrer era o que impedia a dimensão
+de 576 de servir para o que foi desenhada. **Resolvido na fatia 1 de 2026-08-25** (ver changelog).
+
+**§19** parou na fatia 1, e o javadoc do `HivePopulationManager` já lista o que ficou de fora:
+`ENEMY_SPAWN`, `COMMANDER_POINT`, o mapeamento Skitarii/Enforcer e as patrulhas a andar de facto.
+Além disso `CIVIL_SPAWN` e `WORKER_SPAWN` resolvem **para a mesma entidade** (`imperial_citizen`),
+portanto dos 8 papéis da spec há 2 distintos no mundo.
 
 ### 4.2 Roadmap histórico (Fases A–E)
 
@@ -414,6 +429,62 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 - Mensagens de commit em pt-BR, terminar com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
 ## 7. Changelog (mais recente no topo)
+
+- 2026-08-25: **§18 fatia 1 — a Hive deixou de ser cinco lajes empilhadas.** Build verde, `runData`
+  rodado, **medido em servidor**.
+
+  ⚠️ **Primeiro, uma correcção minha.** No dia 24 eu avaliei o "§18-19" sem ter a spec (ela não está
+  em `docs/`), li-o como as citações internas do `HIVE_CITY.md` e escrevi que estava tudo entregue.
+  **Estava errado.** Com a spec à frente, §18 é a *progressão vertical* da Hive e §19 é a *população*.
+  O item foi reaberto e esta entrada é a primeira fatia dele.
+
+  **O achado.** `HiveCityLayout` empilha os cinco níveis desde a FASE 10 — Underhive `-64`,
+  Manufactorum `0`, Hab `+64`, Administratum `+128`, Spire `+192` — e uma busca por
+  `elevator|lift|shaft` no pacote inteiro devolve um comentário e um módulo de carga. **Nunca houve
+  como ir de um nível ao seguinte.** A coisa mais alta do mod eram cinco lajes para olhar.
+
+  **`HiveTier` — a escada como tipo.** A aritmética dos níveis vivia em três `int` locais dentro de um
+  método do layout, portanto nada no mod sabia responder "que nível é este Y?" nem "o que há acima do
+  Hab". O elevador precisava das duas respostas, e uma segunda cópia da conta no bloco seria uma cópia
+  que diverge no dia em que `LEVEL_HEIGHT` mudar.
+
+  **Cinco níveis, quatro nomes de zona.** A spec nomeia UPPER/MID/UNDERHIVE/DEEP e o gerador constrói
+  cinco níveis; o mapeamento não é 1-para-1 e o enum não finge que é (`zoneKey()`). **DEEP HIVE está
+  deliberadamente ausente**: nenhum distrito gera abaixo do Underhive, e inventar a constante faria o
+  `below()` entregar um destino que é pedra maciça. Quando houver distrito, é uma entrada aqui.
+
+  **Transição, não plataforma.** Um elevador a sério é uma entidade a ticar segundos por viagem, a
+  colidir com um poço que ninguém construiu. As regras de performance do próprio mod excluem isso, e
+  não compraria nada: o que o jogador quer é *estar* no nível seguinte. É uma porta que aponta para
+  cima. Agachado desce.
+
+  **Níveis, não deslocamentos.** O destino é o próximo `HiveTier`, nunca "64 blocos daqui" — um
+  elevador num mezanino dez blocos acima do piso do Hab entrega no piso do Administratum, não dez
+  blocos dentro da barriga dele. E `HiveTier.of` responde com o **piso mais alto igual ou abaixo** do
+  Y, não com o mais próximo: y=30 é manufactorum, apesar de estar mais perto de 64 — por proximidade,
+  o elevador passava o andar do próprio passageiro.
+
+  **Quatro recusas, cada uma diz qual falhou:** fora da Hive; sem nível acima/abaixo; e desembarque
+  sólido — esta última nomeia o nível e é a única que o jogador pode ir resolver.
+
+  **Medido em servidor** (`execute in firstcrusade:hive_world`, chunks forceloaded):
+  - o bloco **regista**: `setblock` aceitou `firstcrusade:hive_transit_lift` e **recusou no parse** um
+    id inventado (ao contrário do `/playsound`, que não valida — ver HANDOFF regra 12);
+  - detecção de nível: y=0→manufactorum(mid), y=64→hab(mid), y=128→administratum(upper),
+    y=192→spire(upper), y=-64→underhive, **y=30→manufactorum** (a regra do piso, não da proximidade);
+  - desembarque: piso em 63 → aterra em **64, desvio 0**; piso em 70 → **71, desvio 7**; com pisos em
+    70 **e** 96 escolhe o 71 (o mais perto); só com piso em 96 (desvio 33) **recusa**, porque a janela
+    é meio nível (32) — e o mesmo piso 96 é **aceite** a partir do Hab (desvio −31);
+  - as duas pontas da escada recusam ("é o topo", "é o fundo").
+
+  **Não medido:** a viagem em si. Andar de elevador exige alguém a clicar nele, que é a única coisa que
+  um teste headless não faz. Por isso o comando de sonda `/fchive city lift <pos> [up|down]` chama o
+  **mesmo** `findLanding` do bloco em vez de reimplementar a busca — um teste que chegasse à resposta
+  por um caminho privado estaria a testar um caminho que jogo nenhum toma.
+
+  **Zero PNG novo** (§43): modelo à mão sobre `plasteel_plating` + `hazard_plating`, que já existiam.
+  Loot table e tag `mineable/pickaxe` vieram do `runData` (o `FCBlockLootProvider` já varre
+  `HiveBlocks.BLOCKS` sozinho; a tag foi uma linha, porque o bloco usa `requiresCorrectToolForDrops`).
 
 - 2026-08-24 (7): **§5 fatia 2 — o planeta passou a soar, e a guerra passou a sentir-se debaixo dos
   pés.** Build verde. **O som e o spawn em si não foram vistos** — precisam de cliente.

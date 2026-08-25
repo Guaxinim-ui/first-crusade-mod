@@ -35,10 +35,15 @@ presente; e os **seis sons de planeta** e os roamers da §5 fatia 2.
 
 ## O QUE FALTA
 
-Ver `docs/STATUS.md` §4.1. Resumo: sobra **§18-19 Hive vertical** (por avaliar) — a maior das que
-faltavam e a única que ainda ninguém olhou. **ESCORT/comboios** e a **§5 fatia 2** ficaram feitos em
-2026-08-24. Bloqueados por coisas que não existem: RESCUE, RECOVER, e os desbloqueios de Cadia e
-Ork World.
+Ver `docs/STATUS.md` §4.1. **ESCORT/comboios** e a **§5 fatia 2** ficaram feitos em 2026-08-24, e a
+**§18 fatia 1** (circulação vertical da Hive) em 2026-08-25. Sobra: o **DEEP HIVE** e pôr o elevador
+nos módulos dos distritos (§18 fatia 2), e a **§19 — população da Hive**, que parou na fatia 1 com 2
+papéis distintos dos 8 que a spec pede. Bloqueados por coisas que não existem: RESCUE, RECOVER, e os
+desbloqueios de Cadia e Ork World.
+
+⚠️ **A numeração `§` vem de uma spec que NÃO está em `docs/`** — o dono cola-a no chat. Não adivinhe o
+que uma secção quer dizer a partir das citações internas do `HIVE_CITY.md`: foi assim que a avaliação
+do §18-19 saiu errada em 2026-08-24. Peça a secção.
 
 ## COMO CONSTRUIR E TESTAR
 
@@ -70,7 +75,8 @@ ter ficado 2500 linhas sem nunca ser observada.
 Comandos úteis: `/fc perf`, `/fc squad`, `/fc suppression`, `/fcstrategy planet list|activate|awaken`,
 `/fcstrategy sector list`, `/fcstrategy war tick`, `/fcstrategy supply list`,
 `/fcstrategy convoy list|dispatch <frente>|strike <frente> <n>`, `/fcstrategy raid start`,
-`/firstcrusade planet unlock|travel`.
+`/firstcrusade planet unlock|travel`, `/fchive city tp|generate|status`,
+`/fchive city lift <x y z> [up|down]` (sonda o elevador sem jogador).
 
 ## REGRAS QUE VALEM (não reverter sem entender)
 
