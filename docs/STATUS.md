@@ -430,6 +430,43 @@ não dá pra testar aqui → mudança pequena + dono testa + ler `run/logs/lates
 
 ## 7. Changelog (mais recente no topo)
 
+- 2026-08-26: **Obeliscos: o mundo-tumba ganhou horizonte — e um portão de dimensão que faltava.**
+  Build verde, **medido em servidor**.
+
+  A tumba resolveu "há um sítio", mas está **debaixo do chão**. Um planeta cuja única arquitectura é
+  subterrânea não tem horizonte, e até se tropeçar na entrada nada diz de quem é aquele mundo. As
+  placas de referência Necron são metade silhuetas ao longe.
+
+  **`OBELISK`** — a única forma do ficheiro que **sobe** em vez de escavar: plinto de 5×5 que
+  desce até encontrar chão (para não flutuar numa encosta), pilar 3×3 de 12-20 blocos com a costura
+  acesa a subir o meio de cada face, e a ponta a afinar para 1×1 aceso. Não guarda nada e não se
+  entra — **marcar território É a função**, e por isso é muito mais comum que a tumba (raridade 60
+  contra 900): um marco raro não marca coisa nenhuma.
+
+  **O buraco que isto expôs, e que eu tinha aberto na véspera.** O filtro do `placed_feature` é por
+  **bioma**, e bioma não é chave de planeta — a regra 11 do HANDOFF, escrita por mim dois dias antes.
+  `salt_waste` é 30% de Armageddon e 25% do Forge World, portanto o `site_necron_tomb` que entrou
+  ontem **nasceria em Armageddon**, com Senhor e guarda dentro. Não foi detectado por leitura; foi
+  detectado por eu ir escrever o obelisco no mesmo bioma e reparar.
+
+  **`only_dimension` novo na config do sítio.** Um sítio que o declare recusa em silêncio em qualquer
+  outro mundo. A **ruína do relicário NÃO o declara, de propósito**: ela é a chave do mundo-tumba e
+  tem de continuar a ser encontrável a partir dos outros planetas.
+
+  **Medido** (servidor, `/place feature`):
+  - o portão **discrimina**: obelisco e tumba **recusados** em Armageddon, ruína **colocada** lá;
+  - perfil vertical do obelisco por fatias de quatro blocos —
+    `pedra 30/20/20/20/5/0` e `conduta 4/16/16/16/6/0` de baixo para cima. Os 20+16 por fatia batem
+    **exactamente** com o código: cada nível do pilar é 3×3, dos quais 4 são costura acesa e 5 são
+    pedra, vezes quatro níveis. Total ≈ 95 de pedra e 58 de conduta, com 58 fontes de luz 15.
+
+  **Não feito de propósito:** a **névoa verde**. Ela tem de valer por planeta e o `salt_waste` é
+  partilhado com Armageddon e o Forge World, portanto pintar o bioma tornaria os salgados de
+  Armageddon Necron. As duas saídas certas são um **bioma novo** só do mundo-tumba (que o
+  `generate_planets.py` avisa em comentário ser "outro trabalho": toca em cinco ficheiros e no
+  `FloraRegionResolver`) ou um **override de fog por dimensão no cliente** — que não pode ser medido
+  sem cliente, e por isso ficou de fora desta fatia.
+
 - 2026-08-25 (4): **Os Necrons ganharam arquitectura própria — e a tumba ganhou luz.**
   Build verde, `runData` rodado, **medido em servidor**.
 

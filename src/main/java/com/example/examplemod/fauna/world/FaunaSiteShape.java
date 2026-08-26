@@ -81,7 +81,19 @@ public enum FaunaSiteShape implements StringRepresentable {
      * {@code surfaceAt}, portanto sem uma ancora propria o Senhor da tumba apareceria de pe no sal,
      * a 30 blocos por cima do trono dele.
      */
-    TOMB("tomb");
+    TOMB("tomb"),
+
+    /**
+     * Obelisco: um pilar sobre um plinto, com a costura acesa a subir as quatro faces.
+     *
+     * <p>E a unica forma que sobe em vez de escavar, e existe por uma razao de leitura e nao de
+     * conteudo: um planeta cuja unica construcao esta debaixo do chao nao tem horizonte. As placas
+     * de referencia Necron sao metade silhuetas ao longe — e o que diz "isto e territorio deles"
+     * antes de se distinguir um unico guerreiro.
+     *
+     * <p>Nao guarda nada e nao esconde nada. Marcar territorio E a funcao.
+     */
+    OBELISK("obelisk");
 
     public static final Codec<FaunaSiteShape> CODEC =
             StringRepresentable.fromEnum(FaunaSiteShape::values);

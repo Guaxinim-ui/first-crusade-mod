@@ -45,7 +45,8 @@ public record FaunaSiteConfig(
         Optional<BlockState> frame,
         Optional<BlockState> centre,
         Optional<EntityType<?>> champion,
-        Optional<BlockState> glow) implements FeatureConfiguration {
+        Optional<BlockState> glow,
+        Optional<net.minecraft.resources.ResourceLocation> onlyDimension) implements FeatureConfiguration {
 
     public static final Codec<FaunaSiteConfig> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
@@ -76,7 +77,20 @@ public record FaunaSiteConfig(
                     // O bloco aceso da estrutura. Data-driven porque "de que cor e a luz desta
                     // faccao" e uma decisao de arte, e trocar a luz da tumba nao devia obrigar a
                     // recompilar o mod.
-                    BlockState.CODEC.optionalFieldOf("glow").forGetter(FaunaSiteConfig::glow)
+                    BlockState.CODEC.optionalFieldOf("glow").forGetter(FaunaSiteConfig::glow),
+                    // O sitio so nasce NESTA dimensao, quando declarado.
+                    //
+                    // Existe porque o filtro do placed_feature e por BIOMA, e bioma nao serve de
+                    // chave por planeta: salt_waste e 30% de Armageddon, 25% do Forge World e 60%
+                    // do mundo-tumba. Sem isto, uma tumba com Senhor dentro e um obelisco aceso
+                    // nasceriam nos salgados de Armageddon — a mesma armadilha que o PlanetHazard
+                    // ja tinha documentado, a chegar por outra porta.
+                    //
+                    // A ruina do relicario NAO declara este campo, e e de proposito: ela e a chave
+                    // do mundo-tumba e tem de ser encontravel a partir dos outros planetas.
+                    net.minecraft.resources.ResourceLocation.CODEC
+                            .optionalFieldOf("only_dimension")
+                            .forGetter(FaunaSiteConfig::onlyDimension)
             ).apply(instance, FaunaSiteConfig::new));
 
     /** Quantos moradores este sitio cria nesta geracao. */

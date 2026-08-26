@@ -27,6 +27,7 @@
     "champion": "firstcrusade:necron_overlord",
     "glow": {
       "Name": "firstcrusade:necron_conduit"
-    }
+    },
+    "only_dimension": "firstcrusade:necron_tomb_world"
   }
 }

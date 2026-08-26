@@ -63,18 +63,23 @@ do §18-19 saiu errada em 2026-08-24. Peça a secção.
 
 **Destrancado, se quiser continuar sem esperar por nada:**
 
-1. **Névoa verde no `salt_waste`** — a mais barata. É a cor de fog do bioma, uma linha no
-   `generate_biomes.py`. As placas de referência do dono são metade névoa verde; o mundo-tumba ainda
-   é ar limpo.
-2. **Obeliscos Necron** — sítio novo, pequeno e comum, com feixe a subir. Dá horizonte ao planeta;
-   hoje a tumba é a única coisa Necron de pé.
-3. **Elevador nos módulos dos distritos da Hive** (§18 fatia 2) — para a cidade nascer percorrível
+1. **Névoa verde no mundo-tumba** — ⚠️ **NÃO é uma linha no `generate_biomes.py`**. O `salt_waste`
+   é partilhado com Armageddon (30%) e o Forge World (25%), e pintá-lo tornaria os salgados desses
+   dois Necron. As duas saídas certas: um **bioma novo** só do mundo-tumba (o próprio
+   `generate_planets.py` avisa que bioma novo é "outro trabalho" — toca em cinco ficheiros e no
+   `FloraRegionResolver`), ou um **override de fog por dimensão no cliente**, que não se mede
+   headless.
+2. **Elevador nos módulos dos distritos da Hive** (§18 fatia 2) — para a cidade nascer percorrível
    em vez de precisar de o colocar à mão.
-4. **DEEP HIVE** — o quarto nível da spec §18. Nenhum distrito gera abaixo do Underhive, e por isso
+3. **DEEP HIVE** — o quarto nível da spec §18. Nenhum distrito gera abaixo do Underhive, e por isso
    `HiveTier` deliberadamente **não** tem a constante: inventá-la faria o elevador entregar dentro
    de pedra maciça.
 
-⚠️ Os pontos 1 e 2 mexem em **worldgen** — leia a regra 2 antes.
+⚠️ O ponto 1 mexe em **worldgen** — leia as regras 2 e 11 antes.
+
+**Feito em 2026-08-26:** os **obeliscos** (silhueta no horizonte do mundo-tumba) e o campo
+`only_dimension` na config dos sítios, que fechou um buraco real — a tumba estava a poder
+nascer em Armageddon porque o filtro do `placed_feature` é por bioma.
 
 ## COMO CONSTRUIR E TESTAR
 

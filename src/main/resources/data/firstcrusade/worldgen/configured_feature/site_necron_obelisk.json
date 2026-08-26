@@ -1,0 +1,19 @@
+{
+  "type": "firstcrusade:fauna_site",
+  "config": {
+    "shape": "obelisk",
+    "min_count": 0,
+    "max_count": 2,
+    "radius": 4,
+    "prop_tries": 0,
+    "props": [],
+    "mob": "firstcrusade:necron_scarab",
+    "frame": {
+      "Name": "firstcrusade:necron_stone"
+    },
+    "glow": {
+      "Name": "firstcrusade:necron_conduit"
+    },
+    "only_dimension": "firstcrusade:necron_tomb_world"
+  }
+}

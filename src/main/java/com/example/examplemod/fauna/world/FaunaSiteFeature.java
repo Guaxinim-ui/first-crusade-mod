@@ -70,6 +70,16 @@ public class FaunaSiteFeature extends Feature<FaunaSiteConfig> {
         FaunaSiteConfig config = context.config();
         RandomSource random = context.random();
 
+        // Antes de tudo: este sitio pertence a este mundo?
+        //
+        // O placed_feature filtra por bioma, e bioma nao e chave de planeta. Um sitio que declare
+        // only_dimension recusa em silencio em qualquer outro mundo, e isso nao e desperdicio: a
+        // alternativa era um Senhor Necron a nascer nos salgados de Armageddon.
+        if (config.onlyDimension().isPresent()
+                && !config.onlyDimension().get().equals(level.getLevel().dimension().location())) {
+            return false;
+        }
+
         BlockPos origin = groundAt(level, context.origin(), config.radius());
         if (origin == null) {
             return false;
@@ -89,6 +99,7 @@ public class FaunaSiteFeature extends Feature<FaunaSiteConfig> {
             case CAMP -> buildCamp(level, random, origin, config);
             case RUIN -> buildRuin(level, random, origin, config);
             case TOMB -> anchor = buildTomb(level, random, origin, config);
+            case OBELISK -> buildObelisk(level, random, origin, config);
         }
 
         boolean enclosed = config.shape() == FaunaSiteShape.TOMB;
@@ -311,6 +322,66 @@ public class FaunaSiteFeature extends Feature<FaunaSiteConfig> {
         }
 
         return chamberFloor;
+    }
+
+    /**
+     * Obelisco: plinto, pilar, e a costura acesa a subir as quatro faces.
+     *
+     * <h2>Para que serve uma construcao que nao guarda nada</h2>
+     *
+     * A tumba resolveu "ha um sitio", mas esta debaixo do chao: um planeta cuja unica arquitectura e
+     * subterranea nao tem horizonte, e ate se tropecar na entrada nada diz de quem e aquele mundo. O
+     * obelisco existe para ser visto de longe e nao para ser entrado — e por isso e o unico sitio do
+     * ficheiro sem interior, sem loot e (quase) sem morador.
+     *
+     * <h2>Altura antes de largura</h2>
+     *
+     * O pilar e 3x3 e alto. Um bloco largo e baixo le-se como ruina; um fino e alto le-se como
+     * marco, que e o que isto e. A ponta afina para 1x1 aceso para a silhueta terminar num ponto de
+     * luz em vez de num corte recto.
+     */
+    private void buildObelisk(WorldGenLevel level, RandomSource random, BlockPos origin,
+                              FaunaSiteConfig config) {
+        BlockState frame = config.frame().orElse(Blocks.DEEPSLATE_TILES.defaultBlockState());
+        BlockState glow = config.glow().orElse(Blocks.SEA_LANTERN.defaultBlockState());
+
+        // O plinto: um degrau largo que assenta o pilar no terreno em vez de o espetar nele.
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                put(level, origin.offset(dx, 0, dz), frame);
+
+                // Enche o que estiver por baixo ate encontrar chao, para o plinto nao ficar a
+                // flutuar numa encosta. Oito blocos chegam: acima disso o groundAt ja teria
+                // recusado o sitio por declive.
+                for (int down = 1; down <= 8; down++) {
+                    BlockPos below = origin.offset(dx, -down, dz);
+
+                    if (level.getBlockState(below).isSolidRender(level, below)) {
+                        break;
+                    }
+
+                    put(level, below, frame);
+                }
+            }
+        }
+
+        int height = 12 + random.nextInt(9);
+
+        for (int up = 1; up <= height; up++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    // A costura: o meio de cada face, aceso a toda a altura. E a luz que da a forma,
+                    // como na tumba — a pedra sozinha e uma coluna preta que some contra o ceu.
+                    boolean seam = (dx == 0) != (dz == 0);
+
+                    put(level, origin.offset(dx, up, dz), seam ? glow : frame);
+                }
+            }
+        }
+
+        // A ponta: dois blocos acesos de 1x1.
+        put(level, origin.above(height + 1), glow);
+        put(level, origin.above(height + 2), glow);
     }
 
     /** Clareira: limpa a vegetacao e marca o chao pisado. */

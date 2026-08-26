@@ -121,7 +121,32 @@ SITES = [
         centre=f"{MODID}:necron_glyph",
         glow=f"{MODID}:necron_conduit",
         champion=f"{MODID}:necron_overlord",
+        only_dimension=f"{MODID}:necron_tomb_world",
         rarity=900,
+        biomes=["salt_waste"],
+    ),
+
+    # O obelisco: a silhueta que da horizonte ao mundo-tumba.
+    #
+    # A tumba resolveu "ha um sitio", mas esta debaixo do chao. Um planeta cuja unica arquitectura e
+    # subterranea nao tem horizonte, e por isso este e MUITO mais comum que a tumba: raridade 60
+    # contra 900. Nao guarda nada e nao se entra — marcar territorio E a funcao, e um marco raro nao
+    # marca coisa nenhuma.
+    #
+    # Raio 4 de proposito: o groundAt recusa declive medido nas pontas do raio, e um marco que so
+    # nasce em planicie perfeita nao apareceria nas encostas onde uma silhueta mais se ve.
+    dict(
+        name="site_necron_obelisk",
+        shape="obelisk",
+        mob=f"{MODID}:necron_scarab",
+        min_count=0, max_count=2,
+        radius=4,
+        props=[],
+        prop_tries=0,
+        frame=f"{MODID}:necron_stone",
+        glow=f"{MODID}:necron_conduit",
+        only_dimension=f"{MODID}:necron_tomb_world",
+        rarity=60,
         biomes=["salt_waste"],
     ),
 
@@ -346,6 +371,8 @@ def configured(site):
         config["champion"] = site["champion"]
     if site.get("glow"):
         config["glow"] = state(site["glow"])
+    if site.get("only_dimension"):
+        config["only_dimension"] = site["only_dimension"]
 
     return {"type": f"{MODID}:fauna_site", "config": config}
 
