@@ -11,9 +11,10 @@ pushed em `origin/performance-layer`.
 ## LEIA PRIMEIRO
 
 - `docs/STATUS.md` — §4.1 tem a lista viva do que falta; o changelog (§7) está em ordem cronológica
-  inversa e as entradas de **2026-08-21 a 2026-08-24** são o estado atual.
-- As memórias `campaign-layer`, `necron-asset-generator`, `campaign-rcon-test-recipe` e
-  `worldgen-script-ownership` carregam sozinhas e têm as decisões que não estão óbvias no código.
+  inversa e as entradas de **2026-08-21 a 2026-08-25** são o estado atual.
+- As memórias `campaign-layer`, `necron-asset-generator`, `campaign-rcon-test-recipe`,
+  `worldgen-script-ownership` e `spec-section-numbers` carregam sozinhas e têm as decisões que não
+  estão óbvias no código.
 
 ## ESTADO
 
@@ -27,11 +28,21 @@ jogador; logística; operações; despertar Necron a tomar a zona de pouso; rean
 (6 mortos, 4 levantaram-se); supressão a atravessar os limiares e a decair sozinha; esquadrão a
 formar-se à volta de um Nob; ruína Necron a construir-se com 1 relicário, 66 de parede e 117 de piso.
 
+**Medido em 2026-08-25:** comboio de ponta a ponta (despacho automático, atrição 100→61%, chegada a
+entregar 146 de 240 com a ordem a pagar, `strike` a matar com a ordem a falhar, chegada sem jogador a
+expirar sem pagar, teto e cooldown, e as três recusas); o elevador da Hive (5 níveis detectados,
+desembarque a 0 e a 7 de desvio, recusa a 33 porque a janela é meio nível, e as duas pontas da
+escada); os cinco moradores da Hive a nascer com nome traduzido e o Gangueiro a matar um Guardsman
+sem IA enquanto o Trabalhador ficava intacto; e a tumba (1154 de necrodermis, 72 condutas acesas,
+4 glifos, perfil vertical 12/12/316/40/0/0, Senhor no centro da câmara).
+
 **NUNCA visto (precisa de cliente):** o render dos **sete modelos novos** (3 Necrons + 4 Orks) e do
 relicário; a **aba FRONTS da Mesa de Guerra**; o pacote de ordem da Mesa; a materialização de
 deployment perto do jogador; a requisição de blindado; os quatro botões novos do Ork Camp; os
 perigos ambientais dos planetas; os **comboios na aba Logistics** e o ramo do ESCORT com jogador
-presente; e os **seis sons de planeta** e os roamers da §5 fatia 2.
+presente; os **seis sons de planeta** e os roamers da §5 fatia 2; a **viagem de elevador** na Hive;
+as **cinco texturas dos moradores**; e a **tumba por dentro** — descer o poço, a câmara acesa e o
+combate contra o Senhor com a guarda.
 
 ## O QUE FALTA
 
@@ -49,6 +60,21 @@ sete estão ligadas aos markers que os distritos plantam, mas `/fchive validate 
 ⚠️ **A numeração `§` vem de uma spec que NÃO está em `docs/`** — o dono cola-a no chat. Não adivinhe o
 que uma secção quer dizer a partir das citações internas do `HIVE_CITY.md`: foi assim que a avaliação
 do §18-19 saiu errada em 2026-08-24. Peça a secção.
+
+**Destrancado, se quiser continuar sem esperar por nada:**
+
+1. **Névoa verde no `salt_waste`** — a mais barata. É a cor de fog do bioma, uma linha no
+   `generate_biomes.py`. As placas de referência do dono são metade névoa verde; o mundo-tumba ainda
+   é ar limpo.
+2. **Obeliscos Necron** — sítio novo, pequeno e comum, com feixe a subir. Dá horizonte ao planeta;
+   hoje a tumba é a única coisa Necron de pé.
+3. **Elevador nos módulos dos distritos da Hive** (§18 fatia 2) — para a cidade nascer percorrível
+   em vez de precisar de o colocar à mão.
+4. **DEEP HIVE** — o quarto nível da spec §18. Nenhum distrito gera abaixo do Underhive, e por isso
+   `HiveTier` deliberadamente **não** tem a constante: inventá-la faria o elevador entregar dentro
+   de pedra maciça.
+
+⚠️ Os pontos 1 e 2 mexem em **worldgen** — leia a regra 2 antes.
 
 ## COMO CONSTRUIR E TESTAR
 
