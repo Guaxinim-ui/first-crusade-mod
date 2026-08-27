@@ -61,21 +61,37 @@ sete estão ligadas aos markers que os distritos plantam, mas `/fchive validate 
 que uma secção quer dizer a partir das citações internas do `HIVE_CITY.md`: foi assim que a avaliação
 do §18-19 saiu errada em 2026-08-24. Peça a secção.
 
+⚠️ **Um sítio de worldgen só nasce em chunk NOVO.** Nenhum dos sítios acrescentados em 24-26/08
+(ruína Necron, tumba, obelisco) aparece em terreno que a save já gerou. Para os ver: andar até
+terreno nunca visitado, mundo novo, ou `/place feature <id>` num chunk carregado. Isto não é bug e
+já foi confundido com um.
+
 **Destrancado, se quiser continuar sem esperar por nada:**
 
-1. **Névoa verde no mundo-tumba** — ⚠️ **NÃO é uma linha no `generate_biomes.py`**. O `salt_waste`
+1. **ENCONTRABILIDADE — o mais player-facing, e o único que é um defeito e não uma feature em
+   falta.** Nada no jogo aponta para a relíquia Necron, para a tumba nem para os obeliscos. Os três
+   são `placed_feature` e **não `structure`**, portanto `/locate` não os acha, não há mapa de
+   explorador e não há bússola; e o texto do requisito diz só *"Recupere um artefato Necron"*, sem
+   planeta, sem bioma, sem dizer que é uma ruína. O jogo manda buscar uma coisa e não dá informação
+   nenhuma sobre onde. Três saídas, da mais barata à mais cara:
+   - reescrever a chave de lang do requisito para dizer **onde** (uma linha, zero código);
+   - um comando de debug (`/fcstrategy locate necron`) que varre chunks carregados à procura de
+     `necron_conduit` e diz a direcção — serve para testar, não para jogar;
+   - promover os sítios a **`structure` + `structure_set`**, que os torna localizáveis e permite
+     mapa/pista. É a resposta a sério e mexe em worldgen.
+2. **Névoa verde no mundo-tumba** — ⚠️ **NÃO é uma linha no `generate_biomes.py`**. O `salt_waste`
    é partilhado com Armageddon (30%) e o Forge World (25%), e pintá-lo tornaria os salgados desses
    dois Necron. As duas saídas certas: um **bioma novo** só do mundo-tumba (o próprio
    `generate_planets.py` avisa que bioma novo é "outro trabalho" — toca em cinco ficheiros e no
    `FloraRegionResolver`), ou um **override de fog por dimensão no cliente**, que não se mede
    headless.
-2. **Elevador nos módulos dos distritos da Hive** (§18 fatia 2) — para a cidade nascer percorrível
+3. **Elevador nos módulos dos distritos da Hive** (§18 fatia 2) — para a cidade nascer percorrível
    em vez de precisar de o colocar à mão.
-3. **DEEP HIVE** — o quarto nível da spec §18. Nenhum distrito gera abaixo do Underhive, e por isso
+4. **DEEP HIVE** — o quarto nível da spec §18. Nenhum distrito gera abaixo do Underhive, e por isso
    `HiveTier` deliberadamente **não** tem a constante: inventá-la faria o elevador entregar dentro
    de pedra maciça.
 
-⚠️ O ponto 1 mexe em **worldgen** — leia as regras 2 e 11 antes.
+⚠️ Os pontos 1 (terceira via) e 2 mexem em **worldgen** — leia as regras 2 e 11 antes.
 
 **Feito em 2026-08-26:** os **obeliscos** (silhueta no horizonte do mundo-tumba) e o campo
 `only_dimension` na config dos sítios, que fechou um buraco real — a tumba estava a poder
